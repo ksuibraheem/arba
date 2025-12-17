@@ -1,0 +1,306 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Mail, Phone, ArrowRight, ArrowLeft, Building2, Check, RefreshCw, Shield, Clock } from 'lucide-react';
+
+interface VerificationPageProps {
+    language: 'ar' | 'en';
+    onNavigate: (page: string) => void;
+    email?: string;
+    phone?: string;
+    onVerificationComplete?: () => void;
+}
+
+const VerificationPage: React.FC<VerificationPageProps> = ({
+    language,
+    onNavigate,
+    email = 'user@example.com',
+    phone = '+966501234567',
+    onVerificationComplete
+}) => {
+    const isRtl = language === 'ar';
+    const Arrow = isRtl ? ArrowLeft : ArrowRight;
+
+    const [step, setStep] = useState<'email' | 'phone' | 'complete'>('email');
+    const [emailCode, setEmailCode] = useState(['', '', '', '', '', '']);
+    const [phoneCode, setPhoneCode] = useState(['', '', '', '', '', '']);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [resendTimer, setResendTimer] = useState(60);
+    const [canResend, setCanResend] = useState(false);
+
+    const emailInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+    const phoneInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+    const t = {
+        title: { ar: 'التحقق من الحساب', en: 'Account Verification' },
+        emailVerification: { ar: 'التحقق من البريد الإلكتروني', en: 'Email Verification' },
+        phoneVerification: { ar: 'التحقق من رقم الجوال', en: 'Phone Verification' },
+        enterCode: { ar: 'أدخل رمز التحقق المرسل إلى', en: 'Enter the verification code sent to' },
+        verify: { ar: 'تحقق', en: 'Verify' },
+        resend: { ar: 'إعادة إرسال', en: 'Resend' },
+        resendIn: { ar: 'إعادة الإرسال خلال', en: 'Resend in' },
+        seconds: { ar: 'ثانية', en: 'seconds' },
+        verifying: { ar: 'جاري التحقق...', en: 'Verifying...' },
+        invalidCode: { ar: 'رمز التحقق غير صحيح', en: 'Invalid verification code' },
+        codeSent: { ar: 'تم إرسال الرمز', en: 'Code sent' },
+        emailVerified: { ar: 'تم التحقق من البريد الإلكتروني', en: 'Email verified' },
+        phoneVerified: { ar: 'تم التحقق من رقم الجوال', en: 'Phone verified' },
+        complete: { ar: 'اكتمل التحقق!', en: 'Verification Complete!' },
+        completeMessage: { ar: 'تم التحقق من حسابك بنجاح. يمكنك الآن استخدام جميع ميزات المنصة.', en: 'Your account has been verified successfully. You can now use all platform features.' },
+        goToDashboard: { ar: 'الذهاب للوحة التحكم', en: 'Go to Dashboard' },
+        skip: { ar: 'تخطي', en: 'Skip' },
+        backToHome: { ar: 'العودة للرئيسية', en: 'Back to Home' }
+    };
+
+    const getLabel = (key: keyof typeof t) => t[key][language];
+
+    // Resend timer
+    useEffect(() => {
+        if (resendTimer > 0) {
+            const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+            return () => clearTimeout(timer);
+        } else {
+            setCanResend(true);
+        }
+    }, [resendTimer]);
+
+    const handleCodeChange = (
+        index: number,
+        value: string,
+        codeArray: string[],
+        setCodeArray: React.Dispatch<React.SetStateAction<string[]>>,
+        refs: React.MutableRefObject<(HTMLInputElement | null)[]>
+    ) => {
+        if (value.length > 1) value = value[0];
+        if (!/^\d*$/.test(value)) return;
+
+        const newCode = [...codeArray];
+        newCode[index] = value;
+        setCodeArray(newCode);
+        setError('');
+
+        // Auto-focus next input
+        if (value && index < 5) {
+            refs.current[index + 1]?.focus();
+        }
+    };
+
+    const handleKeyDown = (
+        index: number,
+        e: React.KeyboardEvent,
+        codeArray: string[],
+        setCodeArray: React.Dispatch<React.SetStateAction<string[]>>,
+        refs: React.MutableRefObject<(HTMLInputElement | null)[]>
+    ) => {
+        if (e.key === 'Backspace' && !codeArray[index] && index > 0) {
+            refs.current[index - 1]?.focus();
+        }
+    };
+
+    const handleVerify = async (type: 'email' | 'phone') => {
+        const code = type === 'email' ? emailCode : phoneCode;
+        const fullCode = code.join('');
+
+        if (fullCode.length !== 6) {
+            setError(getLabel('invalidCode'));
+            return;
+        }
+
+        setIsLoading(true);
+        setError('');
+
+        // Simulate API verification
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        // For demo, accept any 6-digit code
+        if (fullCode.length === 6) {
+            if (type === 'email') {
+                setStep('phone');
+                setResendTimer(60);
+                setCanResend(false);
+            } else {
+                setStep('complete');
+                if (onVerificationComplete) {
+                    onVerificationComplete();
+                }
+            }
+        } else {
+            setError(getLabel('invalidCode'));
+        }
+
+        setIsLoading(false);
+    };
+
+    const handleResend = async () => {
+        if (!canResend) return;
+
+        setIsLoading(true);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setResendTimer(60);
+        setCanResend(false);
+        setIsLoading(false);
+    };
+
+    const renderCodeInputs = (
+        codeArray: string[],
+        setCodeArray: React.Dispatch<React.SetStateAction<string[]>>,
+        refs: React.MutableRefObject<(HTMLInputElement | null)[]>
+    ) => (
+        <div className="flex gap-3 justify-center" dir="ltr">
+            {codeArray.map((digit, index) => (
+                <input
+                    key={index}
+                    ref={el => refs.current[index] = el}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleCodeChange(index, e.target.value, codeArray, setCodeArray, refs)}
+                    onKeyDown={(e) => handleKeyDown(index, e, codeArray, setCodeArray, refs)}
+                    className={`w-12 h-14 text-center text-2xl font-bold rounded-xl border-2 transition-all outline-none ${digit
+                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                            : 'border-slate-200 bg-white text-slate-800 focus:border-emerald-500'
+                        }`}
+                />
+            ))}
+        </div>
+    );
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 flex items-center justify-center p-6" dir={isRtl ? 'rtl' : 'ltr'}>
+            <div className="w-full max-w-md">
+                {/* Logo */}
+                <div className="text-center mb-8">
+                    <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
+                        <Shield className="w-8 h-8 text-white" />
+                    </div>
+                    <h1 className="text-2xl font-bold text-white">{getLabel('title')}</h1>
+                </div>
+
+                {/* Verification Card */}
+                <div className="bg-white rounded-3xl p-8 shadow-2xl">
+                    {step === 'complete' ? (
+                        /* Complete State */
+                        <div className="text-center">
+                            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <Check className="w-10 h-10 text-emerald-500" />
+                            </div>
+                            <h2 className="text-2xl font-bold text-slate-800 mb-2">{getLabel('complete')}</h2>
+                            <p className="text-slate-500 mb-8">{getLabel('completeMessage')}</p>
+                            <button
+                                onClick={() => onNavigate('dashboard')}
+                                className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:from-emerald-400 hover:to-teal-400 transition-all flex items-center justify-center gap-2"
+                            >
+                                {getLabel('goToDashboard')}
+                                <Arrow className="w-5 h-5" />
+                            </button>
+                        </div>
+                    ) : (
+                        /* Verification Steps */
+                        <>
+                            {/* Progress Indicator */}
+                            <div className="flex items-center justify-center gap-2 mb-8">
+                                <div className={`w-3 h-3 rounded-full ${step === 'email' ? 'bg-emerald-500' : 'bg-emerald-500'}`} />
+                                <div className={`w-12 h-1 rounded ${step === 'phone' ? 'bg-emerald-500' : 'bg-slate-200'}`} />
+                                <div className={`w-3 h-3 rounded-full ${step === 'phone' ? 'bg-emerald-500' : 'bg-slate-200'}`} />
+                            </div>
+
+                            {/* Step Icon */}
+                            <div className="flex justify-center mb-6">
+                                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${step === 'email' ? 'bg-blue-100' : 'bg-green-100'
+                                    }`}>
+                                    {step === 'email' ? (
+                                        <Mail className="w-8 h-8 text-blue-500" />
+                                    ) : (
+                                        <Phone className="w-8 h-8 text-green-500" />
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Title */}
+                            <h2 className="text-xl font-bold text-slate-800 text-center mb-2">
+                                {step === 'email' ? getLabel('emailVerification') : getLabel('phoneVerification')}
+                            </h2>
+                            <p className="text-slate-500 text-center mb-6">
+                                {getLabel('enterCode')}
+                                <br />
+                                <span className="font-medium text-slate-700" dir="ltr">
+                                    {step === 'email' ? email : phone}
+                                </span>
+                            </p>
+
+                            {/* Code Inputs */}
+                            <div className="mb-6">
+                                {step === 'email'
+                                    ? renderCodeInputs(emailCode, setEmailCode, emailInputRefs)
+                                    : renderCodeInputs(phoneCode, setPhoneCode, phoneInputRefs)
+                                }
+                            </div>
+
+                            {/* Error */}
+                            {error && (
+                                <p className="text-red-500 text-center text-sm mb-4">{error}</p>
+                            )}
+
+                            {/* Resend Timer */}
+                            <div className="text-center mb-6">
+                                {canResend ? (
+                                    <button
+                                        onClick={handleResend}
+                                        disabled={isLoading}
+                                        className="text-emerald-600 font-medium flex items-center gap-2 mx-auto hover:underline disabled:opacity-50"
+                                    >
+                                        <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                                        {getLabel('resend')}
+                                    </button>
+                                ) : (
+                                    <p className="text-slate-400 flex items-center justify-center gap-2">
+                                        <Clock className="w-4 h-4" />
+                                        {getLabel('resendIn')} {resendTimer} {getLabel('seconds')}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Verify Button */}
+                            <button
+                                onClick={() => handleVerify(step)}
+                                disabled={isLoading}
+                                className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:from-emerald-400 hover:to-teal-400 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <RefreshCw className="w-5 h-5 animate-spin" />
+                                        {getLabel('verifying')}
+                                    </>
+                                ) : (
+                                    <>
+                                        {getLabel('verify')}
+                                        <Arrow className="w-5 h-5" />
+                                    </>
+                                )}
+                            </button>
+
+                            {/* Skip Option */}
+                            <button
+                                onClick={() => onNavigate('dashboard')}
+                                className="w-full mt-4 py-2 text-slate-400 hover:text-slate-600 transition-colors"
+                            >
+                                {getLabel('skip')}
+                            </button>
+                        </>
+                    )}
+                </div>
+
+                {/* Back to Home */}
+                <button
+                    onClick={() => onNavigate('landing')}
+                    className="w-full mt-6 text-slate-400 hover:text-white transition-colors flex items-center justify-center gap-2"
+                >
+                    <Arrow className="w-4 h-4 rotate-180" />
+                    {getLabel('backToHome')}
+                </button>
+            </div>
+        </div>
+    );
+};
+
+export default VerificationPage;
