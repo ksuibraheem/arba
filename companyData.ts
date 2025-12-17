@@ -433,12 +433,21 @@ export const PAGE_TRANSLATIONS = {
     company_start_now: { ar: 'ابدأ الآن', en: 'Start Now' },
 
     // Verification Page
-    verification_title: { ar: 'التحقق من البريد الإلكتروني', en: 'Email Verification' },
-    verification_subtitle: { ar: 'أدخل رمز التحقق المرسل إلى بريدك', en: 'Enter the verification code sent to your email' },
-    verification_code: { ar: 'رمز التحقق', en: 'Verification Code' },
+    verification_title: { ar: 'التحقق من الحساب', en: 'Account Verification' },
+    verification_email_title: { ar: 'التحقق من البريد الإلكتروني', en: 'Email Verification' },
+    verification_phone_title: { ar: 'التحقق من رقم الجوال', en: 'Phone Verification' },
+    verification_enter_code: { ar: 'أدخل رمز التحقق المرسل إلى', en: 'Enter the verification code sent to' },
     verification_verify: { ar: 'تحقق', en: 'Verify' },
-    verification_resend: { ar: 'إعادة إرسال الرمز', en: 'Resend Code' },
-    verification_back: { ar: 'رجوع', en: 'Back' },
+    verification_resend: { ar: 'إعادة إرسال', en: 'Resend' },
+    verification_resend_in: { ar: 'إعادة الإرسال خلال', en: 'Resend in' },
+    verification_seconds: { ar: 'ثانية', en: 'seconds' },
+    verification_verifying: { ar: 'جاري التحقق...', en: 'Verifying...' },
+    verification_invalid_code: { ar: 'رمز التحقق غير صحيح', en: 'Invalid verification code' },
+    verification_complete: { ar: 'اكتمل التحقق!', en: 'Verification Complete!' },
+    verification_complete_message: { ar: 'تم التحقق من حسابك بنجاح. يمكنك الآن استخدام جميع ميزات المنصة.', en: 'Your account has been verified successfully. You can now use all platform features.' },
+    verification_go_to_dashboard: { ar: 'الذهاب للوحة التحكم', en: 'Go to Dashboard' },
+    verification_skip: { ar: 'تخطي', en: 'Skip' },
+    verification_back_to_home: { ar: 'العودة للرئيسية', en: 'Back to Home' },
 
     // Admin Dashboard
     admin_panel: { ar: 'لوحة التحكم', en: 'Admin Panel' },
