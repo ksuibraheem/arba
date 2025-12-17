@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Mail, Phone, ArrowRight, ArrowLeft, Building2, Check, RefreshCw, Shield, Clock } from 'lucide-react';
+import { PAGE_TRANSLATIONS } from '../companyData';
 
 interface VerificationPageProps {
     language: 'ar' | 'en';
@@ -30,28 +31,7 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
     const emailInputRefs = useRef<(HTMLInputElement | null)[]>([]);
     const phoneInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-    const t = {
-        title: { ar: 'التحقق من الحساب', en: 'Account Verification' },
-        emailVerification: { ar: 'التحقق من البريد الإلكتروني', en: 'Email Verification' },
-        phoneVerification: { ar: 'التحقق من رقم الجوال', en: 'Phone Verification' },
-        enterCode: { ar: 'أدخل رمز التحقق المرسل إلى', en: 'Enter the verification code sent to' },
-        verify: { ar: 'تحقق', en: 'Verify' },
-        resend: { ar: 'إعادة إرسال', en: 'Resend' },
-        resendIn: { ar: 'إعادة الإرسال خلال', en: 'Resend in' },
-        seconds: { ar: 'ثانية', en: 'seconds' },
-        verifying: { ar: 'جاري التحقق...', en: 'Verifying...' },
-        invalidCode: { ar: 'رمز التحقق غير صحيح', en: 'Invalid verification code' },
-        codeSent: { ar: 'تم إرسال الرمز', en: 'Code sent' },
-        emailVerified: { ar: 'تم التحقق من البريد الإلكتروني', en: 'Email verified' },
-        phoneVerified: { ar: 'تم التحقق من رقم الجوال', en: 'Phone verified' },
-        complete: { ar: 'اكتمل التحقق!', en: 'Verification Complete!' },
-        completeMessage: { ar: 'تم التحقق من حسابك بنجاح. يمكنك الآن استخدام جميع ميزات المنصة.', en: 'Your account has been verified successfully. You can now use all platform features.' },
-        goToDashboard: { ar: 'الذهاب للوحة التحكم', en: 'Go to Dashboard' },
-        skip: { ar: 'تخطي', en: 'Skip' },
-        backToHome: { ar: 'العودة للرئيسية', en: 'Back to Home' }
-    };
-
-    const getLabel = (key: keyof typeof t) => t[key][language];
+    const t = (key: string) => PAGE_TRANSLATIONS[key]?.[language] || key;
 
     // Resend timer
     useEffect(() => {
@@ -157,8 +137,8 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
                     onChange={(e) => handleCodeChange(index, e.target.value, codeArray, setCodeArray, refs)}
                     onKeyDown={(e) => handleKeyDown(index, e, codeArray, setCodeArray, refs)}
                     className={`w-12 h-14 text-center text-2xl font-bold rounded-xl border-2 transition-all outline-none ${digit
-                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                            : 'border-slate-200 bg-white text-slate-800 focus:border-emerald-500'
+                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                        : 'border-slate-200 bg-white text-slate-800 focus:border-emerald-500'
                         }`}
                 />
             ))}
