@@ -53,7 +53,7 @@ const CompanyPage: React.FC<CompanyPageProps> = ({ language, onNavigate, company
                         className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
                     >
                         <Arrow className="w-4 h-4 rotate-180" />
-                        {getLabel('backToHome')}
+                        {t('company_back_to_home')}
                     </button>
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center">
@@ -84,23 +84,23 @@ const CompanyPage: React.FC<CompanyPageProps> = ({ language, onNavigate, company
                         <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 text-center border border-slate-700/50">
                             <Users className="w-8 h-8 text-emerald-400 mx-auto mb-3" />
                             <div className="text-3xl font-bold text-white mb-1">{company.employees}+</div>
-                            <div className="text-slate-400">{getLabel('employees')}</div>
+                            <div className="text-slate-400">{t('company_employees')}</div>
                         </div>
                         <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 text-center border border-slate-700/50">
                             <Briefcase className="w-8 h-8 text-emerald-400 mx-auto mb-3" />
                             <div className="text-3xl font-bold text-white mb-1">{company.projects}+</div>
-                            <div className="text-slate-400">{getLabel('projectsCompleted')}</div>
+                            <div className="text-slate-400">{t('company_projects_completed')}</div>
                         </div>
                         <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 text-center border border-slate-700/50">
                             <Award className="w-8 h-8 text-emerald-400 mx-auto mb-3" />
                             <div className="text-3xl font-bold text-white mb-1">{new Date().getFullYear() - company.established}+</div>
-                            <div className="text-slate-400">{getLabel('yearsExperience')}</div>
+                            <div className="text-slate-400">{t('company_years_experience')}</div>
                         </div>
                     </div>
 
                     {/* Services */}
                     <div className="bg-slate-800/30 backdrop-blur-sm rounded-3xl p-8 border border-slate-700/50 mb-16">
-                        <h2 className="text-2xl font-bold text-white mb-6 text-center">{getLabel('ourServices')}</h2>
+                        <h2 className="text-2xl font-bold text-white mb-6 text-center">{t('company_our_services')}</h2>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             {company.services.map((service, index) => (
                                 <div key={index} className="bg-slate-700/30 rounded-xl p-4 text-center hover:bg-emerald-500/20 transition-colors">
@@ -112,7 +112,7 @@ const CompanyPage: React.FC<CompanyPageProps> = ({ language, onNavigate, company
 
                     {/* Contact Info */}
                     <div className="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-3xl p-8 border border-emerald-500/30">
-                        <h2 className="text-2xl font-bold text-white mb-6 text-center">{getLabel('contactUs')}</h2>
+                        <h2 className="text-2xl font-bold text-white mb-6 text-center">{t('company_contact_us')}</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                             <div className="flex items-center gap-3 text-slate-300">
                                 <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
@@ -149,7 +149,7 @@ const CompanyPage: React.FC<CompanyPageProps> = ({ language, onNavigate, company
                             onClick={() => onNavigate('register')}
                             className="px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold text-lg hover:from-emerald-400 hover:to-teal-400 transition-all shadow-xl flex items-center gap-2 mx-auto"
                         >
-                            {getLabel('startNow')}
+                            {t('company_start_now')}
                             <Arrow className="w-5 h-5" />
                         </button>
                     </div>
