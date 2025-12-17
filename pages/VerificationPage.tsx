@@ -81,7 +81,7 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
         const fullCode = code.join('');
 
         if (fullCode.length !== 6) {
-            setError(getLabel('invalidCode'));
+            setError(t('verification_invalid_code'));
             return;
         }
 
@@ -104,7 +104,7 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
                 }
             }
         } else {
-            setError(getLabel('invalidCode'));
+            setError(t('verification_invalid_code'));
         }
 
         setIsLoading(false);
@@ -153,7 +153,7 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
                     <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
                         <Shield className="w-8 h-8 text-white" />
                     </div>
-                    <h1 className="text-2xl font-bold text-white">{getLabel('title')}</h1>
+                    <h1 className="text-2xl font-bold text-white">{t('verification_title')}</h1>
                 </div>
 
                 {/* Verification Card */}
@@ -164,13 +164,13 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
                             <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
                                 <Check className="w-10 h-10 text-emerald-500" />
                             </div>
-                            <h2 className="text-2xl font-bold text-slate-800 mb-2">{getLabel('complete')}</h2>
-                            <p className="text-slate-500 mb-8">{getLabel('completeMessage')}</p>
+                            <h2 className="text-2xl font-bold text-slate-800 mb-2">{t('verification_complete')}</h2>
+                            <p className="text-slate-500 mb-8">{t('verification_complete_message')}</p>
                             <button
                                 onClick={() => onNavigate('dashboard')}
                                 className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:from-emerald-400 hover:to-teal-400 transition-all flex items-center justify-center gap-2"
                             >
-                                {getLabel('goToDashboard')}
+                                {t('verification_go_to_dashboard')}
                                 <Arrow className="w-5 h-5" />
                             </button>
                         </div>
@@ -198,10 +198,10 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
 
                             {/* Title */}
                             <h2 className="text-xl font-bold text-slate-800 text-center mb-2">
-                                {step === 'email' ? getLabel('emailVerification') : getLabel('phoneVerification')}
+                                {step === 'email' ? t('verification_email_title') : t('verification_phone_title')}
                             </h2>
                             <p className="text-slate-500 text-center mb-6">
-                                {getLabel('enterCode')}
+                                {t('verification_enter_code')}
                                 <br />
                                 <span className="font-medium text-slate-700" dir="ltr">
                                     {step === 'email' ? email : phone}
@@ -230,12 +230,12 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
                                         className="text-emerald-600 font-medium flex items-center gap-2 mx-auto hover:underline disabled:opacity-50"
                                     >
                                         <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                                        {getLabel('resend')}
+                                        {t('verification_resend')}
                                     </button>
                                 ) : (
                                     <p className="text-slate-400 flex items-center justify-center gap-2">
                                         <Clock className="w-4 h-4" />
-                                        {getLabel('resendIn')} {resendTimer} {getLabel('seconds')}
+                                        {t('verification_resend_in')} {resendTimer} {t('verification_seconds')}
                                     </p>
                                 )}
                             </div>
@@ -249,11 +249,11 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
                                 {isLoading ? (
                                     <>
                                         <RefreshCw className="w-5 h-5 animate-spin" />
-                                        {getLabel('verifying')}
+                                        {t('verification_verifying')}
                                     </>
                                 ) : (
                                     <>
-                                        {getLabel('verify')}
+                                        {t('verification_verify')}
                                         <Arrow className="w-5 h-5" />
                                     </>
                                 )}
@@ -264,7 +264,7 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
                                 onClick={() => onNavigate('dashboard')}
                                 className="w-full mt-4 py-2 text-slate-400 hover:text-slate-600 transition-colors"
                             >
-                                {getLabel('skip')}
+                                {t('verification_skip')}
                             </button>
                         </>
                     )}
@@ -276,7 +276,7 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
                     className="w-full mt-6 text-slate-400 hover:text-white transition-colors flex items-center justify-center gap-2"
                 >
                     <Arrow className="w-4 h-4 rotate-180" />
-                    {getLabel('backToHome')}
+                    {t('verification_back_to_home')}
                 </button>
             </div>
         </div>
