@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CreditCard, Check, Crown, Zap, Shield, ArrowRight, ArrowLeft, Building2, Star, Clock, Users, HardDrive } from 'lucide-react';
-import { SUBSCRIPTION_PLANS } from '../companyData';
+import { SUBSCRIPTION_PLANS, PAGE_TRANSLATIONS } from '../companyData';
 
 interface PaymentPageProps {
     language: 'ar' | 'en';
@@ -16,29 +16,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ language, onNavigate, current
     const [paymentMethod, setPaymentMethod] = useState<'card' | 'bank' | 'mada'>('card');
     const [isProcessing, setIsProcessing] = useState(false);
 
-    const t = {
-        title: { ar: 'اختر باقتك', en: 'Choose Your Plan' },
-        subtitle: { ar: 'ابدأ مجاناً أو اختر الباقة المناسبة لاحتياجاتك', en: 'Start free or choose the plan that fits your needs' },
-        currentPlan: { ar: 'باقتك الحالية', en: 'Current Plan' },
-        selectPlan: { ar: 'اختيار الباقة', en: 'Select Plan' },
-        upgradeNow: { ar: 'ترقية الآن', en: 'Upgrade Now' },
-        monthlyPrice: { ar: 'شهرياً', en: '/month' },
-        yearlyPrice: { ar: 'سنوياً', en: '/year' },
-        features: { ar: 'المميزات:', en: 'Features:' },
-        paymentMethod: { ar: 'طريقة الدفع', en: 'Payment Method' },
-        creditCard: { ar: 'بطاقة ائتمان', en: 'Credit Card' },
-        bankTransfer: { ar: 'تحويل بنكي', en: 'Bank Transfer' },
-        mada: { ar: 'مدى', en: 'Mada' },
-        confirmPayment: { ar: 'تأكيد الدفع', en: 'Confirm Payment' },
-        processing: { ar: 'جاري المعالجة...', en: 'Processing...' },
-        backToHome: { ar: 'العودة للرئيسية', en: 'Back to Home' },
-        popular: { ar: 'الأكثر طلباً', en: 'Most Popular' },
-        projects: { ar: 'مشروع', en: 'Projects' },
-        storage: { ar: 'تخزين', en: 'Storage' },
-        unlimited: { ar: 'غير محدود', en: 'Unlimited' }
-    };
-
-    const getLabel = (key: keyof typeof t) => t[key][language];
+    const t = (key: string) => PAGE_TRANSLATIONS[key]?.[language] || key;
 
     const planIcons: Record<string, React.ReactNode> = {
         free: <Zap className="w-6 h-6" />,
@@ -84,7 +62,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ language, onNavigate, current
                         className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
                     >
                         <Arrow className="w-4 h-4 rotate-180" />
-                        {getLabel('backToHome')}
+                        {t('payment_back_to_home')}
                     </button>
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center">
@@ -98,8 +76,8 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ language, onNavigate, current
             <div className="container mx-auto px-6 py-12 max-w-6xl">
                 {/* Title */}
                 <div className="text-center mb-12">
-                    <h1 className="text-4xl font-bold text-white mb-4">{getLabel('title')}</h1>
-                    <p className="text-xl text-slate-300">{getLabel('subtitle')}</p>
+                    <h1 className="text-4xl font-bold text-white mb-4">{t('payment_title')}</h1>
+                    <p className="text-xl text-slate-300">{t('payment_subtitle')}</p>
                 </div>
 
                 {/* Plans Grid */}
@@ -109,14 +87,14 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ language, onNavigate, current
                             <div
                                 key={plan.id}
                                 className={`relative bg-slate-800/50 backdrop-blur-sm rounded-3xl p-8 border transition-all hover:scale-105 ${plan.id === 'professional'
-                                        ? 'border-emerald-500 shadow-xl shadow-emerald-500/20'
-                                        : 'border-slate-700/50'
+                                    ? 'border-emerald-500 shadow-xl shadow-emerald-500/20'
+                                    : 'border-slate-700/50'
                                     }`}
                             >
                                 {plan.id === 'professional' && (
                                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full text-white text-sm font-bold flex items-center gap-1">
                                         <Star className="w-4 h-4" />
-                                        {getLabel('popular')}
+                                        {t('popular')}
                                     </div>
                                 )}
 
@@ -128,17 +106,17 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ language, onNavigate, current
 
                                 <div className="flex items-baseline gap-1 mb-6">
                                     <span className="text-4xl font-bold text-white">{plan.price}</span>
-                                    <span className="text-slate-400">{language === 'ar' ? 'ريال' : 'SAR'} {getLabel('monthlyPrice')}</span>
+                                    <span className="text-slate-400">{language === 'ar' ? 'ريال' : 'SAR'} {t('payment_monthly_price')}</span>
                                 </div>
 
                                 <div className="space-y-3 mb-8">
                                     <div className="flex items-center gap-2 text-slate-300">
                                         <Users className="w-4 h-4 text-emerald-400" />
-                                        <span>{plan.projectsIncluded === -1 ? getLabel('unlimited') : plan.projectsIncluded} {getLabel('projects')}</span>
+                                        <span>{plan.projectsIncluded === -1 ? t('unlimited') : plan.projectsIncluded} {t('payment_projects')}</span>
                                     </div>
                                     <div className="flex items-center gap-2 text-slate-300">
                                         <HardDrive className="w-4 h-4 text-emerald-400" />
-                                        <span>{plan.storageMB >= 1024 ? `${plan.storageMB / 1024}GB` : `${plan.storageMB}MB`} {getLabel('storage')}</span>
+                                        <span>{plan.storageMB >= 1024 ? `${plan.storageMB / 1024}GB` : `${plan.storageMB}MB`} {t('payment_storage')}</span>
                                     </div>
                                 </div>
 
@@ -155,13 +133,13 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ language, onNavigate, current
                                     onClick={() => handleSelectPlan(plan.id)}
                                     disabled={currentPlan === plan.id}
                                     className={`w-full py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 ${currentPlan === plan.id
-                                            ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
-                                            : plan.id === 'professional'
-                                                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-400 hover:to-teal-400'
-                                                : 'bg-slate-700 text-white hover:bg-slate-600'
+                                        ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                                        : plan.id === 'professional'
+                                            ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-400 hover:to-teal-400'
+                                            : 'bg-slate-700 text-white hover:bg-slate-600'
                                         }`}
                                 >
-                                    {currentPlan === plan.id ? getLabel('currentPlan') : getLabel('selectPlan')}
+                                    {currentPlan === plan.id ? t('payment_current_plan') : t('payment_select_plan')}
                                     {currentPlan !== plan.id && <Arrow className="w-4 h-4" />}
                                 </button>
                             </div>
@@ -170,7 +148,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ language, onNavigate, current
                 ) : (
                     /* Payment Form */
                     <div className="max-w-lg mx-auto bg-slate-800/50 backdrop-blur-sm rounded-3xl p-8 border border-slate-700/50">
-                        <h2 className="text-2xl font-bold text-white mb-6">{getLabel('paymentMethod')}</h2>
+                        <h2 className="text-2xl font-bold text-white mb-6">{t('payment_method')}</h2>
 
                         <div className="space-y-3 mb-8">
                             {(['card', 'mada', 'bank'] as const).map((method) => (
@@ -178,8 +156,8 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ language, onNavigate, current
                                     key={method}
                                     onClick={() => setPaymentMethod(method)}
                                     className={`w-full p-4 rounded-xl border transition-all flex items-center gap-4 ${paymentMethod === method
-                                            ? 'border-emerald-500 bg-emerald-500/10'
-                                            : 'border-slate-600 hover:border-slate-500'
+                                        ? 'border-emerald-500 bg-emerald-500/10'
+                                        : 'border-slate-600 hover:border-slate-500'
                                         }`}
                                 >
                                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${paymentMethod === method ? 'bg-emerald-500' : 'bg-slate-700'
@@ -187,7 +165,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ language, onNavigate, current
                                         <CreditCard className={`w-5 h-5 ${paymentMethod === method ? 'text-white' : 'text-slate-400'}`} />
                                     </div>
                                     <span className="text-white font-medium">
-                                        {method === 'card' ? getLabel('creditCard') : method === 'mada' ? getLabel('mada') : getLabel('bankTransfer')}
+                                        {method === 'card' ? t('payment_credit_card') : method === 'mada' ? t('payment_mada') : t('payment_bank_transfer')}
                                     </span>
                                     {paymentMethod === method && (
                                         <Check className="w-5 h-5 text-emerald-400 mr-auto" />
@@ -201,7 +179,7 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ language, onNavigate, current
                                 onClick={() => setSelectedPlan(null)}
                                 className="flex-1 py-3 rounded-xl border border-slate-600 text-slate-300 hover:bg-slate-700 transition-colors"
                             >
-                                {getLabel('backToHome')}
+                                {t('payment_back_to_home')}
                             </button>
                             <button
                                 onClick={handleConfirmPayment}
@@ -211,11 +189,11 @@ const PaymentPage: React.FC<PaymentPageProps> = ({ language, onNavigate, current
                                 {isProcessing ? (
                                     <>
                                         <Clock className="w-4 h-4 animate-spin" />
-                                        {getLabel('processing')}
+                                        {t('payment_processing')}
                                     </>
                                 ) : (
                                     <>
-                                        {getLabel('confirmPayment')}
+                                        {t('payment_confirm')}
                                         <Arrow className="w-4 h-4" />
                                     </>
                                 )}
