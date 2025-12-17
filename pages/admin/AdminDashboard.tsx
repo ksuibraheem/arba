@@ -4,6 +4,7 @@ import {
     TrendingUp, DollarSign, FolderOpen, Clock, Bell, Search,
     ArrowUp, ArrowDown, MoreVertical, Eye, ChevronLeft, ChevronRight
 } from 'lucide-react';
+import { PAGE_TRANSLATIONS } from '../../companyData';
 
 interface AdminDashboardProps {
     language: 'ar' | 'en';
@@ -14,29 +15,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ language, onNavigate })
     const isRtl = language === 'ar';
     const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'companies' | 'data'>('overview');
 
-    const t = {
-        adminPanel: { ar: 'لوحة التحكم', en: 'Admin Panel' },
-        overview: { ar: 'نظرة عامة', en: 'Overview' },
-        users: { ar: 'المستخدمين', en: 'Users' },
-        companies: { ar: 'الشركات', en: 'Companies' },
-        data: { ar: 'البيانات', en: 'Data' },
-        settings: { ar: 'الإعدادات', en: 'Settings' },
-        logout: { ar: 'خروج', en: 'Logout' },
-        totalUsers: { ar: 'إجمالي المستخدمين', en: 'Total Users' },
-        activeCompanies: { ar: 'الشركات النشطة', en: 'Active Companies' },
-        totalProjects: { ar: 'المشاريع', en: 'Projects' },
-        monthlyRevenue: { ar: 'الإيرادات الشهرية', en: 'Monthly Revenue' },
-        recentActivity: { ar: 'النشاط الأخير', en: 'Recent Activity' },
-        quickActions: { ar: 'إجراءات سريعة', en: 'Quick Actions' },
-        viewAll: { ar: 'عرض الكل', en: 'View All' },
-        search: { ar: 'بحث...', en: 'Search...' },
-        newUser: { ar: 'مستخدم جديد', en: 'New User' },
-        newCompany: { ar: 'شركة جديدة', en: 'New Company' },
-        exportData: { ar: 'تصدير البيانات', en: 'Export Data' },
-        notifications: { ar: 'الإشعارات', en: 'Notifications' }
-    };
-
-    const getLabel = (key: keyof typeof t) => t[key][language];
+    const t = (key: string) => PAGE_TRANSLATIONS[key]?.[language] || key;
 
     // Mock data
     const stats = [
@@ -83,8 +62,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ language, onNavigate })
                                 <button
                                     onClick={() => setActiveTab(item.tab)}
                                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === item.tab
-                                            ? 'bg-emerald-500 text-white'
-                                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                                        ? 'bg-emerald-500 text-white'
+                                        : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                                         }`}
                                 >
                                     <item.icon className="w-5 h-5" />
