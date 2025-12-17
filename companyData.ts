@@ -1,10 +1,21 @@
-// Company Data - Arba Pricing
-// شركة أربا للتسعير
+// Company Data - Arba Developer
+// شركة أربا المطور - نظام أربا للتسعير
 
 export const COMPANY_INFO = {
+    // اسم الشركة الأم
+    companyName: {
+        ar: 'آربا المطور',
+        en: 'ARBA Developer'
+    },
+    // اسم النظام/المنتج
     name: {
-        ar: 'أربا للتسعير',
-        en: 'Arba Pricing'
+        ar: 'آربا للتسعير',
+        en: 'ARBA Pricing'
+    },
+    // اسم النظام المختصر
+    systemName: {
+        ar: 'آربا للتسعير',
+        en: 'ARBA Pricing'
     },
     tagline: {
         ar: 'شريكك الموثوق في تسعير المشاريع',
@@ -23,8 +34,8 @@ export const COMPANY_INFO = {
     website: 'https://arba-sys.com',
 
     about: {
-        ar: 'شركة وطنية رائدة في مجال تسعير المشاريع الإنشائية. نجمع بين الخبرة العميقة والتقنيات الحديثة لتقديم خدمات تسعير دقيقة وموثوقة تدعم نجاح مشاريعكم.',
-        en: 'A leading national company in construction project pricing. We combine deep expertise with modern technologies to provide accurate and reliable pricing services that support the success of your projects.'
+        ar: 'شركة آربا المطور هي شركة وطنية رائدة في مجال التقنية والحلول البرمجية. نظام آربا للتسعير هو أحد منتجاتنا المتخصصة في تسعير المشاريع الإنشائية.',
+        en: 'ARBA Developer is a leading national company in technology and software solutions. ARBA Pricing is one of our specialized products for construction project pricing.'
     },
 
     vision: {
@@ -335,6 +346,12 @@ export const PAGE_TRANSLATIONS = {
     nav_register: { ar: 'إنشاء حساب', en: 'Register' },
     nav_dashboard: { ar: 'لوحة التحكم', en: 'Dashboard' },
     nav_logout: { ar: 'تسجيل الخروج', en: 'Logout' },
+    nav_why_us: { ar: 'لماذا نحن', en: 'Why Us' },
+
+    // Company & System Names
+    company_name: { ar: 'آربا المطور', en: 'ARBA Developer' },
+    system_name: { ar: 'آربا للتسعير', en: 'ARBA Pricing' },
+    powered_by: { ar: 'منتج من شركة', en: 'A Product of' },
 
     // Hero Section
     hero_title: { ar: 'منصة التسعير الذكية للمشاريع الإنشائية', en: 'Smart Pricing Platform for Construction Projects' },

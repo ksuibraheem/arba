@@ -271,7 +271,7 @@ const PriceQuote: React.FC<PriceQuoteProps> = ({
                                     <Building2 className="w-8 h-8 text-white" />
                                 </div>
                                 <div>
-                                    <h1 className="text-2xl font-bold text-slate-800">{COMPANY_INFO.name[language]}</h1>
+                                    <h1 className="text-2xl font-bold text-slate-800">{COMPANY_INFO.systemName[language]}</h1>
                                     <p className="text-slate-500">{COMPANY_INFO.tagline[language]}</p>
                                 </div>
                             </div>
@@ -494,7 +494,7 @@ const PriceQuote: React.FC<PriceQuoteProps> = ({
                         <div className="text-center">
                             <div className="text-sm text-slate-500 mb-16">{getLabel('preparedBy')}</div>
                             <div className="border-t border-slate-300 pt-2">
-                                <div className="font-bold">{showCompanyInfo ? COMPANY_INFO.name[language] : '________________'}</div>
+                                <div className="font-bold">{showCompanyInfo ? COMPANY_INFO.systemName[language] : '________________'}</div>
                             </div>
                         </div>
                         <div className="text-center">

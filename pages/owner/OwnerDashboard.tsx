@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
     LayoutDashboard,
     Users,
@@ -41,7 +41,7 @@ import {
     Star,
     MessageSquare
 } from 'lucide-react';
-import { COMPANY_INFO } from '../../companyData';
+import { COMPANY_INFO, PAGE_TRANSLATIONS } from '../../companyData';
 
 interface OwnerDashboardProps {
     language: 'ar' | 'en';
@@ -101,7 +101,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
 
     // إعدادات الموقع
     const [websiteSettings, setWebsiteSettings] = useState({
-        siteName: COMPANY_INFO.name[language],
+        siteName: COMPANY_INFO.systemName[language],
         tagline: COMPANY_INFO.tagline[language],
         email: COMPANY_INFO.email,
         phone: COMPANY_INFO.phone,
@@ -116,35 +116,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
         }
     });
 
-    const t = {
-        dashboard: { ar: 'لوحة تحكم المدير', en: 'Owner Dashboard' },
-        overview: { ar: 'نظرة عامة', en: 'Overview' },
-        customers: { ar: 'العملاء', en: 'Customers' },
-        quotes: { ar: 'عروض الأسعار', en: 'Quotes' },
-        website: { ar: 'إدارة الموقع', en: 'Website' },
-        analytics: { ar: 'التحليلات', en: 'Analytics' },
-        settings: { ar: 'الإعدادات', en: 'Settings' },
-        logout: { ar: 'تسجيل الخروج', en: 'Logout' },
-        totalVisits: { ar: 'إجمالي الزيارات', en: 'Total Visits' },
-        totalCustomers: { ar: 'إجمالي العملاء', en: 'Total Customers' },
-        totalQuotes: { ar: 'عروض الأسعار', en: 'Total Quotes' },
-        totalRevenue: { ar: 'الإيرادات', en: 'Revenue' },
-        today: { ar: 'اليوم', en: 'Today' },
-        week: { ar: 'الأسبوع', en: 'Week' },
-        month: { ar: 'الشهر', en: 'Month' },
-        year: { ar: 'السنة', en: 'Year' },
-        sar: { ar: 'ريال', en: 'SAR' },
-        active: { ar: 'نشط', en: 'Active' },
-        inactive: { ar: 'غير نشط', en: 'Inactive' },
-        pending: { ar: 'معلق', en: 'Pending' },
-        accepted: { ar: 'مقبول', en: 'Accepted' },
-        rejected: { ar: 'مرفوض', en: 'Rejected' },
-        sent: { ar: 'مُرسل', en: 'Sent' },
-        save: { ar: 'حفظ', en: 'Save' },
-        cancel: { ar: 'إلغاء', en: 'Cancel' }
-    };
-
-    const getLabel = (key: keyof typeof t) => t[key][language];
+    const t = (key: string) => PAGE_TRANSLATIONS[key]?.[language] || key;
 
     const getStatusColor = (status: string) => {
         switch (status) {
@@ -171,8 +143,8 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                 <LayoutDashboard className="w-5 h-5 text-white" />
                             </div>
                             <div>
-                                <h1 className="text-lg font-bold text-white">{getLabel('dashboard')}</h1>
-                                <p className="text-xs text-slate-400">{COMPANY_INFO.name[language]}</p>
+                                <h1 className="text-lg font-bold text-white">{t('owner_dashboard')}</h1>
+                                <p className="text-xs text-slate-400">{COMPANY_INFO.systemName[language]}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -183,11 +155,11 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                         key={range}
                                         onClick={() => setDateRange(range)}
                                         className={`px-3 py-1 text-xs rounded-md transition-all ${dateRange === range
-                                                ? 'bg-emerald-500 text-white'
-                                                : 'text-slate-400 hover:text-white'
+                                            ? 'bg-emerald-500 text-white'
+                                            : 'text-slate-400 hover:text-white'
                                             }`}
                                     >
-                                        {getLabel(range)}
+                                        {t(`owner_${range}`)}
                                     </button>
                                 ))}
                             </div>
@@ -196,7 +168,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                 className="flex items-center gap-2 px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors text-sm"
                             >
                                 <LogOut className="w-4 h-4" />
-                                {getLabel('logout')}
+                                {t('owner_logout')}
                             </button>
                         </div>
                     </div>
@@ -211,8 +183,8 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={`px-4 py-2 rounded-xl font-medium transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === tab
-                                    ? 'bg-emerald-500 text-white'
-                                    : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50'
+                                ? 'bg-emerald-500 text-white'
+                                : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50'
                                 }`}
                         >
                             {tab === 'overview' && <LayoutDashboard className="w-4 h-4" />}
@@ -221,7 +193,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                             {tab === 'website' && <Globe className="w-4 h-4" />}
                             {tab === 'analytics' && <BarChart3 className="w-4 h-4" />}
                             {tab === 'settings' && <Settings className="w-4 h-4" />}
-                            {getLabel(tab)}
+                            {t(`owner_${tab}`)}
                         </button>
                     ))}
                 </div>
@@ -242,7 +214,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                     </div>
                                 </div>
                                 <div className="text-3xl font-bold text-white mb-1">{stats.totalVisits.toLocaleString()}</div>
-                                <div className="text-slate-400 text-sm">{getLabel('totalVisits')}</div>
+                                <div className="text-slate-400 text-sm">{t('owner_total_visits')}</div>
                             </div>
 
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50">
@@ -256,7 +228,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                     </div>
                                 </div>
                                 <div className="text-3xl font-bold text-white mb-1">{stats.totalCustomers}</div>
-                                <div className="text-slate-400 text-sm">{getLabel('totalCustomers')}</div>
+                                <div className="text-slate-400 text-sm">{t('owner_total_customers')}</div>
                             </div>
 
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50">
@@ -270,7 +242,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                     </div>
                                 </div>
                                 <div className="text-3xl font-bold text-white mb-1">{stats.totalQuotes}</div>
-                                <div className="text-slate-400 text-sm">{getLabel('totalQuotes')}</div>
+                                <div className="text-slate-400 text-sm">{t('owner_total_quotes')}</div>
                             </div>
 
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50">
@@ -283,8 +255,8 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                         {Math.abs(stats.revenueChange)}%
                                     </div>
                                 </div>
-                                <div className="text-3xl font-bold text-white mb-1">{stats.totalRevenue.toLocaleString()} <span className="text-lg font-normal">{getLabel('sar')}</span></div>
-                                <div className="text-slate-400 text-sm">{getLabel('totalRevenue')}</div>
+                                <div className="text-3xl font-bold text-white mb-1">{stats.totalRevenue.toLocaleString()} <span className="text-lg font-normal">{t('sar')}</span></div>
+                                <div className="text-slate-400 text-sm">{t('owner_total_revenue')}</div>
                             </div>
                         </div>
 
@@ -335,7 +307,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                             <DollarSign className="w-5 h-5 text-amber-400" />
                                             <span className="text-slate-300">{language === 'ar' ? 'متوسط قيمة العرض' : 'Avg. Quote Value'}</span>
                                         </div>
-                                        <span className="text-white font-bold">{stats.avgQuoteValue.toLocaleString()} {getLabel('sar')}</span>
+                                        <span className="text-white font-bold">{stats.avgQuoteValue.toLocaleString()} {t('sar')}</span>
                                     </div>
                                     <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-xl">
                                         <div className="flex items-center gap-3">
@@ -380,10 +352,10 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                                 <td className="px-4 py-3 text-center text-slate-400">{quote.items}</td>
                                                 <td className="px-4 py-3 text-center">
                                                     <span className={`px-2 py-1 rounded-full text-xs border ${getStatusColor(quote.status)}`}>
-                                                        {getLabel(quote.status as keyof typeof t)}
+                                                        {t(`owner_${quote.status}`)}
                                                     </span>
                                                 </td>
-                                                <td className="px-4 py-3 text-end text-white font-medium">{quote.total.toLocaleString()} {getLabel('sar')}</td>
+                                                <td className="px-4 py-3 text-end text-white font-medium">{quote.total.toLocaleString()} {t('sar')}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -440,10 +412,10 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                                 <td className="px-4 py-3 text-center text-white font-medium">{customer.quotes}</td>
                                                 <td className="px-4 py-3 text-center">
                                                     <span className={`px-2 py-1 rounded-full text-xs border ${getStatusColor(customer.status)}`}>
-                                                        {getLabel(customer.status as keyof typeof t)}
+                                                        {t(`owner_${customer.status}`)}
                                                     </span>
                                                 </td>
-                                                <td className="px-4 py-3 text-end text-emerald-400 font-medium">{customer.totalSpent.toLocaleString()} {getLabel('sar')}</td>
+                                                <td className="px-4 py-3 text-end text-emerald-400 font-medium">{customer.totalSpent.toLocaleString()} {t('sar')}</td>
                                                 <td className="px-4 py-3 text-center">
                                                     <div className="flex items-center justify-center gap-2">
                                                         <button className="p-1 text-slate-400 hover:text-blue-400 transition-colors">
@@ -519,10 +491,10 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                                 <td className="px-4 py-3 text-center text-slate-400">{quote.items}</td>
                                                 <td className="px-4 py-3 text-center">
                                                     <span className={`px-2 py-1 rounded-full text-xs border ${getStatusColor(quote.status)}`}>
-                                                        {getLabel(quote.status as keyof typeof t)}
+                                                        {t(`owner_${quote.status}`)}
                                                     </span>
                                                 </td>
-                                                <td className="px-4 py-3 text-end text-white font-medium">{quote.total.toLocaleString()} {getLabel('sar')}</td>
+                                                <td className="px-4 py-3 text-end text-white font-medium">{quote.total.toLocaleString()} {t('sar')}</td>
                                                 <td className="px-4 py-3 text-center">
                                                     <button className="px-3 py-1 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded-lg text-sm transition-colors">
                                                         {language === 'ar' ? 'عرض' : 'View'}
@@ -678,11 +650,11 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
 
                         <div className="flex justify-end gap-3">
                             <button className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl transition-colors">
-                                {getLabel('cancel')}
+                                {t('owner_cancel')}
                             </button>
                             <button className="flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl transition-colors">
                                 <Save className="w-5 h-5" />
-                                {getLabel('save')}
+                                {t('owner_save')}
                             </button>
                         </div>
                     </div>

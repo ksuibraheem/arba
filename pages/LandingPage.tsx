@@ -15,13 +15,15 @@ import {
     MapPin,
     Clock,
     Check,
-    Star
+    Star,
+    Globe
 } from 'lucide-react';
 import { COMPANY_INFO, SERVICES, FEATURES, SUBSCRIPTION_PLANS, PAGE_TRANSLATIONS } from '../companyData';
 
 interface LandingPageProps {
     language: 'ar' | 'en';
     onNavigate: (page: string) => void;
+    onLanguageChange?: (lang: 'ar' | 'en') => void;
 }
 
 const IconMap: Record<string, React.ElementType> = {
@@ -35,7 +37,7 @@ const IconMap: Record<string, React.ElementType> = {
     Award
 };
 
-const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate }) => {
+const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLanguageChange }) => {
     const t = (key: string) => PAGE_TRANSLATIONS[key]?.[language] || key;
     const isRtl = language === 'ar';
     const Arrow = isRtl ? ArrowLeft : ArrowRight;
@@ -50,7 +52,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate }) => {
                             <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center">
                                 <Calculator className="w-6 h-6 text-white" />
                             </div>
-                            <span className="text-xl font-bold text-white">{COMPANY_INFO.name[language]}</span>
+                            <span className="text-xl font-bold text-white">{COMPANY_INFO.systemName[language]}</span>
                         </div>
 
                         <div className="hidden md:flex items-center gap-8">
@@ -72,6 +74,19 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate }) => {
                         </div>
 
                         <div className="flex items-center gap-3">
+                            {/* Language Toggle */}
+                            {onLanguageChange && (
+                                <button
+                                    onClick={() => onLanguageChange(language === 'ar' ? 'en' : 'ar')}
+                                    className="flex items-center gap-2 px-3 py-2 bg-slate-700/50 hover:bg-slate-600/50 rounded-lg text-slate-300 hover:text-white transition-all border border-slate-600/50"
+                                    title={language === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
+                                >
+                                    <Globe className="w-4 h-4" />
+                                    <span className="text-sm font-medium">
+                                        {language === 'ar' ? 'EN' : 'عربي'}
+                                    </span>
+                                </button>
+                            )}
                             <button
                                 onClick={() => onNavigate('login')}
                                 className="px-4 py-2 text-slate-300 hover:text-white transition-colors"
@@ -296,17 +311,17 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate }) => {
 
                     <div className="grid md:grid-cols-4 gap-6 max-w-4xl mx-auto">
                         {[
-                            { icon: Phone, label: language === 'ar' ? 'الهاتف' : 'Phone', value: COMPANY_INFO.phone },
-                            { icon: Mail, label: language === 'ar' ? 'البريد' : 'Email', value: COMPANY_INFO.email },
-                            { icon: MapPin, label: language === 'ar' ? 'الموقع' : 'Location', value: COMPANY_INFO.location[language] },
-                            { icon: Clock, label: language === 'ar' ? 'ساعات العمل' : 'Working Hours', value: COMPANY_INFO.workingHours[language] }
+                            { icon: Phone, label: language === 'ar' ? 'الهاتف' : 'Phone', value: COMPANY_INFO.phone, isLtr: true },
+                            { icon: Mail, label: language === 'ar' ? 'البريد' : 'Email', value: COMPANY_INFO.email, isLtr: true },
+                            { icon: MapPin, label: language === 'ar' ? 'الموقع' : 'Location', value: COMPANY_INFO.location[language], isLtr: false },
+                            { icon: Clock, label: language === 'ar' ? 'ساعات العمل' : 'Working Hours', value: COMPANY_INFO.workingHours[language], isLtr: false }
                         ].map((item, index) => (
                             <div key={index} className="text-center p-6 bg-slate-800/50 rounded-2xl border border-slate-700/50">
                                 <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center mx-auto mb-4">
                                     <item.icon className="w-6 h-6 text-emerald-400" />
                                 </div>
                                 <div className="text-slate-400 text-sm mb-1">{item.label}</div>
-                                <div className="text-white font-medium text-sm">{item.value}</div>
+                                <div className="text-white font-medium text-sm" dir={item.isLtr ? 'ltr' : undefined}>{item.value}</div>
                             </div>
                         ))}
                     </div>
@@ -321,7 +336,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate }) => {
                             <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-lg flex items-center justify-center">
                                 <Calculator className="w-4 h-4 text-white" />
                             </div>
-                            <span className="text-white font-bold">{COMPANY_INFO.name[language]}</span>
+                            <span className="text-white font-bold">{COMPANY_INFO.systemName[language]}</span>
                         </div>
 
                         <div className="flex items-center gap-6 text-sm text-slate-400">

@@ -27,17 +27,18 @@ const CompanyPage: React.FC<CompanyPageProps> = ({ language, onNavigate, company
 
     // Default company data if none provided
     const company = companyData || {
-        name: language === 'ar' ? 'شركة أربا للتسعير' : 'ARBA Pricing Company',
+        name: language === 'ar' ? 'آربا المطور' : 'ARBA Developer',
+        systemName: language === 'ar' ? 'آربا للتسعير' : 'ARBA Pricing',
         phone: '+966 91 529 3394',
         email: 'info@arba-sys.com',
         address: language === 'ar' ? 'الرياض، المملكة العربية السعودية' : 'Riyadh, Saudi Arabia',
         website: 'www.arba-sys.com',
         description: language === 'ar'
-            ? 'شركة رائدة في مجال تسعير مشاريع البناء والمقاولات في المملكة العربية السعودية. نقدم حلولاً متكاملة لإدارة التكاليف وتسعير المشاريع بدقة عالية.'
-            : 'A leading company in construction project pricing in Saudi Arabia. We provide integrated solutions for cost management and accurate project pricing.',
+            ? 'آربا المطور هي شركة وطنية رائدة في مجال التقنية والحلول البرمجية. نظام آربا للتسعير هو أحد أهم خدماتنا المتخصصة في تسعير المشاريع الإنشائية، حيث نجمع بين الخبرة العميقة والتقنيات الحديثة لتقديم خدمات تسعير دقيقة وموثوقة.'
+            : 'ARBA Developer is a leading national technology and software solutions company. ARBA Pricing is one of our key specialized services for construction project pricing, combining deep expertise with modern technologies to provide accurate and reliable pricing services.',
         services: language === 'ar'
-            ? ['تسعير المشاريع', 'حساب الكميات', 'إدارة التكاليف', 'استشارات هندسية']
-            : ['Project Pricing', 'Quantity Surveying', 'Cost Management', 'Engineering Consultancy'],
+            ? ['آربا للتسعير - نظام تسعير المشاريع', 'حساب الكميات', 'إدارة التكاليف', 'الحلول البرمجية', 'استشارات تقنية']
+            : ['ARBA Pricing - Project Pricing System', 'Quantity Surveying', 'Cost Management', 'Software Solutions', 'Technical Consulting'],
         employees: 50,
         projects: 500,
         established: 2020

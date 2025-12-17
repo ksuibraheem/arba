@@ -130,7 +130,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ language, onNavigate, onReg
                             <Calculator className="w-8 h-8 text-white" />
                         </div>
                         <h1 className="text-2xl font-bold text-white mb-2">{t('register_title')}</h1>
-                        <p className="text-slate-400">{COMPANY_INFO.name[language]}</p>
+                        <p className="text-slate-400">{COMPANY_INFO.systemName[language]}</p>
                     </div>
 
                     {/* Error Message */}

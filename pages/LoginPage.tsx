@@ -153,8 +153,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin }) 
                                     setError('');
                                 }}
                                 className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${userType === type.id
-                                        ? `bg-gradient-to-br ${type.color} text-white shadow-lg`
-                                        : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700 hover:text-white'
+                                    ? `bg-gradient-to-br ${type.color} text-white shadow-lg`
+                                    : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700 hover:text-white'
                                     }`}
                             >
                                 <type.icon className="w-5 h-5" />
@@ -331,7 +331,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin }) 
 
                 {/* Footer */}
                 <p className="text-center text-slate-500 text-sm mt-8">
-                    © 2025 {COMPANY_INFO.name[language]}. {language === 'ar' ? 'جميع الحقوق محفوظة' : 'All rights reserved'}
+                    © 2025 {COMPANY_INFO.companyName[language]} - {COMPANY_INFO.systemName[language]}. {language === 'ar' ? 'جميع الحقوق محفوظة' : 'All rights reserved'}
                 </p>
             </div>
         </div>

@@ -282,7 +282,7 @@ const App: React.FC = () => {
 
     // Render Pages Based on Route
     if (currentPage === 'landing') {
-        return <LandingPage language={language} onNavigate={handleNavigate} />;
+        return <LandingPage language={language} onNavigate={handleNavigate} onLanguageChange={setLanguage} />;
     }
 
     if (currentPage === 'login') {

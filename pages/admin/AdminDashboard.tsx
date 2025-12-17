@@ -49,7 +49,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ language, onNavigate })
                             <LayoutDashboard className="w-5 h-5" />
                         </div>
                         <div>
-                            <h1 className="font-bold">{getLabel('adminPanel')}</h1>
+                            <h1 className="font-bold">{t('admin_panel')}</h1>
                             <p className="text-xs text-slate-400">ARBA System</p>
                         </div>
                     </div>
@@ -67,7 +67,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ language, onNavigate })
                                         }`}
                                 >
                                     <item.icon className="w-5 h-5" />
-                                    {getLabel(item.key as keyof typeof t)}
+                                    {t(`admin_${item.key}`)}
                                 </button>
                             </li>
                         ))}
@@ -77,14 +77,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ language, onNavigate })
                 <div className="p-4 border-t border-slate-700 space-y-2">
                     <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
                         <Settings className="w-5 h-5" />
-                        {getLabel('settings')}
+                        {t('admin_settings')}
                     </button>
                     <button
                         onClick={() => onNavigate('landing')}
                         className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-all"
                     >
                         <LogOut className="w-5 h-5" />
-                        {getLabel('logout')}
+                        {t('admin_logout')}
                     </button>
                 </div>
             </aside>
@@ -97,7 +97,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ language, onNavigate })
                         <Search className="w-5 h-5 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
                         <input
                             type="text"
-                            placeholder={getLabel('search')}
+                            placeholder={t('admin_search')}
                             className="w-80 pr-10 pl-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none"
                         />
                     </div>
@@ -134,7 +134,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ language, onNavigate })
                                     </span>
                                 </div>
                                 <p className="text-2xl font-bold text-slate-800 mb-1">{stat.value}</p>
-                                <p className="text-sm text-slate-500">{getLabel(stat.key as keyof typeof t)}</p>
+                                <p className="text-sm text-slate-500">{t(`admin_${stat.key}`)}</p>
                             </div>
                         ))}
                     </div>
@@ -143,8 +143,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ language, onNavigate })
                         {/* Recent Activity */}
                         <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100">
                             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                                <h2 className="font-bold text-slate-800">{getLabel('recentActivity')}</h2>
-                                <button className="text-sm text-emerald-500 hover:underline">{getLabel('viewAll')}</button>
+                                <h2 className="font-bold text-slate-800">{t('admin_recent_activity')}</h2>
+                                <button className="text-sm text-emerald-500 hover:underline">{t('admin_view_all')}</button>
                             </div>
                             <div className="divide-y divide-slate-100">
                                 {recentActivities.map((activity, index) => (
@@ -174,28 +174,28 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ language, onNavigate })
 
                         {/* Quick Actions */}
                         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                            <h2 className="font-bold text-slate-800 mb-6">{getLabel('quickActions')}</h2>
+                            <h2 className="font-bold text-slate-800 mb-6">{t('admin_quick_actions')}</h2>
                             <div className="space-y-3">
                                 <button
                                     onClick={() => setActiveTab('users')}
                                     className="w-full p-4 rounded-xl bg-blue-50 text-blue-700 font-medium hover:bg-blue-100 transition-colors flex items-center gap-3"
                                 >
                                     <Users className="w-5 h-5" />
-                                    {getLabel('newUser')}
+                                    {t('admin_new_user')}
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('companies')}
                                     className="w-full p-4 rounded-xl bg-emerald-50 text-emerald-700 font-medium hover:bg-emerald-100 transition-colors flex items-center gap-3"
                                 >
                                     <Building2 className="w-5 h-5" />
-                                    {getLabel('newCompany')}
+                                    {t('admin_new_company')}
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('data')}
                                     className="w-full p-4 rounded-xl bg-purple-50 text-purple-700 font-medium hover:bg-purple-100 transition-colors flex items-center gap-3"
                                 >
                                     <Database className="w-5 h-5" />
-                                    {getLabel('exportData')}
+                                    {t('admin_export_data')}
                                 </button>
                             </div>
                         </div>

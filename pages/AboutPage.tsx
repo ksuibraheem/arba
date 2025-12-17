@@ -39,7 +39,7 @@ const AboutPage: React.FC<AboutPageProps> = ({ language, onNavigate }) => {
                             <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center">
                                 <Calculator className="w-6 h-6 text-white" />
                             </div>
-                            <span className="text-xl font-bold text-white">{COMPANY_INFO.name[language]}</span>
+                            <span className="text-xl font-bold text-white">{COMPANY_INFO.systemName[language]}</span>
                         </button>
 
                         <div className="flex items-center gap-3">
@@ -160,17 +160,17 @@ const AboutPage: React.FC<AboutPageProps> = ({ language, onNavigate }) => {
                     <h2 className="text-3xl font-bold text-white text-center mb-12">{t('section_contact')}</h2>
                     <div className="grid md:grid-cols-4 gap-6 max-w-4xl mx-auto">
                         {[
-                            { icon: Phone, label: language === 'ar' ? 'الهاتف' : 'Phone', value: COMPANY_INFO.phone },
-                            { icon: Mail, label: language === 'ar' ? 'البريد' : 'Email', value: COMPANY_INFO.email },
-                            { icon: MapPin, label: language === 'ar' ? 'الموقع' : 'Location', value: COMPANY_INFO.location[language] },
-                            { icon: Clock, label: language === 'ar' ? 'ساعات العمل' : 'Hours', value: COMPANY_INFO.workingHours[language] }
+                            { icon: Phone, label: language === 'ar' ? 'الهاتف' : 'Phone', value: COMPANY_INFO.phone, isLtr: true },
+                            { icon: Mail, label: language === 'ar' ? 'البريد' : 'Email', value: COMPANY_INFO.email, isLtr: true },
+                            { icon: MapPin, label: language === 'ar' ? 'الموقع' : 'Location', value: COMPANY_INFO.location[language], isLtr: false },
+                            { icon: Clock, label: language === 'ar' ? 'ساعات العمل' : 'Hours', value: COMPANY_INFO.workingHours[language], isLtr: false }
                         ].map((item, index) => (
                             <div key={index} className="text-center p-6 bg-slate-800/50 rounded-2xl border border-slate-700/50">
                                 <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center mx-auto mb-4">
                                     <item.icon className="w-6 h-6 text-emerald-400" />
                                 </div>
                                 <div className="text-slate-400 text-sm mb-1">{item.label}</div>
-                                <div className="text-white font-medium text-sm">{item.value}</div>
+                                <div className="text-white font-medium text-sm" dir={item.isLtr ? 'ltr' : undefined}>{item.value}</div>
                             </div>
                         ))}
                     </div>
@@ -201,7 +201,7 @@ const AboutPage: React.FC<AboutPageProps> = ({ language, onNavigate }) => {
             {/* Footer */}
             <footer className="py-10 px-6 border-t border-slate-700/50">
                 <div className="max-w-7xl mx-auto text-center text-slate-400 text-sm">
-                    © 2025 {COMPANY_INFO.name[language]}. {t('footer_rights')}
+                    © 2025 {COMPANY_INFO.companyName[language]} - {COMPANY_INFO.systemName[language]}. {t('footer_rights')}
                 </div>
             </footer>
         </div>
