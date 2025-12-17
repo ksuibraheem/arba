@@ -1,5 +1,6 @@
 import React from 'react';
 import { Building2, Phone, Mail, MapPin, Globe, Award, Users, Briefcase, ArrowRight, ArrowLeft } from 'lucide-react';
+import { PAGE_TRANSLATIONS } from '../companyData';
 
 interface CompanyPageProps {
     language: 'ar' | 'en';
@@ -22,6 +23,7 @@ interface CompanyPageProps {
 const CompanyPage: React.FC<CompanyPageProps> = ({ language, onNavigate, companyData }) => {
     const isRtl = language === 'ar';
     const Arrow = isRtl ? ArrowLeft : ArrowRight;
+    const t = (key: string) => PAGE_TRANSLATIONS[key]?.[language] || key;
 
     // Default company data if none provided
     const company = companyData || {
@@ -40,19 +42,6 @@ const CompanyPage: React.FC<CompanyPageProps> = ({ language, onNavigate, company
         projects: 500,
         established: 2020
     };
-
-    const t = {
-        backToHome: { ar: 'العودة للرئيسية', en: 'Back to Home' },
-        aboutCompany: { ar: 'عن الشركة', en: 'About Company' },
-        ourServices: { ar: 'خدماتنا', en: 'Our Services' },
-        contactUs: { ar: 'تواصل معنا', en: 'Contact Us' },
-        employees: { ar: 'موظف', en: 'Employees' },
-        projectsCompleted: { ar: 'مشروع منجز', en: 'Projects Completed' },
-        yearsExperience: { ar: 'سنوات خبرة', en: 'Years Experience' },
-        startNow: { ar: 'ابدأ الآن', en: 'Start Now' }
-    };
-
-    const getLabel = (key: keyof typeof t) => t[key][language];
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900" dir={isRtl ? 'rtl' : 'ltr'}>
