@@ -353,6 +353,16 @@ export const PAGE_TRANSLATIONS = {
     system_name: { ar: 'آربا للتسعير', en: 'ARBA Pricing' },
     powered_by: { ar: 'منتج من شركة', en: 'A Product of' },
 
+    // Admin Dashboard - Browse
+    admin_browse: { ar: 'الاستعراض', en: 'Browse' },
+    admin_access: { ar: 'الصلاحيات', en: 'Access Control' },
+    admin_finance: { ar: 'المالية', en: 'Finance' },
+    admin_operations: { ar: 'العمليات', en: 'Operations' },
+    admin_support: { ar: 'الدعم', en: 'Support' },
+    admin_audit: { ar: 'التدقيق', en: 'Audit' },
+    admin_requests: { ar: 'الطلبات', en: 'Requests' },
+    admin_employees: { ar: 'الموظفين', en: 'Employees' },
+
     // Hero Section
     hero_title: { ar: 'منصة التسعير الذكية للمشاريع الإنشائية', en: 'Smart Pricing Platform for Construction Projects' },
     hero_subtitle: { ar: 'أسعار دقيقة ومحدثة • حصر كميات احترافي • تقارير تفصيلية', en: 'Accurate & Updated Prices • Professional BOQ • Detailed Reports' },

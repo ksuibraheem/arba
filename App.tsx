@@ -114,25 +114,36 @@ const App: React.FC = () => {
     };
 
     // Auth Handlers
-    const handleLogin = (email: string, password: string) => {
+    const handleLogin = (email: string, password: string, userType?: string) => {
         const storedUser = localStorage.getItem('arba_user');
         if (storedUser) {
             const userData = JSON.parse(storedUser);
             if (userData.email === email) {
                 setUser(userData);
-                setCurrentPage('dashboard');
+                // توجيه الموظفين للوحة المدير
+                if (userType === 'employee') {
+                    setCurrentPage('admin');
+                } else {
+                    setCurrentPage('dashboard');
+                }
                 return;
             }
         }
         // Demo login
+        const isEmployee = userType === 'employee';
         setUser({
-            name: 'مستخدم تجريبي',
+            name: isEmployee ? 'موظف آربا' : 'مستخدم تجريبي',
             email: email,
-            plan: 'free',
+            plan: isEmployee ? 'enterprise' : 'free',
             usedProjects: 0,
             usedStorageMB: 10
         });
-        setCurrentPage('dashboard');
+        // توجيه الموظفين للوحة المدير
+        if (isEmployee) {
+            setCurrentPage('admin');
+        } else {
+            setCurrentPage('dashboard');
+        }
     };
 
     const handleRegister = (data: RegisterData) => {
