@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import Sidebar from './components/Sidebar';
 import StatsGrid from './components/StatsGrid';
@@ -20,8 +20,18 @@ import { INITIAL_OVERHEAD, PROJECT_DEFAULTS, PROJECT_TITLES, TRANSLATIONS } from
 import { calculateProjectCosts } from './utils/calculations';
 import { Download, Calendar, User, Briefcase, Hash, LogOut, Calculator, Lock, Crown, AlertTriangle, HardDrive, FolderOpen, Upload, Image } from 'lucide-react';
 import { COMPANY_INFO, SUBSCRIPTION_PLANS, encryptSupplierName, getStorageInfo, getRemainingProjects, FREE_PLAN_RESTRICTIONS } from './companyData';
+// Local auth service (fallback)
+import { registerUser, loginUser, logoutUser, getCurrentUser, StoredUser } from './services/authService';
+// Firebase auth service
+import { registerWithFirebase, loginWithFirebase, logoutFromFirebase, onAuthChange, getUserData, UserData } from './firebase/authService';
 
-type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'admin' | 'dashboard';
+// Toggle Firebase mode - set to true to use Firebase
+const USE_FIREBASE = true;
+
+type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'admin' | 'dashboard' | 'admin-login';
+
+// مفتاح الوصول السري للوحة المدير - غيره لمفتاح خاص بك
+const ADMIN_SECRET_KEY = 'arba2025secure';
 
 interface AuthUser {
     name: string;
@@ -41,6 +51,52 @@ const App: React.FC = () => {
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [upgradeFeature, setUpgradeFeature] = useState('');
     const [showPriceQuote, setShowPriceQuote] = useState(false);
+    const [loginError, setLoginError] = useState<string>('');
+    const [adminAccessGranted, setAdminAccessGranted] = useState(false);
+    const [adminKeyInput, setAdminKeyInput] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Check for existing session on mount
+    useEffect(() => {
+        if (USE_FIREBASE) {
+            // Firebase auth state listener
+            const unsubscribe = onAuthChange(async (firebaseUser) => {
+                if (firebaseUser) {
+                    const userData = await getUserData(firebaseUser.uid);
+                    if (userData) {
+                        setUser({
+                            name: userData.name,
+                            email: userData.email,
+                            company: userData.company,
+                            companyLogo: userData.companyLogo,
+                            plan: userData.plan,
+                            usedProjects: userData.usedProjects,
+                            usedStorageMB: userData.usedStorageMB
+                        });
+                    }
+                } else {
+                    setUser(null);
+                }
+                setIsLoading(false);
+            });
+            return () => unsubscribe();
+        } else {
+            // Local auth
+            const currentUser = getCurrentUser();
+            if (currentUser) {
+                setUser({
+                    name: currentUser.name,
+                    email: currentUser.email,
+                    company: currentUser.company,
+                    companyLogo: currentUser.companyLogo,
+                    plan: currentUser.plan,
+                    usedProjects: currentUser.usedProjects,
+                    usedStorageMB: currentUser.usedStorageMB
+                });
+            }
+            setIsLoading(false);
+        }
+    }, []);
 
     // Pricing Dashboard State
     const [state, setState] = useState<AppState>({
@@ -114,54 +170,128 @@ const App: React.FC = () => {
     };
 
     // Auth Handlers
-    const handleLogin = (email: string, password: string, userType?: string) => {
-        const storedUser = localStorage.getItem('arba_user');
-        if (storedUser) {
-            const userData = JSON.parse(storedUser);
-            if (userData.email === email) {
-                setUser(userData);
-                // توجيه الموظفين للوحة المدير
-                if (userType === 'employee') {
-                    setCurrentPage('admin');
-                } else {
-                    setCurrentPage('dashboard');
-                }
+    const handleLogin = async (email: string, password: string, userType?: string) => {
+        setLoginError('');
+
+        // موظفين - تحقق خاص
+        if (userType === 'employee') {
+            if (email === 'admin' && password === 'admin123') {
+                setUser({
+                    name: 'مدير النظام',
+                    email: 'admin@arba-sys.com',
+                    plan: 'enterprise',
+                    usedProjects: 0,
+                    usedStorageMB: 0
+                });
+                setCurrentPage('admin');
+                return;
+            } else {
+                setLoginError('رقم الموظف أو كلمة المرور غير صحيحة');
                 return;
             }
         }
-        // Demo login
-        const isEmployee = userType === 'employee';
-        setUser({
-            name: isEmployee ? 'موظف آربا' : 'مستخدم تجريبي',
-            email: email,
-            plan: isEmployee ? 'enterprise' : 'free',
-            usedProjects: 0,
-            usedStorageMB: 10
-        });
-        // توجيه الموظفين للوحة المدير
-        if (isEmployee) {
-            setCurrentPage('admin');
-        } else {
+
+        if (USE_FIREBASE) {
+            // Firebase login
+            const result = await loginWithFirebase(email, password);
+            if (!result.success) {
+                setLoginError(result.error || 'حدث خطأ أثناء تسجيل الدخول');
+                return;
+            }
+            // User state will be updated by onAuthChange listener
             setCurrentPage('dashboard');
+        } else {
+            // Local login
+            const result = loginUser(
+                email,
+                password,
+                userType as 'individual' | 'company' | 'supplier' | 'employee'
+            );
+
+            if (!result.success) {
+                setLoginError(result.error || 'حدث خطأ أثناء تسجيل الدخول');
+                return;
+            }
+
+            if (result.user) {
+                setUser({
+                    name: result.user.name,
+                    email: result.user.email,
+                    company: result.user.company,
+                    companyLogo: result.user.companyLogo,
+                    plan: result.user.plan,
+                    usedProjects: result.user.usedProjects,
+                    usedStorageMB: result.user.usedStorageMB
+                });
+                setCurrentPage('dashboard');
+            }
         }
     };
 
-    const handleRegister = (data: RegisterData) => {
-        const userData: AuthUser = {
-            name: data.name,
-            email: data.email,
-            company: data.company,
-            plan: data.plan,
-            usedProjects: 0,
-            usedStorageMB: 0
-        };
-        localStorage.setItem('arba_user', JSON.stringify(userData));
-        setUser(userData);
-        setCurrentPage('dashboard');
+    const handleRegister = async (data: RegisterData) => {
+        if (USE_FIREBASE) {
+            // Firebase registration
+            const result = await registerWithFirebase({
+                userType: data.userType,
+                name: data.name,
+                email: data.email,
+                phone: data.phone,
+                company: data.company,
+                commercialRegister: data.commercialRegister,
+                businessType: data.businessType,
+                password: data.password,
+                plan: data.plan
+            });
+
+            if (!result.success) {
+                console.error('Registration failed:', result.error);
+                setLoginError(result.error || 'حدث خطأ أثناء التسجيل');
+                return;
+            }
+            // User state will be updated by onAuthChange listener
+            setCurrentPage('dashboard');
+        } else {
+            // Local registration
+            const result = registerUser({
+                userType: data.userType,
+                name: data.name,
+                email: data.email,
+                phone: data.phone,
+                company: data.company,
+                commercialRegister: data.commercialRegister,
+                businessType: data.businessType,
+                password: data.password,
+                plan: data.plan
+            });
+
+            if (!result.success) {
+                console.error('Registration failed:', result.error);
+                return;
+            }
+
+            if (result.user) {
+                setUser({
+                    name: result.user.name,
+                    email: result.user.email,
+                    company: result.user.company,
+                    plan: result.user.plan,
+                    usedProjects: result.user.usedProjects,
+                    usedStorageMB: result.user.usedStorageMB
+                });
+                setCurrentPage('dashboard');
+            }
+        }
     };
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        if (USE_FIREBASE) {
+            await logoutFromFirebase();
+        } else {
+            logoutUser();
+        }
         setUser(null);
+        setLoginError('');
+        setAdminAccessGranted(false);
         setCurrentPage('landing');
     };
 
@@ -297,7 +427,7 @@ const App: React.FC = () => {
     }
 
     if (currentPage === 'login') {
-        return <LoginPage language={language} onNavigate={handleNavigate} onLogin={handleLogin} />;
+        return <LoginPage language={language} onNavigate={handleNavigate} onLogin={handleLogin} loginError={loginError} />;
     }
 
     if (currentPage === 'register') {
@@ -327,7 +457,84 @@ const App: React.FC = () => {
         );
     }
 
+    // Admin Login Page (Secret Access)
+    if (currentPage === 'admin-login') {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                <div className="bg-slate-800/50 backdrop-blur-xl rounded-3xl border border-slate-700/50 p-8 shadow-2xl max-w-md w-full">
+                    <div className="text-center mb-8">
+                        <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                            <Lock className="w-8 h-8 text-white" />
+                        </div>
+                        <h1 className="text-2xl font-bold text-white mb-2">
+                            {language === 'ar' ? 'الوصول المحمي' : 'Protected Access'}
+                        </h1>
+                        <p className="text-slate-400">
+                            {language === 'ar' ? 'أدخل مفتاح الوصول للمتابعة' : 'Enter access key to continue'}
+                        </p>
+                    </div>
+                    <div className="space-y-4">
+                        <input
+                            type="password"
+                            value={adminKeyInput}
+                            onChange={(e) => setAdminKeyInput(e.target.value)}
+                            placeholder={language === 'ar' ? 'مفتاح الوصول السري' : 'Secret Access Key'}
+                            className="w-full bg-slate-700/50 border border-slate-600 rounded-xl py-3 px-4 text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                        />
+                        {loginError && (
+                            <p className="text-red-400 text-sm text-center">{loginError}</p>
+                        )}
+                        <button
+                            onClick={() => {
+                                if (adminKeyInput === ADMIN_SECRET_KEY) {
+                                    setAdminAccessGranted(true);
+                                    setLoginError('');
+                                    setCurrentPage('login');
+                                } else {
+                                    setLoginError(language === 'ar' ? 'مفتاح الوصول غير صحيح' : 'Invalid access key');
+                                }
+                            }}
+                            className="w-full py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl font-bold hover:from-purple-400 hover:to-indigo-500 transition-all"
+                        >
+                            {language === 'ar' ? 'تأكيد' : 'Confirm'}
+                        </button>
+                        <button
+                            onClick={() => setCurrentPage('landing')}
+                            className="w-full py-2 text-slate-400 hover:text-white transition-colors"
+                        >
+                            {language === 'ar' ? 'العودة' : 'Back'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     if (currentPage === 'admin') {
+        // تحقق من صلاحية الوصول للوحة المدير
+        if (!adminAccessGranted || !user || user.plan !== 'enterprise') {
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-slate-900 via-red-900 to-slate-900 flex items-center justify-center p-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                    <div className="text-center">
+                        <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <AlertTriangle className="w-10 h-10 text-red-500" />
+                        </div>
+                        <h1 className="text-2xl font-bold text-white mb-2">
+                            {language === 'ar' ? 'غير مصرح' : 'Unauthorized'}
+                        </h1>
+                        <p className="text-slate-400 mb-6">
+                            {language === 'ar' ? 'ليس لديك صلاحية الوصول لهذه الصفحة' : 'You do not have permission to access this page'}
+                        </p>
+                        <button
+                            onClick={() => setCurrentPage('landing')}
+                            className="px-6 py-2 bg-slate-700 text-white rounded-xl hover:bg-slate-600 transition-colors"
+                        >
+                            {language === 'ar' ? 'العودة للرئيسية' : 'Back to Home'}
+                        </button>
+                    </div>
+                </div>
+            );
+        }
         return <AdminDashboard language={language} onNavigate={handleNavigate} />;
     }
 
@@ -460,12 +667,6 @@ const App: React.FC = () => {
                                     className="px-3 py-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors"
                                 >
                                     {language === 'ar' ? 'الباقات' : 'Plans'}
-                                </button>
-                                <button
-                                    onClick={() => handleNavigate('admin')}
-                                    className="px-3 py-1.5 text-xs font-medium text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
-                                >
-                                    {language === 'ar' ? 'لوحة المدير' : 'Admin'}
                                 </button>
                             </div>
 

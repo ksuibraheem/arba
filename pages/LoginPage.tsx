@@ -20,11 +20,12 @@ interface LoginPageProps {
     language: 'ar' | 'en';
     onNavigate: (page: string) => void;
     onLogin: (email: string, password: string, userType?: string) => void;
+    loginError?: string;
 }
 
 type UserType = 'individual' | 'company' | 'supplier' | 'employee';
 
-const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, loginError }) => {
     const [userType, setUserType] = useState<UserType>('individual');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -173,9 +174,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin }) 
                     </div>
 
                     {/* Error Message */}
-                    {error && (
+                    {(error || loginError) && (
                         <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-xl mb-6 text-sm text-center">
-                            {error}
+                            {error || loginError}
                         </div>
                     )}
 
