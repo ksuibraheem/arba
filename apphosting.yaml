@@ -1,0 +1,14 @@
+# Firebase App Hosting Configuration
+# تكوين Firebase App Hosting
+
+runConfig:
+  # Runtime environment
+  runtime: nodejs20
+  
+  # Start command
+  commandLine: npm run start
+  
+  # Environment variables
+  environmentVariables:
+    - variable: NODE_ENV
+      value: production
