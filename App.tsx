@@ -15,6 +15,9 @@ import CompanyPage from './pages/CompanyPage';
 import PaymentPage from './pages/PaymentPage';
 import VerificationPage from './pages/VerificationPage';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import ManagerDashboard from './pages/employees/ManagerDashboard';
+import EmployeeDashboard from './pages/employees/EmployeeDashboard';
+import { employeeService, Employee, MANAGER_CREDENTIALS } from './services/employeeService';
 import { AppState, CalculatedItem, ProjectType, CustomParams, BlueprintConfig, SurfaceLocation, RoomFinishes, BaseItem } from './types';
 import { INITIAL_OVERHEAD, PROJECT_DEFAULTS, PROJECT_TITLES, TRANSLATIONS } from './constants';
 import { calculateProjectCosts } from './utils/calculations';
@@ -28,7 +31,7 @@ import { registerWithFirebase, loginWithFirebase, logoutFromFirebase, onAuthChan
 // Toggle Firebase mode - set to true to use Firebase
 const USE_FIREBASE = true;
 
-type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'admin' | 'dashboard' | 'admin-login';
+type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'admin' | 'dashboard' | 'admin-login' | 'manager' | 'employee';
 
 // مفتاح الوصول السري للوحة المدير - غيره لمفتاح خاص بك
 const ADMIN_SECRET_KEY = 'arba2025secure';
@@ -55,6 +58,9 @@ const App: React.FC = () => {
     const [adminAccessGranted, setAdminAccessGranted] = useState(false);
     const [adminKeyInput, setAdminKeyInput] = useState('');
     const [isLoading, setIsLoading] = useState(true);
+    // Employee state
+    const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
+    const [isManager, setIsManager] = useState(false);
 
     // Check for existing session on mount
     useEffect(() => {
@@ -175,18 +181,52 @@ const App: React.FC = () => {
 
         // موظفين - تحقق خاص
         if (userType === 'employee') {
-            if (email === 'admin' && password === 'admin123') {
-                setUser({
-                    name: 'مدير النظام',
-                    email: 'admin@arba-sys.com',
-                    plan: 'enterprise',
-                    usedProjects: 0,
-                    usedStorageMB: 0
-                });
-                setCurrentPage('admin');
+            // استخدام نظام الموظفين الجديد
+            const result = employeeService.login(email, password);
+
+            if (result.success && result.employee) {
+                // التحقق إذا كان المدير
+                if ('role' in result.employee && result.employee.role === 'manager') {
+                    // المدير
+                    setIsManager(true);
+                    setCurrentEmployee(null);
+                    setUser({
+                        name: MANAGER_CREDENTIALS.name,
+                        email: 'manager@arba-sys.com',
+                        plan: 'enterprise',
+                        usedProjects: 0,
+                        usedStorageMB: 0
+                    });
+                    setCurrentPage('manager');
+                } else if ('employeeNumber' in result.employee && result.employee.employeeNumber === MANAGER_CREDENTIALS.employeeNumber) {
+                    // المدير (من بيانات الدخول الثابتة)
+                    setIsManager(true);
+                    setCurrentEmployee(null);
+                    setUser({
+                        name: MANAGER_CREDENTIALS.name,
+                        email: 'manager@arba-sys.com',
+                        plan: 'enterprise',
+                        usedProjects: 0,
+                        usedStorageMB: 0
+                    });
+                    setCurrentPage('manager');
+                } else {
+                    // موظف عادي
+                    const emp = result.employee as Employee;
+                    setIsManager(false);
+                    setCurrentEmployee(emp);
+                    setUser({
+                        name: emp.name,
+                        email: emp.email,
+                        plan: 'enterprise',
+                        usedProjects: 0,
+                        usedStorageMB: 0
+                    });
+                    setCurrentPage('employee');
+                }
                 return;
             } else {
-                setLoginError('رقم الموظف أو كلمة المرور غير صحيحة');
+                setLoginError(result.error || 'رقم الموظف أو كلمة المرور غير صحيحة');
                 return;
             }
         }
@@ -536,6 +576,47 @@ const App: React.FC = () => {
             );
         }
         return <AdminDashboard language={language} onNavigate={handleNavigate} />;
+    }
+
+    // Manager Dashboard
+    if (currentPage === 'manager') {
+        if (!isManager) {
+            setCurrentPage('login');
+            return null;
+        }
+        return (
+            <ManagerDashboard
+                language={language}
+                onLogout={() => {
+                    setUser(null);
+                    setIsManager(false);
+                    setCurrentEmployee(null);
+                    setCurrentPage('landing');
+                }}
+                onNavigate={handleNavigate}
+            />
+        );
+    }
+
+    // Employee Dashboard
+    if (currentPage === 'employee') {
+        if (!currentEmployee) {
+            setCurrentPage('login');
+            return null;
+        }
+        return (
+            <EmployeeDashboard
+                language={language}
+                employee={currentEmployee}
+                onLogout={() => {
+                    setUser(null);
+                    setIsManager(false);
+                    setCurrentEmployee(null);
+                    setCurrentPage('landing');
+                }}
+                onNavigate={handleNavigate}
+            />
+        );
     }
 
     // Dashboard (Protected)
