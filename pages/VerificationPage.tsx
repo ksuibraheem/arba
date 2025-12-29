@@ -32,11 +32,23 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
     const [resendTimer, setResendTimer] = useState(60);
     const [canResend, setCanResend] = useState(false);
     const [codeExpiryTimer, setCodeExpiryTimer] = useState(300); // 5 minutes in seconds
+    const [testCode, setTestCode] = useState(''); // Show code on screen for testing
 
     const emailInputRefs = useRef<(HTMLInputElement | null)[]>([]);
     const phoneInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
     const t = (key: string) => PAGE_TRANSLATIONS[key]?.[language] || key;
+
+    // Fetch test code for display (testing mode)
+    useEffect(() => {
+        if (registrationRequestId) {
+            const request = registrationService.getRequestById(registrationRequestId);
+            if (request) {
+                const code = step === 'email' ? request.emailCode : request.phoneCode;
+                setTestCode(code);
+            }
+        }
+    }, [registrationRequestId, step]);
 
     // Resend timer
     useEffect(() => {
@@ -277,12 +289,24 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
                             </div>
 
                             {/* Code Inputs - Now 4 digits */}
-                            <div className="mb-6">
+                            <div className="mb-4">
                                 {step === 'email'
                                     ? renderCodeInputs(emailCode, setEmailCode, emailInputRefs)
                                     : renderCodeInputs(phoneCode, setPhoneCode, phoneInputRefs)
                                 }
                             </div>
+
+                            {/* Test Code Display - For testing purposes */}
+                            {testCode && (
+                                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 mb-4 text-center">
+                                    <p className="text-xs text-emerald-600 mb-1">
+                                        {language === 'ar' ? '🧪 للتجربة - الرمز هو:' : '🧪 For testing - Code is:'}
+                                    </p>
+                                    <p className="text-2xl font-bold text-emerald-700 tracking-widest" dir="ltr">
+                                        {testCode}
+                                    </p>
+                                </div>
+                            )}
 
                             {/* Error */}
                             {error && (

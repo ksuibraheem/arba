@@ -23,6 +23,8 @@ import EmployeeDashboard from './pages/employees/EmployeeDashboard';
 import { employeeService, Employee, MANAGER_CREDENTIALS } from './services/employeeService';
 import HRPage from './pages/employees/roles/HRPage';
 import AccountantPage from './pages/employees/roles/AccountantPage';
+import PasswordResetPage from './pages/PasswordResetPage';
+import CloudSyncPage from './pages/CloudSyncPage';
 import { AppState, CalculatedItem, ProjectType, CustomParams, BlueprintConfig, SurfaceLocation, RoomFinishes, BaseItem } from './types';
 import { INITIAL_OVERHEAD, PROJECT_DEFAULTS, PROJECT_TITLES, TRANSLATIONS } from './constants';
 import { calculateProjectCosts } from './utils/calculations';
@@ -36,7 +38,7 @@ import { registerWithFirebase, loginWithFirebase, logoutFromFirebase, onAuthChan
 // Toggle Firebase mode - set to true to use Firebase
 const USE_FIREBASE = true;
 
-type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant';
+type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant' | 'password-reset' | 'cloud-sync';
 
 // مفتاح الوصول السري للوحة المدير - غيره لمفتاح خاص بك
 const ADMIN_SECRET_KEY = 'arba2025secure';
@@ -538,6 +540,10 @@ const App: React.FC = () => {
         return <RegisterPage language={language} onNavigate={handleNavigate} onRegister={handleRegister} />;
     }
 
+    if (currentPage === 'password-reset') {
+        return <PasswordResetPage language={language} onNavigate={handleNavigate} />;
+    }
+
     if (currentPage === 'about') {
         return <AboutPage language={language} onNavigate={handleNavigate} />;
     }
@@ -588,6 +594,10 @@ const App: React.FC = () => {
                 onPaymentSubmitted={() => setCurrentPage('under-review')}
             />
         );
+    }
+
+    if (currentPage === 'cloud-sync') {
+        return <CloudSyncPage language={language} onNavigate={handleNavigate} />;
     }
 
     // Admin Login Page (Secret Access)

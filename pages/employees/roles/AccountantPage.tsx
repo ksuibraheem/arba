@@ -87,6 +87,7 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
     // Load data
     useEffect(() => {
         accountingService.initializeSampleData();
+        registrationService.initializeSampleData();
         loadData();
     }, []);
 
@@ -837,8 +838,8 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
                                                 <div>
                                                     <span className="text-slate-500">{t('النوع:', 'Type:')}</span>
                                                     <span className={`mr-2 px-2 py-0.5 rounded text-xs ${req.userType === 'individual' ? 'bg-blue-500/20 text-blue-300' :
-                                                            req.userType === 'company' ? 'bg-purple-500/20 text-purple-300' :
-                                                                'bg-orange-500/20 text-orange-300'
+                                                        req.userType === 'company' ? 'bg-purple-500/20 text-purple-300' :
+                                                            'bg-orange-500/20 text-orange-300'
                                                         }`}>
                                                         {REG_USER_TYPE_TRANSLATIONS[req.userType][language]}
                                                     </span>
@@ -878,7 +879,7 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
                                                 <div>
                                                     <span className="text-slate-500">{t('الحالة:', 'Status:')}</span>
                                                     <span className={`mr-2 px-2 py-0.5 rounded text-xs ${req.status === 'pending_cr_verification' ? 'bg-orange-500/20 text-orange-300' :
-                                                            'bg-yellow-500/20 text-yellow-300'
+                                                        'bg-yellow-500/20 text-yellow-300'
                                                         }`}>
                                                         {REGISTRATION_STATUS_TRANSLATIONS[req.status][language]}
                                                     </span>

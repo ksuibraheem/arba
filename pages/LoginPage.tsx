@@ -269,7 +269,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, lo
                                 />
                                 <span>{t('login_remember')}</span>
                             </label>
-                            <button type="button" className="text-emerald-400 hover:text-emerald-300 transition-colors">
+                            <button
+                                type="button"
+                                onClick={() => onNavigate('password-reset')}
+                                className="text-emerald-400 hover:text-emerald-300 transition-colors"
+                            >
                                 {t('login_forgot')}
                             </button>
                         </div>

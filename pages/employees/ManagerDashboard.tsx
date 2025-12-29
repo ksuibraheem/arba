@@ -8,11 +8,11 @@ import {
     Crown, Users, UserPlus, Settings, LogOut, Home,
     Calculator, Code, Headphones, Megaphone, CheckCircle,
     UserCog, Edit, Trash2, Key, Mail, Phone, Eye, EyeOff,
-    Copy, Check, AlertCircle, X, Search, Filter
+    Copy, Check, AlertCircle, X, Search, Filter, Cloud
 } from 'lucide-react';
 import {
     Employee, EmployeeRole, employeeService,
-    ROLE_TRANSLATIONS, ROLE_COLORS, MANAGER_CREDENTIALS
+    ROLE_TRANSLATIONS, ROLE_COLORS, MANAGER_CREDENTIALS, getManagerCredentials, updateManagerCredentials
 } from '../../services/employeeService';
 
 interface ManagerDashboardProps {
@@ -21,6 +21,196 @@ interface ManagerDashboardProps {
     onNavigate: (page: string) => void;
 }
 
+// ================= Manager Settings Tab Component =================
+interface ManagerSettingsTabProps {
+    language: 'ar' | 'en';
+    t: (ar: string, en: string) => string;
+    onNavigate: (page: string) => void;
+}
+
+const ManagerSettingsTab: React.FC<ManagerSettingsTabProps> = ({ language, t, onNavigate }) => {
+    const [managerCreds, setManagerCreds] = useState(getManagerCredentials());
+    const [isEditing, setIsEditing] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [editForm, setEditForm] = useState({
+        employeeNumber: managerCreds.employeeNumber,
+        password: managerCreds.password
+    });
+    const [saveSuccess, setSaveSuccess] = useState(false);
+    const [saveError, setSaveError] = useState('');
+
+    const handleSave = () => {
+        setSaveError('');
+        setSaveSuccess(false);
+
+        // Validation
+        if (!editForm.employeeNumber || editForm.employeeNumber.length < 6) {
+            setSaveError(t('رقم الموظف يجب أن يكون 6 أرقام على الأقل', 'Employee number must be at least 6 digits'));
+            return;
+        }
+        if (!editForm.password || editForm.password.length < 6) {
+            setSaveError(t('الرقم السري يجب أن يكون 6 أرقام على الأقل', 'Password must be at least 6 characters'));
+            return;
+        }
+
+        // Update credentials
+        const updated = updateManagerCredentials({
+            employeeNumber: editForm.employeeNumber,
+            password: editForm.password
+        });
+        setManagerCreds(updated);
+        setIsEditing(false);
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3000);
+    };
+
+    const handleCancel = () => {
+        setEditForm({
+            employeeNumber: managerCreds.employeeNumber,
+            password: managerCreds.password
+        });
+        setIsEditing(false);
+        setSaveError('');
+    };
+
+    return (
+        <div className="max-w-2xl mx-auto">
+            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50">
+                <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                    <Settings className="w-6 h-6 text-emerald-400" />
+                    {t('الإعدادات', 'Settings')}
+                </h2>
+                <div className="space-y-4">
+                    {/* Manager Credentials Section */}
+                    <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-amber-400 font-medium flex items-center gap-2">
+                                <Crown className="w-5 h-5" />
+                                {t('بيانات المدير', 'Manager Credentials')}
+                            </h3>
+                            {!isEditing && (
+                                <button
+                                    onClick={() => setIsEditing(true)}
+                                    className="flex items-center gap-1 text-amber-400 hover:text-amber-300 text-sm px-3 py-1 bg-amber-500/20 rounded-lg transition-colors"
+                                >
+                                    <Edit className="w-4 h-4" />
+                                    {t('تعديل', 'Edit')}
+                                </button>
+                            )}
+                        </div>
+
+                        {saveSuccess && (
+                            <div className="mb-4 p-3 bg-green-500/20 border border-green-500/50 rounded-lg flex items-center gap-2 text-green-400">
+                                <CheckCircle className="w-5 h-5" />
+                                {t('تم حفظ التغييرات بنجاح', 'Changes saved successfully')}
+                            </div>
+                        )}
+
+                        {saveError && (
+                            <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg flex items-center gap-2 text-red-400">
+                                <AlertCircle className="w-5 h-5" />
+                                {saveError}
+                            </div>
+                        )}
+
+                        {isEditing ? (
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-slate-400 mb-2 text-sm">
+                                        {t('رقم الموظف', 'Employee Number')}
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={editForm.employeeNumber}
+                                        onChange={(e) => setEditForm(prev => ({ ...prev, employeeNumber: e.target.value }))}
+                                        className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white font-mono focus:outline-none focus:border-amber-500"
+                                        placeholder="XXXXXXXX"
+                                        dir="ltr"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-slate-400 mb-2 text-sm">
+                                        {t('الرقم السري الجديد', 'New Password')}
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            type={showPassword ? 'text' : 'password'}
+                                            value={editForm.password}
+                                            onChange={(e) => setEditForm(prev => ({ ...prev, password: e.target.value }))}
+                                            className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white font-mono focus:outline-none focus:border-amber-500 pe-10"
+                                            placeholder="••••••••"
+                                            dir="ltr"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                                        >
+                                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="flex gap-3 pt-2">
+                                    <button
+                                        onClick={handleSave}
+                                        className="flex-1 py-2 bg-gradient-to-r from-amber-500 to-yellow-600 text-white font-medium rounded-lg hover:from-amber-600 hover:to-yellow-700 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <Key className="w-4 h-4" />
+                                        {t('حفظ التغييرات', 'Save Changes')}
+                                    </button>
+                                    <button
+                                        onClick={handleCancel}
+                                        className="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 transition-colors"
+                                    >
+                                        {t('إلغاء', 'Cancel')}
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <p className="text-slate-500">{t('رقم الموظف', 'Employee #')}</p>
+                                    <p className="text-white font-mono text-lg">{managerCreds.employeeNumber}</p>
+                                </div>
+                                <div>
+                                    <p className="text-slate-500">{t('الرقم السري', 'Password')}</p>
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-white font-mono text-lg">
+                                            {showPassword ? managerCreds.password : '••••••••'}
+                                        </p>
+                                        <button
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-white"
+                                        >
+                                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Cloud Sync Button */}
+                    <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                        <h3 className="text-blue-400 font-medium mb-2">{t('مزامنة السحابة', 'Cloud Sync')}</h3>
+                        <p className="text-slate-400 text-sm mb-4">
+                            {t('تصدير البيانات إلى Firebase للنسخ الاحتياطي', 'Export data to Firebase for backup')}
+                        </p>
+                        <button
+                            onClick={() => onNavigate('cloud-sync')}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                        >
+                            <Cloud className="w-5 h-5" />
+                            {t('فتح مزامنة السحابة', 'Open Cloud Sync')}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// ================= Main Manager Dashboard Component =================
 const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout, onNavigate }) => {
     const isRtl = language === 'ar';
     const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'add' | 'settings'>('overview');
@@ -490,29 +680,11 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
 
                 {/* Settings Tab */}
                 {activeTab === 'settings' && (
-                    <div className="max-w-2xl mx-auto">
-                        <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50">
-                            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                                <Settings className="w-6 h-6 text-emerald-400" />
-                                {t('الإعدادات', 'Settings')}
-                            </h2>
-                            <div className="space-y-4">
-                                <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
-                                    <h3 className="text-amber-400 font-medium mb-2">{t('بيانات المدير', 'Manager Credentials')}</h3>
-                                    <div className="grid grid-cols-2 gap-4 text-sm">
-                                        <div>
-                                            <p className="text-slate-500">{t('رقم الموظف', 'Employee #')}</p>
-                                            <p className="text-white font-mono">{MANAGER_CREDENTIALS.employeeNumber}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-slate-500">{t('الرقم السري', 'Password')}</p>
-                                            <p className="text-white font-mono">••••••••</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <ManagerSettingsTab
+                        language={language}
+                        t={t}
+                        onNavigate={onNavigate}
+                    />
                 )}
             </div>
         </div>

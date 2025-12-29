@@ -231,10 +231,10 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ language, onNavigate, onReg
                                 </div>
                             </div>
 
-                            {/* Phone Field */}
+                            {/* Phone Field - International Format */}
                             <div>
                                 <label className="block text-slate-300 text-sm font-medium mb-2">
-                                    {t('register_phone')}
+                                    {t('register_phone')} <span className="text-red-400">*</span>
                                 </label>
                                 <div className="relative">
                                     <Phone className="absolute top-1/2 -translate-y-1/2 start-4 w-5 h-5 text-slate-500" />
@@ -242,13 +242,18 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ language, onNavigate, onReg
                                         type="tel"
                                         value={formData.phone}
                                         onChange={(e) => handleChange('phone', e.target.value)}
-                                        placeholder={language === 'ar' ? 'رقم الجوال' : 'Phone Number'}
+                                        placeholder={language === 'ar' ? '+966 5x xxx xxxx' : '+966 5x xxx xxxx'}
                                         className="w-full bg-slate-700/50 border border-slate-600 rounded-xl py-3 ps-12 pe-4 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
                                         autoComplete="tel"
+                                        required
                                         id="register-phone"
                                         name="phone"
+                                        dir="ltr"
                                     />
                                 </div>
+                                <p className="text-xs text-slate-500 mt-1">
+                                    {language === 'ar' ? 'أدخل الرقم بصيغة دولية مثل: +966501234567' : 'Enter in international format: +966501234567'}
+                                </p>
                             </div>
 
                             {/* Company Field - Required for company and supplier */}

@@ -148,6 +148,100 @@ class RegistrationService {
     private notificationsKey = 'arba_notifications';
     private CODE_EXPIRY_MINUTES = 5; // 5 دقائق
 
+    // =================== تهيئة بيانات تجريبية ===================
+
+    initializeSampleData(): void {
+        const existing = this.getRequests();
+        // إضافة بيانات تجريبية إذا لم تكن موجودة
+        if (!existing.some(r => r.email === 'sample@company.com')) {
+            const now = new Date();
+            const sampleRequests: RegistrationRequest[] = [
+                // شركة بانتظار تأكيد السجل التجاري
+                {
+                    id: 'sample-1',
+                    userType: 'company',
+                    name: 'أحمد محمد الشركة',
+                    email: 'sample@company.com',
+                    phone: '0551234567',
+                    password: 'Test123456',
+                    companyName: 'شركة النجاح للتقنية',
+                    commercialRegister: '7012345678',
+                    businessType: 'تقنية معلومات',
+                    crVerified: false,
+                    plan: 'professional',
+                    amount: 299,
+                    emailCode: '1234',
+                    emailCodeExpiry: now.toISOString(),
+                    emailVerified: true,
+                    emailVerifiedAt: now.toISOString(),
+                    phoneCode: '5678',
+                    phoneCodeExpiry: now.toISOString(),
+                    phoneVerified: true,
+                    phoneVerifiedAt: now.toISOString(),
+                    paymentStatus: 'pending',
+                    status: 'pending_cr_verification',
+                    createdAt: now.toISOString(),
+                    updatedAt: now.toISOString()
+                },
+                // مورد بانتظار تأكيد السجل التجاري
+                {
+                    id: 'sample-2',
+                    userType: 'supplier',
+                    name: 'فهد العتيبي',
+                    email: 'supplier@example.com',
+                    phone: '0559876543',
+                    password: 'Test123456',
+                    companyName: 'مؤسسة التوريد الذهبي',
+                    commercialRegister: '7098765432',
+                    businessType: 'توريدات',
+                    crVerified: false,
+                    plan: 'professional',
+                    amount: 299,
+                    emailCode: '1111',
+                    emailCodeExpiry: now.toISOString(),
+                    emailVerified: true,
+                    emailVerifiedAt: now.toISOString(),
+                    phoneCode: '2222',
+                    phoneCodeExpiry: now.toISOString(),
+                    phoneVerified: true,
+                    phoneVerifiedAt: now.toISOString(),
+                    paymentStatus: 'pending',
+                    status: 'pending_cr_verification',
+                    createdAt: now.toISOString(),
+                    updatedAt: now.toISOString()
+                },
+                // فرد بانتظار الموافقة (مجاني)
+                {
+                    id: 'sample-3',
+                    userType: 'individual',
+                    name: 'سارة العمري',
+                    email: 'sara@example.com',
+                    phone: '0561112233',
+                    password: 'Test123456',
+                    crVerified: true,
+                    plan: 'free',
+                    amount: 0,
+                    emailCode: '3333',
+                    emailCodeExpiry: now.toISOString(),
+                    emailVerified: true,
+                    emailVerifiedAt: now.toISOString(),
+                    phoneCode: '4444',
+                    phoneCodeExpiry: now.toISOString(),
+                    phoneVerified: true,
+                    phoneVerifiedAt: now.toISOString(),
+                    paymentStatus: 'not_required',
+                    status: 'pending_approval',
+                    createdAt: now.toISOString(),
+                    updatedAt: now.toISOString()
+                }
+            ];
+
+            const allRequests = [...existing, ...sampleRequests];
+            this.saveRequests(allRequests);
+            console.log('✅ تم إضافة بيانات التسجيل التجريبية');
+        }
+    }
+
     // =================== طلبات التسجيل ===================
 
     getRequests(): RegistrationRequest[] {

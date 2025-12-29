@@ -180,8 +180,8 @@ export interface Employee {
     profileImage?: string;      // صورة الموظف
 }
 
-// بيانات المدير الثابتة
-export const MANAGER_CREDENTIALS = {
+// بيانات المدير الافتراضية
+const DEFAULT_MANAGER_CREDENTIALS = {
     employeeNumber: '11223344',
     password: '44332211',
     name: 'المدير العام',
@@ -189,6 +189,33 @@ export const MANAGER_CREDENTIALS = {
     email: 'manager@arba.sa',
     phone: '0500000000'
 };
+
+// مفتاح تخزين بيانات المدير
+const MANAGER_STORAGE_KEY = 'arba_manager_credentials';
+
+// الحصول على بيانات المدير من التخزين المحلي
+export const getManagerCredentials = (): typeof DEFAULT_MANAGER_CREDENTIALS => {
+    const stored = localStorage.getItem(MANAGER_STORAGE_KEY);
+    if (stored) {
+        try {
+            return { ...DEFAULT_MANAGER_CREDENTIALS, ...JSON.parse(stored) };
+        } catch {
+            return DEFAULT_MANAGER_CREDENTIALS;
+        }
+    }
+    return DEFAULT_MANAGER_CREDENTIALS;
+};
+
+// تحديث بيانات المدير
+export const updateManagerCredentials = (updates: Partial<typeof DEFAULT_MANAGER_CREDENTIALS>): typeof DEFAULT_MANAGER_CREDENTIALS => {
+    const current = getManagerCredentials();
+    const updated = { ...current, ...updates };
+    localStorage.setItem(MANAGER_STORAGE_KEY, JSON.stringify(updated));
+    return updated;
+};
+
+// للتوافق مع الكود القديم - يعمل كـ getter ديناميكي
+export const MANAGER_CREDENTIALS = getManagerCredentials();
 
 // ترجمات الأدوار
 export const ROLE_TRANSLATIONS: Record<EmployeeRole, { ar: string; en: string }> = {
@@ -545,13 +572,14 @@ class EmployeeService {
     }
 
     // تسجيل دخول موظف
-    login(employeeNumber: string, password: string): { success: boolean; employee?: Employee | typeof MANAGER_CREDENTIALS; error?: string } {
+    login(employeeNumber: string, password: string): { success: boolean; employee?: Employee | ReturnType<typeof getManagerCredentials>; error?: string } {
         // التحقق من المدير أولاً
-        if (employeeNumber === MANAGER_CREDENTIALS.employeeNumber) {
-            if (password === MANAGER_CREDENTIALS.password) {
+        const managerCreds = getManagerCredentials();
+        if (employeeNumber === managerCreds.employeeNumber) {
+            if (password === managerCreds.password) {
                 return {
                     success: true,
-                    employee: MANAGER_CREDENTIALS
+                    employee: managerCreds
                 };
             }
             return { success: false, error: 'الرقم السري غير صحيح' };
