@@ -14,10 +14,15 @@ import AboutPage from './pages/AboutPage';
 import CompanyPage from './pages/CompanyPage';
 import PaymentPage from './pages/PaymentPage';
 import VerificationPage from './pages/VerificationPage';
+import UnderReviewPage from './pages/UnderReviewPage';
+import PaymentUploadPage from './pages/PaymentUploadPage';
+import { registrationService } from './services/registrationService';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ManagerDashboard from './pages/employees/ManagerDashboard';
 import EmployeeDashboard from './pages/employees/EmployeeDashboard';
 import { employeeService, Employee, MANAGER_CREDENTIALS } from './services/employeeService';
+import HRPage from './pages/employees/roles/HRPage';
+import AccountantPage from './pages/employees/roles/AccountantPage';
 import { AppState, CalculatedItem, ProjectType, CustomParams, BlueprintConfig, SurfaceLocation, RoomFinishes, BaseItem } from './types';
 import { INITIAL_OVERHEAD, PROJECT_DEFAULTS, PROJECT_TITLES, TRANSLATIONS } from './constants';
 import { calculateProjectCosts } from './utils/calculations';
@@ -31,7 +36,7 @@ import { registerWithFirebase, loginWithFirebase, logoutFromFirebase, onAuthChan
 // Toggle Firebase mode - set to true to use Firebase
 const USE_FIREBASE = true;
 
-type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'admin' | 'dashboard' | 'admin-login' | 'manager' | 'employee';
+type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant';
 
 // مفتاح الوصول السري للوحة المدير - غيره لمفتاح خاص بك
 const ADMIN_SECRET_KEY = 'arba2025secure';
@@ -61,6 +66,10 @@ const App: React.FC = () => {
     // Employee state
     const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
     const [isManager, setIsManager] = useState(false);
+    // Registration flow state
+    const [registrationRequestId, setRegistrationRequestId] = useState<string | null>(null);
+    const [pendingRegistrationEmail, setPendingRegistrationEmail] = useState<string>('');
+    const [pendingRegistrationPhone, setPendingRegistrationPhone] = useState<string>('');
 
     // Check for existing session on mount
     useEffect(() => {
@@ -269,6 +278,61 @@ const App: React.FC = () => {
     };
 
     const handleRegister = async (data: RegisterData) => {
+        // For individuals, use the new registration workflow with verification
+        if (data.userType === 'individual') {
+            const result = registrationService.createRegistrationRequest({
+                name: data.name,
+                email: data.email,
+                phone: data.phone || '',
+                password: data.password,
+                plan: (data.plan === 'free' || data.plan === 'professional') ? data.plan : 'free'
+            });
+
+            if (!result.success) {
+                console.error('Registration failed:', result.error);
+                setLoginError(result.error || 'حدث خطأ أثناء التسجيل');
+                return;
+            }
+
+            if (result.request) {
+                setRegistrationRequestId(result.request.id);
+                setPendingRegistrationEmail(result.request.email);
+                setPendingRegistrationPhone(result.request.phone);
+                setCurrentPage('verification');
+            }
+            return;
+        }
+
+        // For companies and suppliers, use the new workflow with commercial register verification
+        if (data.userType === 'company' || data.userType === 'supplier') {
+            const result = registrationService.createCompanyRegistrationRequest({
+                userType: data.userType,
+                name: data.name,
+                email: data.email,
+                phone: data.phone || '',
+                password: data.password,
+                companyName: data.company || '',
+                commercialRegister: data.commercialRegister || '',
+                businessType: data.businessType,
+                plan: (data.plan === 'free' || data.plan === 'professional') ? data.plan : 'professional'
+            });
+
+            if (!result.success) {
+                console.error('Registration failed:', result.error);
+                setLoginError(result.error || 'حدث خطأ أثناء التسجيل');
+                return;
+            }
+
+            if (result.request) {
+                setRegistrationRequestId(result.request.id);
+                setPendingRegistrationEmail(result.request.email);
+                setPendingRegistrationPhone(result.request.phone);
+                setCurrentPage('verification');
+            }
+            return;
+        }
+
+        // For employees, use existing Firebase flow
         if (USE_FIREBASE) {
             // Firebase registration
             const result = await registerWithFirebase({
@@ -491,8 +555,37 @@ const App: React.FC = () => {
             <VerificationPage
                 language={language}
                 onNavigate={handleNavigate}
-                email={user?.email}
-                onVerificationComplete={() => setCurrentPage('dashboard')}
+                email={pendingRegistrationEmail || user?.email}
+                phone={pendingRegistrationPhone}
+                registrationRequestId={registrationRequestId || undefined}
+                onVerificationComplete={(nextStep) => {
+                    if (nextStep === 'under_review' || nextStep === 'payment') {
+                        setCurrentPage(nextStep === 'payment' ? 'payment-upload' : 'under-review');
+                    } else {
+                        setCurrentPage('dashboard');
+                    }
+                }}
+            />
+        );
+    }
+
+    if (currentPage === 'under-review') {
+        return (
+            <UnderReviewPage
+                language={language}
+                onNavigate={handleNavigate}
+                registrationRequestId={registrationRequestId || undefined}
+            />
+        );
+    }
+
+    if (currentPage === 'payment-upload') {
+        return (
+            <PaymentUploadPage
+                language={language}
+                onNavigate={handleNavigate}
+                registrationRequestId={registrationRequestId || undefined}
+                onPaymentSubmitted={() => setCurrentPage('under-review')}
             />
         );
     }
@@ -616,6 +709,100 @@ const App: React.FC = () => {
                 }}
                 onNavigate={handleNavigate}
             />
+        );
+    }
+
+    // HR Page (accessed from Manager Dashboard)
+    if (currentPage === 'hr') {
+        // Create a mock HR employee for viewing the page from manager dashboard
+        const hrEmployee: Employee = currentEmployee || {
+            id: 'manager-view',
+            employeeNumber: 'MGR-001',
+            password: '',
+            name: isManager ? MANAGER_CREDENTIALS.name : 'مدير الموارد البشرية',
+            email: 'hr@arba-sys.com',
+            phone: '0500000000',
+            role: 'hr',
+            isActive: true,
+            createdAt: new Date().toISOString()
+        };
+
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+                {/* Header */}
+                <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 sticky top-0 z-50">
+                    <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+                                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h1 className="text-xl font-bold text-white">{language === 'ar' ? 'إدارة الموارد البشرية' : 'Human Resources Management'}</h1>
+                                <p className="text-slate-400 text-sm">{language === 'ar' ? 'نظام إدارة شؤون الموظفين' : 'Employee Management System'}</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setCurrentPage(isManager ? 'manager' : 'employee')}
+                            className="flex items-center gap-2 px-4 py-2 bg-slate-700/50 text-slate-300 hover:bg-slate-700 rounded-lg transition-all"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            <span>{language === 'ar' ? 'رجوع' : 'Back'}</span>
+                        </button>
+                    </div>
+                </header>
+                <div className="p-6">
+                    <HRPage language={language} employee={hrEmployee} />
+                </div>
+            </div>
+        );
+    }
+
+    // Accountant Page (accessed from Manager Dashboard)
+    if (currentPage === 'accountant') {
+        const accountantEmployee: Employee = currentEmployee || {
+            id: 'manager-view',
+            employeeNumber: 'MGR-001',
+            password: '',
+            name: isManager ? MANAGER_CREDENTIALS.name : 'المحاسب',
+            email: 'accountant@arba-sys.com',
+            phone: '0500000000',
+            role: 'accountant',
+            isActive: true,
+            createdAt: new Date().toISOString()
+        };
+
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+                <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 sticky top-0 z-50">
+                    <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+                                <Calculator className="w-7 h-7 text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-xl font-bold text-white">{language === 'ar' ? 'نظام المحاسبة' : 'Accounting System'}</h1>
+                                <p className="text-slate-400 text-sm">{language === 'ar' ? 'الفواتير والمدفوعات والقيود' : 'Invoices, Payments & Ledger'}</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setCurrentPage(isManager ? 'manager' : 'employee')}
+                            className="flex items-center gap-2 px-4 py-2 bg-slate-700/50 text-slate-300 hover:bg-slate-700 rounded-lg transition-all"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            <span>{language === 'ar' ? 'رجوع' : 'Back'}</span>
+                        </button>
+                    </div>
+                </header>
+                <div className="p-6">
+                    <AccountantPage language={language} employee={accountantEmployee} />
+                </div>
+            </div>
         );
     }
 

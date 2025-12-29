@@ -177,8 +177,8 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${activeTab === tab.id
-                                    ? 'bg-emerald-500 text-white'
-                                    : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                                ? 'bg-emerald-500 text-white'
+                                : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
                                 }`}
                         >
                             {tab.icon}
@@ -223,8 +223,15 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
                                     key={role}
                                     className={`bg-gradient-to-br ${ROLE_COLORS[role]} rounded-xl p-4 cursor-pointer hover:scale-105 transition-transform`}
                                     onClick={() => {
-                                        setFilterRole(role);
-                                        setActiveTab('employees');
+                                        // إذا كان الدور هو الموارد البشرية أو المحاسب، اذهب لصفحة البرنامج الخاص بها
+                                        if (role === 'hr') {
+                                            onNavigate('hr');
+                                        } else if (role === 'accountant') {
+                                            onNavigate('accountant');
+                                        } else {
+                                            setFilterRole(role);
+                                            setActiveTab('employees');
+                                        }
                                     }}
                                 >
                                     <div className="flex items-center gap-3">

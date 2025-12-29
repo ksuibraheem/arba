@@ -90,6 +90,18 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ language, onNavigate, onReg
             return;
         }
 
+        // Validate commercial register for companies and suppliers
+        if ((userType === 'company' || userType === 'supplier') && formData.commercialRegister) {
+            if (!formData.commercialRegister.startsWith('7')) {
+                setError(language === 'ar' ? 'رقم السجل التجاري يجب أن يبدأ بالرقم 7' : 'Commercial register must start with 7');
+                return;
+            }
+            if (!/^\d{10}$/.test(formData.commercialRegister)) {
+                setError(language === 'ar' ? 'رقم السجل التجاري يجب أن يكون 10 أرقام' : 'Commercial register must be 10 digits');
+                return;
+            }
+        }
+
         if (!agreeTerms) {
             setError(language === 'ar' ? 'يرجى الموافقة على الشروط والأحكام' : 'Please agree to the terms and conditions');
             return;

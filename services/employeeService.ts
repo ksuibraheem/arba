@@ -1,6 +1,6 @@
 /**
- * نظام إدارة الموظفين
- * Employee Management System
+ * نظام إدارة الموظفين الشامل
+ * Comprehensive Employee Management System
  */
 
 // أنواع أدوار الموظفين
@@ -14,19 +14,170 @@ export type EmployeeRole =
     | 'marketing'    // التسويق
     | 'quality';     // الجودة
 
-// بيانات الموظف
+// نوع العقد
+export type ContractType = 'permanent' | 'temporary' | 'contract' | 'parttime';
+
+// نوع الإنذار
+export type WarningType = 'verbal' | 'written' | 'final';
+
+// الشهادة
+export interface Certificate {
+    id: string;
+    name: string;           // اسم الشهادة
+    issuer: string;         // الجهة المانحة
+    issueDate: string;      // تاريخ الإصدار
+    expiryDate?: string;    // تاريخ الانتهاء
+    attachmentUrl?: string; // رابط المرفق
+}
+
+// الخبرة العملية
+export interface Experience {
+    id: string;
+    company: string;        // اسم الشركة
+    position: string;       // المسمى الوظيفي
+    startDate: string;      // تاريخ البداية
+    endDate?: string;       // تاريخ النهاية
+    description?: string;   // وصف المهام
+    isCurrent?: boolean;    // وظيفة حالية
+}
+
+// هيكل الراتب
+export interface SalaryStructure {
+    basic: number;          // الراتب الأساسي
+    housing: number;        // بدل السكن
+    transportation: number; // بدل النقل
+    food: number;           // بدل الطعام
+    phone: number;          // بدل الهاتف
+    other: number;          // بدلات أخرى
+    benefits: string[];     // المزايا الإضافية
+}
+
+// بيانات العقد
+export interface ContractInfo {
+    type: ContractType;     // نوع العقد
+    startDate: string;      // تاريخ بداية العقد
+    endDate?: string;       // تاريخ نهاية العقد
+    noticePeriod: number;   // فترة الإشعار (بالأيام)
+    probationEnd?: string;  // نهاية فترة التجربة
+}
+
+// الملاحظة
+export interface Note {
+    id: string;
+    date: string;
+    content: string;
+    addedBy: string;
+    category?: 'general' | 'performance' | 'attendance' | 'other';
+}
+
+// الإنذار
+export interface Warning {
+    id: string;
+    date: string;
+    type: WarningType;
+    reason: string;
+    issuedBy: string;
+    acknowledged?: boolean;
+    acknowledgedDate?: string;
+}
+
+// فترة الاستراحة
+export interface BreakRecord {
+    id: string;
+    startTime: string;      // وقت بدء الاستراحة
+    endTime?: string;       // وقت نهاية الاستراحة
+    duration?: number;      // المدة بالدقائق
+    type: 'prayer' | 'lunch' | 'personal' | 'other'; // نوع الاستراحة
+}
+
+// ملخص المهمة
+export interface TaskSummary {
+    id: string;
+    title: string;          // عنوان المهمة
+    description?: string;   // وصف المهمة
+    status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+    startTime?: string;     // وقت البدء
+    endTime?: string;       // وقت الانتهاء
+    priority: 'low' | 'medium' | 'high';
+}
+
+// سجل الحضور اليومي
+export interface AttendanceRecord {
+    id: string;
+    employeeId: string;
+    employeeNumber: string;
+    employeeName: string;
+    date: string;           // تاريخ اليوم YYYY-MM-DD
+    clockIn?: string;       // وقت تسجيل الدخول
+    clockOut?: string;      // وقت تسجيل الخروج
+    breaks: BreakRecord[];  // فترات الاستراحة
+    tasks: TaskSummary[];   // المهام اليومية
+    totalWorkMinutes?: number;    // إجمالي دقائق العمل
+    totalBreakMinutes?: number;   // إجمالي دقائق الاستراحة
+    status: 'present' | 'absent' | 'late' | 'early_leave' | 'on_leave';
+    notes?: string;         // ملاحظات
+}
+
+// ترجمات حالة الحضور
+export const ATTENDANCE_STATUS_TRANSLATIONS: Record<AttendanceRecord['status'], { ar: string; en: string }> = {
+    present: { ar: 'حاضر', en: 'Present' },
+    absent: { ar: 'غائب', en: 'Absent' },
+    late: { ar: 'متأخر', en: 'Late' },
+    early_leave: { ar: 'خروج مبكر', en: 'Early Leave' },
+    on_leave: { ar: 'إجازة', en: 'On Leave' }
+};
+
+// ترجمات نوع الاستراحة
+export const BREAK_TYPE_TRANSLATIONS: Record<BreakRecord['type'], { ar: string; en: string }> = {
+    prayer: { ar: 'صلاة', en: 'Prayer' },
+    lunch: { ar: 'غداء', en: 'Lunch' },
+    personal: { ar: 'شخصي', en: 'Personal' },
+    other: { ar: 'أخرى', en: 'Other' }
+};
+
+// بيانات الموظف الشاملة
 export interface Employee {
     id: string;
-    employeeNumber: string;  // رقم الموظف
+    employeeNumber: string;     // رقم الموظف
+
+    // البيانات الشخصية
     name: string;
     email: string;
-    phone?: string;
+    phone: string;              // رقم الجوال
+    emergencyContact: string;   // رقم الطوارئ
+    nationalId?: string;        // رقم الهوية
+    birthDate?: string;         // تاريخ الميلاد
+    nationality?: string;       // الجنسية
+    address?: string;           // العنوان
+
+    // بيانات الوظيفة
     role: EmployeeRole;
+    department?: string;        // القسم
+    jobTitle?: string;          // المسمى الوظيفي
+    professionalClass?: string; // التصنيف المهني
+
+    // المؤهلات والخبرات
+    certificates: Certificate[];
+    experiences: Experience[];
+    skills?: string[];          // المهارات
+
+    // الراتب والمزايا
+    salary: SalaryStructure;
+
+    // العقد
+    contract: ContractInfo;
+
+    // الملاحظات والإنذارات
+    notes: Note[];
+    warnings: Warning[];
+
+    // بيانات النظام
     password: string;
     isActive: boolean;
     createdAt: Date;
     lastLogin?: Date;
     passwordChangedAt?: Date;
+    profileImage?: string;      // صورة الموظف
 }
 
 // بيانات المدير الثابتة
@@ -34,7 +185,9 @@ export const MANAGER_CREDENTIALS = {
     employeeNumber: '436103592',
     password: '14902423',
     name: 'المدير العام',
-    role: 'manager' as EmployeeRole
+    role: 'manager' as EmployeeRole,
+    email: 'manager@arba.sa',
+    phone: '0500000000'
 };
 
 // ترجمات الأدوار
@@ -49,7 +202,22 @@ export const ROLE_TRANSLATIONS: Record<EmployeeRole, { ar: string; en: string }>
     quality: { ar: 'الجودة', en: 'Quality' }
 };
 
-// أيقونات الأدوار (اسم الأيقونة من lucide-react)
+// ترجمات نوع العقد
+export const CONTRACT_TRANSLATIONS: Record<ContractType, { ar: string; en: string }> = {
+    permanent: { ar: 'دائم', en: 'Permanent' },
+    temporary: { ar: 'مؤقت', en: 'Temporary' },
+    contract: { ar: 'تعاقد', en: 'Contract' },
+    parttime: { ar: 'دوام جزئي', en: 'Part-time' }
+};
+
+// ترجمات نوع الإنذار
+export const WARNING_TRANSLATIONS: Record<WarningType, { ar: string; en: string }> = {
+    verbal: { ar: 'شفهي', en: 'Verbal' },
+    written: { ar: 'كتابي', en: 'Written' },
+    final: { ar: 'نهائي', en: 'Final' }
+};
+
+// أيقونات الأدوار
 export const ROLE_ICONS: Record<EmployeeRole, string> = {
     manager: 'Crown',
     deputy: 'UserCog',
@@ -73,14 +241,132 @@ export const ROLE_COLORS: Record<EmployeeRole, string> = {
     quality: 'from-teal-500 to-green-600'
 };
 
+// القيم الافتراضية للراتب
+export const DEFAULT_SALARY: SalaryStructure = {
+    basic: 0,
+    housing: 0,
+    transportation: 0,
+    food: 0,
+    phone: 0,
+    other: 0,
+    benefits: []
+};
+
+// القيم الافتراضية للعقد
+export const DEFAULT_CONTRACT: ContractInfo = {
+    type: 'permanent',
+    startDate: new Date().toISOString().split('T')[0],
+    noticePeriod: 30
+};
+
+// حساب إجمالي الراتب
+export const calculateTotalSalary = (salary: SalaryStructure): number => {
+    return salary.basic + salary.housing + salary.transportation + salary.food + salary.phone + salary.other;
+};
+
+// بيانات موظفين تجريبية
+export const SAMPLE_EMPLOYEES: Partial<Employee>[] = [
+    {
+        employeeNumber: '412345678',
+        name: 'أحمد محمد العلي',
+        email: 'ahmed@arba.sa',
+        phone: '0501234567',
+        emergencyContact: '0559876543',
+        role: 'hr',
+        jobTitle: 'مسؤول موارد بشرية',
+        nationalId: '1098765432',
+        salary: { basic: 8000, housing: 2000, transportation: 500, food: 300, phone: 200, other: 0, benefits: ['تأمين طبي', 'تأمين سيارة'] },
+        contract: { type: 'permanent', startDate: '2023-01-15', noticePeriod: 60 },
+        certificates: [
+            { id: '1', name: 'بكالوريوس إدارة أعمال', issuer: 'جامعة الملك سعود', issueDate: '2018-06-15' },
+            { id: '2', name: 'شهادة PHR', issuer: 'HRCI', issueDate: '2022-03-20', expiryDate: '2025-03-20' }
+        ],
+        experiences: [
+            { id: '1', company: 'شركة سابك', position: 'أخصائي موارد بشرية', startDate: '2018-08-01', endDate: '2022-12-31' }
+        ],
+        notes: [],
+        warnings: []
+    },
+    {
+        employeeNumber: '423456789',
+        name: 'فاطمة عبدالله السعود',
+        email: 'fatima@arba.sa',
+        phone: '0512345678',
+        emergencyContact: '0558765432',
+        role: 'accountant',
+        jobTitle: 'محاسب أول',
+        nationalId: '1087654321',
+        salary: { basic: 10000, housing: 2500, transportation: 500, food: 300, phone: 200, other: 500, benefits: ['تأمين طبي'] },
+        contract: { type: 'permanent', startDate: '2022-06-01', noticePeriod: 60 },
+        certificates: [
+            { id: '1', name: 'بكالوريوس محاسبة', issuer: 'جامعة الملك فهد', issueDate: '2017-06-15' },
+            { id: '2', name: 'زمالة SOCPA', issuer: 'الهيئة السعودية للمحاسبين', issueDate: '2021-09-10' }
+        ],
+        experiences: [
+            { id: '1', company: 'شركة أرامكو', position: 'محاسب', startDate: '2017-09-01', endDate: '2022-05-31' }
+        ],
+        notes: [],
+        warnings: []
+    },
+    {
+        employeeNumber: '434567890',
+        name: 'خالد سعد الدوسري',
+        email: 'khaled@arba.sa',
+        phone: '0523456789',
+        emergencyContact: '0557654321',
+        role: 'developer',
+        jobTitle: 'مطور برمجيات',
+        nationalId: '1076543210',
+        salary: { basic: 12000, housing: 3000, transportation: 500, food: 300, phone: 300, other: 0, benefits: ['تأمين طبي', 'لابتوب'] },
+        contract: { type: 'permanent', startDate: '2023-03-01', noticePeriod: 30 },
+        certificates: [
+            { id: '1', name: 'بكالوريوس علوم حاسب', issuer: 'جامعة الملك عبدالعزيز', issueDate: '2019-06-15' }
+        ],
+        experiences: [
+            { id: '1', company: 'شركة STC', position: 'مبرمج', startDate: '2019-08-01', endDate: '2023-02-28' }
+        ],
+        notes: [],
+        warnings: []
+    }
+];
+
 // خدمة إدارة الموظفين
 class EmployeeService {
     private storageKey = 'arba_employees';
+
+    // تهيئة البيانات التجريبية
+    initializeSampleData(): void {
+        const existing = this.getEmployees();
+        if (existing.length === 0) {
+            SAMPLE_EMPLOYEES.forEach(emp => {
+                try {
+                    this.addEmployee({
+                        ...emp as any,
+                        password: this.generatePassword()
+                    });
+                } catch (e) {
+                    // تجاهل الأخطاء
+                }
+            });
+        }
+    }
 
     // الحصول على جميع الموظفين
     getEmployees(): Employee[] {
         const data = localStorage.getItem(this.storageKey);
         return data ? JSON.parse(data) : [];
+    }
+
+    // الحصول على موظف بالمعرف
+    getEmployeeById(id: string): Employee | null {
+        const employees = this.getEmployees();
+        return employees.find(e => e.id === id) || null;
+    }
+
+    // الحصول على موظف برقم الموظف
+    getEmployeeByNumber(employeeNumber: string): Employee | null {
+        const employees = this.getEmployees();
+        return employees.find(e => e.employeeNumber === employeeNumber) || null;
     }
 
     // إضافة موظف جديد
@@ -96,11 +382,20 @@ class EmployeeService {
             ...employee,
             id: crypto.randomUUID(),
             isActive: true,
-            createdAt: new Date()
+            createdAt: new Date(),
+            certificates: employee.certificates || [],
+            experiences: employee.experiences || [],
+            notes: employee.notes || [],
+            warnings: employee.warnings || [],
+            salary: employee.salary || DEFAULT_SALARY,
+            contract: employee.contract || DEFAULT_CONTRACT
         };
 
         employees.push(newEmployee);
         localStorage.setItem(this.storageKey, JSON.stringify(employees));
+
+        // إنشاء سجل حضور للموظف الجديد لليوم الحالي
+        this.createAttendanceForEmployee(newEmployee);
 
         return newEmployee;
     }
@@ -115,7 +410,33 @@ class EmployeeService {
         employees[index] = { ...employees[index], ...updates };
         localStorage.setItem(this.storageKey, JSON.stringify(employees));
 
+        // تحديث سجلات الحضور إذا تغير الاسم أو رقم الموظف
+        if (updates.name || updates.employeeNumber) {
+            this.updateAttendanceEmployeeInfo(id, {
+                employeeName: employees[index].name,
+                employeeNumber: employees[index].employeeNumber
+            });
+        }
+
         return employees[index];
+    }
+
+    // تحديث معلومات الموظف في سجلات الحضور
+    private updateAttendanceEmployeeInfo(employeeId: string, info: { employeeName: string; employeeNumber: string }): void {
+        let records = this.getAttendanceRecords();
+        let updated = false;
+
+        records = records.map(r => {
+            if (r.employeeId === employeeId) {
+                updated = true;
+                return { ...r, employeeName: info.employeeName, employeeNumber: info.employeeNumber };
+            }
+            return r;
+        });
+
+        if (updated) {
+            this.saveAttendanceRecords(records);
+        }
     }
 
     // حذف موظف
@@ -127,6 +448,100 @@ class EmployeeService {
 
         localStorage.setItem(this.storageKey, JSON.stringify(filtered));
         return true;
+    }
+
+    // إضافة شهادة لموظف
+    addCertificate(employeeId: string, certificate: Omit<Certificate, 'id'>): Certificate | null {
+        const employee = this.getEmployeeById(employeeId);
+        if (!employee) return null;
+
+        const newCert: Certificate = {
+            ...certificate,
+            id: crypto.randomUUID()
+        };
+
+        const updated = this.updateEmployee(employeeId, {
+            certificates: [...employee.certificates, newCert]
+        });
+
+        return updated ? newCert : null;
+    }
+
+    // حذف شهادة
+    deleteCertificate(employeeId: string, certificateId: string): boolean {
+        const employee = this.getEmployeeById(employeeId);
+        if (!employee) return false;
+
+        const updated = this.updateEmployee(employeeId, {
+            certificates: employee.certificates.filter(c => c.id !== certificateId)
+        });
+
+        return updated !== null;
+    }
+
+    // إضافة خبرة لموظف
+    addExperience(employeeId: string, experience: Omit<Experience, 'id'>): Experience | null {
+        const employee = this.getEmployeeById(employeeId);
+        if (!employee) return null;
+
+        const newExp: Experience = {
+            ...experience,
+            id: crypto.randomUUID()
+        };
+
+        const updated = this.updateEmployee(employeeId, {
+            experiences: [...employee.experiences, newExp]
+        });
+
+        return updated ? newExp : null;
+    }
+
+    // حذف خبرة
+    deleteExperience(employeeId: string, experienceId: string): boolean {
+        const employee = this.getEmployeeById(employeeId);
+        if (!employee) return false;
+
+        const updated = this.updateEmployee(employeeId, {
+            experiences: employee.experiences.filter(e => e.id !== experienceId)
+        });
+
+        return updated !== null;
+    }
+
+    // إضافة ملاحظة
+    addNote(employeeId: string, note: Omit<Note, 'id' | 'date'>): Note | null {
+        const employee = this.getEmployeeById(employeeId);
+        if (!employee) return null;
+
+        const newNote: Note = {
+            ...note,
+            id: crypto.randomUUID(),
+            date: new Date().toISOString()
+        };
+
+        const updated = this.updateEmployee(employeeId, {
+            notes: [...employee.notes, newNote]
+        });
+
+        return updated ? newNote : null;
+    }
+
+    // إضافة إنذار
+    addWarning(employeeId: string, warning: Omit<Warning, 'id' | 'date'>): Warning | null {
+        const employee = this.getEmployeeById(employeeId);
+        if (!employee) return null;
+
+        const newWarning: Warning = {
+            ...warning,
+            id: crypto.randomUUID(),
+            date: new Date().toISOString()
+        };
+
+        const updated = this.updateEmployee(employeeId, {
+            warnings: [...employee.warnings, newWarning]
+        });
+
+        return updated ? newWarning : null;
     }
 
     // تسجيل دخول موظف
@@ -185,7 +600,7 @@ class EmployeeService {
         return { success: true };
     }
 
-    // إعادة تعيين كلمة المرور (من قبل المدير)
+    // إعادة تعيين كلمة المرور
     resetPassword(employeeId: string, newPassword: string): boolean {
         const result = this.updateEmployee(employeeId, {
             password: newPassword,
@@ -205,7 +620,327 @@ class EmployeeService {
     generatePassword(): string {
         return Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
     }
+
+    // البحث في الموظفين
+    searchEmployees(query: string): Employee[] {
+        const employees = this.getEmployees();
+        const lowerQuery = query.toLowerCase();
+        return employees.filter(e =>
+            e.name.toLowerCase().includes(lowerQuery) ||
+            e.employeeNumber.includes(query) ||
+            e.email.toLowerCase().includes(lowerQuery) ||
+            e.phone?.includes(query)
+        );
+    }
+
+    // فلترة حسب الدور
+    filterByRole(role: EmployeeRole): Employee[] {
+        return this.getEmployees().filter(e => e.role === role);
+    }
+
+    // إحصائيات الموظفين
+    getStatistics(): {
+        total: number;
+        active: number;
+        inactive: number;
+        byRole: Record<EmployeeRole, number>;
+        totalSalaries: number;
+        warningsCount: number;
+    } {
+        const employees = this.getEmployees();
+        const byRole: Record<EmployeeRole, number> = {
+            manager: 0, deputy: 0, accountant: 0, hr: 0,
+            developer: 0, support: 0, marketing: 0, quality: 0
+        };
+
+        let totalSalaries = 0;
+        let warningsCount = 0;
+
+        employees.forEach(e => {
+            byRole[e.role]++;
+            totalSalaries += calculateTotalSalary(e.salary);
+            warningsCount += e.warnings.length;
+        });
+
+        return {
+            total: employees.length,
+            active: employees.filter(e => e.isActive).length,
+            inactive: employees.filter(e => !e.isActive).length,
+            byRole,
+            totalSalaries,
+            warningsCount
+        };
+    }
+
+    // ====================== نظام الحضور والانصراف ======================
+
+    private attendanceStorageKey = 'arba_attendance';
+
+    // الحصول على جميع سجلات الحضور
+    getAttendanceRecords(): AttendanceRecord[] {
+        const data = localStorage.getItem(this.attendanceStorageKey);
+        return data ? JSON.parse(data) : [];
+    }
+
+    // حفظ سجلات الحضور
+    private saveAttendanceRecords(records: AttendanceRecord[]): void {
+        localStorage.setItem(this.attendanceStorageKey, JSON.stringify(records));
+    }
+
+    // الحصول على سجلات حضور يوم معين
+    getAttendanceByDate(date: string): AttendanceRecord[] {
+        return this.getAttendanceRecords().filter(r => r.date === date);
+    }
+
+    // الحصول على سجل حضور موظف لليوم
+    getTodayAttendance(employeeId: string): AttendanceRecord | null {
+        const today = new Date().toISOString().split('T')[0];
+        const records = this.getAttendanceRecords();
+        return records.find(r => r.employeeId === employeeId && r.date === today) || null;
+    }
+
+    // إنشاء سجل حضور لموظف معين (يُستخدم عند إضافة موظف جديد)
+    createAttendanceForEmployee(employee: Employee): AttendanceRecord {
+        const today = new Date().toISOString().split('T')[0];
+        let records = this.getAttendanceRecords();
+
+        // التحقق من عدم وجود سجل مسبق
+        const existingRecord = records.find(r => r.employeeId === employee.id && r.date === today);
+        if (existingRecord) {
+            return existingRecord;
+        }
+
+        const newRecord: AttendanceRecord = {
+            id: crypto.randomUUID(),
+            employeeId: employee.id,
+            employeeNumber: employee.employeeNumber,
+            employeeName: employee.name,
+            date: today,
+            breaks: [],
+            tasks: [],
+            status: 'absent'
+        };
+
+        records.push(newRecord);
+        this.saveAttendanceRecords(records);
+        return newRecord;
+    }
+
+    // تسجيل دخول الموظف
+    clockIn(employeeId: string): AttendanceRecord | null {
+        const employee = this.getEmployeeById(employeeId);
+        if (!employee) return null;
+
+        const today = new Date().toISOString().split('T')[0];
+        const now = new Date().toISOString();
+
+        // التحقق من عدم وجود تسجيل دخول سابق لليوم
+        let records = this.getAttendanceRecords();
+        let existingRecord = records.find(r => r.employeeId === employeeId && r.date === today);
+
+        if (existingRecord && existingRecord.clockIn) {
+            // تحديث وقت الدخول إذا كان موجود
+            return existingRecord;
+        }
+
+        // تحديد حالة الحضور (متأخر إذا بعد 9 صباحاً)
+        const currentHour = new Date().getHours();
+        const status: AttendanceRecord['status'] = currentHour >= 9 ? 'late' : 'present';
+
+        if (existingRecord) {
+            // تحديث السجل الموجود
+            existingRecord.clockIn = now;
+            existingRecord.status = status;
+        } else {
+            // إنشاء سجل جديد
+            existingRecord = {
+                id: crypto.randomUUID(),
+                employeeId: employee.id,
+                employeeNumber: employee.employeeNumber,
+                employeeName: employee.name,
+                date: today,
+                clockIn: now,
+                breaks: [],
+                tasks: [],
+                status
+            };
+            records.push(existingRecord);
+        }
+
+        this.saveAttendanceRecords(records);
+        return existingRecord;
+    }
+
+    // تسجيل خروج الموظف
+    clockOut(employeeId: string): AttendanceRecord | null {
+        const today = new Date().toISOString().split('T')[0];
+        const now = new Date().toISOString();
+
+        let records = this.getAttendanceRecords();
+        const recordIndex = records.findIndex(r => r.employeeId === employeeId && r.date === today);
+
+        if (recordIndex === -1) return null;
+
+        const record = records[recordIndex];
+        record.clockOut = now;
+
+        // حساب إجمالي ساعات العمل
+        if (record.clockIn) {
+            const clockInTime = new Date(record.clockIn).getTime();
+            const clockOutTime = new Date(now).getTime();
+            record.totalWorkMinutes = Math.round((clockOutTime - clockInTime) / 60000);
+
+            // طرح وقت الاستراحات
+            const totalBreakMinutes = record.breaks.reduce((sum, b) => sum + (b.duration || 0), 0);
+            record.totalWorkMinutes -= totalBreakMinutes;
+            record.totalBreakMinutes = totalBreakMinutes;
+        }
+
+        // تحديد إذا كان خروج مبكر (قبل 5 مساءً)
+        const currentHour = new Date().getHours();
+        if (currentHour < 17 && record.status === 'present') {
+            record.status = 'early_leave';
+        }
+
+        records[recordIndex] = record;
+        this.saveAttendanceRecords(records);
+        return record;
+    }
+
+    // بدء استراحة
+    startBreak(employeeId: string, type: BreakRecord['type'] = 'other'): BreakRecord | null {
+        const today = new Date().toISOString().split('T')[0];
+        let records = this.getAttendanceRecords();
+        const recordIndex = records.findIndex(r => r.employeeId === employeeId && r.date === today);
+
+        if (recordIndex === -1) return null;
+
+        const newBreak: BreakRecord = {
+            id: crypto.randomUUID(),
+            startTime: new Date().toISOString(),
+            type
+        };
+
+        records[recordIndex].breaks.push(newBreak);
+        this.saveAttendanceRecords(records);
+        return newBreak;
+    }
+
+    // إنهاء استراحة
+    endBreak(employeeId: string, breakId: string): BreakRecord | null {
+        const today = new Date().toISOString().split('T')[0];
+        let records = this.getAttendanceRecords();
+        const recordIndex = records.findIndex(r => r.employeeId === employeeId && r.date === today);
+
+        if (recordIndex === -1) return null;
+
+        const breakIndex = records[recordIndex].breaks.findIndex(b => b.id === breakId);
+        if (breakIndex === -1) return null;
+
+        const breakRecord = records[recordIndex].breaks[breakIndex];
+        breakRecord.endTime = new Date().toISOString();
+
+        // حساب مدة الاستراحة بالدقائق
+        const startTime = new Date(breakRecord.startTime).getTime();
+        const endTime = new Date(breakRecord.endTime).getTime();
+        breakRecord.duration = Math.round((endTime - startTime) / 60000);
+
+        records[recordIndex].breaks[breakIndex] = breakRecord;
+        this.saveAttendanceRecords(records);
+        return breakRecord;
+    }
+
+    // إضافة مهمة
+    addTask(employeeId: string, task: Omit<TaskSummary, 'id'>): TaskSummary | null {
+        const today = new Date().toISOString().split('T')[0];
+        let records = this.getAttendanceRecords();
+        const recordIndex = records.findIndex(r => r.employeeId === employeeId && r.date === today);
+
+        if (recordIndex === -1) return null;
+
+        const newTask: TaskSummary = {
+            ...task,
+            id: crypto.randomUUID()
+        };
+
+        records[recordIndex].tasks.push(newTask);
+        this.saveAttendanceRecords(records);
+        return newTask;
+    }
+
+    // تحديث مهمة
+    updateTask(employeeId: string, taskId: string, updates: Partial<TaskSummary>): TaskSummary | null {
+        const today = new Date().toISOString().split('T')[0];
+        let records = this.getAttendanceRecords();
+        const recordIndex = records.findIndex(r => r.employeeId === employeeId && r.date === today);
+
+        if (recordIndex === -1) return null;
+
+        const taskIndex = records[recordIndex].tasks.findIndex(t => t.id === taskId);
+        if (taskIndex === -1) return null;
+
+        records[recordIndex].tasks[taskIndex] = {
+            ...records[recordIndex].tasks[taskIndex],
+            ...updates
+        };
+
+        this.saveAttendanceRecords(records);
+        return records[recordIndex].tasks[taskIndex];
+    }
+
+    // إحصائيات الحضور لفترة معينة
+    getAttendanceStats(startDate: string, endDate: string): {
+        totalDays: number;
+        presentDays: number;
+        lateDays: number;
+        absentDays: number;
+        averageWorkHours: number;
+        averageBreakMinutes: number;
+    } {
+        const records = this.getAttendanceRecords().filter(r =>
+            r.date >= startDate && r.date <= endDate
+        );
+
+        const presentRecords = records.filter(r => r.status === 'present' || r.status === 'late');
+        const totalWorkMinutes = presentRecords.reduce((sum, r) => sum + (r.totalWorkMinutes || 0), 0);
+        const totalBreakMinutes = presentRecords.reduce((sum, r) => sum + (r.totalBreakMinutes || 0), 0);
+
+        return {
+            totalDays: records.length,
+            presentDays: records.filter(r => r.status === 'present').length,
+            lateDays: records.filter(r => r.status === 'late').length,
+            absentDays: records.filter(r => r.status === 'absent').length,
+            averageWorkHours: presentRecords.length > 0 ? (totalWorkMinutes / presentRecords.length) / 60 : 0,
+            averageBreakMinutes: presentRecords.length > 0 ? totalBreakMinutes / presentRecords.length : 0
+        };
+    }
+
+    // تهيئة حضور اليوم لجميع الموظفين (يُستدعى تلقائياً)
+    initializeTodayAttendance(): void {
+        const today = new Date().toISOString().split('T')[0];
+        const employees = this.getEmployees();
+        let records = this.getAttendanceRecords();
+
+        employees.forEach(emp => {
+            const exists = records.some(r => r.employeeId === emp.id && r.date === today);
+            if (!exists) {
+                records.push({
+                    id: crypto.randomUUID(),
+                    employeeId: emp.id,
+                    employeeNumber: emp.employeeNumber,
+                    employeeName: emp.name,
+                    date: today,
+                    breaks: [],
+                    tasks: [],
+                    status: 'absent'
+                });
+            }
+        });
+
+        this.saveAttendanceRecords(records);
+    }
 }
 
 export const employeeService = new EmployeeService();
 export default employeeService;
+
