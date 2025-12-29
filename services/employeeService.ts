@@ -182,8 +182,8 @@ export interface Employee {
 
 // بيانات المدير الثابتة
 export const MANAGER_CREDENTIALS = {
-    employeeNumber: '436103592',
-    password: '14902423',
+    employeeNumber: '11223344',
+    password: '44332211',
     name: 'المدير العام',
     role: 'manager' as EmployeeRole,
     email: 'manager@arba.sa',
