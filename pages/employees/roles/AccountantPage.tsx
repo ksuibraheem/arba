@@ -615,7 +615,11 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
                                         <td className="px-4 py-3 text-center text-slate-400">{invoice.issueDate}</td>
                                         <td className="px-4 py-3">
                                             <div className="flex items-center justify-center gap-2">
-                                                <button className="p-1 hover:bg-slate-700 rounded text-blue-400">
+                                                <button
+                                                    onClick={() => taxInvoiceService.openInvoicePDF({ invoice, invoiceType: 'standard' })}
+                                                    className="p-1 hover:bg-slate-700 rounded text-blue-400"
+                                                    title={t('عرض الفاتورة', 'View Invoice')}
+                                                >
                                                     <Eye className="w-4 h-4" />
                                                 </button>
                                                 <button

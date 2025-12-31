@@ -38,25 +38,20 @@ export interface ZATCAQRData {
     vatAmount: number;
 }
 
-// ====================== تحميل المكتبات من CDN ======================
+// ====================== استيراد المكتبات ======================
 
-let jsPDFModule: any = null;
-let QRCodeModule: any = null;
+// @ts-ignore
+import { jsPDF } from 'jspdf';
+// @ts-ignore
+import QRCode from 'qrcode';
 
+// دوال تحميل المكتبات (للتوافق مع الكود الحالي)
 async function loadJsPDF() {
-    if (!jsPDFModule) {
-        // @ts-ignore
-        jsPDFModule = await import('https://esm.sh/jspdf@2.5.2');
-    }
-    return jsPDFModule.jsPDF;
+    return jsPDF;
 }
 
 async function loadQRCode() {
-    if (!QRCodeModule) {
-        // @ts-ignore
-        QRCodeModule = await import('https://esm.sh/qrcode@1.5.4');
-    }
-    return QRCodeModule.default;
+    return QRCode;
 }
 
 // ====================== دوال مساعدة ======================

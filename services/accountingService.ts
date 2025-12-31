@@ -258,11 +258,11 @@ class AccountingService {
 
         // إضافة قيد دائن
         this.addLedgerEntry({
-            description: `فاتورة ${newInvoice.invoiceNumber} - ${newInvoice.customerName}`,
+            description: `Invoice ${newInvoice.invoiceNumber} - ${newInvoice.customerName}`,
             type: 'credit',
             amount: newInvoice.total,
             reference: newInvoice.invoiceNumber,
-            category: 'مبيعات',
+            category: 'Sales',
             createdBy: newInvoice.createdBy
         });
 
@@ -461,11 +461,11 @@ class AccountingService {
         // إضافة قيد مدين (استلام مبلغ)
         if (payment.status === 'completed') {
             this.addLedgerEntry({
-                description: `دفعة من ${payment.customerName}`,
+                description: `Payment from ${payment.customerName}`,
                 type: 'debit',
                 amount: payment.amount,
                 reference: payment.transactionRef || newPayment.id,
-                category: 'مدفوعات',
+                category: 'Payments',
                 createdBy: payment.createdBy
             });
         }
@@ -538,17 +538,37 @@ class AccountingService {
 
     // =================== بيانات تجريبية ===================
 
+    // مسح وإعادة تهيئة البيانات (تشغيل مرة واحدة)
+    resetAndReinitialize(): void {
+        const dataVersion = localStorage.getItem('arba_data_version');
+        // Version 2 = English data
+        if (dataVersion !== '2') {
+            // مسح جميع البيانات القديمة
+            localStorage.removeItem(this.invoicesKey);
+            localStorage.removeItem(this.ledgerKey);
+            localStorage.removeItem(this.subscriptionsKey);
+            localStorage.removeItem(this.paymentsKey);
+            localStorage.removeItem(this.clientsKey);
+            // تعيين الإصدار الجديد
+            localStorage.setItem('arba_data_version', '2');
+            console.log('Data reset to English version');
+        }
+    }
+
     initializeSampleData(): void {
+        // مسح البيانات القديمة إذا لزم الأمر
+        this.resetAndReinitialize();
+
         // فواتير تجريبية
         if (this.getInvoices().length === 0) {
             const sampleInvoices: Omit<Invoice, 'id' | 'invoiceNumber' | 'createdAt'>[] = [
                 {
                     customerId: 'c1',
-                    customerName: 'شركة التقنية المتقدمة',
+                    customerName: 'Advanced Technology Co.',
                     customerEmail: 'info@tech-adv.com',
                     customerPhone: '0501234567',
                     items: [
-                        { id: '1', description: 'اشتراك سنوي - باقة احترافية', quantity: 1, unitPrice: 3588, total: 3588 }
+                        { id: '1', description: 'Annual Subscription - Professional Package', quantity: 1, unitPrice: 3588, total: 3588 }
                     ],
                     subtotal: 3588,
                     tax: 538.2,
@@ -558,15 +578,15 @@ class AccountingService {
                     dueDate: '2025-01-15',
                     issueDate: '2024-12-15',
                     paidDate: '2024-12-20',
-                    createdBy: 'النظام'
+                    createdBy: 'System'
                 },
                 {
                     customerId: 'c2',
-                    customerName: 'مؤسسة البناء الحديث',
+                    customerName: 'Modern Construction Est.',
                     customerEmail: 'contact@modern-build.sa',
                     customerPhone: '0559876543',
                     items: [
-                        { id: '1', description: 'اشتراك شهري - باقة مؤسسية', quantity: 1, unitPrice: 999, total: 999 }
+                        { id: '1', description: 'Monthly Subscription - Enterprise Package', quantity: 1, unitPrice: 999, total: 999 }
                     ],
                     subtotal: 999,
                     tax: 149.85,
@@ -575,7 +595,24 @@ class AccountingService {
                     status: 'pending',
                     dueDate: '2025-01-05',
                     issueDate: '2024-12-25',
-                    createdBy: 'النظام'
+                    createdBy: 'System'
+                },
+                {
+                    customerId: 'c3',
+                    customerName: 'Omar Yasser',
+                    customerEmail: 'omar@example.com',
+                    customerPhone: '0512345678',
+                    items: [
+                        { id: '1', description: 'Yearly Subscription - Professional Package', quantity: 1, unitPrice: 1599, total: 1599 }
+                    ],
+                    subtotal: 1599,
+                    tax: 239.85,
+                    discount: 0,
+                    total: 1838.85,
+                    status: 'pending',
+                    dueDate: '2025-12-30',
+                    issueDate: '2025-12-30',
+                    createdBy: 'System'
                 }
             ];
 
@@ -587,7 +624,7 @@ class AccountingService {
             const sampleSubs: Omit<Subscription, 'id' | 'createdAt' | 'paymentHistory'>[] = [
                 {
                     userId: 'u1',
-                    userName: 'أحمد محمد',
+                    userName: 'Ahmed Mohammed',
                     userEmail: 'ahmed@example.com',
                     userType: 'individual',
                     plan: 'professional',
@@ -597,15 +634,15 @@ class AccountingService {
                     amount: 3588,
                     autoRenew: true,
                     approvalStatus: 'approved',
-                    approvedBy: 'المدير العام',
+                    approvedBy: 'General Manager',
                     approvedAt: '2024-12-01'
                 },
                 {
                     userId: 'u2',
-                    userName: 'فاطمة علي',
+                    userName: 'Fatima Ali',
                     userEmail: 'fatima@example.com',
                     userType: 'company',
-                    companyName: 'شركة التقنية',
+                    companyName: 'Tech Solutions Co.',
                     plan: 'enterprise',
                     status: 'active',
                     startDate: '2024-11-15',
@@ -613,12 +650,12 @@ class AccountingService {
                     amount: 11988,
                     autoRenew: false,
                     approvalStatus: 'approved',
-                    approvedBy: 'المدير العام',
+                    approvedBy: 'General Manager',
                     approvedAt: '2024-11-15'
                 },
                 {
                     userId: 'u3',
-                    userName: 'خالد سعد',
+                    userName: 'Khaled Saad',
                     userEmail: 'khaled@example.com',
                     userType: 'individual',
                     plan: 'free',
@@ -631,10 +668,10 @@ class AccountingService {
                 },
                 {
                     userId: 'u4',
-                    userName: 'مؤسسة البناء الحديث',
+                    userName: 'Modern Construction Est.',
                     userEmail: 'info@modern-build.sa',
                     userType: 'supplier',
-                    companyName: 'مؤسسة البناء الحديث',
+                    companyName: 'Modern Construction Est.',
                     plan: 'professional',
                     status: 'pending_approval',
                     startDate: '2024-12-28',
