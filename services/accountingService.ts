@@ -126,6 +126,41 @@ export interface Payment {
     createdAt: string;
 }
 
+// العميل (Client)
+export interface Client {
+    id: string;
+    name: string;               // اسم العميل
+    email: string;              // البريد الإلكتروني
+    phone: string;              // رقم الهاتف
+    type: UserType;             // نوع العميل
+    companyName?: string;       // اسم الشركة (للشركات والموردين)
+
+    // الحساب المالي
+    totalPaid: number;          // إجمالي المدفوع
+    totalDue: number;           // إجمالي المستحق
+    balance: number;            // الرصيد (موجب = دائن، سالب = مدين)
+
+    // الاشتراكات والفواتير والمدفوعات المرتبطة
+    subscriptionIds: string[];
+    invoiceIds: string[];
+    paymentIds: string[];
+
+    createdAt: string;
+    updatedAt: string;
+}
+
+// ملخص مالي للعميل
+export interface ClientFinancialSummary {
+    totalPaid: number;          // إجمالي ما دفعه
+    totalDue: number;           // إجمالي المطلوب منه
+    balance: number;            // الرصيد
+    debit: number;              // المدين (ما عليه)
+    credit: number;             // الدائن (ما له)
+    subscriptions: Subscription[];
+    invoices: Invoice[];
+    payments: Payment[];
+}
+
 // ====================== الترجمات ======================
 
 export const INVOICE_STATUS_TRANSLATIONS: Record<InvoiceStatus, { ar: string; en: string }> = {
@@ -612,6 +647,231 @@ class AccountingService {
 
             sampleSubs.forEach(sub => this.createSubscription(sub));
         }
+
+        // مزامنة العملاء من الاشتراكات الموجودة
+        this.syncClientsFromSubscriptions();
+    }
+
+    // =================== إدارة العملاء ===================
+
+    private clientsKey = 'arba_clients';
+
+    getClients(): Client[] {
+        const data = localStorage.getItem(this.clientsKey);
+        return data ? JSON.parse(data) : [];
+    }
+
+    private saveClients(clients: Client[]): void {
+        localStorage.setItem(this.clientsKey, JSON.stringify(clients));
+    }
+
+    getClientById(id: string): Client | null {
+        return this.getClients().find(c => c.id === id) || null;
+    }
+
+    getClientByEmail(email: string): Client | null {
+        return this.getClients().find(c => c.email.toLowerCase() === email.toLowerCase()) || null;
+    }
+
+    // البحث في العملاء
+    searchClients(query: string): Client[] {
+        const lowerQuery = query.toLowerCase();
+        return this.getClients().filter(c =>
+            c.name.toLowerCase().includes(lowerQuery) ||
+            c.email.toLowerCase().includes(lowerQuery) ||
+            c.phone.includes(query) ||
+            (c.companyName && c.companyName.toLowerCase().includes(lowerQuery))
+        );
+    }
+
+    // إنشاء عميل جديد
+    createClient(client: Omit<Client, 'id' | 'createdAt' | 'updatedAt' | 'totalPaid' | 'totalDue' | 'balance' | 'subscriptionIds' | 'invoiceIds' | 'paymentIds'>): Client {
+        const clients = this.getClients();
+
+        // التحقق من عدم وجود العميل
+        if (clients.some(c => c.email.toLowerCase() === client.email.toLowerCase())) {
+            // إعادة العميل الموجود
+            return clients.find(c => c.email.toLowerCase() === client.email.toLowerCase())!;
+        }
+
+        const newClient: Client = {
+            ...client,
+            id: crypto.randomUUID(),
+            totalPaid: 0,
+            totalDue: 0,
+            balance: 0,
+            subscriptionIds: [],
+            invoiceIds: [],
+            paymentIds: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        clients.push(newClient);
+        this.saveClients(clients);
+        return newClient;
+    }
+
+    // تحديث بيانات العميل
+    updateClient(id: string, updates: Partial<Client>): Client | null {
+        const clients = this.getClients();
+        const index = clients.findIndex(c => c.id === id);
+        if (index === -1) return null;
+
+        clients[index] = {
+            ...clients[index],
+            ...updates,
+            updatedAt: new Date().toISOString()
+        };
+        this.saveClients(clients);
+        return clients[index];
+    }
+
+    // تحديث رصيد العميل
+    updateClientBalance(clientId: string): Client | null {
+        const client = this.getClientById(clientId);
+        if (!client) return null;
+
+        // حساب المدفوعات
+        const payments = this.getPayments().filter(p => client.paymentIds.includes(p.id) && p.status === 'completed');
+        const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+
+        // حساب المستحق من الاشتراكات والفواتير
+        const subscriptions = this.getSubscriptions().filter(s => client.subscriptionIds.includes(s.id));
+        const invoices = this.getInvoices().filter(i => client.invoiceIds.includes(i.id));
+        const subDue = subscriptions.reduce((sum, s) => sum + s.amount, 0);
+        const invDue = invoices.filter(i => i.status !== 'paid' && i.status !== 'cancelled').reduce((sum, i) => sum + i.total, 0);
+        const totalDue = subDue + invDue;
+
+        const balance = totalPaid - totalDue;
+
+        return this.updateClient(clientId, { totalPaid, totalDue, balance });
+    }
+
+    // الحصول على ملخص مالي للعميل
+    getClientFinancialSummary(clientId: string): ClientFinancialSummary | null {
+        const client = this.getClientById(clientId);
+        if (!client) return null;
+
+        const subscriptions = this.getSubscriptions().filter(s => client.subscriptionIds.includes(s.id));
+        const invoices = this.getInvoices().filter(i => client.invoiceIds.includes(i.id));
+        const payments = this.getPayments().filter(p => client.paymentIds.includes(p.id));
+
+        const totalPaid = payments.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0);
+        const subDue = subscriptions.reduce((sum, s) => sum + s.amount, 0);
+        const invDue = invoices.filter(i => i.status !== 'paid' && i.status !== 'cancelled').reduce((sum, i) => sum + i.total, 0);
+        const totalDue = subDue + invDue;
+        const balance = totalPaid - totalDue;
+
+        return {
+            totalPaid,
+            totalDue,
+            balance,
+            debit: balance < 0 ? Math.abs(balance) : 0,  // ما عليه
+            credit: balance > 0 ? balance : 0,           // ما له
+            subscriptions,
+            invoices,
+            payments
+        };
+    }
+
+    // ربط اشتراك بالعميل
+    linkSubscriptionToClient(clientId: string, subscriptionId: string): Client | null {
+        const client = this.getClientById(clientId);
+        if (!client) return null;
+
+        if (!client.subscriptionIds.includes(subscriptionId)) {
+            const updated = this.updateClient(clientId, {
+                subscriptionIds: [...client.subscriptionIds, subscriptionId]
+            });
+            this.updateClientBalance(clientId);
+            return updated;
+        }
+        return client;
+    }
+
+    // ربط فاتورة بالعميل
+    linkInvoiceToClient(clientId: string, invoiceId: string): Client | null {
+        const client = this.getClientById(clientId);
+        if (!client) return null;
+
+        if (!client.invoiceIds.includes(invoiceId)) {
+            const updated = this.updateClient(clientId, {
+                invoiceIds: [...client.invoiceIds, invoiceId]
+            });
+            this.updateClientBalance(clientId);
+            return updated;
+        }
+        return client;
+    }
+
+    // ربط دفعة بالعميل
+    linkPaymentToClient(clientId: string, paymentId: string): Client | null {
+        const client = this.getClientById(clientId);
+        if (!client) return null;
+
+        if (!client.paymentIds.includes(paymentId)) {
+            const updated = this.updateClient(clientId, {
+                paymentIds: [...client.paymentIds, paymentId]
+            });
+            this.updateClientBalance(clientId);
+            return updated;
+        }
+        return client;
+    }
+
+    // مزامنة العملاء من الاشتراكات الموجودة
+    syncClientsFromSubscriptions(): void {
+        const subscriptions = this.getSubscriptions();
+
+        subscriptions.forEach(sub => {
+            let client = this.getClientByEmail(sub.userEmail);
+
+            if (!client) {
+                // إنشاء عميل جديد من الاشتراك
+                client = this.createClient({
+                    name: sub.userName,
+                    email: sub.userEmail,
+                    phone: sub.userPhone || '',
+                    type: sub.userType,
+                    companyName: sub.companyName
+                });
+            }
+
+            // ربط الاشتراك بالعميل
+            this.linkSubscriptionToClient(client.id, sub.id);
+        });
+
+        // مزامنة الفواتير
+        const invoices = this.getInvoices();
+        invoices.forEach(inv => {
+            if (inv.customerEmail) {
+                let client = this.getClientByEmail(inv.customerEmail);
+                if (client) {
+                    this.linkInvoiceToClient(client.id, inv.id);
+                }
+            }
+        });
+
+        // مزامنة المدفوعات
+        const payments = this.getPayments();
+        payments.forEach(payment => {
+            // البحث عن العميل بالاسم
+            const client = this.getClients().find(c =>
+                c.name === payment.customerName ||
+                c.name.includes(payment.customerName) ||
+                payment.customerName.includes(c.name)
+            );
+            if (client) {
+                this.linkPaymentToClient(client.id, payment.id);
+            }
+        });
+    }
+
+    // الحصول على العميل من الاشتراك
+    getClientFromSubscription(subscriptionId: string): Client | null {
+        const clients = this.getClients();
+        return clients.find(c => c.subscriptionIds.includes(subscriptionId)) || null;
     }
 }
 

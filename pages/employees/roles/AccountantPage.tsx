@@ -9,11 +9,12 @@ import {
     Plus, Search, Filter, Eye, Edit2, Trash2, X, Save, Check,
     CreditCard, Calendar, Users, AlertCircle, CheckCircle, Clock,
     Download, Printer, RefreshCw, ArrowUpRight, ArrowDownRight,
-    UserPlus, Image, MessageSquare, XCircle, Building2, ExternalLink
+    UserPlus, Image, MessageSquare, XCircle, Building2, ExternalLink,
+    BookOpen, BarChart3, Layers, Briefcase, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { Employee } from '../../../services/employeeService';
 import {
-    Invoice, InvoiceItem, LedgerEntry, Subscription, Payment,
+    Invoice, InvoiceItem, LedgerEntry, Subscription, Payment, Client, ClientFinancialSummary,
     InvoiceStatus, LedgerType, PaymentMethod, PaymentStatus, UserType,
     accountingService,
     INVOICE_STATUS_TRANSLATIONS, LEDGER_TYPE_TRANSLATIONS,
@@ -28,13 +29,20 @@ import {
     USER_TYPE_TRANSLATIONS as REG_USER_TYPE_TRANSLATIONS,
     CR_VERIFICATION_URL
 } from '../../../services/registrationService';
+import {
+    chartOfAccountsService,
+    Account, JournalEntry, TrialBalance, IncomeStatement,
+    ACCOUNT_CODES, ACCOUNT_TYPE_TRANSLATIONS, JOURNAL_SOURCE_TRANSLATIONS
+} from '../../../services/chartOfAccountsService';
+import { employeeService, calculateTotalSalary } from '../../../services/employeeService';
+import { taxInvoiceService } from '../../../services/taxInvoiceService';
 
 interface AccountantPageProps {
     language: 'ar' | 'en';
     employee: Employee;
 }
 
-type TabType = 'overview' | 'invoices' | 'payments' | 'ledger' | 'subscriptions' | 'registrations';
+type TabType = 'overview' | 'invoices' | 'payments' | 'ledger' | 'subscriptions' | 'registrations' | 'chart_of_accounts' | 'journal' | 'reports';
 
 const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) => {
     const t = (ar: string, en: string) => language === 'ar' ? ar : en;
@@ -50,11 +58,38 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
     const [registrationRequests, setRegistrationRequests] = useState<RegistrationRequest[]>([]);
     const [selectedReceipt, setSelectedReceipt] = useState<string | null>(null);
 
+    // Client search states
+    const [clients, setClients] = useState<Client[]>([]);
+    const [clientSearchQuery, setClientSearchQuery] = useState('');
+    const [clientSearchResults, setClientSearchResults] = useState<Client[]>([]);
+    const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+    const [selectedClientSummary, setSelectedClientSummary] = useState<ClientFinancialSummary | null>(null);
+    const [showClientDropdown, setShowClientDropdown] = useState(false);
+
     // Modal states
     const [showInvoiceModal, setShowInvoiceModal] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [showLedgerModal, setShowLedgerModal] = useState(false);
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+
+    // Financial Management states
+    const [accounts, setAccounts] = useState<Account[]>([]);
+    const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
+    const [trialBalance, setTrialBalance] = useState<TrialBalance | null>(null);
+    const [incomeStatement, setIncomeStatement] = useState<IncomeStatement | null>(null);
+    const [showFinancialSection, setShowFinancialSection] = useState(false);
+    const [showJournalModal, setShowJournalModal] = useState(false);
+    const [showPayrollModal, setShowPayrollModal] = useState(false);
+    const [showMediationModal, setShowMediationModal] = useState(false);
+
+    // Mediation form state
+    const [mediationForm, setMediationForm] = useState({
+        buyerName: '',
+        supplierName: '',
+        saleAmount: 0,
+        purchaseAmount: 0,
+        description: ''
+    });
 
     // Form states
     const [invoiceForm, setInvoiceForm] = useState({
@@ -88,6 +123,7 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
     useEffect(() => {
         accountingService.initializeSampleData();
         registrationService.initializeSampleData();
+        chartOfAccountsService.initializeDefaultAccounts();
         loadData();
     }, []);
 
@@ -98,6 +134,50 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
         setPayments(accountingService.getPayments());
         setStats(accountingService.getFinancialStats());
         setRegistrationRequests(registrationService.getPendingRegistrations());
+        setClients(accountingService.getClients());
+
+        // Financial Management data
+        setAccounts(chartOfAccountsService.getAccounts());
+        setJournalEntries(chartOfAccountsService.getJournalEntries());
+        setTrialBalance(chartOfAccountsService.getTrialBalance());
+
+        const today = new Date();
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+        setIncomeStatement(chartOfAccountsService.getIncomeStatement(firstDay, lastDay));
+    };
+
+    // Client search handler
+    const handleClientSearch = (query: string) => {
+        setClientSearchQuery(query);
+        if (query.length >= 2) {
+            const results = accountingService.searchClients(query);
+            setClientSearchResults(results);
+            setShowClientDropdown(true);
+        } else {
+            setClientSearchResults([]);
+            setShowClientDropdown(false);
+        }
+    };
+
+    // Select client handler
+    const handleSelectClient = (client: Client) => {
+        setSelectedClient(client);
+        setClientSearchQuery(client.name);
+        setShowClientDropdown(false);
+        setPaymentForm({ ...paymentForm, customerName: client.name });
+
+        // Get client financial summary
+        const summary = accountingService.getClientFinancialSummary(client.id);
+        setSelectedClientSummary(summary);
+    };
+
+    // Clear selected client
+    const handleClearClient = () => {
+        setSelectedClient(null);
+        setSelectedClientSummary(null);
+        setClientSearchQuery('');
+        setPaymentForm({ ...paymentForm, customerName: '' });
     };
 
     // Calculate invoice totals
@@ -175,7 +255,7 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
 
     // Record payment
     const handleRecordPayment = () => {
-        accountingService.recordPayment({
+        const payment = accountingService.recordPayment({
             invoiceId: paymentForm.invoiceId || undefined,
             amount: paymentForm.amount,
             method: paymentForm.method,
@@ -187,6 +267,11 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
             createdBy: employee.name
         });
 
+        // Link payment to selected client
+        if (selectedClient) {
+            accountingService.linkPaymentToClient(selectedClient.id, payment.id);
+        }
+
         setShowPaymentModal(false);
         setPaymentForm({
             invoiceId: '',
@@ -196,6 +281,8 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
             transactionRef: '',
             notes: ''
         });
+        // Reset client search state
+        handleClearClient();
         loadData();
     };
 
@@ -241,14 +328,21 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
         }
     };
 
-    // Tabs
-    const tabs = [
+    // Tabs - Operational
+    const operationalTabs = [
         { id: 'overview', label: t('نظرة عامة', 'Overview'), icon: <PieChart className="w-4 h-4" /> },
         { id: 'registrations', label: t('طلبات التسجيل', 'Registrations'), icon: <UserPlus className="w-4 h-4" />, badge: registrationRequests.length },
         { id: 'invoices', label: t('الفواتير', 'Invoices'), icon: <Receipt className="w-4 h-4" /> },
         { id: 'payments', label: t('المدفوعات', 'Payments'), icon: <CreditCard className="w-4 h-4" /> },
         { id: 'ledger', label: t('سجل القيود', 'Ledger'), icon: <FileText className="w-4 h-4" /> },
         { id: 'subscriptions', label: t('الاشتراكات', 'Subscriptions'), icon: <Users className="w-4 h-4" /> },
+    ];
+
+    // Tabs - Financial Management
+    const financialTabs = [
+        { id: 'chart_of_accounts', label: t('شجرة الحسابات', 'Chart of Accounts'), icon: <Layers className="w-4 h-4" /> },
+        { id: 'journal', label: t('اليومية العامة', 'General Journal'), icon: <BookOpen className="w-4 h-4" /> },
+        { id: 'reports', label: t('التقارير المالية', 'Financial Reports'), icon: <BarChart3 className="w-4 h-4" /> },
     ];
 
     return (
@@ -267,25 +361,66 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-2 bg-slate-800/50 p-2 rounded-xl overflow-x-auto">
-                {tabs.map(tab => (
+            <div className="space-y-3">
+                {/* Operational Tabs */}
+                <div className="flex gap-2 bg-slate-800/50 p-2 rounded-xl overflow-x-auto">
+                    {operationalTabs.map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id as TabType)}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition ${activeTab === tab.id
+                                ? 'bg-green-500 text-white'
+                                : 'text-slate-400 hover:bg-slate-700'
+                                }`}
+                        >
+                            {tab.icon}
+                            {tab.label}
+                            {(tab as any).badge > 0 && (
+                                <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">
+                                    {(tab as any).badge}
+                                </span>
+                            )}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Financial Management Section */}
+                <div className="bg-gradient-to-r from-purple-900/20 to-indigo-900/20 rounded-xl border border-purple-500/30 overflow-hidden">
                     <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id as TabType)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition ${activeTab === tab.id
-                            ? 'bg-green-500 text-white'
-                            : 'text-slate-400 hover:bg-slate-700'
-                            }`}
+                        onClick={() => setShowFinancialSection(!showFinancialSection)}
+                        className="w-full flex items-center justify-between px-4 py-3 hover:bg-purple-500/10 transition"
                     >
-                        {tab.icon}
-                        {tab.label}
-                        {(tab as any).badge > 0 && (
-                            <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">
-                                {(tab as any).badge}
-                            </span>
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                                <Briefcase className="w-4 h-4 text-purple-400" />
+                            </div>
+                            <span className="text-purple-300 font-medium">{t('الإدارة المالية', 'Financial Management')}</span>
+                        </div>
+                        {showFinancialSection ? (
+                            <ChevronUp className="w-5 h-5 text-purple-400" />
+                        ) : (
+                            <ChevronDown className="w-5 h-5 text-purple-400" />
                         )}
                     </button>
-                ))}
+
+                    {showFinancialSection && (
+                        <div className="flex gap-2 p-2 pt-0 overflow-x-auto">
+                            {financialTabs.map(tab => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setActiveTab(tab.id as TabType)}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition ${activeTab === tab.id
+                                        ? 'bg-purple-500 text-white'
+                                        : 'text-slate-400 hover:bg-slate-700'
+                                        }`}
+                                >
+                                    {tab.icon}
+                                    {tab.label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Overview Tab */}
@@ -483,7 +618,11 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
                                                 <button className="p-1 hover:bg-slate-700 rounded text-blue-400">
                                                     <Eye className="w-4 h-4" />
                                                 </button>
-                                                <button className="p-1 hover:bg-slate-700 rounded text-green-400">
+                                                <button
+                                                    onClick={() => taxInvoiceService.downloadInvoicePDF({ invoice, invoiceType: 'standard' })}
+                                                    className="p-1 hover:bg-slate-700 rounded text-green-400"
+                                                    title={t('طباعة الفاتورة (PDF)', 'Print Invoice (PDF)')}
+                                                >
                                                     <Printer className="w-4 h-4" />
                                                 </button>
                                                 {invoice.status === 'pending' && (
@@ -1204,15 +1343,109 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
                         </div>
 
                         <div className="space-y-4">
-                            <div>
-                                <label className="block text-slate-400 text-sm mb-1">{t('اسم العميل', 'Customer Name')} *</label>
-                                <input
-                                    type="text"
-                                    value={paymentForm.customerName}
-                                    onChange={(e) => setPaymentForm({ ...paymentForm, customerName: e.target.value })}
-                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
-                                />
+                            {/* Client Search */}
+                            <div className="relative">
+                                <label className="block text-slate-400 text-sm mb-1">{t('البحث عن عميل', 'Search Client')} *</label>
+                                <div className="relative">
+                                    <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <input
+                                        type="text"
+                                        value={clientSearchQuery}
+                                        onChange={(e) => handleClientSearch(e.target.value)}
+                                        placeholder={t('ابحث بالاسم أو البريد أو الهاتف...', 'Search by name, email or phone...')}
+                                        className="w-full bg-slate-700 border border-slate-600 rounded-lg ps-10 pe-10 py-2 text-white"
+                                    />
+                                    {selectedClient && (
+                                        <button
+                                            onClick={handleClearClient}
+                                            className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-red-400"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Search Results Dropdown */}
+                                {showClientDropdown && clientSearchResults.length > 0 && (
+                                    <div className="absolute z-10 w-full mt-1 bg-slate-700 border border-slate-600 rounded-lg max-h-48 overflow-y-auto shadow-xl">
+                                        {clientSearchResults.map(client => (
+                                            <button
+                                                key={client.id}
+                                                onClick={() => handleSelectClient(client)}
+                                                className="w-full px-4 py-3 text-start hover:bg-slate-600 flex items-center justify-between gap-2 border-b border-slate-600/50 last:border-0"
+                                            >
+                                                <div>
+                                                    <p className="text-white font-medium">{client.name}</p>
+                                                    <p className="text-slate-400 text-xs">{client.email} • {client.phone}</p>
+                                                </div>
+                                                <div className={`text-xs font-bold ${client.balance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                    {client.balance.toLocaleString()} {t('ر.س', 'SAR')}
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* No results */}
+                                {showClientDropdown && clientSearchQuery.length >= 2 && clientSearchResults.length === 0 && (
+                                    <div className="absolute z-10 w-full mt-1 bg-slate-700 border border-slate-600 rounded-lg p-4 text-center text-slate-400">
+                                        {t('لا يوجد عملاء بهذا الاسم', 'No clients found')}
+                                    </div>
+                                )}
                             </div>
+
+                            {/* Selected Client Financial Summary */}
+                            {selectedClient && selectedClientSummary && (
+                                <div className="bg-gradient-to-br from-slate-700/50 to-slate-600/30 rounded-xl p-4 border border-slate-600/50">
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                                            <Users className="w-5 h-5 text-blue-400" />
+                                        </div>
+                                        <div>
+                                            <p className="text-white font-medium">{selectedClient.name}</p>
+                                            <p className="text-slate-400 text-xs">{USER_TYPE_TRANSLATIONS[selectedClient.type][language]}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="bg-slate-800/50 rounded-lg p-3">
+                                            <p className="text-slate-400 text-xs">{t('إجمالي المستحق', 'Total Due')}</p>
+                                            <p className="text-white font-bold">{selectedClientSummary.totalDue.toLocaleString()} {t('ر.س', 'SAR')}</p>
+                                        </div>
+                                        <div className="bg-slate-800/50 rounded-lg p-3">
+                                            <p className="text-slate-400 text-xs">{t('إجمالي المدفوع', 'Total Paid')}</p>
+                                            <p className="text-green-400 font-bold">{selectedClientSummary.totalPaid.toLocaleString()} {t('ر.س', 'SAR')}</p>
+                                        </div>
+                                        <div className="bg-slate-800/50 rounded-lg p-3">
+                                            <p className="text-slate-400 text-xs">{t('المدين (عليه)', 'Debit (Owes)')}</p>
+                                            <p className="text-red-400 font-bold">{selectedClientSummary.debit.toLocaleString()} {t('ر.س', 'SAR')}</p>
+                                        </div>
+                                        <div className="bg-slate-800/50 rounded-lg p-3">
+                                            <p className="text-slate-400 text-xs">{t('الدائن (له)', 'Credit (Has)')}</p>
+                                            <p className="text-emerald-400 font-bold">{selectedClientSummary.credit.toLocaleString()} {t('ر.س', 'SAR')}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Subscriptions */}
+                                    {selectedClientSummary.subscriptions.length > 0 && (
+                                        <div className="mt-3 pt-3 border-t border-slate-600/50">
+                                            <p className="text-slate-400 text-xs mb-2">{t('الاشتراكات', 'Subscriptions')}</p>
+                                            <div className="space-y-1">
+                                                {selectedClientSummary.subscriptions.map(sub => (
+                                                    <div key={sub.id} className="flex items-center justify-between text-sm">
+                                                        <span className="text-white">{SUBSCRIPTION_PLAN_TRANSLATIONS[sub.plan][language]}</span>
+                                                        <span className={`px-2 py-0.5 rounded text-xs ${sub.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'
+                                                            }`}>
+                                                            {SUBSCRIPTION_STATUS_TRANSLATIONS[sub.status][language]}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
                             <div>
                                 <label className="block text-slate-400 text-sm mb-1">{t('المبلغ', 'Amount')} *</label>
                                 <input
@@ -1316,6 +1549,547 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
                                 className="w-full py-3 bg-purple-500 text-white rounded-lg font-medium hover:bg-purple-600 disabled:opacity-50"
                             >
                                 {t('إضافة القيد', 'Add Entry')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Chart of Accounts Tab */}
+            {activeTab === 'chart_of_accounts' && (
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                            <Layers className="w-5 h-5 text-purple-400" />
+                            {t('شجرة الحسابات', 'Chart of Accounts')}
+                        </h3>
+                        <div className="text-slate-400 text-sm">
+                            {t('إجمالي الحسابات:', 'Total Accounts:')} <span className="text-white font-bold">{accounts.length}</span>
+                        </div>
+                    </div>
+
+                    {/* Account Types Summary */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {(['asset', 'liability', 'revenue', 'expense'] as const).map(type => {
+                            const typeAccounts = accounts.filter(a => a.type === type);
+                            const totalBalance = typeAccounts.reduce((sum, a) => sum + a.balance, 0);
+                            const colors = {
+                                asset: 'from-blue-500/20 to-cyan-500/20 border-blue-500/30',
+                                liability: 'from-red-500/20 to-orange-500/20 border-red-500/30',
+                                revenue: 'from-green-500/20 to-emerald-500/20 border-green-500/30',
+                                expense: 'from-yellow-500/20 to-amber-500/20 border-yellow-500/30'
+                            };
+                            return (
+                                <div key={type} className={`bg-gradient-to-br ${colors[type]} rounded-xl p-4 border`}>
+                                    <p className="text-slate-400 text-sm">{ACCOUNT_TYPE_TRANSLATIONS[type][language]}</p>
+                                    <p className="text-2xl font-bold text-white">{totalBalance.toLocaleString()} {t('ر.س', 'SAR')}</p>
+                                    <p className="text-slate-500 text-xs">{typeAccounts.length} {t('حسابات', 'accounts')}</p>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Accounts Table */}
+                    <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 overflow-hidden">
+                        <table className="w-full">
+                            <thead className="bg-slate-700/50">
+                                <tr>
+                                    <th className="px-4 py-3 text-right text-sm text-slate-300">{t('الكود', 'Code')}</th>
+                                    <th className="px-4 py-3 text-right text-sm text-slate-300">{t('اسم الحساب', 'Account Name')}</th>
+                                    <th className="px-4 py-3 text-center text-sm text-slate-300">{t('النوع', 'Type')}</th>
+                                    <th className="px-4 py-3 text-center text-sm text-slate-300">{t('الرصيد', 'Balance')}</th>
+                                    <th className="px-4 py-3 text-center text-sm text-slate-300">{t('مرتبط بـ', 'Linked To')}</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-700/50">
+                                {accounts.map(account => (
+                                    <tr key={account.code} className="hover:bg-slate-700/30">
+                                        <td className="px-4 py-3 text-white font-mono">{account.code}</td>
+                                        <td className="px-4 py-3">
+                                            <p className="text-white">{account.name}</p>
+                                            <p className="text-slate-500 text-xs">{account.nameEn}</p>
+                                        </td>
+                                        <td className="px-4 py-3 text-center">
+                                            <span className={`px-2 py-1 rounded-full text-xs ${account.type === 'asset' ? 'bg-blue-500/20 text-blue-400' :
+                                                account.type === 'liability' ? 'bg-red-500/20 text-red-400' :
+                                                    account.type === 'revenue' ? 'bg-green-500/20 text-green-400' :
+                                                        'bg-yellow-500/20 text-yellow-400'
+                                                }`}>
+                                                {ACCOUNT_TYPE_TRANSLATIONS[account.type][language]}
+                                            </span>
+                                        </td>
+                                        <td className={`px-4 py-3 text-center font-bold ${account.balance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                            {account.balance.toLocaleString()} {t('ر.س', 'SAR')}
+                                        </td>
+                                        <td className="px-4 py-3 text-center text-slate-400 text-sm">
+                                            {account.linkedEntityType ? (
+                                                account.linkedEntityType === 'client' ? t('العملاء', 'Clients') :
+                                                    account.linkedEntityType === 'supplier' ? t('الموردين', 'Suppliers') :
+                                                        t('الموظفين', 'Employees')
+                                            ) : '-'}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
+            {/* Journal Tab */}
+            {activeTab === 'journal' && (
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                            <BookOpen className="w-5 h-5 text-purple-400" />
+                            {t('اليومية العامة', 'General Journal')}
+                        </h3>
+                        <div className="flex gap-2 flex-wrap">
+                            <button
+                                onClick={() => setShowMediationModal(true)}
+                                className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                            >
+                                <TrendingUp className="w-4 h-4" />
+                                {t('عملية وساطة', 'Mediation Sale')}
+                            </button>
+                            <button
+                                onClick={() => setShowPayrollModal(true)}
+                                className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
+                            >
+                                <Users className="w-4 h-4" />
+                                {t('مسير الرواتب', 'Payroll')}
+                            </button>
+                            <button
+                                onClick={() => setShowJournalModal(true)}
+                                className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
+                            >
+                                <Plus className="w-4 h-4" />
+                                {t('قيد يدوي', 'Manual Entry')}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Journal Entries */}
+                    <div className="space-y-3">
+                        {journalEntries.length === 0 ? (
+                            <div className="text-center py-12 text-slate-400 bg-slate-800/50 rounded-xl">
+                                <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                                <p>{t('لا توجد قيود محاسبية', 'No journal entries')}</p>
+                            </div>
+                        ) : (
+                            journalEntries.slice().reverse().map(entry => (
+                                <div key={entry.id} className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div className="flex items-center gap-3">
+                                            <span className="px-2 py-1 bg-purple-500/20 text-purple-400 rounded text-xs font-mono">
+                                                {entry.entryNumber}
+                                            </span>
+                                            <span className="text-white font-medium">{entry.description}</span>
+                                            <span className={`px-2 py-0.5 rounded text-xs ${entry.isPosted ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'
+                                                }`}>
+                                                {entry.isPosted ? t('مرحّل', 'Posted') : t('معلق', 'Pending')}
+                                            </span>
+                                        </div>
+                                        <div className="text-slate-400 text-sm">{entry.date}</div>
+                                    </div>
+
+                                    <table className="w-full text-sm">
+                                        <thead>
+                                            <tr className="text-slate-500">
+                                                <th className="text-right pb-2">{t('الحساب', 'Account')}</th>
+                                                <th className="text-center pb-2">{t('مدين', 'Debit')}</th>
+                                                <th className="text-center pb-2">{t('دائن', 'Credit')}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {entry.lines.map((line, idx) => (
+                                                <tr key={idx} className="border-t border-slate-700/30">
+                                                    <td className="py-2 text-white">
+                                                        <span className="text-slate-500 font-mono text-xs me-2">{line.accountCode}</span>
+                                                        {line.accountName}
+                                                        {line.entityName && (
+                                                            <span className="text-slate-400 text-xs ms-2">({line.entityName})</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="py-2 text-center text-blue-400 font-bold">
+                                                        {line.debit > 0 ? line.debit.toLocaleString() : '-'}
+                                                    </td>
+                                                    <td className="py-2 text-center text-green-400 font-bold">
+                                                        {line.credit > 0 ? line.credit.toLocaleString() : '-'}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                        <tfoot className="border-t border-slate-600">
+                                            <tr className="font-bold">
+                                                <td className="py-2 text-slate-300">{t('الإجمالي', 'Total')}</td>
+                                                <td className="py-2 text-center text-blue-400">{entry.totalDebit.toLocaleString()}</td>
+                                                <td className="py-2 text-center text-green-400">{entry.totalCredit.toLocaleString()}</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+
+                                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-700/30 text-xs text-slate-500">
+                                        <span>{JOURNAL_SOURCE_TRANSLATIONS[entry.sourceType][language]}</span>
+                                        <span>{t('بواسطة:', 'By:')} {entry.createdBy}</span>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Reports Tab */}
+            {activeTab === 'reports' && (
+                <div className="space-y-6">
+                    <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                        <BarChart3 className="w-5 h-5 text-purple-400" />
+                        {t('التقارير المالية', 'Financial Reports')}
+                    </h3>
+
+                    {/* Income Statement Summary */}
+                    {incomeStatement && (
+                        <div className="bg-gradient-to-br from-emerald-900/20 to-green-900/20 rounded-xl p-6 border border-emerald-500/30">
+                            <h4 className="text-emerald-300 font-medium mb-4 flex items-center gap-2">
+                                <TrendingUp className="w-5 h-5" />
+                                {t('قائمة الدخل', 'Income Statement')}
+                            </h4>
+
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                                <div className="bg-slate-800/50 rounded-lg p-4">
+                                    <p className="text-slate-400 text-sm">{t('إيراد الاشتراكات', 'Subscription Revenue')}</p>
+                                    <p className="text-2xl font-bold text-green-400">{incomeStatement.subscriptionRevenue.toLocaleString()}</p>
+                                </div>
+                                <div className="bg-slate-800/50 rounded-lg p-4">
+                                    <p className="text-slate-400 text-sm">{t('إيراد المبيعات', 'Sales Revenue')}</p>
+                                    <p className="text-2xl font-bold text-blue-400">{incomeStatement.salesRevenue.toLocaleString()}</p>
+                                </div>
+                                <div className="bg-slate-800/50 rounded-lg p-4">
+                                    <p className="text-slate-400 text-sm">{t('تكلفة البضاعة', 'COGS')}</p>
+                                    <p className="text-2xl font-bold text-red-400">{incomeStatement.costOfGoodsSold.toLocaleString()}</p>
+                                </div>
+                                <div className="bg-slate-800/50 rounded-lg p-4">
+                                    <p className="text-slate-400 text-sm">{t('مصروف الرواتب', 'Salaries')}</p>
+                                    <p className="text-2xl font-bold text-orange-400">{incomeStatement.salaryExpense.toLocaleString()}</p>
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-4">
+                                <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-xl p-4 border border-blue-500/30 text-center">
+                                    <p className="text-blue-300 text-sm">{t('ربح الوساطة', 'Mediation Profit')}</p>
+                                    <p className="text-3xl font-bold text-white">{incomeStatement.mediationProfit.toLocaleString()}</p>
+                                    <p className="text-slate-500 text-xs">{t('المبيعات - التكلفة', 'Sales - COGS')}</p>
+                                </div>
+                                <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-xl p-4 border border-purple-500/30 text-center">
+                                    <p className="text-purple-300 text-sm">{t('ربح الاشتراكات', 'Subscription Profit')}</p>
+                                    <p className="text-3xl font-bold text-white">{incomeStatement.subscriptionProfit.toLocaleString()}</p>
+                                    <p className="text-slate-500 text-xs">{t('إيراد صافي', 'Net Revenue')}</p>
+                                </div>
+                                <div className="bg-gradient-to-br from-emerald-500/20 to-green-500/20 rounded-xl p-4 border border-emerald-500/30 text-center">
+                                    <p className="text-emerald-300 text-sm">{t('صافي الربح', 'Net Profit')}</p>
+                                    <p className={`text-3xl font-bold ${incomeStatement.netProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                        {incomeStatement.netProfit.toLocaleString()}
+                                    </p>
+                                    <p className="text-slate-500 text-xs">{t('الإيرادات - المصروفات', 'Revenue - Expenses')}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Trial Balance */}
+                    {trialBalance && (
+                        <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 overflow-hidden">
+                            <div className="bg-slate-700/50 px-4 py-3 flex items-center justify-between">
+                                <h4 className="text-white font-medium flex items-center gap-2">
+                                    <FileText className="w-4 h-4" />
+                                    {t('ميزان المراجعة', 'Trial Balance')}
+                                </h4>
+                                <div className="flex items-center gap-3">
+                                    <span className={`px-3 py-1 rounded-full text-sm ${trialBalance.isBalanced ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                                        }`}>
+                                        {trialBalance.isBalanced ? t('متوازن ✓', 'Balanced ✓') : t('غير متوازن ✗', 'Unbalanced ✗')}
+                                    </span>
+                                    <button className="flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 text-sm">
+                                        <Download className="w-4 h-4" />
+                                        {t('PDF', 'PDF')}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <table className="w-full">
+                                <thead className="bg-slate-700/30">
+                                    <tr>
+                                        <th className="px-4 py-2 text-right text-sm text-slate-300">{t('الكود', 'Code')}</th>
+                                        <th className="px-4 py-2 text-right text-sm text-slate-300">{t('الحساب', 'Account')}</th>
+                                        <th className="px-4 py-2 text-center text-sm text-slate-300">{t('مدين', 'Debit')}</th>
+                                        <th className="px-4 py-2 text-center text-sm text-slate-300">{t('دائن', 'Credit')}</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-700/50">
+                                    {trialBalance.accounts.map(account => (
+                                        <tr key={account.code} className="hover:bg-slate-700/30">
+                                            <td className="px-4 py-2 text-slate-400 font-mono text-sm">{account.code}</td>
+                                            <td className="px-4 py-2 text-white">{account.name}</td>
+                                            <td className="px-4 py-2 text-center text-blue-400 font-bold">
+                                                {account.debit > 0 ? account.debit.toLocaleString() : '-'}
+                                            </td>
+                                            <td className="px-4 py-2 text-center text-green-400 font-bold">
+                                                {account.credit > 0 ? account.credit.toLocaleString() : '-'}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                                <tfoot className="bg-slate-700/50 font-bold">
+                                    <tr>
+                                        <td colSpan={2} className="px-4 py-3 text-white">{t('الإجمالي', 'Total')}</td>
+                                        <td className="px-4 py-3 text-center text-blue-400">{trialBalance.totalDebit.toLocaleString()}</td>
+                                        <td className="px-4 py-3 text-center text-green-400">{trialBalance.totalCredit.toLocaleString()}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    )}
+
+                    {/* VAT Summary */}
+                    <div className="bg-gradient-to-r from-amber-900/20 to-orange-900/20 rounded-xl p-6 border border-amber-500/30">
+                        <h4 className="text-amber-300 font-medium mb-4 flex items-center gap-2">
+                            <Calculator className="w-5 h-5" />
+                            {t('ملخص الضريبة (VAT 15%)', 'VAT Summary (15%)')}
+                        </h4>
+
+                        <div className="grid grid-cols-3 gap-4">
+                            <div className="bg-slate-800/50 rounded-lg p-4 text-center">
+                                <p className="text-slate-400 text-sm">{t('ضريبة المخرجات', 'Output VAT')}</p>
+                                <p className="text-2xl font-bold text-red-400">
+                                    {(accounts.find(a => a.code === ACCOUNT_CODES.OUTPUT_VAT)?.balance || 0).toLocaleString()}
+                                </p>
+                                <p className="text-slate-500 text-xs">{t('محصّلة من العملاء', 'Collected')}</p>
+                            </div>
+                            <div className="bg-slate-800/50 rounded-lg p-4 text-center">
+                                <p className="text-slate-400 text-sm">{t('ضريبة المدخلات', 'Input VAT')}</p>
+                                <p className="text-2xl font-bold text-green-400">
+                                    {(accounts.find(a => a.code === ACCOUNT_CODES.INPUT_VAT)?.balance || 0).toLocaleString()}
+                                </p>
+                                <p className="text-slate-500 text-xs">{t('مدفوعة للموردين', 'Paid')}</p>
+                            </div>
+                            <div className="bg-slate-800/50 rounded-lg p-4 text-center">
+                                <p className="text-slate-400 text-sm">{t('صافي الضريبة', 'Net VAT')}</p>
+                                <p className="text-2xl font-bold text-amber-400">
+                                    {((accounts.find(a => a.code === ACCOUNT_CODES.OUTPUT_VAT)?.balance || 0) -
+                                        (accounts.find(a => a.code === ACCOUNT_CODES.INPUT_VAT)?.balance || 0)).toLocaleString()}
+                                </p>
+                                <p className="text-slate-500 text-xs">{t('مستحق للهيئة', 'Due to ZATCA')}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Payroll Modal */}
+            {showPayrollModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="bg-slate-800 rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                <Users className="w-6 h-6 text-orange-400" />
+                                {t('اعتماد مسير الرواتب', 'Approve Payroll')}
+                            </h3>
+                            <button onClick={() => setShowPayrollModal(false)} className="text-slate-400 hover:text-white">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <p className="text-slate-400 text-sm">
+                                {t('سيتم إنشاء قيد استحقاق رواتب لجميع الموظفين النشطين', 'A payroll accrual entry will be created for all active employees')}
+                            </p>
+
+                            <div className="bg-slate-700/50 rounded-lg p-4">
+                                <div className="flex justify-between items-center mb-4">
+                                    <span className="text-slate-300">{t('عدد الموظفين:', 'Employees:')}</span>
+                                    <span className="text-white font-bold">{employeeService.getEmployees().length}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-slate-300">{t('إجمالي الرواتب:', 'Total Salaries:')}</span>
+                                    <span className="text-green-400 font-bold">
+                                        {employeeService.getEmployees().reduce((sum, e) => sum + calculateTotalSalary(e.salary), 0).toLocaleString()} {t('ر.س', 'SAR')}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="bg-slate-700/30 rounded-lg overflow-hidden">
+                                <table className="w-full text-sm">
+                                    <thead className="bg-slate-700/50">
+                                        <tr>
+                                            <th className="px-3 py-2 text-right text-slate-300">{t('الموظف', 'Employee')}</th>
+                                            <th className="px-3 py-2 text-center text-slate-300">{t('القسم', 'Department')}</th>
+                                            <th className="px-3 py-2 text-center text-slate-300">{t('الراتب', 'Salary')}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-700/50">
+                                        {employeeService.getEmployees().map(emp => (
+                                            <tr key={emp.id} className="hover:bg-slate-700/30">
+                                                <td className="px-3 py-2 text-white">{emp.name}</td>
+                                                <td className="px-3 py-2 text-center text-slate-400">{emp.department}</td>
+                                                <td className="px-3 py-2 text-center text-green-400 font-bold">{calculateTotalSalary(emp.salary).toLocaleString()}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <button
+                                onClick={() => {
+                                    const employees = employeeService.getEmployees().map(e => ({
+                                        id: e.id,
+                                        name: e.name,
+                                        salary: calculateTotalSalary(e.salary)
+                                    }));
+                                    chartOfAccountsService.createPayrollAccrualEntry(employees, employee.name);
+                                    setShowPayrollModal(false);
+                                    loadData();
+                                }}
+                                className="w-full py-3 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600"
+                            >
+                                {t('اعتماد المسير وإنشاء القيد', 'Approve & Create Entry')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Mediation Sale Modal */}
+            {showMediationModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="bg-slate-800 rounded-2xl p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                <TrendingUp className="w-6 h-6 text-blue-400" />
+                                {t('عملية وساطة تجارية', 'Mediation Sale')}
+                            </h3>
+                            <button onClick={() => setShowMediationModal(false)} className="text-slate-400 hover:text-white">
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <p className="text-slate-400 text-sm bg-blue-900/20 p-3 rounded-lg border border-blue-500/30">
+                                {t('هذه العملية ستُنشئ قيدين: فاتورة مبيعات للمشتري وفاتورة مشتريات من المورد، مع حساب الربح تلقائياً.',
+                                    'This will create two entries: Sales invoice for buyer and Purchase invoice from supplier, with automatic profit calculation.')}
+                            </p>
+
+                            {/* Buyer Info */}
+                            <div>
+                                <label className="block text-slate-300 text-sm mb-2">{t('اسم المشتري', 'Buyer Name')} *</label>
+                                <input
+                                    type="text"
+                                    value={mediationForm.buyerName}
+                                    onChange={(e) => setMediationForm({ ...mediationForm, buyerName: e.target.value })}
+                                    className="w-full bg-slate-700/50 border border-slate-600 rounded-lg py-2 px-4 text-white"
+                                    placeholder={t('أدخل اسم المشتري', 'Enter buyer name')}
+                                />
+                            </div>
+
+                            {/* Sale Amount */}
+                            <div>
+                                <label className="block text-slate-300 text-sm mb-2">{t('مبلغ البيع (شامل الضريبة)', 'Sale Amount (inc. VAT)')} *</label>
+                                <input
+                                    type="number"
+                                    value={mediationForm.saleAmount || ''}
+                                    onChange={(e) => setMediationForm({ ...mediationForm, saleAmount: parseFloat(e.target.value) || 0 })}
+                                    className="w-full bg-slate-700/50 border border-slate-600 rounded-lg py-2 px-4 text-white"
+                                    placeholder="0"
+                                />
+                            </div>
+
+                            <hr className="border-slate-600" />
+
+                            {/* Supplier Info */}
+                            <div>
+                                <label className="block text-slate-300 text-sm mb-2">{t('اسم المورد', 'Supplier Name')} *</label>
+                                <input
+                                    type="text"
+                                    value={mediationForm.supplierName}
+                                    onChange={(e) => setMediationForm({ ...mediationForm, supplierName: e.target.value })}
+                                    className="w-full bg-slate-700/50 border border-slate-600 rounded-lg py-2 px-4 text-white"
+                                    placeholder={t('أدخل اسم المورد', 'Enter supplier name')}
+                                />
+                            </div>
+
+                            {/* Purchase Amount */}
+                            <div>
+                                <label className="block text-slate-300 text-sm mb-2">{t('مبلغ الشراء (شامل الضريبة)', 'Purchase Amount (inc. VAT)')} *</label>
+                                <input
+                                    type="number"
+                                    value={mediationForm.purchaseAmount || ''}
+                                    onChange={(e) => setMediationForm({ ...mediationForm, purchaseAmount: parseFloat(e.target.value) || 0 })}
+                                    className="w-full bg-slate-700/50 border border-slate-600 rounded-lg py-2 px-4 text-white"
+                                    placeholder="0"
+                                />
+                            </div>
+
+                            {/* Description */}
+                            <div>
+                                <label className="block text-slate-300 text-sm mb-2">{t('وصف العملية', 'Description')}</label>
+                                <input
+                                    type="text"
+                                    value={mediationForm.description}
+                                    onChange={(e) => setMediationForm({ ...mediationForm, description: e.target.value })}
+                                    className="w-full bg-slate-700/50 border border-slate-600 rounded-lg py-2 px-4 text-white"
+                                    placeholder={t('وصف اختياري للعملية', 'Optional description')}
+                                />
+                            </div>
+
+                            {/* Profit Preview */}
+                            {mediationForm.saleAmount > 0 && mediationForm.purchaseAmount > 0 && (
+                                <div className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 rounded-lg p-4 border border-green-500/30">
+                                    <div className="grid grid-cols-3 gap-4 text-center">
+                                        <div>
+                                            <p className="text-slate-400 text-xs">{t('إيراد البيع', 'Sale Revenue')}</p>
+                                            <p className="text-blue-400 font-bold">{(mediationForm.saleAmount / 1.15).toFixed(2)}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-slate-400 text-xs">{t('تكلفة الشراء', 'Purchase Cost')}</p>
+                                            <p className="text-red-400 font-bold">{(mediationForm.purchaseAmount / 1.15).toFixed(2)}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-slate-400 text-xs">{t('صافي الربح', 'Net Profit')}</p>
+                                            <p className={`font-bold text-lg ${(mediationForm.saleAmount - mediationForm.purchaseAmount) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                {((mediationForm.saleAmount - mediationForm.purchaseAmount) / 1.15).toFixed(2)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            <button
+                                onClick={() => {
+                                    if (!mediationForm.buyerName || !mediationForm.supplierName || mediationForm.saleAmount <= 0 || mediationForm.purchaseAmount <= 0) {
+                                        alert(t('يرجى ملء جميع الحقول المطلوبة', 'Please fill all required fields'));
+                                        return;
+                                    }
+
+                                    chartOfAccountsService.createMediationEntries({
+                                        type: 'sale',
+                                        amount: mediationForm.saleAmount,
+                                        entityId: crypto.randomUUID(),
+                                        entityName: mediationForm.buyerName,
+                                        description: mediationForm.description || `عملية وساطة - ${mediationForm.buyerName}`,
+                                        linkedSupplierId: crypto.randomUUID(),
+                                        linkedSupplierName: mediationForm.supplierName,
+                                        supplierAmount: mediationForm.purchaseAmount,
+                                        createdBy: employee.name
+                                    });
+
+                                    setShowMediationModal(false);
+                                    setMediationForm({ buyerName: '', supplierName: '', saleAmount: 0, purchaseAmount: 0, description: '' });
+                                    loadData();
+                                }}
+                                disabled={!mediationForm.buyerName || !mediationForm.supplierName || mediationForm.saleAmount <= 0 || mediationForm.purchaseAmount <= 0}
+                                className="w-full py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 disabled:opacity-50"
+                            >
+                                {t('إنشاء قيود الوساطة', 'Create Mediation Entries')}
                             </button>
                         </div>
                     </div>
