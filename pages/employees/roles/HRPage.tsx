@@ -15,7 +15,9 @@ import {
     ContractInfo, Note, Warning, WarningType, AttendanceRecord, BreakRecord, TaskSummary,
     employeeService, ROLE_TRANSLATIONS, ROLE_COLORS, CONTRACT_TRANSLATIONS,
     WARNING_TRANSLATIONS, DEFAULT_SALARY, DEFAULT_CONTRACT, calculateTotalSalary,
-    ATTENDANCE_STATUS_TRANSLATIONS, BREAK_TYPE_TRANSLATIONS
+    ATTENDANCE_STATUS_TRANSLATIONS, BREAK_TYPE_TRANSLATIONS,
+    isSuperAdmin, hasFullPermissions, shouldHideActivityStats, isExcludedFromActivityTracking,
+    SUPER_ADMIN_EMPLOYEE_NUMBER
 } from '../../../services/employeeService';
 
 interface HRPageProps {
@@ -29,6 +31,13 @@ type TabType = 'info' | 'certificates' | 'experience' | 'salary' | 'contract' | 
 const HRPage: React.FC<HRPageProps> = ({ language, employee }) => {
     const t = (ar: string, en: string) => language === 'ar' ? ar : en;
     const dir = language === 'ar' ? 'rtl' : 'ltr';
+
+    // التحقق من صلاحيات المدير العام (Super Admin)
+    const currentEmployeeNumber = (employee as any)?.employeeNumber || SUPER_ADMIN_EMPLOYEE_NUMBER;
+    const isSuperAdminUser = isSuperAdmin(currentEmployeeNumber);
+    const hasFullAccess = hasFullPermissions(currentEmployeeNumber);
+    const hideActivityStats = shouldHideActivityStats(currentEmployeeNumber);
+    const excludeFromTracking = isExcludedFromActivityTracking(currentEmployeeNumber);
 
     // States
     const [employees, setEmployees] = useState<Employee[]>([]);
@@ -424,6 +433,56 @@ const HRPage: React.FC<HRPageProps> = ({ language, employee }) => {
                     <div>
                         <p className="text-slate-400 text-sm">{t('الإنذارات', 'Warnings')}</p>
                         <p className="text-2xl font-bold text-white">{stats.warningsCount}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
+    // لوحة الرقابة للمدير العام
+    const renderSuperAdminPanel = () => (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-gradient-to-br from-amber-500/20 to-yellow-500/20 rounded-xl p-4 border border-amber-500/30">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-amber-500/30 flex items-center justify-center">
+                        <Users className="w-5 h-5 text-amber-400" />
+                    </div>
+                    <div>
+                        <p className="text-slate-400 text-sm">{t('إجمالي الموظفين', 'Total Employees')}</p>
+                        <p className="text-2xl font-bold text-white">{stats.total}</p>
+                    </div>
+                </div>
+            </div>
+            <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-xl p-4 border border-green-500/30">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-green-500/30 flex items-center justify-center">
+                        <UserCheck className="w-5 h-5 text-green-400" />
+                    </div>
+                    <div>
+                        <p className="text-slate-400 text-sm">{t('حاضرون اليوم', 'Present Today')}</p>
+                        <p className="text-2xl font-bold text-white">{attendanceRecords.filter(r => r.status === 'present' || r.status === 'late').length}</p>
+                    </div>
+                </div>
+            </div>
+            <div className="bg-gradient-to-br from-red-500/20 to-rose-500/20 rounded-xl p-4 border border-red-500/30">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-red-500/30 flex items-center justify-center">
+                        <UserX className="w-5 h-5 text-red-400" />
+                    </div>
+                    <div>
+                        <p className="text-slate-400 text-sm">{t('غائبون', 'Absent')}</p>
+                        <p className="text-2xl font-bold text-white">{attendanceRecords.filter(r => r.status === 'absent').length}</p>
+                    </div>
+                </div>
+            </div>
+            <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-xl p-4 border border-purple-500/30">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-purple-500/30 flex items-center justify-center">
+                        <DollarSign className="w-5 h-5 text-purple-400" />
+                    </div>
+                    <div>
+                        <p className="text-slate-400 text-sm">{t('إجمالي الرواتب', 'Total Salaries')}</p>
+                        <p className="text-2xl font-bold text-white">{stats.totalSalaries.toLocaleString()}</p>
                     </div>
                 </div>
             </div>
@@ -1062,20 +1121,41 @@ const HRPage: React.FC<HRPageProps> = ({ language, employee }) => {
             )}
 
             {/* Welcome */}
-            <div className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-xl p-6 border border-blue-500/30">
-                <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center">
-                        <Users className="w-8 h-8 text-white" />
+            <div className={`bg-gradient-to-r ${isSuperAdminUser ? 'from-amber-500/20 to-yellow-500/20 border-amber-500/30' : 'from-blue-500/20 to-cyan-500/20 border-blue-500/30'} rounded-xl p-6 border`}>
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${isSuperAdminUser ? 'from-amber-500 to-yellow-600' : 'from-blue-500 to-cyan-600'} flex items-center justify-center`}>
+                            <Users className="w-8 h-8 text-white" />
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                                {t('إدارة الموارد البشرية', 'Human Resources Management')}
+                                {isSuperAdminUser && (
+                                    <span className="bg-gradient-to-r from-amber-500 to-yellow-600 text-white text-xs px-3 py-1 rounded-full font-medium">
+                                        {t('المدير العام', 'Super Admin')}
+                                    </span>
+                                )}
+                            </h2>
+                            <p className="text-slate-400">
+                                {isSuperAdminUser
+                                    ? t('لوحة الإدارة والرقابة الشاملة', 'Full Administration & Oversight Panel')
+                                    : t('إدارة شاملة لبيانات الموظفين', 'Comprehensive employee data management')
+                                }
+                            </p>
+                        </div>
                     </div>
-                    <div>
-                        <h2 className="text-2xl font-bold text-white">{t('إدارة الموارد البشرية', 'Human Resources Management')}</h2>
-                        <p className="text-slate-400">{t('إدارة شاملة لبيانات الموظفين', 'Comprehensive employee data management')}</p>
-                    </div>
+                    {isSuperAdminUser && (
+                        <div className="hidden md:flex items-center gap-2 text-amber-400 text-sm">
+                            <AlertTriangle className="w-4 h-4" />
+                            {t('مستثنى من التتبع', 'Excluded from tracking')}
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* Stats */}
-            {viewMode === 'list' && renderStats()}
+            {/* Stats - لوحة المدير العام أو الإحصائيات العادية */}
+            {viewMode === 'list' && isSuperAdminUser && renderSuperAdminPanel()}
+            {viewMode === 'list' && !isSuperAdminUser && renderStats()}
 
             {/* Main Content */}
             {viewMode === 'list' && renderEmployeeList()}

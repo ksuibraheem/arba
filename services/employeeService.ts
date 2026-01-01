@@ -217,6 +217,49 @@ export const updateManagerCredentials = (updates: Partial<typeof DEFAULT_MANAGER
 // للتوافق مع الكود القديم - يعمل كـ getter ديناميكي
 export const MANAGER_CREDENTIALS = getManagerCredentials();
 
+// ====================== Super Admin (المدير العام) ======================
+
+// رقم المدير العام - يمتلك كافة الصلاحيات
+export const SUPER_ADMIN_EMPLOYEE_NUMBER = '2201187';
+
+/**
+ * التحقق إذا كان الموظف هو المدير العام (Super Admin)
+ * @param employeeNumber رقم الموظف
+ * @returns true إذا كان المدير العام
+ */
+export const isSuperAdmin = (employeeNumber: string | undefined): boolean => {
+    return employeeNumber === SUPER_ADMIN_EMPLOYEE_NUMBER;
+};
+
+/**
+ * التحقق إذا كان يجب استثناء الموظف من تتبع النشاط
+ * المدير العام مستثنى من نظام heartbeat وتتبع النشاط
+ * @param employeeNumber رقم الموظف
+ * @returns true إذا كان يجب استثناءه
+ */
+export const isExcludedFromActivityTracking = (employeeNumber: string | undefined): boolean => {
+    return isSuperAdmin(employeeNumber);
+};
+
+/**
+ * التحقق إذا كان الموظف لديه صلاحيات كاملة
+ * المدير العام يمكنه الوصول لجميع التبويبات والبيانات
+ * @param employeeNumber رقم الموظف
+ * @returns true إذا كان لديه صلاحيات كاملة
+ */
+export const hasFullPermissions = (employeeNumber: string | undefined): boolean => {
+    return isSuperAdmin(employeeNumber);
+};
+
+/**
+ * التحقق إذا كان يجب إخفاء إحصائيات الحضور والإنتاجية
+ * @param employeeNumber رقم الموظف
+ * @returns true إذا كان يجب إخفاء الإحصائيات
+ */
+export const shouldHideActivityStats = (employeeNumber: string | undefined): boolean => {
+    return isSuperAdmin(employeeNumber);
+};
+
 // ترجمات الأدوار
 export const ROLE_TRANSLATIONS: Record<EmployeeRole, { ar: string; en: string }> = {
     manager: { ar: 'المدير', en: 'Manager' },
@@ -362,6 +405,7 @@ class EmployeeService {
     private storageKey = 'arba_employees';
 
     // تهيئة البيانات التجريبية
+    // كلمة المرور الافتراضية = رقم الهوية الوطنية
     initializeSampleData(): void {
         const existing = this.getEmployees();
         if (existing.length === 0) {
@@ -369,7 +413,7 @@ class EmployeeService {
                 try {
                     this.addEmployee({
                         ...emp as any,
-                        password: this.generatePassword()
+                        password: emp.nationalId // استخدام رقم الهوية ككلمة مرور
                     });
                 } catch (e) {
                     // تجاهل الأخطاء
@@ -397,6 +441,7 @@ class EmployeeService {
     }
 
     // إضافة موظف جديد
+    // كلمة المرور الافتراضية = رقم الهوية الوطنية
     addEmployee(employee: Omit<Employee, 'id' | 'createdAt' | 'isActive'>): Employee {
         const employees = this.getEmployees();
 
@@ -405,11 +450,20 @@ class EmployeeService {
             throw new Error('رقم الموظف موجود مسبقاً');
         }
 
+        // التحقق من وجود رقم الهوية (مطلوب لكلمة المرور الافتراضية)
+        if (!employee.nationalId || employee.nationalId.trim() === '') {
+            throw new Error('رقم الهوية الوطنية مطلوب');
+        }
+
+        // كلمة المرور الافتراضية = رقم الهوية الوطنية
+        const defaultPassword = employee.nationalId;
+
         const newEmployee: Employee = {
             ...employee,
             id: crypto.randomUUID(),
             isActive: true,
             createdAt: new Date(),
+            password: employee.password || defaultPassword, // استخدام رقم الهوية كافتراضي
             certificates: employee.certificates || [],
             experiences: employee.experiences || [],
             notes: employee.notes || [],
@@ -428,11 +482,19 @@ class EmployeeService {
     }
 
     // تحديث بيانات موظف
-    updateEmployee(id: string, updates: Partial<Employee>): Employee | null {
+    // الموظف لا يمكنه تغيير رقم الموظف - فقط المدير العام يستطيع
+    updateEmployee(id: string, updates: Partial<Employee>, updatedByEmployeeNumber?: string): Employee | null {
         const employees = this.getEmployees();
         const index = employees.findIndex(e => e.id === id);
 
         if (index === -1) return null;
+
+        // منع تغيير رقم الموظف إلا من قبل المدير العام
+        if (updates.employeeNumber && updates.employeeNumber !== employees[index].employeeNumber) {
+            if (!isSuperAdmin(updatedByEmployeeNumber)) {
+                throw new Error('لا يمكن تغيير رقم الموظف');
+            }
+        }
 
         employees[index] = { ...employees[index], ...updates };
         localStorage.setItem(this.storageKey, JSON.stringify(employees));
@@ -573,6 +635,9 @@ class EmployeeService {
 
     // تسجيل دخول موظف
     login(employeeNumber: string, password: string): { success: boolean; employee?: Employee | ReturnType<typeof getManagerCredentials>; error?: string } {
+        // تهيئة البيانات التجريبية إذا لم تكن موجودة
+        this.initializeSampleData();
+
         // التحقق من المدير أولاً
         const managerCreds = getManagerCredentials();
         if (employeeNumber === managerCreds.employeeNumber) {
@@ -629,9 +694,20 @@ class EmployeeService {
     }
 
     // إعادة تعيين كلمة المرور
-    resetPassword(employeeId: string, newPassword: string): boolean {
+    // إذا لم يتم تحديد كلمة مرور جديدة، يتم استخدام رقم الهوية
+    resetPassword(employeeId: string, newPassword?: string): boolean {
+        const employee = this.getEmployeeById(employeeId);
+        if (!employee) return false;
+
+        // استخدام رقم الهوية كافتراضي إذا لم يتم تحديد كلمة مرور
+        const passwordToSet = newPassword || employee.nationalId || '';
+
+        if (!passwordToSet) {
+            return false; // لا يمكن إعادة التعيين بدون رقم هوية
+        }
+
         const result = this.updateEmployee(employeeId, {
-            password: newPassword,
+            password: passwordToSet,
             passwordChangedAt: new Date()
         });
         return result !== null;
