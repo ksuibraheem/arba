@@ -11,17 +11,15 @@ interface PaymentUploadPageProps {
 
 const BANK_ACCOUNT_INFO = {
     bankName: { ar: 'بنك الراجحي', en: 'Al Rajhi Bank' },
-    accountName: { ar: 'شركة أربا للتقنية', en: 'ARBA Technology Co.' },
-    iban: 'SA0380000000608010167519',
-    accountNumber: '608010167519'
+    accountName: { ar: 'مؤسسة اربا المطور', en: 'Arba Developer Est.' },
+    iban: 'SA4680000216608016630501',
+    accountNumber: '216000010006086630501'
 };
 
-const PAYMENT_METHODS: { id: PaymentMethod; name: { ar: string; en: string }; icon: React.ReactNode; requiresReceipt: boolean }[] = [
+const PAYMENT_METHODS: { id: PaymentMethod; name: { ar: string; en: string }; icon: React.ReactNode; requiresReceipt: boolean; comingSoon?: boolean }[] = [
     { id: 'bank_transfer', name: { ar: 'تحويل بنكي', en: 'Bank Transfer' }, icon: <Building2 className="w-6 h-6" />, requiresReceipt: true },
-    { id: 'mada', name: { ar: 'مدى', en: 'Mada' }, icon: <CreditCard className="w-6 h-6" />, requiresReceipt: false },
-    { id: 'credit_card', name: { ar: 'بطاقة ائتمان', en: 'Credit Card' }, icon: <CreditCard className="w-6 h-6" />, requiresReceipt: false },
-    { id: 'stc_pay', name: { ar: 'STC Pay', en: 'STC Pay' }, icon: <Smartphone className="w-6 h-6" />, requiresReceipt: false },
-    { id: 'apple_pay', name: { ar: 'Apple Pay', en: 'Apple Pay' }, icon: <Smartphone className="w-6 h-6" />, requiresReceipt: false },
+    { id: 'mada', name: { ar: 'مدى', en: 'Mada' }, icon: <CreditCard className="w-6 h-6" />, requiresReceipt: false, comingSoon: true },
+    { id: 'credit_card', name: { ar: 'بطاقة ائتمان', en: 'Credit Card' }, icon: <CreditCard className="w-6 h-6" />, requiresReceipt: false, comingSoon: true },
 ];
 
 const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
@@ -194,16 +192,24 @@ const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
                             {PAYMENT_METHODS.map(method => (
                                 <button
                                     key={method.id}
-                                    onClick={() => handleMethodSelect(method.id)}
-                                    className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${selectedMethod === method.id
-                                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                                            : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                                    onClick={() => !method.comingSoon && handleMethodSelect(method.id)}
+                                    disabled={method.comingSoon}
+                                    className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 relative ${method.comingSoon
+                                            ? 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed opacity-60'
+                                            : selectedMethod === method.id
+                                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                                         }`}
                                 >
+                                    {method.comingSoon && (
+                                        <span className="absolute top-1 right-1 bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-full font-medium">
+                                            {language === 'ar' ? 'قريباً' : 'Soon'}
+                                        </span>
+                                    )}
                                     {method.icon}
                                     <span className="text-sm font-medium">{method.name[language]}</span>
-                                    {selectedMethod === method.id && (
-                                        <Check className="w-4 h-4 text-emerald-500 absolute top-2 right-2" />
+                                    {selectedMethod === method.id && !method.comingSoon && (
+                                        <Check className="w-4 h-4 text-emerald-500 absolute top-2 left-2" />
                                     )}
                                 </button>
                             ))}
@@ -245,8 +251,8 @@ const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
                                     {language === 'ar' ? 'رفع إيصال الدفع' : 'Upload Payment Receipt'}
                                 </h4>
                                 <label className={`block border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${receiptFile
-                                        ? 'border-emerald-500 bg-emerald-50'
-                                        : 'border-slate-300 hover:border-emerald-400 bg-slate-50'
+                                    ? 'border-emerald-500 bg-emerald-50'
+                                    : 'border-slate-300 hover:border-emerald-400 bg-slate-50'
                                     }`}>
                                     <input
                                         type="file"
