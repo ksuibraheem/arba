@@ -36,6 +36,8 @@ import {
 } from '../../../services/chartOfAccountsService';
 import { employeeService, calculateTotalSalary } from '../../../services/employeeService';
 import { taxInvoiceService } from '../../../services/taxInvoiceService';
+import { invoiceEditRequestService, InvoiceEditRequest, EDIT_REQUEST_STATUS_TRANSLATIONS } from '../../../services/invoiceEditRequestService';
+import { excelExportService } from '../../../services/excelExportService';
 
 interface AccountantPageProps {
     language: 'ar' | 'en';
@@ -56,7 +58,12 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
     const [payments, setPayments] = useState<Payment[]>([]);
     const [stats, setStats] = useState(accountingService.getFinancialStats());
     const [registrationRequests, setRegistrationRequests] = useState<RegistrationRequest[]>([]);
-    const [selectedReceipt, setSelectedReceipt] = useState<string | null>(null);
+    const [selectedReceipt, setSelectedReceipt] = useState<{
+        image: string;
+        customerName: string;
+        customerId: string;
+        email: string;
+    } | null>(null);
 
     // Client search states
     const [clients, setClients] = useState<Client[]>([]);
@@ -578,13 +585,28 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
                 <div className="space-y-4">
                     <div className="flex justify-between items-center">
                         <h3 className="text-lg font-semibold text-white">{t('الفواتير', 'Invoices')}</h3>
-                        <button
-                            onClick={() => setShowInvoiceModal(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                        >
-                            <Plus className="w-4 h-4" />
-                            {t('فاتورة جديدة', 'New Invoice')}
-                        </button>
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={async () => {
+                                    try {
+                                        await excelExportService.exportInvoices(invoices);
+                                    } catch (e) {
+                                        alert(t('خطأ في التصدير', 'Export error'));
+                                    }
+                                }}
+                                className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                            >
+                                <Download className="w-4 h-4" />
+                                {t('تصدير Excel', 'Export Excel')}
+                            </button>
+                            <button
+                                onClick={() => setShowInvoiceModal(true)}
+                                className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                            >
+                                <Plus className="w-4 h-4" />
+                                {t('فاتورة جديدة', 'New Invoice')}
+                            </button>
+                        </div>
                     </div>
 
                     <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 overflow-hidden">
@@ -640,6 +662,36 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
                                                     >
                                                         <Check className="w-4 h-4" />
                                                     </button>
+                                                )}
+                                                {/* طلب تعديل */}
+                                                <button
+                                                    onClick={() => {
+                                                        const reason = prompt(t('سبب طلب التعديل:', 'Edit request reason:'));
+                                                        if (reason) {
+                                                            try {
+                                                                invoiceEditRequestService.createRequest(
+                                                                    invoice.id,
+                                                                    invoice.invoiceNumber,
+                                                                    employee.id,
+                                                                    employee.name,
+                                                                    reason
+                                                                );
+                                                                alert(t('تم إرسال طلب التعديل للمدير', 'Edit request sent to manager'));
+                                                            } catch (e: any) {
+                                                                alert(e.message);
+                                                            }
+                                                        }
+                                                    }}
+                                                    className="p-1 hover:bg-slate-700 rounded text-yellow-400"
+                                                    title={t('طلب تعديل', 'Request Edit')}
+                                                >
+                                                    <Edit2 className="w-4 h-4" />
+                                                </button>
+                                                {/* مؤشر التعديل */}
+                                                {invoice.isEdited && (
+                                                    <span className="px-1.5 py-0.5 bg-orange-500/20 text-orange-400 text-xs rounded" title={t(`عدد التعديلات: ${invoice.editCount}`, `Edit count: ${invoice.editCount}`)}>
+                                                        {t('معدّل', 'Edited')}
+                                                    </span>
                                                 )}
                                             </div>
                                         </td>
@@ -1114,7 +1166,12 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
                                                     </div>
                                                     {req.paymentReceipt && (
                                                         <button
-                                                            onClick={() => setSelectedReceipt(req.paymentReceipt!)}
+                                                            onClick={() => setSelectedReceipt({
+                                                                image: req.paymentReceipt!,
+                                                                customerName: req.name,
+                                                                customerId: req.id,
+                                                                email: req.email
+                                                            })}
                                                             className="w-full mt-2 py-1 bg-blue-500/20 text-blue-300 rounded text-xs hover:bg-blue-500/30 flex items-center justify-center gap-1"
                                                         >
                                                             <Image className="w-3 h-3" />
@@ -2104,21 +2161,64 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
             {selectedReceipt && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
                     <div className="relative max-w-4xl w-full mx-4">
-                        <button
-                            onClick={() => setSelectedReceipt(null)}
-                            className="absolute top-4 right-4 z-10 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors"
-                        >
-                            <X className="w-6 h-6" />
-                        </button>
                         <div className="bg-white rounded-2xl p-4 overflow-auto max-h-[90vh]">
-                            <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                                <Image className="w-5 h-5" />
-                                {t('إيصال الدفع', 'Payment Receipt')}
-                            </h3>
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                    <Image className="w-5 h-5" />
+                                    {t('إيصال الدفع', 'Payment Receipt')}
+                                </h3>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => {
+                                            const link = document.createElement('a');
+                                            link.href = selectedReceipt.image;
+                                            const sanitizedName = selectedReceipt.customerName.replace(/[^a-zA-Z0-9\u0600-\u06FF]/g, '_');
+                                            const shortId = selectedReceipt.customerId.slice(0, 8);
+                                            link.download = `${shortId}_${sanitizedName}_receipt.png`;
+                                            document.body.appendChild(link);
+                                            link.click();
+                                            document.body.removeChild(link);
+                                        }}
+                                        className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                                    >
+                                        <Download className="w-4 h-4" />
+                                        {t('تحميل', 'Download')}
+                                    </button>
+                                    <button
+                                        onClick={() => setSelectedReceipt(null)}
+                                        className="p-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg transition-colors"
+                                        title={t('إغلاق', 'Close')}
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="bg-slate-100 rounded-lg p-3 mb-4 text-sm">
+                                <div className="flex flex-wrap gap-4">
+                                    <div>
+                                        <span className="text-slate-500">{t('اسم العميل:', 'Customer:')}</span>
+                                        <span className="text-slate-800 font-medium mr-2">{selectedReceipt.customerName}</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-slate-500">{t('رقم الطلب:', 'Request ID:')}</span>
+                                        <span className="text-slate-800 font-mono mr-2" dir="ltr">{selectedReceipt.customerId.slice(0, 8)}</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-slate-500">{t('البريد:', 'Email:')}</span>
+                                        <span className="text-slate-800 mr-2" dir="ltr">{selectedReceipt.email}</span>
+                                    </div>
+                                </div>
+                            </div>
                             <img
-                                src={selectedReceipt}
+                                src={selectedReceipt.image}
                                 alt="Payment Receipt"
                                 className="max-w-full h-auto rounded-lg border border-slate-200"
+                                onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = 'none';
+                                    target.parentElement?.insertAdjacentHTML('beforeend',
+                                        `<div class="text-center py-8 text-red-500">${t('فشل تحميل الصورة', 'Failed to load image')}</div>`);
+                                }}
                             />
                         </div>
                     </div>
@@ -2129,3 +2229,4 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
 };
 
 export default AccountantPage;
+

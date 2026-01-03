@@ -397,6 +397,94 @@ export const SAMPLE_EMPLOYEES: Partial<Employee>[] = [
         ],
         notes: [],
         warnings: []
+    },
+    // نائب المدير
+    {
+        employeeNumber: '445678901',
+        name: 'عبدالرحمن يوسف القحطاني',
+        email: 'abdulrahman@arba.sa',
+        phone: '0534567890',
+        emergencyContact: '0556543210',
+        role: 'deputy',
+        jobTitle: 'نائب المدير العام',
+        nationalId: '1065432109',
+        salary: { basic: 18000, housing: 4500, transportation: 1000, food: 500, phone: 500, other: 1000, benefits: ['تأمين طبي شامل', 'سيارة', 'بدل سفر'] },
+        contract: { type: 'permanent', startDate: '2021-01-01', noticePeriod: 90 },
+        certificates: [
+            { id: '1', name: 'ماجستير إدارة أعمال', issuer: 'جامعة الملك فهد', issueDate: '2015-06-15' },
+            { id: '2', name: 'شهادة PMP', issuer: 'PMI', issueDate: '2020-03-20', expiryDate: '2026-03-20' }
+        ],
+        experiences: [
+            { id: '1', company: 'شركة الاتصالات السعودية', position: 'مدير مشاريع', startDate: '2015-08-01', endDate: '2020-12-31' }
+        ],
+        notes: [],
+        warnings: []
+    },
+    // الدعم الفني
+    {
+        employeeNumber: '456789012',
+        name: 'سارة علي المالكي',
+        email: 'sara@arba.sa',
+        phone: '0545678901',
+        emergencyContact: '0555432109',
+        role: 'support',
+        jobTitle: 'أخصائي دعم فني',
+        nationalId: '1054321098',
+        salary: { basic: 7000, housing: 1750, transportation: 400, food: 250, phone: 200, other: 0, benefits: ['تأمين طبي'] },
+        contract: { type: 'permanent', startDate: '2023-06-01', noticePeriod: 30 },
+        certificates: [
+            { id: '1', name: 'بكالوريوس تقنية معلومات', issuer: 'جامعة الأميرة نورة', issueDate: '2021-06-15' },
+            { id: '2', name: 'شهادة ITIL', issuer: 'Axelos', issueDate: '2023-01-10' }
+        ],
+        experiences: [
+            { id: '1', company: 'شركة موبايلي', position: 'فني دعم', startDate: '2021-08-01', endDate: '2023-05-31' }
+        ],
+        notes: [],
+        warnings: []
+    },
+    // التسويق
+    {
+        employeeNumber: '467890123',
+        name: 'نورة محمد الشمري',
+        email: 'noura@arba.sa',
+        phone: '0556789012',
+        emergencyContact: '0554321098',
+        role: 'marketing',
+        jobTitle: 'مسؤول تسويق رقمي',
+        nationalId: '1043210987',
+        salary: { basic: 9000, housing: 2250, transportation: 500, food: 300, phone: 300, other: 500, benefits: ['تأمين طبي', 'دورات تدريبية'] },
+        contract: { type: 'permanent', startDate: '2023-02-01', noticePeriod: 30 },
+        certificates: [
+            { id: '1', name: 'بكالوريوس تسويق', issuer: 'جامعة الإمام', issueDate: '2020-06-15' },
+            { id: '2', name: 'Google Ads Certification', issuer: 'Google', issueDate: '2022-08-20' }
+        ],
+        experiences: [
+            { id: '1', company: 'وكالة إعلانية', position: 'مسوق رقمي', startDate: '2020-09-01', endDate: '2023-01-31' }
+        ],
+        notes: [],
+        warnings: []
+    },
+    // الجودة
+    {
+        employeeNumber: '478901234',
+        name: 'عمر فهد العتيبي',
+        email: 'omar@arba.sa',
+        phone: '0567890123',
+        emergencyContact: '0553210987',
+        role: 'quality',
+        jobTitle: 'مسؤول ضمان الجودة',
+        nationalId: '1032109876',
+        salary: { basic: 8500, housing: 2125, transportation: 500, food: 300, phone: 200, other: 0, benefits: ['تأمين طبي'] },
+        contract: { type: 'permanent', startDate: '2023-04-01', noticePeriod: 30 },
+        certificates: [
+            { id: '1', name: 'بكالوريوس هندسة صناعية', issuer: 'جامعة الملك سعود', issueDate: '2019-06-15' },
+            { id: '2', name: 'شهادة ISO 9001', issuer: 'SGS', issueDate: '2022-05-10' }
+        ],
+        experiences: [
+            { id: '1', company: 'مصنع المراعي', position: 'مراقب جودة', startDate: '2019-08-01', endDate: '2023-03-31' }
+        ],
+        notes: [],
+        warnings: []
     }
 ];
 

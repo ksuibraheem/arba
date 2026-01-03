@@ -8,12 +8,14 @@ import {
     Crown, Users, UserPlus, Settings, LogOut, Home,
     Calculator, Code, Headphones, Megaphone, CheckCircle,
     UserCog, Edit, Trash2, Key, Mail, Phone, Eye, EyeOff,
-    Copy, Check, AlertCircle, X, Search, Filter, Cloud
+    Copy, Check, AlertCircle, AlertTriangle, X, Search, Filter, Cloud, FileText, Clock
 } from 'lucide-react';
 import {
     Employee, EmployeeRole, employeeService,
     ROLE_TRANSLATIONS, ROLE_COLORS, MANAGER_CREDENTIALS, getManagerCredentials, updateManagerCredentials
 } from '../../services/employeeService';
+import { invoiceEditRequestService, InvoiceEditRequest, EDIT_REQUEST_STATUS_TRANSLATIONS } from '../../services/invoiceEditRequestService';
+import { registrationService, RegistrationRequest, USER_TYPE_TRANSLATIONS, REGISTRATION_STATUS_TRANSLATIONS } from '../../services/registrationService';
 
 interface ManagerDashboardProps {
     language: 'ar' | 'en';
@@ -213,12 +215,25 @@ const ManagerSettingsTab: React.FC<ManagerSettingsTabProps> = ({ language, t, on
 // ================= Main Manager Dashboard Component =================
 const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout, onNavigate }) => {
     const isRtl = language === 'ar';
-    const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'add' | 'settings'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'add' | 'accounts' | 'edit_requests' | 'settings'>('overview');
     const [employees, setEmployees] = useState<Employee[]>([]);
+    const [editRequests, setEditRequests] = useState<InvoiceEditRequest[]>([]);
+    const [accounts, setAccounts] = useState<RegistrationRequest[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterRole, setFilterRole] = useState<EmployeeRole | 'all'>('all');
     const [showPassword, setShowPassword] = useState<Record<string, boolean>>({});
     const [copiedId, setCopiedId] = useState<string | null>(null);
+    const [accountsFilter, setAccountsFilter] = useState<'all' | 'active' | 'suspended'>('all');
+
+    // حالة نافذة الحظر/التنبيه
+    const [showSuspendModal, setShowSuspendModal] = useState(false);
+    const [selectedAccount, setSelectedAccount] = useState<RegistrationRequest | null>(null);
+    const [suspendForm, setSuspendForm] = useState({
+        actionType: 'suspend' as 'suspend' | 'warning',
+        suspensionType: 'permanent' as 'permanent' | 'week' | 'custom',
+        customDays: 7,
+        reason: ''
+    });
 
     // حالة نموذج إضافة موظف
     const [newEmployee, setNewEmployee] = useState({
@@ -232,9 +247,12 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
     const [formError, setFormError] = useState('');
     const [formSuccess, setFormSuccess] = useState('');
 
-    // تحميل الموظفين
+
+    // تحميل الموظفين وطلبات التعديل والحسابات
     useEffect(() => {
         setEmployees(employeeService.getEmployees());
+        setEditRequests(invoiceEditRequestService.getPendingRequests());
+        setAccounts(registrationService.getAllApprovedAccounts());
     }, []);
 
     // توليد بيانات عشوائية
@@ -322,7 +340,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
     };
 
     return (
-        <div className={`min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900`} dir={isRtl ? 'rtl' : 'ltr'}>
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" dir={isRtl ? 'rtl' : 'ltr'}>
             {/* Header */}
             <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -361,6 +379,8 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
                         { id: 'overview', label: t('نظرة عامة', 'Overview'), icon: <Home className="w-4 h-4" /> },
                         { id: 'employees', label: t('الموظفين', 'Employees'), icon: <Users className="w-4 h-4" /> },
                         { id: 'add', label: t('إضافة موظف', 'Add Employee'), icon: <UserPlus className="w-4 h-4" /> },
+                        { id: 'accounts', label: t('إدارة الحسابات', 'Accounts'), icon: <UserCog className="w-4 h-4" />, badge: accounts.filter(a => a.isSuspended).length },
+                        { id: 'edit_requests', label: t('طلبات التعديل', 'Edit Requests'), icon: <FileText className="w-4 h-4" />, badge: editRequests.length },
                         { id: 'settings', label: t('الإعدادات', 'Settings'), icon: <Settings className="w-4 h-4" /> }
                     ].map(tab => (
                         <button
@@ -373,6 +393,9 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
                         >
                             {tab.icon}
                             <span>{tab.label}</span>
+                            {(tab as any).badge > 0 && (
+                                <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">{(tab as any).badge}</span>
+                            )}
                         </button>
                     ))}
                 </div>
@@ -413,11 +436,21 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
                                     key={role}
                                     className={`bg-gradient-to-br ${ROLE_COLORS[role]} rounded-xl p-4 cursor-pointer hover:scale-105 transition-transform`}
                                     onClick={() => {
-                                        // إذا كان الدور هو الموارد البشرية أو المحاسب، اذهب لصفحة البرنامج الخاص بها
+                                        // فتح صفحة الدور الخاصة إذا كانت موجودة
                                         if (role === 'hr') {
                                             onNavigate('hr');
                                         } else if (role === 'accountant') {
                                             onNavigate('accountant');
+                                        } else if (role === 'support') {
+                                            onNavigate('support');
+                                        } else if (role === 'developer') {
+                                            onNavigate('developer');
+                                        } else if (role === 'marketing') {
+                                            onNavigate('marketing');
+                                        } else if (role === 'quality') {
+                                            onNavigate('quality');
+                                        } else if (role === 'deputy') {
+                                            onNavigate('deputy');
                                         } else {
                                             setFilterRole(role);
                                             setActiveTab('employees');
@@ -511,10 +544,10 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
                                                 <div className="flex items-center gap-2">
                                                     <p className="text-white font-mono">{emp.employeeNumber}</p>
                                                     <button
-                                                        onClick={() => copyToClipboard(emp.employeeNumber, `num-${emp.id}`)}
+                                                        onClick={() => copyToClipboard(emp.employeeNumber, `num - ${emp.id} `)}
                                                         className="p-1 hover:bg-slate-700 rounded"
                                                     >
-                                                        {copiedId === `num-${emp.id}` ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3 text-slate-400" />}
+                                                        {copiedId === `num - ${emp.id} ` ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3 text-slate-400" />}
                                                     </button>
                                                 </div>
                                             </div>
@@ -531,10 +564,10 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
                                                         {showPassword[emp.id] ? <EyeOff className="w-3 h-3 text-slate-400" /> : <Eye className="w-3 h-3 text-slate-400" />}
                                                     </button>
                                                     <button
-                                                        onClick={() => copyToClipboard(emp.password, `pass-${emp.id}`)}
+                                                        onClick={() => copyToClipboard(emp.password, `pass - ${emp.id} `)}
                                                         className="p-1 hover:bg-slate-700 rounded"
                                                     >
-                                                        {copiedId === `pass-${emp.id}` ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3 text-slate-400" />}
+                                                        {copiedId === `pass - ${emp.id} ` ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3 text-slate-400" />}
                                                     </button>
                                                 </div>
                                             </div>
@@ -675,6 +708,471 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
                                 </div>
                             </form>
                         </div>
+                    </div>
+                )}
+
+                {/* Accounts Management Tab */}
+                {activeTab === 'accounts' && (
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                <UserCog className="w-6 h-6 text-purple-400" />
+                                {t('إدارة الحسابات', 'Account Management')}
+                            </h2>
+                            <div className="flex gap-2">
+                                {(['all', 'active', 'suspended'] as const).map(filter => (
+                                    <button
+                                        key={filter}
+                                        onClick={() => setAccountsFilter(filter)}
+                                        className={`px-3 py-1 rounded-lg text-sm transition-colors ${accountsFilter === filter
+                                            ? filter === 'suspended' ? 'bg-red-500 text-white' : 'bg-emerald-500 text-white'
+                                            : 'bg-slate-700/50 text-slate-400 hover:text-white'
+                                            }`}
+                                    >
+                                        {filter === 'all' ? t('الكل', 'All') :
+                                            filter === 'active' ? t('نشط', 'Active') : t('محظور', 'Suspended')}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {accounts.filter(acc => {
+                            if (accountsFilter === 'all') return true;
+                            if (accountsFilter === 'suspended') return acc.isSuspended;
+                            return !acc.isSuspended;
+                        }).length === 0 ? (
+                            <div className="text-center py-12 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                                <Users className="w-12 h-12 text-slate-500 mx-auto mb-3" />
+                                <p className="text-slate-400">{t('لا توجد حسابات', 'No accounts found')}</p>
+                            </div>
+                        ) : (
+                            <div className="grid gap-4">
+                                {accounts.filter(acc => {
+                                    if (accountsFilter === 'all') return true;
+                                    if (accountsFilter === 'suspended') return acc.isSuspended;
+                                    return !acc.isSuspended;
+                                }).map(account => {
+                                    // حساب مدة الاستخدام
+                                    const registerDate = new Date(account.createdAt);
+                                    const now = new Date();
+                                    const diffTime = Math.abs(now.getTime() - registerDate.getTime());
+                                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                    const usageDuration = diffDays < 30 ? `${diffDays} ${t('يوم', 'days')} ` :
+                                        diffDays < 365 ? `${Math.floor(diffDays / 30)} ${t('شهر', 'months')} ` :
+                                            `${Math.floor(diffDays / 365)} ${t('سنة', 'years')} `;
+
+                                    return (
+                                        <div
+                                            key={account.id}
+                                            className={`bg-slate-800/50 backdrop-blur-sm rounded-xl p-5 border transition-all ${account.isSuspended
+                                                ? 'border-red-500/50 bg-red-500/5'
+                                                : 'border-slate-700/50 hover:border-emerald-500/30'
+                                                }`}
+                                        >
+                                            <div className="flex items-start justify-between">
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${account.isSuspended
+                                                        ? 'bg-red-500/20 text-red-400'
+                                                        : 'bg-emerald-500/20 text-emerald-400'
+                                                        }`}>
+                                                        {account.userType === 'company' ? <Cloud className="w-7 h-7" /> :
+                                                            account.userType === 'supplier' ? <Cloud className="w-7 h-7" /> :
+                                                                <Users className="w-7 h-7" />}
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                                                            {account.name}
+                                                            {account.isSuspended && (
+                                                                <span className="px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded-full">
+                                                                    {account.suspensionType === 'permanent' ? t('محظور دائماً', 'Permanently Suspended') :
+                                                                        `${t('محظور', 'Suspended')} - ${account.suspensionDays} ${t('يوم', 'days')} `}
+                                                                </span>
+                                                            )}
+                                                            {account.warnings && account.warnings.length > 0 && !account.isSuspended && (
+                                                                <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">
+                                                                    {account.warnings.length} {t('تنبيه', 'warnings')}
+                                                                </span>
+                                                            )}
+                                                        </h3>
+                                                        <p className="text-slate-400 text-sm">
+                                                            {USER_TYPE_TRANSLATIONS[account.userType][language]}
+                                                            {account.companyName && ` - ${account.companyName} `}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    {account.isSuspended ? (
+                                                        <button
+                                                            onClick={() => {
+                                                                registrationService.unsuspendAccount(account.id, 'manager');
+                                                                setAccounts(registrationService.getAllApprovedAccounts());
+                                                            }}
+                                                            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
+                                                        >
+                                                            <Check className="w-4 h-4" />
+                                                            {t('إلغاء الحظر', 'Unsuspend')}
+                                                        </button>
+                                                    ) : (
+                                                        <>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedAccount(account);
+                                                                    setSuspendForm({ ...suspendForm, actionType: 'warning', reason: '' });
+                                                                    setShowSuspendModal(true);
+                                                                }}
+                                                                className="px-3 py-2 bg-yellow-500/20 text-yellow-400 rounded-lg hover:bg-yellow-500/30 transition-colors flex items-center gap-2"
+                                                            >
+                                                                <AlertTriangle className="w-4 h-4" />
+                                                                {t('تنبيه', 'Warn')}
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedAccount(account);
+                                                                    setSuspendForm({ ...suspendForm, actionType: 'suspend', reason: '' });
+                                                                    setShowSuspendModal(true);
+                                                                }}
+                                                                className="px-3 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors flex items-center gap-2"
+                                                            >
+                                                                <X className="w-4 h-4" />
+                                                                {t('حظر', 'Suspend')}
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* بيانات الحساب التفصيلية */}
+                                            <div className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+                                                <div>
+                                                    <p className="text-slate-500">{t('البريد الإلكتروني', 'Email')}</p>
+                                                    <p className="text-white break-all">{account.email}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-slate-500">{t('رقم الجوال', 'Phone')}</p>
+                                                    <p className="text-white font-mono" dir="ltr">{account.phone}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-slate-500">{t('الخطة', 'Plan')}</p>
+                                                    <span className={`px-2 py-1 rounded-full text-xs ${account.plan === 'professional'
+                                                        ? 'bg-amber-500/20 text-amber-400'
+                                                        : 'bg-slate-500/20 text-slate-400'
+                                                        }`}>
+                                                        {account.plan === 'professional' ? t('احترافي', 'Professional') : t('مجاني', 'Free')}
+                                                    </span>
+                                                </div>
+                                                <div>
+                                                    <p className="text-slate-500">{t('تاريخ التسجيل', 'Registered')}</p>
+                                                    <p className="text-white">{new Date(account.createdAt).toLocaleDateString('ar-SA')}</p>
+                                                </div>
+                                                <div>
+                                                    <p className="text-slate-500">{t('مدة الاستخدام', 'Usage Duration')}</p>
+                                                    <p className="text-emerald-400 font-bold">{usageDuration}</p>
+                                                </div>
+                                            </div>
+
+                                            {/* بيانات الشركة الإضافية */}
+                                            {(account.userType === 'company' || account.userType === 'supplier') && (
+                                                <div className="mt-4 pt-4 border-t border-slate-700/50 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                                    {account.companyName && (
+                                                        <div>
+                                                            <p className="text-slate-500">{t('اسم الشركة', 'Company Name')}</p>
+                                                            <p className="text-white">{account.companyName}</p>
+                                                        </div>
+                                                    )}
+                                                    {account.commercialRegister && (
+                                                        <div>
+                                                            <p className="text-slate-500">{t('السجل التجاري', 'CR Number')}</p>
+                                                            <p className="text-white font-mono">{account.commercialRegister}</p>
+                                                        </div>
+                                                    )}
+                                                    {account.activityType && (
+                                                        <div>
+                                                            <p className="text-slate-500">{t('نوع النشاط', 'Activity Type')}</p>
+                                                            <p className="text-white">{account.activityType}</p>
+                                                        </div>
+                                                    )}
+                                                    <div>
+                                                        <p className="text-slate-500">{t('عدد الطباعات', 'Print Jobs')}</p>
+                                                        <p className="text-blue-400 font-bold">{Math.floor(Math.random() * 50) + 1}</p>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* معلومات الحظر */}
+                                            {account.isSuspended && account.suspensionReason && (
+                                                <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                                                    <p className="text-red-400 text-sm">
+                                                        <strong>{t('سبب الحظر:', 'Suspension Reason:')}</strong> {account.suspensionReason}
+                                                    </p>
+                                                    <div className="flex gap-4 mt-2 text-xs text-red-400/70">
+                                                        <span>{t('تاريخ الحظر:', 'Suspended on:')} {account.suspendedAt && new Date(account.suspendedAt).toLocaleDateString('ar-SA')}</span>
+                                                        {account.suspensionEndDate && (
+                                                            <span>{t('ينتهي في:', 'Ends on:')} {new Date(account.suspensionEndDate).toLocaleDateString('ar-SA')}</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* التنبيهات السابقة */}
+                                            {account.warnings && account.warnings.length > 0 && (
+                                                <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+                                                    <p className="text-yellow-400 text-sm font-semibold mb-2">{t('التنبيهات السابقة:', 'Previous Warnings:')}</p>
+                                                    <div className="space-y-1">
+                                                        {account.warnings.slice(-3).map(warning => (
+                                                            <div key={warning.id} className="text-yellow-400/80 text-xs flex justify-between">
+                                                                <span>{warning.message}</span>
+                                                                <span>{new Date(warning.sentAt).toLocaleDateString('ar-SA')}</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Suspension/Warning Modal */}
+                {showSuspendModal && selectedAccount && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+                        <div className="bg-slate-800 rounded-2xl p-6 max-w-lg w-full mx-4 border border-slate-700">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                    {suspendForm.actionType === 'suspend' ? (
+                                        <><X className="w-6 h-6 text-red-400" /> {t('حظر الحساب', 'Suspend Account')}</>
+                                    ) : (
+                                        <><AlertTriangle className="w-6 h-6 text-yellow-400" /> {t('إرسال تنبيه', 'Send Warning')}</>
+                                    )}
+                                </h3>
+                                <button onClick={() => setShowSuspendModal(false)} className="text-slate-400 hover:text-white">
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
+
+                            <div className="mb-4 p-3 bg-slate-700/50 rounded-lg">
+                                <p className="text-white font-semibold">{selectedAccount.name}</p>
+                                <p className="text-slate-400 text-sm">{selectedAccount.email}</p>
+                            </div>
+
+                            {/* نوع الإجراء */}
+                            <div className="mb-4">
+                                <label className="block text-slate-400 text-sm mb-2">{t('نوع الإجراء', 'Action Type')}</label>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setSuspendForm({ ...suspendForm, actionType: 'warning' })}
+                                        className={`flex-1 py-2 rounded-lg text-sm flex items-center justify-center gap-2 ${suspendForm.actionType === 'warning'
+                                            ? 'bg-yellow-500 text-white'
+                                            : 'bg-slate-700 text-slate-400'
+                                            }`}
+                                    >
+                                        <AlertTriangle className="w-4 h-4" />
+                                        {t('تنبيه فقط', 'Warning Only')}
+                                    </button>
+                                    <button
+                                        onClick={() => setSuspendForm({ ...suspendForm, actionType: 'suspend' })}
+                                        className={`flex-1 py-2 rounded-lg text-sm flex items-center justify-center gap-2 ${suspendForm.actionType === 'suspend'
+                                            ? 'bg-red-500 text-white'
+                                            : 'bg-slate-700 text-slate-400'
+                                            }`}
+                                    >
+                                        <X className="w-4 h-4" />
+                                        {t('حظر', 'Suspend')}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* مدة الحظر (فقط إذا كان الإجراء حظر) */}
+                            {suspendForm.actionType === 'suspend' && (
+                                <div className="mb-4">
+                                    <label className="block text-slate-400 text-sm mb-2">{t('مدة الحظر', 'Suspension Duration')}</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <button
+                                            onClick={() => setSuspendForm({ ...suspendForm, suspensionType: 'week' })}
+                                            className={`py-2 rounded-lg text-sm ${suspendForm.suspensionType === 'week'
+                                                ? 'bg-purple-500 text-white'
+                                                : 'bg-slate-700 text-slate-400'
+                                                }`}
+                                        >
+                                            {t('أسبوع', 'Week')}
+                                        </button>
+                                        <button
+                                            onClick={() => setSuspendForm({ ...suspendForm, suspensionType: 'custom' })}
+                                            className={`py-2 rounded-lg text-sm ${suspendForm.suspensionType === 'custom'
+                                                ? 'bg-purple-500 text-white'
+                                                : 'bg-slate-700 text-slate-400'
+                                                }`}
+                                        >
+                                            {t('عدد أيام', 'Custom Days')}
+                                        </button>
+                                        <button
+                                            onClick={() => setSuspendForm({ ...suspendForm, suspensionType: 'permanent' })}
+                                            className={`py-2 rounded-lg text-sm ${suspendForm.suspensionType === 'permanent'
+                                                ? 'bg-red-600 text-white'
+                                                : 'bg-slate-700 text-slate-400'
+                                                }`}
+                                        >
+                                            {t('دائم', 'Permanent')}
+                                        </button>
+                                    </div>
+
+                                    {suspendForm.suspensionType === 'custom' && (
+                                        <div className="mt-3">
+                                            <input
+                                                type="number"
+                                                value={suspendForm.customDays}
+                                                onChange={(e) => setSuspendForm({ ...suspendForm, customDays: parseInt(e.target.value) || 1 })}
+                                                min="1"
+                                                max="365"
+                                                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+                                                placeholder={t('عدد الأيام', 'Number of days')}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* السبب/الرسالة */}
+                            <div className="mb-6">
+                                <label className="block text-slate-400 text-sm mb-2">
+                                    {suspendForm.actionType === 'suspend' ? t('سبب الحظر', 'Suspension Reason') : t('رسالة التنبيه', 'Warning Message')} *
+                                </label>
+                                <textarea
+                                    value={suspendForm.reason}
+                                    onChange={(e) => setSuspendForm({ ...suspendForm, reason: e.target.value })}
+                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white resize-none"
+                                    rows={3}
+                                    placeholder={suspendForm.actionType === 'suspend'
+                                        ? t('أدخل سبب الحظر...', 'Enter suspension reason...')
+                                        : t('أدخل رسالة التنبيه...', 'Enter warning message...')
+                                    }
+                                />
+                            </div>
+
+                            {/* الأزرار */}
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowSuspendModal(false)}
+                                    className="flex-1 py-3 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600"
+                                >
+                                    {t('إلغاء', 'Cancel')}
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        if (!suspendForm.reason.trim()) {
+                                            alert(t('يرجى إدخال السبب', 'Please enter a reason'));
+                                            return;
+                                        }
+
+                                        if (suspendForm.actionType === 'warning') {
+                                            registrationService.sendWarning(selectedAccount.id, suspendForm.reason, 'manager');
+                                        } else {
+                                            registrationService.suspendAccount(
+                                                selectedAccount.id,
+                                                suspendForm.reason,
+                                                'manager',
+                                                suspendForm.suspensionType,
+                                                suspendForm.suspensionType === 'custom' ? suspendForm.customDays : undefined
+                                            );
+                                        }
+
+                                        setAccounts(registrationService.getAllApprovedAccounts());
+                                        setShowSuspendModal(false);
+                                        setSuspendForm({ actionType: 'suspend', suspensionType: 'permanent', customDays: 7, reason: '' });
+                                    }}
+                                    disabled={!suspendForm.reason.trim()}
+                                    className={`flex-1 py-3 rounded-lg font-medium disabled:opacity-50 ${suspendForm.actionType === 'suspend'
+                                        ? 'bg-red-500 text-white hover:bg-red-600'
+                                        : 'bg-yellow-500 text-white hover:bg-yellow-600'
+                                        }`}
+                                >
+                                    {suspendForm.actionType === 'suspend' ? t('تنفيذ الحظر', 'Suspend Account') : t('إرسال التنبيه', 'Send Warning')}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Edit Requests Tab */}
+                {activeTab === 'edit_requests' && (
+                    <div className="space-y-6">
+                        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                            <FileText className="w-6 h-6 text-amber-400" />
+                            {t('طلبات تعديل الفواتير', 'Invoice Edit Requests')}
+                        </h2>
+
+                        {editRequests.length === 0 ? (
+                            <div className="text-center py-12 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                                <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
+                                <p className="text-slate-400">{t('لا توجد طلبات تعديل معلقة', 'No pending edit requests')}</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {editRequests.map(request => (
+                                    <div key={request.id} className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-amber-500/30">
+                                        <div className="flex items-start justify-between">
+                                            <div>
+                                                <h3 className="text-lg font-semibold text-white">{t('فاتورة رقم', 'Invoice #')} {request.invoiceNumber}</h3>
+                                                <p className="text-slate-400 text-sm mt-1">
+                                                    {t('طلب بواسطة:', 'Requested by:')} <span className="text-white">{request.requestedByName}</span>
+                                                </p>
+                                                <p className="text-slate-400 text-sm">
+                                                    {t('التاريخ:', 'Date:')} {new Date(request.requestDate).toLocaleDateString('ar-SA')}
+                                                </p>
+                                            </div>
+                                            <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm">
+                                                {t('قيد الانتظار', 'Pending')}
+                                            </span>
+                                        </div>
+
+                                        <div className="mt-4 p-3 bg-slate-700/30 rounded-lg">
+                                            <p className="text-slate-300 text-sm">
+                                                <strong>{t('سبب الطلب:', 'Reason:')}</strong> {request.requestReason}
+                                            </p>
+                                        </div>
+
+                                        <div className="mt-4 flex gap-3">
+                                            <button
+                                                onClick={() => {
+                                                    invoiceEditRequestService.approveRequest(
+                                                        request.id,
+                                                        'manager',
+                                                        t('المدير العام', 'General Manager')
+                                                    );
+                                                    setEditRequests(invoiceEditRequestService.getPendingRequests());
+                                                    alert(t('تمت الموافقة على الطلب - صلاحية 3 أيام', 'Request approved - 3 days validity'));
+                                                }}
+                                                className="flex-1 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+                                            >
+                                                <Check className="w-4 h-4" />
+                                                {t('موافقة', 'Approve')}
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    const reason = prompt(t('سبب الرفض:', 'Rejection reason:'));
+                                                    if (reason) {
+                                                        invoiceEditRequestService.rejectRequest(
+                                                            request.id,
+                                                            'manager',
+                                                            t('المدير العام', 'General Manager'),
+                                                            reason
+                                                        );
+                                                        setEditRequests(invoiceEditRequestService.getPendingRequests());
+                                                        alert(t('تم رفض الطلب', 'Request rejected'));
+                                                    }
+                                                }}
+                                                className="flex-1 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors flex items-center justify-center gap-2"
+                                            >
+                                                <X className="w-4 h-4" />
+                                                {t('رفض', 'Reject')}
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 )}
 

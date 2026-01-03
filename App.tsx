@@ -24,6 +24,7 @@ import { employeeService, Employee, MANAGER_CREDENTIALS } from './services/emplo
 import HRPage from './pages/employees/roles/HRPage';
 import AccountantPage from './pages/employees/roles/AccountantPage';
 import PasswordResetPage from './pages/PasswordResetPage';
+import SupportCenterPage from './pages/SupportCenterPage';
 import CloudSyncPage from './pages/CloudSyncPage';
 import { AppState, CalculatedItem, ProjectType, CustomParams, BlueprintConfig, SurfaceLocation, RoomFinishes, BaseItem } from './types';
 import { INITIAL_OVERHEAD, PROJECT_DEFAULTS, PROJECT_TITLES, TRANSLATIONS } from './constants';
@@ -38,7 +39,7 @@ import { registerWithFirebase, loginWithFirebase, logoutFromFirebase, onAuthChan
 // Toggle Firebase mode - set to true to use Firebase
 const USE_FIREBASE = true;
 
-type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant' | 'password-reset' | 'cloud-sync';
+type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant' | 'password-reset' | 'cloud-sync' | 'support-center' | 'support' | 'developer' | 'marketing' | 'quality' | 'deputy';
 
 // مفتاح الوصول السري للوحة المدير - غيره لمفتاح خاص بك
 const ADMIN_SECRET_KEY = 'arba2025secure';
@@ -242,10 +243,82 @@ const App: React.FC = () => {
             }
         }
 
+        // Check for approved registration requests (for company/supplier users)
+        if (userType === 'company' || userType === 'supplier') {
+            const registrationRequest = registrationService.getRequestByEmail(email);
+            if (registrationRequest && registrationRequest.password === password) {
+                // First check if commercial register is verified
+                if (!registrationRequest.crVerified) {
+                    // CR not verified - redirect to under review page
+                    setRegistrationRequestId(registrationRequest.id);
+                    setPendingRegistrationEmail(registrationRequest.email);
+                    setPendingRegistrationPhone(registrationRequest.phone);
+                    setCurrentPage('under-review');
+                    return;
+                }
+
+                // CR is verified - check status for next step
+                if (registrationRequest.status === 'approved') {
+                    // Check if account is suspended
+                    if (registrationRequest.isSuspended) {
+                        setLoginError(language === 'ar'
+                            ? `حسابك محظور: ${registrationRequest.suspensionReason || 'للاستفسار تواصل مع الدعم'}`
+                            : `Your account is suspended: ${registrationRequest.suspensionReason || 'Contact support for more info'}`);
+                        return;
+                    }
+                    // Login successful with approved registration
+                    setUser({
+                        name: registrationRequest.name,
+                        email: registrationRequest.email,
+                        company: registrationRequest.companyName,
+                        plan: registrationRequest.plan,
+                        usedProjects: 0,
+                        usedStorageMB: 0
+                    });
+                    setCurrentPage('dashboard');
+                    return;
+                } else if (registrationRequest.status === 'pending_payment') {
+                    // CR verified but payment pending - redirect to payment page
+                    setRegistrationRequestId(registrationRequest.id);
+                    setPendingRegistrationEmail(registrationRequest.email);
+                    setPendingRegistrationPhone(registrationRequest.phone);
+                    setCurrentPage('payment-upload');
+                    return;
+                } else if (
+                    registrationRequest.status === 'pending_approval' ||
+                    registrationRequest.status === 'payment_under_review'
+                ) {
+                    // CR verified but still under review
+                    setRegistrationRequestId(registrationRequest.id);
+                    setPendingRegistrationEmail(registrationRequest.email);
+                    setPendingRegistrationPhone(registrationRequest.phone);
+                    setCurrentPage('under-review');
+                    return;
+                } else if (registrationRequest.status === 'rejected') {
+                    setLoginError('تم رفض طلب التسجيل. يرجى التواصل مع الدعم الفني.');
+                    return;
+                }
+            }
+        }
+
         if (USE_FIREBASE) {
             // Firebase login
             const result = await loginWithFirebase(email, password);
             if (!result.success) {
+                // If Firebase fails, check approved registrations as fallback
+                const approvedRequest = registrationService.getRequestByEmail(email);
+                if (approvedRequest && approvedRequest.status === 'approved' && approvedRequest.password === password) {
+                    setUser({
+                        name: approvedRequest.name,
+                        email: approvedRequest.email,
+                        company: approvedRequest.companyName,
+                        plan: approvedRequest.plan,
+                        usedProjects: 0,
+                        usedStorageMB: 0
+                    });
+                    setCurrentPage('dashboard');
+                    return;
+                }
                 setLoginError(result.error || 'حدث خطأ أثناء تسجيل الدخول');
                 return;
             }
@@ -600,6 +673,19 @@ const App: React.FC = () => {
         return <CloudSyncPage language={language} onNavigate={handleNavigate} />;
     }
 
+    if (currentPage === 'support-center') {
+        return (
+            <SupportCenterPage
+                language={language}
+                onNavigate={handleNavigate}
+                userId={user?.email || 'guest'}
+                userName={user?.name}
+                userEmail={user?.email}
+                userType={user ? 'individual' : 'guest'}
+            />
+        );
+    }
+
     // Admin Login Page (Secret Access)
     if (currentPage === 'admin-login') {
         return (
@@ -811,6 +897,148 @@ const App: React.FC = () => {
                 </header>
                 <div className="p-6">
                     <AccountantPage language={language} employee={accountantEmployee} />
+                </div>
+            </div>
+        );
+    }
+
+    // Support Page (accessed from Manager Dashboard)
+    if (currentPage === 'support') {
+        const supportEmployee: Employee = currentEmployee || {
+            id: 'manager-view',
+            employeeNumber: 'MGR-001',
+            password: '',
+            name: isManager ? MANAGER_CREDENTIALS.name : 'موظف الدعم الفني',
+            email: 'support@arba-sys.com',
+            phone: '0500000000',
+            role: 'support',
+            isActive: true,
+            createdAt: new Date().toISOString()
+        };
+
+        // Import SupportPage dynamically
+        const SupportPage = require('./pages/employees/roles/SupportPage').default;
+
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+                <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 sticky top-0 z-50">
+                    <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
+                                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h1 className="text-xl font-bold text-white">{language === 'ar' ? 'الدعم الفني' : 'Technical Support'}</h1>
+                                <p className="text-slate-400 text-sm">{language === 'ar' ? 'إدارة تذاكر الدعم' : 'Support Ticket Management'}</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setCurrentPage(isManager ? 'manager' : 'employee')}
+                            className="flex items-center gap-2 px-4 py-2 bg-slate-700/50 text-slate-300 hover:bg-slate-700 rounded-lg transition-all"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            <span>{language === 'ar' ? 'رجوع' : 'Back'}</span>
+                        </button>
+                    </div>
+                </header>
+                <div className="p-6">
+                    <SupportPage language={language} employee={supportEmployee} />
+                </div>
+            </div>
+        );
+    }
+
+    // Developer Page (placeholder)
+    if (currentPage === 'developer') {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                <div className="text-center">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-slate-500 to-gray-600 flex items-center justify-center mx-auto mb-6">
+                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                        </svg>
+                    </div>
+                    <h1 className="text-2xl font-bold text-white mb-2">{language === 'ar' ? 'لوحة المطور' : 'Developer Dashboard'}</h1>
+                    <p className="text-slate-400 mb-6">{language === 'ar' ? 'قريباً...' : 'Coming soon...'}</p>
+                    <button
+                        onClick={() => setCurrentPage(isManager ? 'manager' : 'employee')}
+                        className="px-6 py-3 bg-slate-700 text-white rounded-xl hover:bg-slate-600 transition-colors"
+                    >
+                        {language === 'ar' ? 'رجوع' : 'Back'}
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // Marketing Page (placeholder)
+    if (currentPage === 'marketing') {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                <div className="text-center">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center mx-auto mb-6">
+                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                        </svg>
+                    </div>
+                    <h1 className="text-2xl font-bold text-white mb-2">{language === 'ar' ? 'لوحة التسويق' : 'Marketing Dashboard'}</h1>
+                    <p className="text-slate-400 mb-6">{language === 'ar' ? 'قريباً...' : 'Coming soon...'}</p>
+                    <button
+                        onClick={() => setCurrentPage(isManager ? 'manager' : 'employee')}
+                        className="px-6 py-3 bg-slate-700 text-white rounded-xl hover:bg-slate-600 transition-colors"
+                    >
+                        {language === 'ar' ? 'رجوع' : 'Back'}
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // Quality Page (placeholder)
+    if (currentPage === 'quality') {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                <div className="text-center">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-teal-500 to-green-600 flex items-center justify-center mx-auto mb-6">
+                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h1 className="text-2xl font-bold text-white mb-2">{language === 'ar' ? 'لوحة الجودة' : 'Quality Dashboard'}</h1>
+                    <p className="text-slate-400 mb-6">{language === 'ar' ? 'قريباً...' : 'Coming soon...'}</p>
+                    <button
+                        onClick={() => setCurrentPage(isManager ? 'manager' : 'employee')}
+                        className="px-6 py-3 bg-slate-700 text-white rounded-xl hover:bg-slate-600 transition-colors"
+                    >
+                        {language === 'ar' ? 'رجوع' : 'Back'}
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    // Deputy Manager Page (placeholder)
+    if (currentPage === 'deputy') {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                <div className="text-center">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center mx-auto mb-6">
+                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h1 className="text-2xl font-bold text-white mb-2">{language === 'ar' ? 'لوحة نائب المدير' : 'Deputy Manager Dashboard'}</h1>
+                    <p className="text-slate-400 mb-6">{language === 'ar' ? 'قريباً...' : 'Coming soon...'}</p>
+                    <button
+                        onClick={() => setCurrentPage(isManager ? 'manager' : 'employee')}
+                        className="px-6 py-3 bg-slate-700 text-white rounded-xl hover:bg-slate-600 transition-colors"
+                    >
+                        {language === 'ar' ? 'رجوع' : 'Back'}
+                    </button>
                 </div>
             </div>
         );

@@ -131,7 +131,15 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ language, onNavig
         }
 
         setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        // تحديث كلمة المرور فعلياً في خدمة التسجيل
+        const result = registrationService.updatePasswordByPhone(phone, newPassword);
+
+        if (!result.success) {
+            setError(result.error || (language === 'ar' ? 'حدث خطأ أثناء تحديث كلمة المرور' : 'Error updating password'));
+            setIsLoading(false);
+            return;
+        }
 
         // Password updated successfully
         setStep('complete');
@@ -272,8 +280,8 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ language, onNavig
                                         onChange={(e) => handleCodeChange(index, e.target.value)}
                                         onKeyDown={(e) => handleKeyDown(index, e)}
                                         className={`w-14 h-16 text-center text-3xl font-bold rounded-xl border-2 transition-all outline-none ${digit
-                                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                                                : 'border-slate-200 bg-white text-slate-800 focus:border-emerald-500'
+                                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                            : 'border-slate-200 bg-white text-slate-800 focus:border-emerald-500'
                                             }`}
                                     />
                                 ))}

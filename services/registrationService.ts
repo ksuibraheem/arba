@@ -91,6 +91,23 @@ export interface RegistrationRequest {
     // الطوابع الزمنية
     createdAt: string;
     updatedAt: string;
+
+    // حظر الحساب
+    isSuspended?: boolean;
+    suspensionReason?: string;
+    suspensionType?: 'permanent' | 'week' | 'custom'; // نوع الحظر
+    suspensionDays?: number; // عدد أيام الحظر (للحظر المخصص)
+    suspensionEndDate?: string; // تاريخ انتهاء الحظر
+    suspendedBy?: string;
+    suspendedAt?: string;
+
+    // التنبيهات والتحذيرات
+    warnings?: {
+        id: string;
+        message: string;
+        sentBy: string;
+        sentAt: string;
+    }[];
 }
 
 // إشعار
@@ -259,6 +276,168 @@ class RegistrationService {
 
     getRequestByEmail(email: string): RegistrationRequest | null {
         return this.getRequests().find(r => r.email.toLowerCase() === email.toLowerCase()) || null;
+    }
+
+    // =================== البحث بالهاتف ===================
+
+    getRequestByPhone(phone: string): RegistrationRequest | null {
+        // تنظيف الرقم من المسافات والرموز
+        const cleanPhone = phone.replace(/[\s\-\+]/g, '');
+        return this.getRequests().find(r => {
+            const rPhone = r.phone.replace(/[\s\-\+]/g, '');
+            // مطابقة كاملة أو جزئية (آخر 9 أرقام)
+            return rPhone === cleanPhone ||
+                rPhone.endsWith(cleanPhone) ||
+                cleanPhone.endsWith(rPhone);
+        }) || null;
+    }
+
+    // =================== تحديث كلمة المرور ===================
+
+    updatePassword(requestId: string, newPassword: string): { success: boolean; error?: string } {
+        const requests = this.getRequests();
+        const index = requests.findIndex(r => r.id === requestId);
+
+        if (index === -1) {
+            return { success: false, error: 'الحساب غير موجود' };
+        }
+
+        requests[index] = {
+            ...requests[index],
+            password: newPassword,
+            updatedAt: new Date().toISOString()
+        };
+
+        this.saveRequests(requests);
+        console.log(`🔐 [PASSWORD] Updated for user: ${requests[index].email}`);
+        return { success: true };
+    }
+
+    updatePasswordByPhone(phone: string, newPassword: string): { success: boolean; error?: string } {
+        const request = this.getRequestByPhone(phone);
+        if (!request) {
+            return { success: false, error: 'لم يتم العثور على حساب مرتبط بهذا الرقم' };
+        }
+        return this.updatePassword(request.id, newPassword);
+    }
+
+    // =================== حظر وإلغاء حظر الحسابات ===================
+
+    suspendAccount(
+        requestId: string,
+        reason: string,
+        suspendedBy: string,
+        suspensionType: 'permanent' | 'week' | 'custom' = 'permanent',
+        customDays?: number
+    ): { success: boolean; error?: string } {
+        const requests = this.getRequests();
+        const index = requests.findIndex(r => r.id === requestId);
+
+        if (index === -1) {
+            return { success: false, error: 'الحساب غير موجود' };
+        }
+
+        // حساب تاريخ انتهاء الحظر
+        let suspensionEndDate: string | undefined;
+        let days = 0;
+
+        if (suspensionType === 'week') {
+            days = 7;
+            suspensionEndDate = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+        } else if (suspensionType === 'custom' && customDays && customDays > 0) {
+            days = customDays;
+            suspensionEndDate = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+        }
+        // للحظر الدائم، لا يوجد تاريخ انتهاء
+
+        requests[index] = {
+            ...requests[index],
+            isSuspended: true,
+            suspensionReason: reason,
+            suspensionType: suspensionType,
+            suspensionDays: days > 0 ? days : undefined,
+            suspensionEndDate: suspensionEndDate,
+            suspendedBy: suspendedBy,
+            suspendedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+
+        this.saveRequests(requests);
+
+        // إرسال إشعار بالحظر
+        const durationText = suspensionType === 'permanent' ? 'دائم' :
+            suspensionType === 'week' ? 'أسبوع واحد' :
+                `${customDays} أيام`;
+        this.sendSuspensionNotification(requests[index].email, `${reason} (المدة: ${durationText})`, requestId);
+
+        console.log(`🚫 [SUSPENDED] Account: ${requests[index].email} | Type: ${suspensionType} | Reason: ${reason}`);
+        return { success: true };
+    }
+
+    // إرسال تنبيه/تحذير للمستخدم بدون حظر
+    sendWarning(requestId: string, message: string, sentBy: string): { success: boolean; error?: string } {
+        const requests = this.getRequests();
+        const index = requests.findIndex(r => r.id === requestId);
+
+        if (index === -1) {
+            return { success: false, error: 'الحساب غير موجود' };
+        }
+
+        const warning = {
+            id: crypto.randomUUID(),
+            message: message,
+            sentBy: sentBy,
+            sentAt: new Date().toISOString()
+        };
+
+        const currentWarnings = requests[index].warnings || [];
+        requests[index] = {
+            ...requests[index],
+            warnings: [...currentWarnings, warning],
+            updatedAt: new Date().toISOString()
+        };
+
+        this.saveRequests(requests);
+
+        // إرسال إشعار بالتنبيه
+        this.sendWarningNotification(requests[index].email, message, requestId);
+
+        console.log(`⚠️ [WARNING] Account: ${requests[index].email} | Message: ${message}`);
+        return { success: true };
+    }
+
+    unsuspendAccount(requestId: string, unsuspendedBy: string): { success: boolean; error?: string } {
+        const requests = this.getRequests();
+        const index = requests.findIndex(r => r.id === requestId);
+
+        if (index === -1) {
+            return { success: false, error: 'الحساب غير موجود' };
+        }
+
+        requests[index] = {
+            ...requests[index],
+            isSuspended: false,
+            suspensionReason: undefined,
+            suspendedBy: undefined,
+            suspendedAt: undefined,
+            updatedAt: new Date().toISOString()
+        };
+
+        this.saveRequests(requests);
+
+        // إرسال إشعار بإلغاء الحظر
+        this.sendUnsuspensionNotification(requests[index].email, requestId);
+
+        console.log(`✅ [UNSUSPENDED] Account: ${requests[index].email}`);
+        return { success: true };
+    }
+
+    getSuspendedAccounts(): RegistrationRequest[] {
+        return this.getRequests().filter(r => r.isSuspended === true);
+    }
+
+    getAllApprovedAccounts(): RegistrationRequest[] {
+        return this.getRequests().filter(r => r.status === 'approved');
     }
 
     // =================== إنشاء طلب تسجيل (أفراد) ===================
@@ -996,6 +1175,48 @@ class RegistrationService {
         };
         this.saveNotification(notification);
         console.log(`📧 [EMAIL] To: ${email} | Subject: New Receipt Required`);
+    }
+
+    private sendSuspensionNotification(email: string, reason: string, requestId: string): void {
+        const notification: Notification = {
+            id: crypto.randomUUID(),
+            type: 'email',
+            to: email,
+            subject: 'تم إيقاف حسابك - نظام أربا',
+            message: `تم إيقاف حسابك بسبب: ${reason}\nللاستفسار، يرجى التواصل مع الدعم الفني.`,
+            sentAt: new Date().toISOString(),
+            relatedRequestId: requestId
+        };
+        this.saveNotification(notification);
+        console.log(`📧 [EMAIL] To: ${email} | Subject: Account Suspended`);
+    }
+
+    private sendUnsuspensionNotification(email: string, requestId: string): void {
+        const notification: Notification = {
+            id: crypto.randomUUID(),
+            type: 'email',
+            to: email,
+            subject: 'تم إعادة تفعيل حسابك - نظام أربا',
+            message: 'تم إعادة تفعيل حسابك. يمكنك الآن تسجيل الدخول والاستخدام بشكل طبيعي.',
+            sentAt: new Date().toISOString(),
+            relatedRequestId: requestId
+        };
+        this.saveNotification(notification);
+        console.log(`📧 [EMAIL] To: ${email} | Subject: Account Unsuspended`);
+    }
+
+    private sendWarningNotification(email: string, message: string, requestId: string): void {
+        const notification: Notification = {
+            id: crypto.randomUUID(),
+            type: 'email',
+            to: email,
+            subject: 'تنبيه هام - نظام أربا',
+            message: `تنبيه: ${message}\n\nيرجى الالتزام بسياسات الاستخدام لتجنب إيقاف حسابك.`,
+            sentAt: new Date().toISOString(),
+            relatedRequestId: requestId
+        };
+        this.saveNotification(notification);
+        console.log(`📧 [EMAIL] To: ${email} | Subject: Warning`);
     }
 
     // =================== إحصائيات ===================

@@ -46,6 +46,13 @@ export interface Invoice {
     issueDate: string;          // تاريخ الإصدار
     paidDate?: string;          // تاريخ الدفع
 
+    // ربط بشجرة الحسابات
+    journalEntryId?: string;    // معرف القيد المحاسبي المرتبط
+
+    // تتبع التعديلات
+    isEdited: boolean;          // هل تم تعديل الفاتورة?
+    editCount: number;          // عدد التعديلات
+
     notes?: string;             // ملاحظات
     createdBy: string;          // منشئ الفاتورة
     createdAt: string;
@@ -243,13 +250,15 @@ class AccountingService {
         return `INV-${year}-${count.toString().padStart(5, '0')}`;
     }
 
-    createInvoice(invoice: Omit<Invoice, 'id' | 'invoiceNumber' | 'createdAt'>): Invoice {
+    createInvoice(invoice: Omit<Invoice, 'id' | 'invoiceNumber' | 'createdAt' | 'isEdited' | 'editCount'>): Invoice {
         const invoices = this.getInvoices();
 
         const newInvoice: Invoice = {
             ...invoice,
             id: crypto.randomUUID(),
             invoiceNumber: this.generateInvoiceNumber(),
+            isEdited: false,
+            editCount: 0,
             createdAt: new Date().toISOString()
         };
 
@@ -561,7 +570,7 @@ class AccountingService {
 
         // فواتير تجريبية
         if (this.getInvoices().length === 0) {
-            const sampleInvoices: Omit<Invoice, 'id' | 'invoiceNumber' | 'createdAt'>[] = [
+            const sampleInvoices: Omit<Invoice, 'id' | 'invoiceNumber' | 'createdAt' | 'isEdited' | 'editCount'>[] = [
                 {
                     customerId: 'c1',
                     customerName: 'Advanced Technology Co.',

@@ -16,7 +16,8 @@ import {
     Clock,
     Check,
     Star,
-    Globe
+    Globe,
+    Headphones
 } from 'lucide-react';
 import { COMPANY_INFO, SERVICES, FEATURES, SUBSCRIPTION_PLANS, PAGE_TRANSLATIONS } from '../companyData';
 
@@ -70,6 +71,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                                 className="text-slate-300 hover:text-white transition-colors"
                             >
                                 {t('nav_about')}
+                            </button>
+                            <button
+                                onClick={() => onNavigate('support-center')}
+                                className="text-slate-300 hover:text-white transition-colors flex items-center gap-1"
+                            >
+                                <Headphones className="w-4 h-4" />
+                                {language === 'ar' ? 'الدعم' : 'Support'}
                             </button>
                         </div>
 
