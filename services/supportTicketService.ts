@@ -11,7 +11,7 @@ export type TicketCategory = 'technical_bug' | 'finance_boq' | 'hr_general' | 'f
 export type TicketPriority = 'low' | 'medium' | 'high' | 'urgent';
 export type TicketStatus = 'open' | 'in_progress' | 'waiting_response' | 'resolved' | 'closed';
 export type TicketRoute = 'github' | 'finance' | 'admin' | 'support';
-export type UserType = 'admin' | 'employee' | 'supplier' | 'individual' | 'guest';
+export type UserType = 'admin' | 'employee' | 'company' | 'supplier' | 'individual' | 'guest';
 
 export interface Attachment {
     id: string;
