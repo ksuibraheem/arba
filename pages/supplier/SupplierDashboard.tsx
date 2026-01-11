@@ -19,7 +19,15 @@ import {
     XCircle,
     TrendingUp,
     Users,
-    ShoppingCart
+    ShoppingCart,
+    Percent,
+    Tag,
+    Calendar,
+    Target,
+    Megaphone,
+    Gift,
+    BarChart2,
+    PieChart
 } from 'lucide-react';
 import { COMPANY_INFO } from '../../companyData';
 
@@ -37,6 +45,26 @@ interface Product {
     unit: string;
     stock: number;
     status: 'active' | 'inactive';
+    // Analytics fields
+    views: number;
+    pricings: number;
+    addedToQuotes: number;
+    conversionRate: number;
+}
+
+interface Promotion {
+    id: string;
+    productId: string;
+    productName: { ar: string; en: string };
+    discountType: 'percentage' | 'fixed';
+    discountValue: number;
+    originalPrice: number;
+    startDate: string;
+    endDate: string;
+    targetCustomers: 'all' | 'companies' | 'individuals';
+    maxUses: number;
+    currentUses: number;
+    status: 'active' | 'scheduled' | 'expired';
 }
 
 interface QuoteRequest {
@@ -51,8 +79,10 @@ interface QuoteRequest {
 const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavigate, onLogout }) => {
     const isRtl = language === 'ar';
     const Arrow = isRtl ? ArrowRight : ArrowLeft;
-    const [activeTab, setActiveTab] = useState<'overview' | 'categories' | 'products' | 'quotes' | 'settings'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'categories' | 'products' | 'quotes' | 'analytics' | 'promotions' | 'settings'>('overview');
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const [showCreatePromotion, setShowCreatePromotion] = useState(false);
+    const [selectedProductForPromo, setSelectedProductForPromo] = useState<Product | null>(null);
 
     // Product Categories
     const productCategories = [
@@ -89,10 +119,16 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
     };
 
     const products: Product[] = [
-        { id: '1', name: { ar: 'حديد تسليح 12مم', en: 'Rebar 12mm' }, category: 'structure', price: 3200, unit: 'طن', stock: 150, status: 'active' },
-        { id: '2', name: { ar: 'اسمنت بورتلاندي', en: 'Portland Cement' }, category: 'structure', price: 18, unit: 'كيس', stock: 5000, status: 'active' },
-        { id: '3', name: { ar: 'بلاط سيراميك 60×60', en: 'Ceramic Tiles 60x60' }, category: 'finishing', price: 45, unit: 'م²', stock: 800, status: 'active' },
-        { id: '4', name: { ar: 'دهان زيتي أبيض', en: 'White Oil Paint' }, category: 'finishing', price: 85, unit: 'جالون', stock: 0, status: 'inactive' },
+        { id: '1', name: { ar: 'حديد تسليح 12مم', en: 'Rebar 12mm' }, category: 'structure', price: 3200, unit: 'طن', stock: 150, status: 'active', views: 1250, pricings: 85, addedToQuotes: 42, conversionRate: 49.4 },
+        { id: '2', name: { ar: 'اسمنت بورتلاندي', en: 'Portland Cement' }, category: 'structure', price: 18, unit: 'كيس', stock: 5000, status: 'active', views: 980, pricings: 156, addedToQuotes: 89, conversionRate: 57.1 },
+        { id: '3', name: { ar: 'بلاط سيراميك 60×60', en: 'Ceramic Tiles 60x60' }, category: 'finishing', price: 45, unit: 'م²', stock: 800, status: 'active', views: 654, pricings: 45, addedToQuotes: 23, conversionRate: 51.1 },
+        { id: '4', name: { ar: 'دهان زيتي أبيض', en: 'White Oil Paint' }, category: 'finishing', price: 85, unit: 'جالون', stock: 0, status: 'inactive', views: 120, pricings: 8, addedToQuotes: 2, conversionRate: 25.0 },
+    ];
+
+    const promotions: Promotion[] = [
+        { id: 'P001', productId: '1', productName: { ar: 'حديد تسليح 12مم', en: 'Rebar 12mm' }, discountType: 'percentage', discountValue: 10, originalPrice: 3200, startDate: '2026-01-01', endDate: '2026-01-31', targetCustomers: 'companies', maxUses: 50, currentUses: 23, status: 'active' },
+        { id: 'P002', productId: '2', productName: { ar: 'اسمنت بورتلاندي', en: 'Portland Cement' }, discountType: 'fixed', discountValue: 2, originalPrice: 18, startDate: '2026-01-05', endDate: '2026-01-20', targetCustomers: 'all', maxUses: 100, currentUses: 67, status: 'active' },
+        { id: 'P003', productId: '3', productName: { ar: 'بلاط سيراميك 60×60', en: 'Ceramic Tiles 60x60' }, discountType: 'percentage', discountValue: 15, originalPrice: 45, startDate: '2025-12-01', endDate: '2025-12-31', targetCustomers: 'individuals', maxUses: 30, currentUses: 30, status: 'expired' },
     ];
 
     const quoteRequests: QuoteRequest[] = [
@@ -137,7 +173,27 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
         logout: { ar: 'تسجيل الخروج', en: 'Logout' },
         backHome: { ar: 'العودة للرئيسية', en: 'Back to Home' },
         freeAccount: { ar: 'حساب مجاني', en: 'Free Account' },
-        noFees: { ar: 'بدون رسوم اشتراك', en: 'No subscription fees' }
+        noFees: { ar: 'بدون رسوم اشتراك', en: 'No subscription fees' },
+        analytics: { ar: 'التحليلات', en: 'Analytics' },
+        promotions: { ar: 'العروض والتسويق', en: 'Promotions' },
+        views: { ar: 'المشاهدات', en: 'Views' },
+        pricings: { ar: 'التسعيرات', en: 'Pricings' },
+        conversionRate: { ar: 'نسبة التحويل', en: 'Conversion Rate' },
+        createPromotion: { ar: 'إنشاء عرض', en: 'Create Promotion' },
+        discountType: { ar: 'نوع الخصم', en: 'Discount Type' },
+        percentage: { ar: 'نسبة مئوية', en: 'Percentage' },
+        fixed: { ar: 'مبلغ ثابت', en: 'Fixed Amount' },
+        targetCustomers: { ar: 'الفئة المستهدفة', en: 'Target Customers' },
+        all: { ar: 'الجميع', en: 'All' },
+        companies: { ar: 'الشركات', en: 'Companies' },
+        individuals: { ar: 'الأفراد', en: 'Individuals' },
+        startDate: { ar: 'تاريخ البداية', en: 'Start Date' },
+        endDate: { ar: 'تاريخ النهاية', en: 'End Date' },
+        maxUses: { ar: 'الحد الأقصى للاستخدام', en: 'Max Uses' },
+        scheduled: { ar: 'مجدول', en: 'Scheduled' },
+        expired: { ar: 'منتهي', en: 'Expired' },
+        topProducts: { ar: 'أفضل المنتجات أداءً', en: 'Top Performing Products' },
+        productPerformance: { ar: 'أداء المنتجات', en: 'Product Performance' }
     };
 
     const getLabel = (key: keyof typeof t) => t[key][language];
@@ -208,15 +264,17 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
             <div className="max-w-7xl mx-auto px-6 py-8">
                 {/* Tabs */}
                 <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
-                    {(['overview', 'categories', 'products', 'quotes', 'settings'] as const).map((tab) => (
+                    {(['overview', 'categories', 'products', 'quotes', 'analytics', 'promotions', 'settings'] as const).map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
-                            className={`px-4 py-2 rounded-xl font-medium transition-all whitespace-nowrap ${activeTab === tab
+                            className={`px-4 py-2 rounded-xl font-medium transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === tab
                                 ? 'bg-emerald-500 text-white'
                                 : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50'
                                 }`}
                         >
+                            {tab === 'analytics' && <BarChart2 className="w-4 h-4" />}
+                            {tab === 'promotions' && <Megaphone className="w-4 h-4" />}
                             {getLabel(tab)}
                         </button>
                     ))}
@@ -491,6 +549,231 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                                     ))}
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                )}
+
+                {/* Analytics Tab */}
+                {activeTab === 'analytics' && (
+                    <div className="space-y-6">
+                        {/* Summary Stats */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-slate-700/50">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <Eye className="w-5 h-5 text-blue-400" />
+                                    <span className="text-slate-400 text-sm">{language === 'ar' ? 'إجمالي المشاهدات' : 'Total Views'}</span>
+                                </div>
+                                <div className="text-2xl font-bold text-white">{products.reduce((sum, p) => sum + p.views, 0).toLocaleString()}</div>
+                            </div>
+                            <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-slate-700/50">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <DollarSign className="w-5 h-5 text-emerald-400" />
+                                    <span className="text-slate-400 text-sm">{language === 'ar' ? 'إجمالي التسعيرات' : 'Total Pricings'}</span>
+                                </div>
+                                <div className="text-2xl font-bold text-white">{products.reduce((sum, p) => sum + p.pricings, 0).toLocaleString()}</div>
+                            </div>
+                            <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-slate-700/50">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <ShoppingCart className="w-5 h-5 text-purple-400" />
+                                    <span className="text-slate-400 text-sm">{language === 'ar' ? 'أُضيف للعروض' : 'Added to Quotes'}</span>
+                                </div>
+                                <div className="text-2xl font-bold text-white">{products.reduce((sum, p) => sum + p.addedToQuotes, 0).toLocaleString()}</div>
+                            </div>
+                            <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-slate-700/50">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <TrendingUp className="w-5 h-5 text-amber-400" />
+                                    <span className="text-slate-400 text-sm">{language === 'ar' ? 'متوسط التحويل' : 'Avg. Conversion'}</span>
+                                </div>
+                                <div className="text-2xl font-bold text-white">{(products.reduce((sum, p) => sum + p.conversionRate, 0) / products.length).toFixed(1)}%</div>
+                            </div>
+                        </div>
+
+                        {/* Product Performance Table */}
+                        <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 overflow-hidden">
+                            <div className="p-4 border-b border-slate-700/50">
+                                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                    <BarChart2 className="w-5 h-5 text-emerald-400" />
+                                    {getLabel('productPerformance')}
+                                </h3>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="bg-slate-700/30">
+                                            <th className="px-4 py-3 text-start text-sm text-slate-400">{getLabel('productName')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('views')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('pricings')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{language === 'ar' ? 'أُضيف للعروض' : 'Quotes'}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('conversionRate')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{language === 'ar' ? 'الأداء' : 'Performance'}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {products.sort((a, b) => b.pricings - a.pricings).map((product) => (
+                                            <tr key={product.id} className="border-t border-slate-700/50 hover:bg-slate-700/20">
+                                                <td className="px-4 py-3 text-white font-medium">{product.name[language]}</td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <span className="text-blue-400 font-medium">{product.views.toLocaleString()}</span>
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <span className="text-emerald-400 font-medium">{product.pricings}</span>
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <span className="text-purple-400 font-medium">{product.addedToQuotes}</span>
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <span className={`font-medium ${product.conversionRate > 50 ? 'text-emerald-400' : product.conversionRate > 30 ? 'text-amber-400' : 'text-red-400'}`}>
+                                                        {product.conversionRate}%
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <div className="w-full bg-slate-700/50 rounded-full h-2">
+                                                        <div
+                                                            className={`h-2 rounded-full ${product.conversionRate > 50 ? 'bg-emerald-500' : product.conversionRate > 30 ? 'bg-amber-500' : 'bg-red-500'}`}
+                                                            style={{ width: `${product.conversionRate}%` }}
+                                                        ></div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Promotions Tab */}
+                {activeTab === 'promotions' && (
+                    <div className="space-y-6">
+                        {/* Header */}
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                <Megaphone className="w-6 h-6 text-emerald-400" />
+                                {getLabel('promotions')}
+                            </h2>
+                            <button
+                                onClick={() => setShowCreatePromotion(true)}
+                                className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl transition-colors"
+                            >
+                                <Plus className="w-5 h-5" />
+                                {getLabel('createPromotion')}
+                            </button>
+                        </div>
+
+                        {/* Promotions Stats */}
+                        <div className="grid grid-cols-3 gap-4">
+                            <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-emerald-500/30">
+                                <div className="text-emerald-400 text-sm mb-1">{language === 'ar' ? 'العروض النشطة' : 'Active Promotions'}</div>
+                                <div className="text-2xl font-bold text-white">{promotions.filter(p => p.status === 'active').length}</div>
+                            </div>
+                            <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-amber-500/30">
+                                <div className="text-amber-400 text-sm mb-1">{language === 'ar' ? 'إجمالي الاستخدامات' : 'Total Uses'}</div>
+                                <div className="text-2xl font-bold text-white">{promotions.reduce((sum, p) => sum + p.currentUses, 0)}</div>
+                            </div>
+                            <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-slate-500/30">
+                                <div className="text-slate-400 text-sm mb-1">{language === 'ar' ? 'العروض المنتهية' : 'Expired'}</div>
+                                <div className="text-2xl font-bold text-white">{promotions.filter(p => p.status === 'expired').length}</div>
+                            </div>
+                        </div>
+
+                        {/* Promotions List */}
+                        <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="bg-slate-700/30">
+                                            <th className="px-4 py-3 text-start text-sm text-slate-400">{getLabel('productName')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('discountType')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{language === 'ar' ? 'الخصم' : 'Discount'}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('targetCustomers')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{language === 'ar' ? 'الفترة' : 'Period'}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{language === 'ar' ? 'الاستخدام' : 'Usage'}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('status')}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {promotions.map((promo) => (
+                                            <tr key={promo.id} className="border-t border-slate-700/50 hover:bg-slate-700/20">
+                                                <td className="px-4 py-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <Gift className="w-4 h-4 text-emerald-400" />
+                                                        <span className="text-white font-medium">{promo.productName[language]}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <span className="flex items-center justify-center gap-1 text-slate-300">
+                                                        {promo.discountType === 'percentage' ? <Percent className="w-4 h-4" /> : <Tag className="w-4 h-4" />}
+                                                        {getLabel(promo.discountType)}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <span className="text-emerald-400 font-bold">
+                                                        {promo.discountType === 'percentage' ? `${promo.discountValue}%` : `${promo.discountValue} ${getLabel('sar')}`}
+                                                    </span>
+                                                    <div className="text-xs text-slate-500">
+                                                        {language === 'ar' ? 'من' : 'from'} {promo.originalPrice} {getLabel('sar')}
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <span className={`px-2 py-1 rounded-full text-xs ${promo.targetCustomers === 'all' ? 'bg-blue-500/10 text-blue-400' :
+                                                            promo.targetCustomers === 'companies' ? 'bg-purple-500/10 text-purple-400' :
+                                                                'bg-teal-500/10 text-teal-400'
+                                                        }`}>
+                                                        {getLabel(promo.targetCustomers)}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3 text-center text-slate-400 text-sm">
+                                                    <div>{promo.startDate}</div>
+                                                    <div className="text-slate-500">{language === 'ar' ? 'إلى' : 'to'}</div>
+                                                    <div>{promo.endDate}</div>
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <div className="text-white font-medium">{promo.currentUses} / {promo.maxUses}</div>
+                                                    <div className="w-full bg-slate-700/50 rounded-full h-1.5 mt-1">
+                                                        <div
+                                                            className="h-1.5 rounded-full bg-emerald-500"
+                                                            style={{ width: `${(promo.currentUses / promo.maxUses) * 100}%` }}
+                                                        ></div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <span className={`px-2 py-1 rounded-full text-xs ${promo.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' :
+                                                            promo.status === 'scheduled' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30' :
+                                                                'bg-slate-500/10 text-slate-400 border border-slate-500/30'
+                                                        }`}>
+                                                        {getLabel(promo.status)}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* Quick Create Promotion Button for Products */}
+                        <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
+                            <h3 className="text-lg font-bold text-white mb-4">{language === 'ar' ? 'إنشاء عرض سريع' : 'Quick Create Promotion'}</h3>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                {products.filter(p => p.status === 'active').map((product) => (
+                                    <button
+                                        key={product.id}
+                                        onClick={() => {
+                                            setSelectedProductForPromo(product);
+                                            setShowCreatePromotion(true);
+                                        }}
+                                        className="p-3 bg-slate-700/30 hover:bg-slate-700/50 rounded-xl border border-slate-600/50 hover:border-emerald-500/50 transition-all text-start"
+                                    >
+                                        <div className="text-white font-medium text-sm">{product.name[language]}</div>
+                                        <div className="text-slate-400 text-xs mt-1">{product.price} {getLabel('sar')} / {product.unit}</div>
+                                        <div className="flex items-center gap-1 mt-2 text-emerald-400 text-xs">
+                                            <Plus className="w-3 h-3" />
+                                            {language === 'ar' ? 'إنشاء عرض' : 'Create Offer'}
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 )}

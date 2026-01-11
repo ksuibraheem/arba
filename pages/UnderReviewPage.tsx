@@ -44,6 +44,17 @@ const UnderReviewPage: React.FC<UnderReviewPageProps> = ({
 
         switch (request.status) {
             case 'pending_payment':
+                // الموردين مجاناً - لا نظهر لهم صفحة الدفع
+                if (request.userType === 'supplier') {
+                    return {
+                        icon: <Clock className="w-12 h-12 text-yellow-500" />,
+                        title: language === 'ar' ? 'طلبك تحت المراجعة' : 'Under Review',
+                        message: language === 'ar'
+                            ? 'طلبك تحت الدراسة من قبل فريق الدعم. سيتم إبلاغكم بتفعيل الحساب في أقرب وقت ممكن.'
+                            : 'Your request is being reviewed by our support team. You will be notified once approved.',
+                        color: 'yellow'
+                    };
+                }
                 return {
                     icon: <CreditCard className="w-12 h-12 text-blue-500" />,
                     title: language === 'ar' ? 'بانتظار الدفع' : 'Awaiting Payment',

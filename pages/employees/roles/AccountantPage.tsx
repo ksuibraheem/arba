@@ -10,7 +10,7 @@ import {
     CreditCard, Calendar, Users, AlertCircle, CheckCircle, Clock,
     Download, Printer, RefreshCw, ArrowUpRight, ArrowDownRight,
     UserPlus, Image, MessageSquare, XCircle, Building2, ExternalLink,
-    BookOpen, BarChart3, Layers, Briefcase, ChevronDown, ChevronUp
+    BookOpen, BarChart3, Layers, Briefcase, ChevronDown, ChevronUp, Percent
 } from 'lucide-react';
 import { Employee } from '../../../services/employeeService';
 import {
@@ -38,13 +38,409 @@ import { employeeService, calculateTotalSalary } from '../../../services/employe
 import { taxInvoiceService } from '../../../services/taxInvoiceService';
 import { invoiceEditRequestService, InvoiceEditRequest, EDIT_REQUEST_STATUS_TRANSLATIONS } from '../../../services/invoiceEditRequestService';
 import { excelExportService } from '../../../services/excelExportService';
+import {
+    supplierService,
+    Supplier, SupplierProduct, PurchaseInvoice, PurchaseInvoiceItem, SupplierPayment, SupplierBalance,
+    PURCHASE_INVOICE_STATUS_TRANSLATIONS, PAYMENT_METHOD_TRANSLATIONS as SUPPLIER_PAYMENT_METHOD_TRANSLATIONS
+} from '../../../services/supplierService';
+import {
+    discountRequestService,
+    DiscountRequest,
+    DISCOUNT_REQUEST_STATUS_TRANSLATIONS,
+    DISCOUNT_TARGET_TYPE_TRANSLATIONS,
+    DISCOUNT_TYPE_TRANSLATIONS
+} from '../../../services/discountRequestService';
 
+// ====================== Purchase Invoice Modal ======================
+interface PurchaseInvoiceModalProps {
+    supplier: Supplier;
+    language: 'ar' | 'en';
+    employeeName: string;
+    onClose: () => void;
+    onSubmit: (data: {
+        items: PurchaseInvoiceItem[];
+        dueDate: string;
+        notes?: string;
+    }) => void;
+}
+
+const PurchaseInvoiceModal: React.FC<PurchaseInvoiceModalProps> = ({
+    supplier, language, employeeName, onClose, onSubmit
+}) => {
+    const t = (ar: string, en: string) => language === 'ar' ? ar : en;
+
+    const [items, setItems] = useState<PurchaseInvoiceItem[]>([
+        { productId: '', productName: '', quantity: 1, unitPrice: 0, total: 0 }
+    ]);
+    const [dueDate, setDueDate] = useState(
+        new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    );
+    const [notes, setNotes] = useState('');
+
+    const updateItem = (index: number, field: keyof PurchaseInvoiceItem, value: string | number) => {
+        const newItems = [...items];
+        newItems[index] = { ...newItems[index], [field]: value };
+        if (field === 'quantity' || field === 'unitPrice') {
+            newItems[index].total = newItems[index].quantity * newItems[index].unitPrice;
+        }
+        setItems(newItems);
+    };
+
+    const addItem = () => {
+        setItems([...items, { productId: crypto.randomUUID(), productName: '', quantity: 1, unitPrice: 0, total: 0 }]);
+    };
+
+    const removeItem = (index: number) => {
+        if (items.length > 1) {
+            setItems(items.filter((_, i) => i !== index));
+        }
+    };
+
+    const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+    const tax = subtotal * 0.15;
+    const total = subtotal + tax;
+
+    const handleSubmit = () => {
+        const validItems = items.filter(item => item.productName && item.quantity > 0 && item.unitPrice > 0);
+        if (validItems.length === 0) {
+            alert(t('يرجى إضافة بند واحد على الأقل', 'Please add at least one item'));
+            return;
+        }
+        onSubmit({ items: validItems, dueDate, notes });
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="bg-slate-800 rounded-2xl p-6 max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                        <Receipt className="w-6 h-6 text-blue-400" />
+                        {t('فاتورة مشتريات جديدة', 'New Purchase Invoice')}
+                    </h3>
+                    <button onClick={onClose} className="text-slate-400 hover:text-white">
+                        <X className="w-6 h-6" />
+                    </button>
+                </div>
+
+                {/* Supplier Info */}
+                <div className="bg-blue-500/10 rounded-lg p-4 mb-6 border border-blue-500/30">
+                    <div className="flex items-center gap-3">
+                        <Building2 className="w-8 h-8 text-blue-400" />
+                        <div>
+                            <p className="text-white font-medium">{supplier.companyName}</p>
+                            <p className="text-slate-400 text-sm">{supplier.phone}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Items */}
+                <div className="space-y-3 mb-6">
+                    <div className="flex items-center justify-between">
+                        <label className="text-slate-300 font-medium">{t('البنود', 'Items')}</label>
+                        <button
+                            onClick={addItem}
+                            className="flex items-center gap-1 px-3 py-1 bg-green-500/20 text-green-400 rounded-lg hover:bg-green-500/30 text-sm"
+                        >
+                            <Plus className="w-4 h-4" />
+                            {t('إضافة بند', 'Add Item')}
+                        </button>
+                    </div>
+
+                    {items.map((item, index) => (
+                        <div key={index} className="flex gap-2 items-center bg-slate-700/30 p-3 rounded-lg">
+                            <input
+                                type="text"
+                                value={item.productName}
+                                onChange={(e) => updateItem(index, 'productName', e.target.value)}
+                                placeholder={t('اسم المنتج/الخدمة', 'Product/Service name')}
+                                className="flex-1 bg-slate-700/50 border border-slate-600 rounded-lg py-2 px-3 text-white text-sm"
+                            />
+                            <input
+                                type="number"
+                                value={item.quantity || ''}
+                                onChange={(e) => updateItem(index, 'quantity', parseFloat(e.target.value) || 0)}
+                                placeholder={t('الكمية', 'Qty')}
+                                className="w-20 bg-slate-700/50 border border-slate-600 rounded-lg py-2 px-3 text-white text-sm text-center"
+                                min="1"
+                            />
+                            <input
+                                type="number"
+                                value={item.unitPrice || ''}
+                                onChange={(e) => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                                placeholder={t('السعر', 'Price')}
+                                className="w-28 bg-slate-700/50 border border-slate-600 rounded-lg py-2 px-3 text-white text-sm text-center"
+                                min="0"
+                            />
+                            <span className="w-28 text-green-400 font-bold text-center">
+                                {item.total.toLocaleString()}
+                            </span>
+                            {items.length > 1 && (
+                                <button
+                                    onClick={() => removeItem(index)}
+                                    className="p-2 hover:bg-red-500/20 rounded text-red-400"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            )}
+                        </div>
+                    ))}
+                </div>
+
+                {/* Totals */}
+                <div className="bg-slate-700/30 rounded-lg p-4 mb-6 space-y-2">
+                    <div className="flex justify-between text-slate-300">
+                        <span>{t('المجموع الفرعي', 'Subtotal')}</span>
+                        <span>{subtotal.toLocaleString()} {t('ر.س', 'SAR')}</span>
+                    </div>
+                    <div className="flex justify-between text-slate-300">
+                        <span>{t('ضريبة القيمة المضافة (15%)', 'VAT (15%)')}</span>
+                        <span>{tax.toLocaleString()} {t('ر.س', 'SAR')}</span>
+                    </div>
+                    <hr className="border-slate-600" />
+                    <div className="flex justify-between text-white font-bold text-lg">
+                        <span>{t('الإجمالي', 'Total')}</span>
+                        <span className="text-green-400">{total.toLocaleString()} {t('ر.س', 'SAR')}</span>
+                    </div>
+                </div>
+
+                {/* Due Date */}
+                <div className="mb-4">
+                    <label className="block text-slate-300 text-sm mb-2">{t('تاريخ الاستحقاق', 'Due Date')}</label>
+                    <input
+                        type="date"
+                        value={dueDate}
+                        onChange={(e) => setDueDate(e.target.value)}
+                        className="w-full bg-slate-700/50 border border-slate-600 rounded-lg py-2 px-4 text-white"
+                    />
+                </div>
+
+                {/* Notes */}
+                <div className="mb-6">
+                    <label className="block text-slate-300 text-sm mb-2">{t('ملاحظات', 'Notes')}</label>
+                    <textarea
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        className="w-full bg-slate-700/50 border border-slate-600 rounded-lg py-2 px-4 text-white h-20 resize-none"
+                        placeholder={t('ملاحظات اختيارية...', 'Optional notes...')}
+                    />
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3">
+                    <button
+                        onClick={onClose}
+                        className="flex-1 py-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600"
+                    >
+                        {t('إلغاء', 'Cancel')}
+                    </button>
+                    <button
+                        onClick={handleSubmit}
+                        disabled={subtotal === 0}
+                        className="flex-1 py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 disabled:opacity-50"
+                    >
+                        {t('إنشاء الفاتورة', 'Create Invoice')}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// ====================== Supplier Payment Modal ======================
+interface SupplierPaymentModalProps {
+    supplier: Supplier;
+    invoices: PurchaseInvoice[];
+    language: 'ar' | 'en';
+    employeeName: string;
+    onClose: () => void;
+    onSubmit: (data: {
+        invoiceId?: string;
+        amount: number;
+        paymentMethod: 'cash' | 'bank_transfer' | 'cheque';
+        reference?: string;
+        notes?: string;
+    }) => void;
+}
+
+const SupplierPaymentModal: React.FC<SupplierPaymentModalProps> = ({
+    supplier, invoices, language, employeeName, onClose, onSubmit
+}) => {
+    const t = (ar: string, en: string) => language === 'ar' ? ar : en;
+
+    const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>('');
+    const [amount, setAmount] = useState<number>(0);
+    const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bank_transfer' | 'cheque'>('bank_transfer');
+    const [reference, setReference] = useState('');
+    const [notes, setNotes] = useState('');
+
+    const selectedInvoice = invoices.find(inv => inv.id === selectedInvoiceId);
+
+    const handleInvoiceSelect = (invoiceId: string) => {
+        setSelectedInvoiceId(invoiceId);
+        const invoice = invoices.find(inv => inv.id === invoiceId);
+        if (invoice) {
+            setAmount(invoice.remainingAmount);
+        }
+    };
+
+    const handleSubmit = () => {
+        if (amount <= 0) {
+            alert(t('يرجى إدخال مبلغ صحيح', 'Please enter a valid amount'));
+            return;
+        }
+        onSubmit({
+            invoiceId: selectedInvoiceId || undefined,
+            amount,
+            paymentMethod,
+            reference,
+            notes
+        });
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="bg-slate-800 rounded-2xl p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+                <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                        <CreditCard className="w-6 h-6 text-green-400" />
+                        {t('تسجيل دفعة للمورد', 'Record Supplier Payment')}
+                    </h3>
+                    <button onClick={onClose} className="text-slate-400 hover:text-white">
+                        <X className="w-6 h-6" />
+                    </button>
+                </div>
+
+                {/* Supplier Info */}
+                <div className="bg-green-500/10 rounded-lg p-4 mb-6 border border-green-500/30">
+                    <div className="flex items-center gap-3">
+                        <Building2 className="w-8 h-8 text-green-400" />
+                        <div>
+                            <p className="text-white font-medium">{supplier.companyName}</p>
+                            <p className="text-slate-400 text-sm">{supplier.phone}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Invoice Selection */}
+                {invoices.length > 0 && (
+                    <div className="mb-4">
+                        <label className="block text-slate-300 text-sm mb-2">{t('ربط بفاتورة (اختياري)', 'Link to Invoice (optional)')}</label>
+                        <select
+                            value={selectedInvoiceId}
+                            onChange={(e) => handleInvoiceSelect(e.target.value)}
+                            className="w-full bg-slate-700/50 border border-slate-600 rounded-lg py-2 px-4 text-white"
+                        >
+                            <option value="">{t('-- بدون ربط بفاتورة --', '-- No invoice link --')}</option>
+                            {invoices.map(inv => (
+                                <option key={inv.id} value={inv.id}>
+                                    {inv.invoiceNumber} - {t('المتبقي', 'Remaining')}: {inv.remainingAmount.toLocaleString()} {t('ر.س', 'SAR')}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                )}
+
+                {/* Selected Invoice Details */}
+                {selectedInvoice && (
+                    <div className="bg-slate-700/30 rounded-lg p-3 mb-4 text-sm">
+                        <div className="flex justify-between mb-1">
+                            <span className="text-slate-400">{t('إجمالي الفاتورة', 'Invoice Total')}</span>
+                            <span className="text-white">{selectedInvoice.total.toLocaleString()} {t('ر.س', 'SAR')}</span>
+                        </div>
+                        <div className="flex justify-between mb-1">
+                            <span className="text-slate-400">{t('المدفوع', 'Paid')}</span>
+                            <span className="text-green-400">{selectedInvoice.paidAmount.toLocaleString()} {t('ر.س', 'SAR')}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-slate-400">{t('المتبقي', 'Remaining')}</span>
+                            <span className="text-red-400 font-bold">{selectedInvoice.remainingAmount.toLocaleString()} {t('ر.س', 'SAR')}</span>
+                        </div>
+                    </div>
+                )}
+
+                {/* Amount */}
+                <div className="mb-4">
+                    <label className="block text-slate-300 text-sm mb-2">{t('المبلغ', 'Amount')} *</label>
+                    <input
+                        type="number"
+                        value={amount || ''}
+                        onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
+                        className="w-full bg-slate-700/50 border border-slate-600 rounded-lg py-2 px-4 text-white text-lg"
+                        placeholder="0"
+                        min="0"
+                    />
+                </div>
+
+                {/* Payment Method */}
+                <div className="mb-4">
+                    <label className="block text-slate-300 text-sm mb-2">{t('طريقة الدفع', 'Payment Method')}</label>
+                    <div className="grid grid-cols-3 gap-2">
+                        {(['bank_transfer', 'cash', 'cheque'] as const).map(method => (
+                            <button
+                                key={method}
+                                onClick={() => setPaymentMethod(method)}
+                                className={`py-2 px-3 rounded-lg text-sm transition ${paymentMethod === method
+                                    ? 'bg-green-500 text-white'
+                                    : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
+                                    }`}
+                            >
+                                {SUPPLIER_PAYMENT_METHOD_TRANSLATIONS[method][language]}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Reference */}
+                <div className="mb-4">
+                    <label className="block text-slate-300 text-sm mb-2">{t('رقم المرجع / الشيك', 'Reference / Cheque No.')}</label>
+                    <input
+                        type="text"
+                        value={reference}
+                        onChange={(e) => setReference(e.target.value)}
+                        className="w-full bg-slate-700/50 border border-slate-600 rounded-lg py-2 px-4 text-white"
+                        placeholder={t('رقم الحوالة أو الشيك', 'Transfer or cheque number')}
+                    />
+                </div>
+
+                {/* Notes */}
+                <div className="mb-6">
+                    <label className="block text-slate-300 text-sm mb-2">{t('ملاحظات', 'Notes')}</label>
+                    <textarea
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        className="w-full bg-slate-700/50 border border-slate-600 rounded-lg py-2 px-4 text-white h-20 resize-none"
+                        placeholder={t('ملاحظات اختيارية...', 'Optional notes...')}
+                    />
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3">
+                    <button
+                        onClick={onClose}
+                        className="flex-1 py-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600"
+                    >
+                        {t('إلغاء', 'Cancel')}
+                    </button>
+                    <button
+                        onClick={handleSubmit}
+                        disabled={amount <= 0}
+                        className="flex-1 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 disabled:opacity-50"
+                    >
+                        {t('تسجيل الدفعة', 'Record Payment')}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// ====================== Main Component ======================
 interface AccountantPageProps {
     language: 'ar' | 'en';
     employee: Employee;
 }
 
-type TabType = 'overview' | 'invoices' | 'payments' | 'ledger' | 'subscriptions' | 'registrations' | 'chart_of_accounts' | 'journal' | 'reports';
+type TabType = 'overview' | 'invoices' | 'payments' | 'ledger' | 'subscriptions' | 'registrations' | 'suppliers' | 'discount_requests' | 'chart_of_accounts' | 'journal' | 'reports';
 
 const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) => {
     const t = (ar: string, en: string) => language === 'ar' ? ar : en;
@@ -89,6 +485,18 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
     const [showPayrollModal, setShowPayrollModal] = useState(false);
     const [showMediationModal, setShowMediationModal] = useState(false);
 
+    // Supplier states
+    const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+    const [supplierBalances, setSupplierBalances] = useState<SupplierBalance[]>([]);
+    const [purchaseInvoices, setPurchaseInvoices] = useState<PurchaseInvoice[]>([]);
+    const [supplierPayments, setSupplierPayments] = useState<SupplierPayment[]>([]);
+    const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
+    const [showPurchaseInvoiceModal, setShowPurchaseInvoiceModal] = useState(false);
+    const [showSupplierPaymentModal, setShowSupplierPaymentModal] = useState(false);
+
+    // Discount requests states
+    const [discountRequests, setDiscountRequests] = useState<DiscountRequest[]>([]);
+
     // Mediation form state
     const [mediationForm, setMediationForm] = useState({
         buyerName: '',
@@ -131,6 +539,7 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
         accountingService.initializeSampleData();
         registrationService.initializeSampleData();
         chartOfAccountsService.initializeDefaultAccounts();
+        supplierService.initializeSampleData();
         loadData();
     }, []);
 
@@ -152,6 +561,15 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
         const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
         const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
         setIncomeStatement(chartOfAccountsService.getIncomeStatement(firstDay, lastDay));
+
+        // Supplier data
+        setSuppliers(supplierService.getSuppliers());
+        setSupplierBalances(supplierService.getAllSupplierBalances());
+        setPurchaseInvoices(supplierService.getInvoices());
+        setSupplierPayments(supplierService.getPayments());
+
+        // Discount requests
+        setDiscountRequests(discountRequestService.getPendingRequests());
     };
 
     // Client search handler
@@ -341,6 +759,8 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
         { id: 'registrations', label: t('طلبات التسجيل', 'Registrations'), icon: <UserPlus className="w-4 h-4" />, badge: registrationRequests.length },
         { id: 'invoices', label: t('الفواتير', 'Invoices'), icon: <Receipt className="w-4 h-4" /> },
         { id: 'payments', label: t('المدفوعات', 'Payments'), icon: <CreditCard className="w-4 h-4" /> },
+        { id: 'suppliers', label: t('الموردين', 'Suppliers'), icon: <Building2 className="w-4 h-4" />, badge: suppliers.length },
+        { id: 'discount_requests', label: t('طلبات التخفيض', 'Discount Requests'), icon: <Percent className="w-4 h-4" />, badge: discountRequests.length },
         { id: 'ledger', label: t('سجل القيود', 'Ledger'), icon: <FileText className="w-4 h-4" /> },
         { id: 'subscriptions', label: t('الاشتراكات', 'Subscriptions'), icon: <Users className="w-4 h-4" /> },
     ];
@@ -845,6 +1265,214 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
                             </div>
                         )}
                     </div>
+                </div>
+            )}
+
+            {/* Suppliers Tab */}
+            {activeTab === 'suppliers' && (
+                <div className="space-y-6">
+                    {/* Header */}
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <h3 className="text-lg font-semibold text-white">{t('الموردين', 'Suppliers')}</h3>
+                            <p className="text-slate-400 text-sm">
+                                {t('إدارة الموردين وفواتير المشتريات والمدفوعات', 'Manage suppliers, purchase invoices and payments')}
+                            </p>
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setShowPurchaseInvoiceModal(true)}
+                                className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                            >
+                                <Plus className="w-4 h-4" />
+                                {t('فاتورة مشتريات', 'Purchase Invoice')}
+                            </button>
+                            <button
+                                onClick={() => setShowSupplierPaymentModal(true)}
+                                className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                            >
+                                <CreditCard className="w-4 h-4" />
+                                {t('دفعة للمورد', 'Supplier Payment')}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Stats */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                                    <Building2 className="w-5 h-5 text-blue-400" />
+                                </div>
+                                <div>
+                                    <p className="text-slate-400 text-sm">{t('الموردين النشطين', 'Active Suppliers')}</p>
+                                    <p className="text-xl font-bold text-white">{suppliers.length}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                                    <Receipt className="w-5 h-5 text-purple-400" />
+                                </div>
+                                <div>
+                                    <p className="text-slate-400 text-sm">{t('فواتير المشتريات', 'Purchase Invoices')}</p>
+                                    <p className="text-xl font-bold text-white">{purchaseInvoices.length}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center">
+                                    <DollarSign className="w-5 h-5 text-red-400" />
+                                </div>
+                                <div>
+                                    <p className="text-slate-400 text-sm">{t('المستحق للموردين', 'Payable to Suppliers')}</p>
+                                    <p className="text-xl font-bold text-white">
+                                        {supplierBalances.reduce((sum, b) => sum + b.balance, 0).toLocaleString()} {t('ر.س', 'SAR')}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                                    <CreditCard className="w-5 h-5 text-green-400" />
+                                </div>
+                                <div>
+                                    <p className="text-slate-400 text-sm">{t('إجمالي المدفوعات', 'Total Payments')}</p>
+                                    <p className="text-xl font-bold text-white">
+                                        {supplierBalances.reduce((sum, b) => sum + b.totalPayments, 0).toLocaleString()} {t('ر.س', 'SAR')}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Suppliers Table */}
+                    <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 overflow-hidden">
+                        <div className="p-4 border-b border-slate-700/50">
+                            <h4 className="text-white font-medium">{t('قائمة الموردين وأرصدتهم', 'Suppliers List & Balances')}</h4>
+                        </div>
+                        <table className="w-full">
+                            <thead className="bg-slate-700/50">
+                                <tr>
+                                    <th className="px-4 py-3 text-right text-sm text-slate-300">{t('المورد', 'Supplier')}</th>
+                                    <th className="px-4 py-3 text-center text-sm text-slate-300">{t('رقم الجوال', 'Phone')}</th>
+                                    <th className="px-4 py-3 text-center text-sm text-slate-300">{t('إجمالي المشتريات', 'Total Purchases')}</th>
+                                    <th className="px-4 py-3 text-center text-sm text-slate-300">{t('المدفوعات', 'Payments')}</th>
+                                    <th className="px-4 py-3 text-center text-sm text-slate-300">{t('الرصيد المستحق', 'Balance')}</th>
+                                    <th className="px-4 py-3 text-center text-sm text-slate-300">{t('إجراءات', 'Actions')}</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-700/50">
+                                {suppliers.length > 0 ? suppliers.map(supplier => {
+                                    const balance = supplierBalances.find(b => b.supplierId === supplier.id);
+                                    return (
+                                        <tr key={supplier.id} className="hover:bg-slate-700/30">
+                                            <td className="px-4 py-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                                                        <Building2 className="w-5 h-5 text-blue-400" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-white font-medium">{supplier.companyName}</p>
+                                                        <p className="text-slate-400 text-sm">{supplier.name}</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3 text-center text-slate-300" dir="ltr">{supplier.phone}</td>
+                                            <td className="px-4 py-3 text-center text-blue-400 font-medium">
+                                                {(balance?.totalPurchases || 0).toLocaleString()} {t('ر.س', 'SAR')}
+                                            </td>
+                                            <td className="px-4 py-3 text-center text-green-400 font-medium">
+                                                {(balance?.totalPayments || 0).toLocaleString()} {t('ر.س', 'SAR')}
+                                            </td>
+                                            <td className="px-4 py-3 text-center">
+                                                <span className={`font-bold ${(balance?.balance || 0) > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                                                    {(balance?.balance || 0).toLocaleString()} {t('ر.س', 'SAR')}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedSupplier(supplier);
+                                                            setShowPurchaseInvoiceModal(true);
+                                                        }}
+                                                        className="p-2 hover:bg-slate-700 rounded text-blue-400"
+                                                        title={t('فاتورة مشتريات', 'Purchase Invoice')}
+                                                    >
+                                                        <Plus className="w-4 h-4" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedSupplier(supplier);
+                                                            setShowSupplierPaymentModal(true);
+                                                        }}
+                                                        className="p-2 hover:bg-slate-700 rounded text-green-400"
+                                                        title={t('تسجيل دفعة', 'Record Payment')}
+                                                    >
+                                                        <CreditCard className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                }) : (
+                                    <tr>
+                                        <td colSpan={6} className="text-center py-12 text-slate-400">
+                                            <Building2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                                            <p>{t('لا يوجد موردين مسجلين', 'No suppliers registered')}</p>
+                                            <p className="text-sm mt-2">{t('سيظهر الموردين هنا بعد تسجيلهم واعتمادهم', 'Suppliers will appear here after registration and approval')}</p>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Recent Purchase Invoices */}
+                    {purchaseInvoices.length > 0 && (
+                        <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 overflow-hidden">
+                            <div className="p-4 border-b border-slate-700/50">
+                                <h4 className="text-white font-medium">{t('آخر فواتير المشتريات', 'Recent Purchase Invoices')}</h4>
+                            </div>
+                            <table className="w-full">
+                                <thead className="bg-slate-700/50">
+                                    <tr>
+                                        <th className="px-4 py-3 text-right text-sm text-slate-300">{t('رقم الفاتورة', 'Invoice #')}</th>
+                                        <th className="px-4 py-3 text-right text-sm text-slate-300">{t('المورد', 'Supplier')}</th>
+                                        <th className="px-4 py-3 text-center text-sm text-slate-300">{t('المبلغ', 'Amount')}</th>
+                                        <th className="px-4 py-3 text-center text-sm text-slate-300">{t('الحالة', 'Status')}</th>
+                                        <th className="px-4 py-3 text-center text-sm text-slate-300">{t('التاريخ', 'Date')}</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-700/50">
+                                    {purchaseInvoices.slice(0, 5).map(inv => (
+                                        <tr key={inv.id} className="hover:bg-slate-700/30">
+                                            <td className="px-4 py-3 text-white font-mono">{inv.invoiceNumber}</td>
+                                            <td className="px-4 py-3 text-white">{inv.supplierName}</td>
+                                            <td className="px-4 py-3 text-center text-blue-400 font-bold">
+                                                {inv.total.toLocaleString()} {t('ر.س', 'SAR')}
+                                            </td>
+                                            <td className="px-4 py-3 text-center">
+                                                <span className={`px-2 py-1 rounded-full text-xs ${inv.status === 'paid' ? 'bg-green-500/20 text-green-400' :
+                                                    inv.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                                                        'bg-slate-500/20 text-slate-400'
+                                                    }`}>
+                                                    {PURCHASE_INVOICE_STATUS_TRANSLATIONS[inv.status][language]}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3 text-center text-slate-400">
+                                                {new Date(inv.createdAt).toLocaleDateString('ar-SA')}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -2155,6 +2783,67 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Purchase Invoice Modal */}
+            {showPurchaseInvoiceModal && selectedSupplier && (
+                <PurchaseInvoiceModal
+                    supplier={selectedSupplier}
+                    language={language}
+                    employeeName={employee.name}
+                    onClose={() => {
+                        setShowPurchaseInvoiceModal(false);
+                        setSelectedSupplier(null);
+                    }}
+                    onSubmit={(data) => {
+                        try {
+                            supplierService.createPurchaseInvoice({
+                                supplierId: selectedSupplier.id,
+                                items: data.items,
+                                dueDate: data.dueDate,
+                                notes: data.notes,
+                                createdBy: employee.name
+                            });
+                            setShowPurchaseInvoiceModal(false);
+                            setSelectedSupplier(null);
+                            loadData();
+                        } catch (e: any) {
+                            alert(e.message);
+                        }
+                    }}
+                />
+            )}
+
+            {/* Supplier Payment Modal */}
+            {showSupplierPaymentModal && selectedSupplier && (
+                <SupplierPaymentModal
+                    supplier={selectedSupplier}
+                    invoices={purchaseInvoices.filter(inv => inv.supplierId === selectedSupplier.id && inv.status !== 'paid' && inv.status !== 'cancelled')}
+                    language={language}
+                    employeeName={employee.name}
+                    onClose={() => {
+                        setShowSupplierPaymentModal(false);
+                        setSelectedSupplier(null);
+                    }}
+                    onSubmit={(data) => {
+                        try {
+                            supplierService.recordPayment({
+                                supplierId: selectedSupplier.id,
+                                invoiceId: data.invoiceId,
+                                amount: data.amount,
+                                paymentMethod: data.paymentMethod,
+                                reference: data.reference,
+                                notes: data.notes,
+                                createdBy: employee.name
+                            });
+                            setShowSupplierPaymentModal(false);
+                            setSelectedSupplier(null);
+                            loadData();
+                        } catch (e: any) {
+                            alert(e.message);
+                        }
+                    }}
+                />
             )}
 
             {/* Receipt Viewer Modal */}

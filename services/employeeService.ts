@@ -5,14 +5,15 @@
 
 // أنواع أدوار الموظفين
 export type EmployeeRole =
-    | 'manager'      // المدير
-    | 'deputy'       // نائب المدير
-    | 'accountant'   // المحاسب
-    | 'hr'           // الموارد البشرية
-    | 'developer'    // المبرمج
-    | 'support'      // الدعم الفني
-    | 'marketing'    // التسويق
-    | 'quality';     // الجودة
+    | 'manager'           // المدير
+    | 'deputy'            // نائب المدير
+    | 'accountant'        // المحاسب
+    | 'hr'                // الموارد البشرية
+    | 'developer'         // المبرمج
+    | 'support'           // الدعم الفني
+    | 'marketing'         // التسويق
+    | 'quality'           // الجودة
+    | 'quantity_surveyor';// مهندس الكميات والتسعيرات
 
 // نوع العقد
 export type ContractType = 'permanent' | 'temporary' | 'contract' | 'parttime';
@@ -269,7 +270,8 @@ export const ROLE_TRANSLATIONS: Record<EmployeeRole, { ar: string; en: string }>
     developer: { ar: 'المبرمج', en: 'Developer' },
     support: { ar: 'الدعم الفني', en: 'Technical Support' },
     marketing: { ar: 'التسويق', en: 'Marketing' },
-    quality: { ar: 'الجودة', en: 'Quality' }
+    quality: { ar: 'الجودة', en: 'Quality' },
+    quantity_surveyor: { ar: 'مهندس الكميات', en: 'Quantity Surveyor' }
 };
 
 // ترجمات نوع العقد
@@ -296,7 +298,8 @@ export const ROLE_ICONS: Record<EmployeeRole, string> = {
     developer: 'Code',
     support: 'Headphones',
     marketing: 'Megaphone',
-    quality: 'CheckCircle'
+    quality: 'CheckCircle',
+    quantity_surveyor: 'ClipboardCheck'
 };
 
 // ألوان الأدوار
@@ -308,7 +311,8 @@ export const ROLE_COLORS: Record<EmployeeRole, string> = {
     developer: 'from-slate-500 to-gray-600',
     support: 'from-orange-500 to-red-600',
     marketing: 'from-pink-500 to-rose-600',
-    quality: 'from-teal-500 to-green-600'
+    quality: 'from-teal-500 to-green-600',
+    quantity_surveyor: 'from-cyan-500 to-blue-600'
 };
 
 // القيم الافتراضية للراتب
@@ -482,6 +486,28 @@ export const SAMPLE_EMPLOYEES: Partial<Employee>[] = [
         ],
         experiences: [
             { id: '1', company: 'مصنع المراعي', position: 'مراقب جودة', startDate: '2019-08-01', endDate: '2023-03-31' }
+        ],
+        notes: [],
+        warnings: []
+    },
+    // مهندس الكميات والتسعيرات
+    {
+        employeeNumber: '489012345',
+        name: 'محمد عبدالله الزهراني',
+        email: 'mohammed.qs@arba.sa',
+        phone: '0578901234',
+        emergencyContact: '0552109876',
+        role: 'quantity_surveyor',
+        jobTitle: 'مهندس كميات وتسعيرات',
+        nationalId: '1021098765',
+        salary: { basic: 11000, housing: 2750, transportation: 500, food: 300, phone: 300, other: 500, benefits: ['تأمين طبي', 'بدل مواصلات'] },
+        contract: { type: 'permanent', startDate: '2023-05-01', noticePeriod: 30 },
+        certificates: [
+            { id: '1', name: 'بكالوريوس هندسة مدنية', issuer: 'جامعة الملك فهد', issueDate: '2018-06-15' },
+            { id: '2', name: 'شهادة حصر الكميات', issuer: 'الهيئة السعودية للمهندسين', issueDate: '2020-09-10' }
+        ],
+        experiences: [
+            { id: '1', company: 'شركة سعودي أوجيه', position: 'مهندس تسعير', startDate: '2018-08-01', endDate: '2023-04-30' }
         ],
         notes: [],
         warnings: []
@@ -842,7 +868,8 @@ class EmployeeService {
         const employees = this.getEmployees();
         const byRole: Record<EmployeeRole, number> = {
             manager: 0, deputy: 0, accountant: 0, hr: 0,
-            developer: 0, support: 0, marketing: 0, quality: 0
+            developer: 0, support: 0, marketing: 0, quality: 0,
+            quantity_surveyor: 0
         };
 
         let totalSalaries = 0;

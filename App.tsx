@@ -26,6 +26,8 @@ import AccountantPage from './pages/employees/roles/AccountantPage';
 import PasswordResetPage from './pages/PasswordResetPage';
 import SupportCenterPage from './pages/SupportCenterPage';
 import CloudSyncPage from './pages/CloudSyncPage';
+import SupplierDashboard from './pages/supplier/SupplierDashboard';
+import QuantitySurveyorPage from './pages/employees/roles/QuantitySurveyorPage';
 import { AppState, CalculatedItem, ProjectType, CustomParams, BlueprintConfig, SurfaceLocation, RoomFinishes, BaseItem } from './types';
 import { INITIAL_OVERHEAD, PROJECT_DEFAULTS, PROJECT_TITLES, TRANSLATIONS } from './constants';
 import { calculateProjectCosts } from './utils/calculations';
@@ -39,7 +41,7 @@ import { registerWithFirebase, loginWithFirebase, logoutFromFirebase, onAuthChan
 // Toggle Firebase mode - set to true to use Firebase
 const USE_FIREBASE = true;
 
-type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant' | 'password-reset' | 'cloud-sync' | 'support-center' | 'support' | 'developer' | 'marketing' | 'quality' | 'deputy';
+type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant' | 'password-reset' | 'cloud-sync' | 'support-center' | 'support' | 'developer' | 'marketing' | 'quality' | 'deputy' | 'supplier' | 'quantity_surveyor';
 
 // مفتاح الوصول السري للوحة المدير - غيره لمفتاح خاص بك
 const ADMIN_SECRET_KEY = 'arba2025secure';
@@ -245,7 +247,10 @@ const App: React.FC = () => {
 
         // Check for approved registration requests (for company/supplier users)
         if (userType === 'company' || userType === 'supplier') {
-            const registrationRequest = registrationService.getRequestByEmail(email);
+            // للموردين: البحث برقم الجوال، للشركات: البحث بالإيميل
+            const registrationRequest = userType === 'supplier'
+                ? registrationService.getRequestByPhone(email) // email هنا هو رقم الجوال للموردين
+                : registrationService.getRequestByEmail(email);
             if (registrationRequest && registrationRequest.password === password) {
                 // First check if commercial register is verified
                 if (!registrationRequest.crVerified) {
@@ -275,10 +280,19 @@ const App: React.FC = () => {
                         usedProjects: 0,
                         usedStorageMB: 0
                     });
-                    setCurrentPage('dashboard');
+                    // الموردين: لوحة تحكم خاصة، الشركات: dashboard
+                    setCurrentPage(userType === 'supplier' ? 'supplier' : 'dashboard');
                     return;
                 } else if (registrationRequest.status === 'pending_payment') {
-                    // CR verified but payment pending - redirect to payment page
+                    // الموردين مجاناً - لا يحتاجون دفع، تحويلهم لصفحة المراجعة
+                    if (userType === 'supplier') {
+                        setRegistrationRequestId(registrationRequest.id);
+                        setPendingRegistrationEmail(registrationRequest.email);
+                        setPendingRegistrationPhone(registrationRequest.phone);
+                        setCurrentPage('under-review');
+                        return;
+                    }
+                    // CR verified but payment pending - redirect to payment page (companies only)
                     setRegistrationRequestId(registrationRequest.id);
                     setPendingRegistrationEmail(registrationRequest.email);
                     setPendingRegistrationPhone(registrationRequest.phone);
@@ -389,7 +403,8 @@ const App: React.FC = () => {
                 companyName: data.company || '',
                 commercialRegister: data.commercialRegister || '',
                 businessType: data.businessType,
-                plan: (data.plan === 'free' || data.plan === 'professional') ? data.plan : 'professional'
+                // الموردين مجاناً دائماً، الشركات حسب اختيارهم
+                plan: data.userType === 'supplier' ? 'free' : ((data.plan === 'free' || data.plan === 'professional') ? data.plan : 'professional')
             });
 
             if (!result.success) {
@@ -808,6 +823,24 @@ const App: React.FC = () => {
         );
     }
 
+    // Supplier Dashboard (لوحة تحكم الموردين)
+    if (currentPage === 'supplier') {
+        if (!user) {
+            setCurrentPage('login');
+            return null;
+        }
+        return (
+            <SupplierDashboard
+                language={language}
+                onNavigate={handleNavigate}
+                onLogout={() => {
+                    setUser(null);
+                    setCurrentPage('landing');
+                }}
+            />
+        );
+    }
+
     // HR Page (accessed from Manager Dashboard)
     if (currentPage === 'hr') {
         // Create a mock HR employee for viewing the page from manager dashboard
@@ -949,6 +982,34 @@ const App: React.FC = () => {
                     <SupportPage language={language} employee={supportEmployee} />
                 </div>
             </div>
+        );
+    }
+
+    // Quantity Surveyor Page (مهندس الكميات والتسعيرات)
+    if (currentPage === 'quantity_surveyor') {
+        const qsEmployee: Employee = currentEmployee || {
+            id: 'manager-view',
+            employeeNumber: 'MGR-001',
+            password: '',
+            name: isManager ? MANAGER_CREDENTIALS.name : 'مهندس الكميات',
+            email: 'qs@arba-sys.com',
+            phone: '0500000000',
+            role: 'quantity_surveyor',
+            isActive: true,
+            createdAt: new Date().toISOString()
+        };
+
+        return (
+            <QuantitySurveyorPage
+                language={language}
+                employee={qsEmployee}
+                onLogout={() => {
+                    setUser(null);
+                    setIsManager(false);
+                    setCurrentEmployee(null);
+                    setCurrentPage('landing');
+                }}
+            />
         );
     }
 

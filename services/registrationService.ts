@@ -200,7 +200,7 @@ class RegistrationService {
                     createdAt: now.toISOString(),
                     updatedAt: now.toISOString()
                 },
-                // مورد بانتظار تأكيد السجل التجاري
+                // مورد معتمد وجاهز للدخول (مجاني)
                 {
                     id: 'sample-2',
                     userType: 'supplier',
@@ -211,9 +211,9 @@ class RegistrationService {
                     companyName: 'مؤسسة التوريد الذهبي',
                     commercialRegister: '7098765432',
                     businessType: 'توريدات',
-                    crVerified: false,
-                    plan: 'professional',
-                    amount: 299,
+                    crVerified: true,            // تم تأكيد السجل التجاري
+                    plan: 'free',                // الموردين مجاناً
+                    amount: 0,                   // بدون رسوم
                     emailCode: '1111',
                     emailCodeExpiry: now.toISOString(),
                     emailVerified: true,
@@ -222,8 +222,8 @@ class RegistrationService {
                     phoneCodeExpiry: now.toISOString(),
                     phoneVerified: true,
                     phoneVerifiedAt: now.toISOString(),
-                    paymentStatus: 'pending',
-                    status: 'pending_cr_verification',
+                    paymentStatus: 'not_required',  // لا يحتاج دفع
+                    status: 'approved',             // معتمد وجاهز للدخول
                     createdAt: now.toISOString(),
                     updatedAt: now.toISOString()
                 },
