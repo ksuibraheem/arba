@@ -27,9 +27,20 @@ import {
     Megaphone,
     Gift,
     BarChart2,
-    PieChart
+    PieChart,
+    Wrench,
+    Building2
 } from 'lucide-react';
 import { COMPANY_INFO } from '../../companyData';
+import {
+    PRODUCT_CATEGORIES,
+    PRODUCT_TYPE_TRANSLATIONS,
+    RENTAL_PERIOD_TRANSLATIONS,
+    ProductType,
+    RentalPeriod,
+    UnitType,
+    ApprovalStatus
+} from '../../services/supplierService';
 
 interface SupplierDashboardProps {
     language: 'ar' | 'en';
@@ -41,15 +52,22 @@ interface Product {
     id: string;
     name: { ar: string; en: string };
     category: string;
+    productType: ProductType;           // بيع أو تأجير
     price: number;
+    unitType: UnitType;                 // نوع الوحدة
     unit: string;
     stock: number;
     status: 'active' | 'inactive';
+    approvalStatus: ApprovalStatus;     // حالة الموافقة
     // Analytics fields
     views: number;
     pricings: number;
     addedToQuotes: number;
     conversionRate: number;
+    // حقول التأجير
+    rentalPeriod?: RentalPeriod;
+    minRentalDuration?: number;
+    depositAmount?: number;
 }
 
 interface Promotion {
@@ -79,7 +97,7 @@ interface QuoteRequest {
 const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavigate, onLogout }) => {
     const isRtl = language === 'ar';
     const Arrow = isRtl ? ArrowRight : ArrowLeft;
-    const [activeTab, setActiveTab] = useState<'overview' | 'categories' | 'products' | 'quotes' | 'analytics' | 'promotions' | 'settings'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'categories' | 'products' | 'sales' | 'rentals' | 'quotes' | 'analytics' | 'promotions' | 'settings'>('overview');
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [showCreatePromotion, setShowCreatePromotion] = useState(false);
     const [selectedProductForPromo, setSelectedProductForPromo] = useState<Product | null>(null);
@@ -119,10 +137,17 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
     };
 
     const products: Product[] = [
-        { id: '1', name: { ar: 'حديد تسليح 12مم', en: 'Rebar 12mm' }, category: 'structure', price: 3200, unit: 'طن', stock: 150, status: 'active', views: 1250, pricings: 85, addedToQuotes: 42, conversionRate: 49.4 },
-        { id: '2', name: { ar: 'اسمنت بورتلاندي', en: 'Portland Cement' }, category: 'structure', price: 18, unit: 'كيس', stock: 5000, status: 'active', views: 980, pricings: 156, addedToQuotes: 89, conversionRate: 57.1 },
-        { id: '3', name: { ar: 'بلاط سيراميك 60×60', en: 'Ceramic Tiles 60x60' }, category: 'finishing', price: 45, unit: 'م²', stock: 800, status: 'active', views: 654, pricings: 45, addedToQuotes: 23, conversionRate: 51.1 },
-        { id: '4', name: { ar: 'دهان زيتي أبيض', en: 'White Oil Paint' }, category: 'finishing', price: 85, unit: 'جالون', stock: 0, status: 'inactive', views: 120, pricings: 8, addedToQuotes: 2, conversionRate: 25.0 },
+        // منتجات البيع
+        { id: '1', name: { ar: 'حديد تسليح 12مم', en: 'Rebar 12mm' }, category: 'steel', productType: 'sale', price: 3200, unitType: 'ton', unit: 'طن', stock: 150, status: 'active', approvalStatus: 'approved', views: 1250, pricings: 85, addedToQuotes: 42, conversionRate: 49.4 },
+        { id: '2', name: { ar: 'اسمنت بورتلاندي', en: 'Portland Cement' }, category: 'cement', productType: 'sale', price: 18, unitType: 'bag', unit: 'كيس', stock: 5000, status: 'active', approvalStatus: 'approved', views: 980, pricings: 156, addedToQuotes: 89, conversionRate: 57.1 },
+        { id: '3', name: { ar: 'بلاط سيراميك 60×60', en: 'Ceramic Tiles 60x60' }, category: 'tiles', productType: 'sale', price: 45, unitType: 'sqm', unit: 'م²', stock: 800, status: 'active', approvalStatus: 'pending', views: 654, pricings: 45, addedToQuotes: 23, conversionRate: 51.1 },
+        { id: '4', name: { ar: 'دهان زيتي أبيض', en: 'White Oil Paint' }, category: 'paints', productType: 'sale', price: 85, unitType: 'liter', unit: 'جالون', stock: 0, status: 'inactive', approvalStatus: 'rejected', views: 120, pricings: 8, addedToQuotes: 2, conversionRate: 25.0 },
+        // منتجات التأجير
+        { id: '5', name: { ar: 'سقالات معدنية', en: 'Metal Scaffolding' }, category: 'scaffolding', productType: 'rental', price: 50, unitType: 'meter', unit: 'متر/يوم', stock: 500, status: 'active', approvalStatus: 'approved', views: 890, pricings: 65, addedToQuotes: 35, conversionRate: 53.8, rentalPeriod: 'daily', minRentalDuration: 7, depositAmount: 1000 },
+        { id: '6', name: { ar: 'رافعة برجية 40 متر', en: 'Tower Crane 40m' }, category: 'cranes', productType: 'rental', price: 5000, unitType: 'piece', unit: 'وحدة/شهر', stock: 3, status: 'active', approvalStatus: 'approved', views: 450, pricings: 28, addedToQuotes: 12, conversionRate: 42.9, rentalPeriod: 'monthly', minRentalDuration: 3, depositAmount: 50000 },
+        { id: '7', name: { ar: 'مولد كهربائي 100 كيلو واط', en: 'Generator 100KW' }, category: 'generators', productType: 'rental', price: 500, unitType: 'piece', unit: 'وحدة/يوم', stock: 10, status: 'active', approvalStatus: 'pending', views: 720, pricings: 92, addedToQuotes: 58, conversionRate: 63.0, rentalPeriod: 'daily', minRentalDuration: 1, depositAmount: 5000 },
+        { id: '8', name: { ar: 'خلاطة خرسانة', en: 'Concrete Mixer' }, category: 'concrete_mixers', productType: 'rental', price: 300, unitType: 'piece', unit: 'وحدة/يوم', stock: 8, status: 'active', approvalStatus: 'approved', views: 560, pricings: 45, addedToQuotes: 28, conversionRate: 62.2, rentalPeriod: 'daily', minRentalDuration: 1 },
+        { id: '9', name: { ar: 'رافعة شوكية 3 طن', en: 'Forklift 3 Ton' }, category: 'forklifts', productType: 'rental', price: 400, unitType: 'piece', unit: 'وحدة/يوم', stock: 5, status: 'active', approvalStatus: 'revision_required', views: 380, pricings: 35, addedToQuotes: 20, conversionRate: 57.1, rentalPeriod: 'daily', minRentalDuration: 1, depositAmount: 8000 },
     ];
 
     const promotions: Promotion[] = [
@@ -193,7 +218,16 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
         scheduled: { ar: 'مجدول', en: 'Scheduled' },
         expired: { ar: 'منتهي', en: 'Expired' },
         topProducts: { ar: 'أفضل المنتجات أداءً', en: 'Top Performing Products' },
-        productPerformance: { ar: 'أداء المنتجات', en: 'Product Performance' }
+        productPerformance: { ar: 'أداء المنتجات', en: 'Product Performance' },
+        sales: { ar: 'المبيعات', en: 'Sales' },
+        rentals: { ar: 'التأجير', en: 'Rentals' },
+        productType: { ar: 'النوع', en: 'Type' },
+        sale: { ar: 'بيع', en: 'Sale' },
+        rental: { ar: 'تأجير', en: 'Rental' },
+        rentalPeriod: { ar: 'فترة التأجير', en: 'Rental Period' },
+        deposit: { ar: 'التأمين', en: 'Deposit' },
+        minDuration: { ar: 'أقل مدة', en: 'Min Duration' },
+        availableForRent: { ar: 'متاح للتأجير', en: 'Available' }
     };
 
     const getLabel = (key: keyof typeof t) => t[key][language];
@@ -264,7 +298,7 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
             <div className="max-w-7xl mx-auto px-6 py-8">
                 {/* Tabs */}
                 <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
-                    {(['overview', 'categories', 'products', 'quotes', 'analytics', 'promotions', 'settings'] as const).map((tab) => (
+                    {(['overview', 'categories', 'sales', 'rentals', 'products', 'quotes', 'analytics', 'promotions', 'settings'] as const).map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
@@ -273,6 +307,8 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                                 : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50'
                                 }`}
                         >
+                            {tab === 'sales' && <ShoppingCart className="w-4 h-4" />}
+                            {tab === 'rentals' && <Wrench className="w-4 h-4" />}
                             {tab === 'analytics' && <BarChart2 className="w-4 h-4" />}
                             {tab === 'promotions' && <Megaphone className="w-4 h-4" />}
                             {getLabel(tab)}
@@ -431,6 +467,216 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                                     <div className="text-2xl font-bold text-amber-400">{Math.round(productCategories.reduce((sum, c) => sum + c.count, 0) / productCategories.length)}</div>
                                     <div className="text-sm text-slate-400">{language === 'ar' ? 'متوسط المنتجات' : 'Avg. Products'}</div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Sales Tab */}
+                {activeTab === 'sales' && (
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                                    <ShoppingCart className="w-6 h-6 text-white" />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-bold text-white">{getLabel('sales')}</h2>
+                                    <p className="text-slate-400 text-sm">{language === 'ar' ? 'منتجات البيع المباشر' : 'Direct sale products'}</p>
+                                </div>
+                            </div>
+                            <button className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-400 text-white rounded-xl transition-colors">
+                                <Plus className="w-5 h-5" />
+                                {language === 'ar' ? 'إضافة منتج للبيع' : 'Add Sale Product'}
+                            </button>
+                        </div>
+
+                        {/* Stats */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-blue-500/30">
+                                <div className="text-blue-400 text-sm mb-1">{language === 'ar' ? 'منتجات البيع' : 'Sale Products'}</div>
+                                <div className="text-2xl font-bold text-white">{products.filter(p => p.productType === 'sale').length}</div>
+                            </div>
+                            <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-emerald-500/30">
+                                <div className="text-emerald-400 text-sm mb-1">{language === 'ar' ? 'نشط' : 'Active'}</div>
+                                <div className="text-2xl font-bold text-white">{products.filter(p => p.productType === 'sale' && p.status === 'active').length}</div>
+                            </div>
+                            <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-slate-500/30">
+                                <div className="text-slate-400 text-sm mb-1">{language === 'ar' ? 'إجمالي المشاهدات' : 'Total Views'}</div>
+                                <div className="text-2xl font-bold text-white">{products.filter(p => p.productType === 'sale').reduce((sum, p) => sum + p.views, 0).toLocaleString()}</div>
+                            </div>
+                            <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-amber-500/30">
+                                <div className="text-amber-400 text-sm mb-1">{language === 'ar' ? 'نسبة التحويل' : 'Conversion'}</div>
+                                <div className="text-2xl font-bold text-white">
+                                    {(products.filter(p => p.productType === 'sale').reduce((sum, p) => sum + p.conversionRate, 0) / Math.max(1, products.filter(p => p.productType === 'sale').length)).toFixed(1)}%
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Products Table */}
+                        <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="bg-slate-700/30">
+                                            <th className="px-4 py-3 text-start text-sm text-slate-400">{getLabel('productName')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('category')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('price')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('stock')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('status')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('actions')}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {products.filter(p => p.productType === 'sale').map((product) => (
+                                            <tr key={product.id} className="border-t border-slate-700/50 hover:bg-slate-700/20">
+                                                <td className="px-4 py-3 text-white font-medium">{product.name[language]}</td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <span className="px-2 py-1 bg-blue-500/10 text-blue-400 rounded-lg text-xs">
+                                                        {PRODUCT_CATEGORIES[product.category]?.[language] || product.category}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3 text-center text-white">{product.price} / {product.unit}</td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <span className={product.stock > 0 ? 'text-emerald-400' : 'text-red-400'}>
+                                                        {product.stock}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <span className={`px-2 py-1 rounded-full text-xs ${product.status === 'active'
+                                                        ? 'bg-emerald-500/10 text-emerald-400'
+                                                        : 'bg-slate-500/10 text-slate-400'
+                                                        }`}>
+                                                        {getLabel(product.status)}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <button className="p-1 text-slate-400 hover:text-blue-400 transition-colors">
+                                                            <Edit3 className="w-4 h-4" />
+                                                        </button>
+                                                        <button className="p-1 text-slate-400 hover:text-red-400 transition-colors">
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Rentals Tab */}
+                {activeTab === 'rentals' && (
+                    <div className="space-y-6">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
+                                    <Wrench className="w-6 h-6 text-white" />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-bold text-white">{getLabel('rentals')}</h2>
+                                    <p className="text-slate-400 text-sm">{language === 'ar' ? 'المعدات والأدوات للتأجير' : 'Equipment & tools for rent'}</p>
+                                </div>
+                            </div>
+                            <button className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-400 text-white rounded-xl transition-colors">
+                                <Plus className="w-5 h-5" />
+                                {language === 'ar' ? 'إضافة منتج للتأجير' : 'Add Rental Product'}
+                            </button>
+                        </div>
+
+                        {/* Stats */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-orange-500/30">
+                                <div className="text-orange-400 text-sm mb-1">{language === 'ar' ? 'منتجات التأجير' : 'Rental Products'}</div>
+                                <div className="text-2xl font-bold text-white">{products.filter(p => p.productType === 'rental').length}</div>
+                            </div>
+                            <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-emerald-500/30">
+                                <div className="text-emerald-400 text-sm mb-1">{language === 'ar' ? 'متاح للتأجير' : 'Available'}</div>
+                                <div className="text-2xl font-bold text-white">{products.filter(p => p.productType === 'rental' && p.status === 'active').length}</div>
+                            </div>
+                            <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-slate-500/30">
+                                <div className="text-slate-400 text-sm mb-1">{language === 'ar' ? 'إجمالي التسعيرات' : 'Total Pricings'}</div>
+                                <div className="text-2xl font-bold text-white">{products.filter(p => p.productType === 'rental').reduce((sum, p) => sum + p.pricings, 0).toLocaleString()}</div>
+                            </div>
+                            <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-amber-500/30">
+                                <div className="text-amber-400 text-sm mb-1">{language === 'ar' ? 'نسبة التحويل' : 'Conversion'}</div>
+                                <div className="text-2xl font-bold text-white">
+                                    {(products.filter(p => p.productType === 'rental').reduce((sum, p) => sum + p.conversionRate, 0) / Math.max(1, products.filter(p => p.productType === 'rental').length)).toFixed(1)}%
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Rental Categories */}
+                        <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
+                            <h3 className="text-lg font-bold text-white mb-4">{language === 'ar' ? 'تصنيفات التأجير' : 'Rental Categories'}</h3>
+                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                                {Object.entries(PRODUCT_CATEGORIES).filter(([_, cat]) => cat.type === 'rental').map(([key, cat]) => (
+                                    <div key={key} className="p-3 bg-slate-700/30 rounded-xl border border-slate-600/50 hover:border-orange-500/50 transition-all cursor-pointer">
+                                        <div className="text-white font-medium text-sm">{cat[language]}</div>
+                                        <div className="text-slate-400 text-xs mt-1">
+                                            {products.filter(p => p.category === key).length} {language === 'ar' ? 'منتج' : 'items'}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Products Table */}
+                        <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="bg-slate-700/30">
+                                            <th className="px-4 py-3 text-start text-sm text-slate-400">{getLabel('productName')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('category')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('rentalPeriod')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('price')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('deposit')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('availableForRent')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('actions')}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {products.filter(p => p.productType === 'rental').map((product) => (
+                                            <tr key={product.id} className="border-t border-slate-700/50 hover:bg-slate-700/20">
+                                                <td className="px-4 py-3 text-white font-medium">{product.name[language]}</td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <span className="px-2 py-1 bg-orange-500/10 text-orange-400 rounded-lg text-xs">
+                                                        {PRODUCT_CATEGORIES[product.category]?.[language] || product.category}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <span className="text-slate-300">
+                                                        {product.rentalPeriod && RENTAL_PERIOD_TRANSLATIONS[product.rentalPeriod]?.[language]}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3 text-center text-emerald-400 font-bold">{product.price} {getLabel('sar')}</td>
+                                                <td className="px-4 py-3 text-center text-amber-400">
+                                                    {product.depositAmount ? `${product.depositAmount.toLocaleString()} ${getLabel('sar')}` : '-'}
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <span className={product.stock > 0 ? 'text-emerald-400' : 'text-red-400'}>
+                                                        {product.stock}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3 text-center">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <button className="p-1 text-slate-400 hover:text-blue-400 transition-colors">
+                                                            <Edit3 className="w-4 h-4" />
+                                                        </button>
+                                                        <button className="p-1 text-slate-400 hover:text-red-400 transition-colors">
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -717,8 +963,8 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                                                 </td>
                                                 <td className="px-4 py-3 text-center">
                                                     <span className={`px-2 py-1 rounded-full text-xs ${promo.targetCustomers === 'all' ? 'bg-blue-500/10 text-blue-400' :
-                                                            promo.targetCustomers === 'companies' ? 'bg-purple-500/10 text-purple-400' :
-                                                                'bg-teal-500/10 text-teal-400'
+                                                        promo.targetCustomers === 'companies' ? 'bg-purple-500/10 text-purple-400' :
+                                                            'bg-teal-500/10 text-teal-400'
                                                         }`}>
                                                         {getLabel(promo.targetCustomers)}
                                                     </span>
@@ -739,8 +985,8 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                                                 </td>
                                                 <td className="px-4 py-3 text-center">
                                                     <span className={`px-2 py-1 rounded-full text-xs ${promo.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' :
-                                                            promo.status === 'scheduled' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30' :
-                                                                'bg-slate-500/10 text-slate-400 border border-slate-500/30'
+                                                        promo.status === 'scheduled' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30' :
+                                                            'bg-slate-500/10 text-slate-400 border border-slate-500/30'
                                                         }`}>
                                                         {getLabel(promo.status)}
                                                     </span>

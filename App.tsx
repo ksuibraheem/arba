@@ -28,6 +28,7 @@ import SupportCenterPage from './pages/SupportCenterPage';
 import CloudSyncPage from './pages/CloudSyncPage';
 import SupplierDashboard from './pages/supplier/SupplierDashboard';
 import QuantitySurveyorPage from './pages/employees/roles/QuantitySurveyorPage';
+import SupplierCatalog from './pages/SupplierCatalog';
 import { AppState, CalculatedItem, ProjectType, CustomParams, BlueprintConfig, SurfaceLocation, RoomFinishes, BaseItem } from './types';
 import { INITIAL_OVERHEAD, PROJECT_DEFAULTS, PROJECT_TITLES, TRANSLATIONS } from './constants';
 import { calculateProjectCosts } from './utils/calculations';
@@ -41,7 +42,7 @@ import { registerWithFirebase, loginWithFirebase, logoutFromFirebase, onAuthChan
 // Toggle Firebase mode - set to true to use Firebase
 const USE_FIREBASE = true;
 
-type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant' | 'password-reset' | 'cloud-sync' | 'support-center' | 'support' | 'developer' | 'marketing' | 'quality' | 'deputy' | 'supplier' | 'quantity_surveyor';
+type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant' | 'password-reset' | 'cloud-sync' | 'support-center' | 'support' | 'developer' | 'marketing' | 'quality' | 'deputy' | 'supplier' | 'quantity_surveyor' | 'supplier-catalog';
 
 // مفتاح الوصول السري للوحة المدير - غيره لمفتاح خاص بك
 const ADMIN_SECRET_KEY = 'arba2025secure';
@@ -688,6 +689,15 @@ const App: React.FC = () => {
         return <CloudSyncPage language={language} onNavigate={handleNavigate} />;
     }
 
+    // صفحة كتالوج الموردين (للمستخدمين المسجلين فقط)
+    if (currentPage === 'supplier-catalog') {
+        if (!user) {
+            setCurrentPage('login');
+            return null;
+        }
+        return <SupplierCatalog language={language} onNavigate={handleNavigate} />;
+    }
+
     if (currentPage === 'support-center') {
         return (
             <SupportCenterPage
@@ -1229,6 +1239,12 @@ const App: React.FC = () => {
 
                             {/* Quick Navigation */}
                             <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => handleNavigate('supplier-catalog')}
+                                    className="px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                                >
+                                    {language === 'ar' ? 'كتالوج الموردين' : 'Supplier Catalog'}
+                                </button>
                                 <button
                                     onClick={() => handleNavigate('payment')}
                                     className="px-3 py-1.5 text-xs font-medium text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors"

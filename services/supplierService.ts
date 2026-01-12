@@ -19,7 +19,37 @@ export interface Supplier {
     businessType: string;
     isActive: boolean;
     createdAt: string;
+    // حقول المصداقية
+    certificates?: SupplierCertificate[];        // الشهادات
+    rating?: number;                             // التقييم (1-5)
+    verificationStatus?: VerificationStatus;     // حالة التحقق
+    technicalSpecs?: string;                     // المواصفات الفنية العامة
 }
+
+// حالة التحقق من المورد
+export type VerificationStatus = 'pending' | 'verified' | 'rejected';
+
+// شهادة المورد
+export interface SupplierCertificate {
+    id: string;
+    name: { ar: string; en: string };
+    type: 'iso' | 'quality' | 'safety' | 'environmental' | 'commercial' | 'other';
+    fileUrl?: string;
+    expiryDate?: string;
+    isVerified: boolean;
+}
+
+// نوع المنتج (بيع أو تأجير)
+export type ProductType = 'sale' | 'rental';
+
+// فترة التأجير
+export type RentalPeriod = 'hourly' | 'daily' | 'weekly' | 'monthly';
+
+// نوع الوحدة
+export type UnitType = 'piece' | 'kg' | 'ton' | 'meter' | 'sqm' | 'cbm' | 'liter' | 'bag' | 'roll' | 'box' | 'set';
+
+// حالة موافقة الإدارة
+export type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'revision_required';
 
 // منتج المورد
 export interface SupplierProduct {
@@ -27,10 +57,27 @@ export interface SupplierProduct {
     supplierId: string;
     name: { ar: string; en: string };
     category: string;
-    price: number;
-    unit: string;
-    stock: number;
+    productType: ProductType;           // بيع أو تأجير
+    price: number;                      // سعر البيع (للبيع) أو سعر الفترة (للتأجير)
+    unitType: UnitType;                 // نوع الوحدة
+    unit: string;                       // وصف الوحدة (للعرض)
+    stock: number;                      // المخزون (للبيع) أو الكمية المتاحة (للتأجير)
     status: 'active' | 'inactive';
+    // حالة الموافقة
+    approvalStatus: ApprovalStatus;     // حالة موافقة الإدارة
+    approvalNotes?: string;             // ملاحظات الموافقة
+    approvedBy?: string;                // معرف الموافِق
+    approvedAt?: string;                // تاريخ الموافقة
+    // حقول التأجير
+    rentalPeriod?: RentalPeriod;        // فترة التأجير
+    minRentalDuration?: number;         // أقل مدة تأجير (بالفترات)
+    maxRentalDuration?: number;         // أقصى مدة تأجير
+    depositAmount?: number;             // مبلغ التأمين
+    // الوصف والمواصفات
+    description?: { ar: string; en: string }; // وصف المنتج
+    specifications?: string;            // المواصفات الفنية
+    images?: string[];                  // صور المنتج
+    documents?: string[];               // مستندات (كتالوجات، شهادات)
     createdAt: string;
     updatedAt: string;
 }
@@ -110,6 +157,92 @@ export const PAYMENT_METHOD_TRANSLATIONS: Record<SupplierPayment['paymentMethod'
     cash: { ar: 'نقداً', en: 'Cash' },
     bank_transfer: { ar: 'تحويل بنكي', en: 'Bank Transfer' },
     cheque: { ar: 'شيك', en: 'Cheque' }
+};
+
+// ترجمات نوع المنتج
+export const PRODUCT_TYPE_TRANSLATIONS: Record<ProductType, { ar: string; en: string }> = {
+    sale: { ar: 'بيع', en: 'Sale' },
+    rental: { ar: 'تأجير', en: 'Rental' }
+};
+
+// ترجمات فترة التأجير
+export const RENTAL_PERIOD_TRANSLATIONS: Record<RentalPeriod, { ar: string; en: string }> = {
+    hourly: { ar: 'بالساعة', en: 'Per Hour' },
+    daily: { ar: 'باليوم', en: 'Per Day' },
+    weekly: { ar: 'بالأسبوع', en: 'Per Week' },
+    monthly: { ar: 'بالشهر', en: 'Per Month' }
+};
+
+// ترجمات نوع الوحدة
+export const UNIT_TYPE_TRANSLATIONS: Record<UnitType, { ar: string; en: string; symbol: string }> = {
+    piece: { ar: 'قطعة', en: 'Piece', symbol: 'pc' },
+    kg: { ar: 'كيلوجرام', en: 'Kilogram', symbol: 'kg' },
+    ton: { ar: 'طن', en: 'Ton', symbol: 'ton' },
+    meter: { ar: 'متر طولي', en: 'Linear Meter', symbol: 'm' },
+    sqm: { ar: 'متر مربع', en: 'Square Meter', symbol: 'm²' },
+    cbm: { ar: 'متر مكعب', en: 'Cubic Meter', symbol: 'm³' },
+    liter: { ar: 'لتر', en: 'Liter', symbol: 'L' },
+    bag: { ar: 'كيس', en: 'Bag', symbol: 'bag' },
+    roll: { ar: 'رول', en: 'Roll', symbol: 'roll' },
+    box: { ar: 'صندوق', en: 'Box', symbol: 'box' },
+    set: { ar: 'طقم', en: 'Set', symbol: 'set' }
+};
+
+// ترجمات حالة الموافقة
+export const APPROVAL_STATUS_TRANSLATIONS: Record<ApprovalStatus, { ar: string; en: string }> = {
+    pending: { ar: 'قيد المراجعة', en: 'Pending Review' },
+    approved: { ar: 'معتمد', en: 'Approved' },
+    rejected: { ar: 'مرفوض', en: 'Rejected' },
+    revision_required: { ar: 'يحتاج تعديل', en: 'Revision Required' }
+};
+
+// ترجمات حالة التحقق من المورد
+export const VERIFICATION_STATUS_TRANSLATIONS: Record<VerificationStatus, { ar: string; en: string }> = {
+    pending: { ar: 'قيد التحقق', en: 'Pending Verification' },
+    verified: { ar: 'موثق', en: 'Verified' },
+    rejected: { ar: 'مرفوض', en: 'Rejected' }
+};
+
+// ترجمات أنواع الشهادات
+export const CERTIFICATE_TYPE_TRANSLATIONS: Record<SupplierCertificate['type'], { ar: string; en: string }> = {
+    iso: { ar: 'شهادة ISO', en: 'ISO Certificate' },
+    quality: { ar: 'شهادة جودة', en: 'Quality Certificate' },
+    safety: { ar: 'شهادة سلامة', en: 'Safety Certificate' },
+    environmental: { ar: 'شهادة بيئية', en: 'Environmental Certificate' },
+    commercial: { ar: 'سجل تجاري', en: 'Commercial Registration' },
+    other: { ar: 'أخرى', en: 'Other' }
+};
+
+export const PRODUCT_CATEGORIES: Record<string, { ar: string; en: string; type: ProductType | 'both' }> = {
+    // تصنيفات البيع
+    building_materials: { ar: 'مواد البناء', en: 'Building Materials', type: 'sale' },
+    electrical: { ar: 'كهربائيات', en: 'Electrical', type: 'sale' },
+    plumbing: { ar: 'سباكة', en: 'Plumbing', type: 'sale' },
+    paints: { ar: 'دهانات', en: 'Paints', type: 'sale' },
+    tiles: { ar: 'بلاط وسيراميك', en: 'Tiles & Ceramics', type: 'sale' },
+    insulation: { ar: 'عوازل', en: 'Insulation', type: 'sale' },
+    steel: { ar: 'حديد وصلب', en: 'Steel', type: 'sale' },
+    cement: { ar: 'إسمنت وخرسانة', en: 'Cement & Concrete', type: 'sale' },
+    wood: { ar: 'أخشاب', en: 'Wood', type: 'sale' },
+    tools: { ar: 'أدوات وعدد', en: 'Tools', type: 'both' },
+    safety_equipment: { ar: 'معدات السلامة', en: 'Safety Equipment', type: 'sale' },
+    // تصنيفات التأجير
+    scaffolding: { ar: 'سقالات', en: 'Scaffolding', type: 'rental' },
+    cranes: { ar: 'رافعات', en: 'Cranes', type: 'rental' },
+    forklifts: { ar: 'رافعات شوكية', en: 'Forklifts', type: 'rental' },
+    excavators: { ar: 'حفارات', en: 'Excavators', type: 'rental' },
+    loaders: { ar: 'لودرات', en: 'Loaders', type: 'rental' },
+    concrete_mixers: { ar: 'خلاطات خرسانة', en: 'Concrete Mixers', type: 'rental' },
+    concrete_pumps: { ar: 'مضخات خرسانة', en: 'Concrete Pumps', type: 'rental' },
+    generators: { ar: 'مولدات كهربائية', en: 'Generators', type: 'rental' },
+    compressors: { ar: 'ضواغط هواء', en: 'Compressors', type: 'rental' },
+    welding_machines: { ar: 'ماكينات لحام', en: 'Welding Machines', type: 'rental' },
+    cutting_machines: { ar: 'ماكينات قطع', en: 'Cutting Machines', type: 'rental' },
+    water_pumps: { ar: 'مضخات مياه', en: 'Water Pumps', type: 'rental' },
+    containers: { ar: 'حاويات ومستودعات', en: 'Containers & Storage', type: 'rental' },
+    site_offices: { ar: 'مكاتب موقع', en: 'Site Offices', type: 'rental' },
+    portable_toilets: { ar: 'حمامات متنقلة', en: 'Portable Toilets', type: 'rental' },
+    other: { ar: 'أخرى', en: 'Other', type: 'both' }
 };
 
 // ====================== خدمة الموردين ======================
@@ -467,32 +600,102 @@ class SupplierService {
         // إضافة منتجات تجريبية للمورد sample-2
         if (this.getProducts().length === 0) {
             const sampleProducts: Omit<SupplierProduct, 'id' | 'createdAt' | 'updatedAt'>[] = [
+                // منتجات بيع
                 {
                     supplierId: 'sample-2',
                     name: { ar: 'حديد تسليح 12مم', en: 'Rebar 12mm' },
                     category: 'steel',
+                    productType: 'sale',
                     price: 3200,
+                    unitType: 'ton',
                     unit: 'طن',
                     stock: 150,
-                    status: 'active'
+                    status: 'active',
+                    approvalStatus: 'approved'
                 },
                 {
                     supplierId: 'sample-2',
                     name: { ar: 'اسمنت بورتلاندي', en: 'Portland Cement' },
-                    category: 'concrete',
+                    category: 'cement',
+                    productType: 'sale',
                     price: 18,
+                    unitType: 'bag',
                     unit: 'كيس',
                     stock: 5000,
-                    status: 'active'
+                    status: 'active',
+                    approvalStatus: 'approved'
                 },
                 {
                     supplierId: 'sample-2',
                     name: { ar: 'بلاط سيراميك 60×60', en: 'Ceramic Tiles 60x60' },
                     category: 'tiles',
+                    productType: 'sale',
                     price: 45,
+                    unitType: 'sqm',
                     unit: 'م²',
                     stock: 800,
-                    status: 'active'
+                    status: 'active',
+                    approvalStatus: 'pending'
+                },
+                // منتجات تأجير
+                {
+                    supplierId: 'sample-2',
+                    name: { ar: 'سقالات معدنية', en: 'Metal Scaffolding' },
+                    category: 'scaffolding',
+                    productType: 'rental',
+                    price: 50,
+                    unitType: 'meter',
+                    unit: 'متر طولي',
+                    stock: 500,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    rentalPeriod: 'daily',
+                    minRentalDuration: 7,
+                    depositAmount: 1000
+                },
+                {
+                    supplierId: 'sample-2',
+                    name: { ar: 'رافعة برجية 40 متر', en: 'Tower Crane 40m' },
+                    category: 'cranes',
+                    productType: 'rental',
+                    price: 5000,
+                    unitType: 'piece',
+                    unit: 'وحدة',
+                    stock: 3,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    rentalPeriod: 'monthly',
+                    minRentalDuration: 3,
+                    depositAmount: 50000
+                },
+                {
+                    supplierId: 'sample-2',
+                    name: { ar: 'مولد كهربائي 100 كيلو واط', en: 'Generator 100KW' },
+                    category: 'generators',
+                    productType: 'rental',
+                    price: 500,
+                    unitType: 'piece',
+                    unit: 'وحدة',
+                    stock: 10,
+                    status: 'active',
+                    approvalStatus: 'pending',
+                    rentalPeriod: 'daily',
+                    minRentalDuration: 1,
+                    depositAmount: 5000
+                },
+                {
+                    supplierId: 'sample-2',
+                    name: { ar: 'خلاطة خرسانة', en: 'Concrete Mixer' },
+                    category: 'concrete_mixers',
+                    productType: 'rental',
+                    price: 300,
+                    unitType: 'piece',
+                    unit: 'وحدة',
+                    stock: 8,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    rentalPeriod: 'daily',
+                    minRentalDuration: 1
                 }
             ];
 
