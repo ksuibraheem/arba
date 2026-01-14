@@ -5,10 +5,11 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-    Crown, Users, UserPlus, Settings, LogOut, Home,
+    Crown, Users, UserPlus, Settings, LogOut, Home, LogIn,
     Calculator, Code, Headphones, Megaphone, CheckCircle,
-    UserCog, Edit, Trash2, Key, Mail, Phone, Eye, EyeOff,
-    Copy, Check, AlertCircle, AlertTriangle, X, Search, Filter, Cloud, FileText, Clock
+    UserCog, Edit, Trash2, Key, Mail, Phone, Eye, EyeOff, Save,
+    Copy, Check, AlertCircle, AlertTriangle, X, Search, Filter, Cloud, FileText, Clock,
+    Play, ClipboardCheck
 } from 'lucide-react';
 import {
     Employee, EmployeeRole, employeeService,
@@ -16,11 +17,30 @@ import {
 } from '../../services/employeeService';
 import { invoiceEditRequestService, InvoiceEditRequest, EDIT_REQUEST_STATUS_TRANSLATIONS } from '../../services/invoiceEditRequestService';
 import { registrationService, RegistrationRequest, USER_TYPE_TRANSLATIONS, REGISTRATION_STATUS_TRANSLATIONS } from '../../services/registrationService';
+import {
+    getAllTestPermissions,
+    setEmployeeTestPermissions,
+    hasAnyTestPermission,
+    startTestMode,
+    endTestMode,
+    getCurrentTestSession,
+    isInTestMode,
+    getAvailablePackagesForTest,
+    TEST_MODE_TRANSLATIONS,
+    PACKAGE_TRANSLATIONS,
+    TEST_USER_TYPE_TRANSLATIONS,
+    isSuperAdmin,
+    TestModePermission,
+    TestSession,
+    PackagePlan,
+    TestUserType
+} from '../../services/testModeService';
 
 interface ManagerDashboardProps {
     language: 'ar' | 'en';
     onLogout: () => void;
     onNavigate: (page: string) => void;
+    onStartTestMode?: (plan: string, userType: string) => void;
 }
 
 // ================= Manager Settings Tab Component =================
@@ -213,9 +233,9 @@ const ManagerSettingsTab: React.FC<ManagerSettingsTabProps> = ({ language, t, on
 };
 
 // ================= Main Manager Dashboard Component =================
-const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout, onNavigate }) => {
+const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout, onNavigate, onStartTestMode }) => {
     const isRtl = language === 'ar';
-    const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'add' | 'accounts' | 'edit_requests' | 'settings'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'add' | 'accounts' | 'edit_requests' | 'test_mode' | 'settings'>('overview');
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [editRequests, setEditRequests] = useState<InvoiceEditRequest[]>([]);
     const [accounts, setAccounts] = useState<RegistrationRequest[]>([]);
@@ -235,6 +255,10 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
         reason: ''
     });
 
+    // حالة تعديل الموظف
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [selectedEmployeeForEdit, setSelectedEmployeeForEdit] = useState<Employee | null>(null);
+
     // حالة نموذج إضافة موظف
     const [newEmployee, setNewEmployee] = useState({
         name: '',
@@ -244,12 +268,65 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
         employeeNumber: '',
         password: ''
     });
+
+    // حالة نموذج تعديل الموظف
+    const [editEmployee, setEditEmployee] = useState({
+        id: '',
+        name: '',
+        email: '',
+        phone: '',
+        role: 'accountant' as EmployeeRole,
+        employeeNumber: '',
+        password: '',
+        isActive: true
+    });
+
+    // تحديث بيانات نموذج التعديل عند اختيار موظف
+    useEffect(() => {
+        if (selectedEmployeeForEdit) {
+            setEditEmployee({
+                id: selectedEmployeeForEdit.id,
+                name: selectedEmployeeForEdit.name,
+                email: selectedEmployeeForEdit.email,
+                phone: selectedEmployeeForEdit.phone,
+                role: selectedEmployeeForEdit.role,
+                employeeNumber: selectedEmployeeForEdit.employeeNumber,
+                password: selectedEmployeeForEdit.password,
+                isActive: selectedEmployeeForEdit.isActive
+            });
+        }
+    }, [selectedEmployeeForEdit]);
+
+    // تحديث موظف
+    const handleUpdateEmployee = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        try {
+            // هنا نفترض وجود دالة updateEmployee في الخدمة، إن لم توجد سنستخدم addEmployee كبديل مؤقت أو نحدث القائمة مباشرة
+            // لكن بما أننا نستخدم localStorage، يمكننا تحديث القائمة مباشرة
+            const updatedEmployees = employees.map(emp =>
+                emp.id === editEmployee.id ? { ...emp, ...editEmployee } : emp
+            );
+
+            // حفظ في LocalStorage (محاكاة لخدمة التحديث)
+            localStorage.setItem('arba_employees', JSON.stringify(updatedEmployees));
+            setEmployees(updatedEmployees);
+
+            setShowEditModal(false);
+            setFormSuccess(language === 'ar' ? 'تم تحديث البيانات بنجاح' : 'Employee updated successfully');
+            setTimeout(() => setFormSuccess(''), 3000);
+        } catch (error) {
+            setFormError(language === 'ar' ? 'حدث خطأ أثناء التحديث' : 'Error updating employee');
+        }
+    };
     const [formError, setFormError] = useState('');
     const [formSuccess, setFormSuccess] = useState('');
 
 
     // تحميل الموظفين وطلبات التعديل والحسابات
     useEffect(() => {
+        // تهيئة البيانات التجريبية إذا لم تكن موجودة
+        employeeService.initializeSampleData();
         setEmployees(employeeService.getEmployees());
         setEditRequests(invoiceEditRequestService.getPendingRequests());
         setAccounts(registrationService.getAllApprovedAccounts());
@@ -336,7 +413,8 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
         developer: <Code className="w-5 h-5" />,
         support: <Headphones className="w-5 h-5" />,
         marketing: <Megaphone className="w-5 h-5" />,
-        quality: <CheckCircle className="w-5 h-5" />
+        quality: <CheckCircle className="w-5 h-5" />,
+        quantity_surveyor: <ClipboardCheck className="w-5 h-5" />
     };
 
     return (
@@ -381,6 +459,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
                         { id: 'add', label: t('إضافة موظف', 'Add Employee'), icon: <UserPlus className="w-4 h-4" /> },
                         { id: 'accounts', label: t('إدارة الحسابات', 'Accounts'), icon: <UserCog className="w-4 h-4" />, badge: accounts.filter(a => a.isSuspended).length },
                         { id: 'edit_requests', label: t('طلبات التعديل', 'Edit Requests'), icon: <FileText className="w-4 h-4" />, badge: editRequests.length },
+                        { id: 'test_mode', label: t('اختبار الباقات', 'Test Packages'), icon: <Play className="w-4 h-4" /> },
                         { id: 'settings', label: t('الإعدادات', 'Settings'), icon: <Settings className="w-4 h-4" /> }
                     ].map(tab => (
                         <button
@@ -529,6 +608,39 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-2">
+                                                {/* زر تعيين/تعديل الموظف */}
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedEmployeeForEdit(emp);
+                                                        setShowEditModal(true);
+                                                    }}
+                                                    className="p-2 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors"
+                                                    title={t('تعيين / تعديل', 'Assign / Edit')}
+                                                >
+                                                    <Edit className="w-4 h-4" />
+                                                </button>
+                                                {/* زر الدخول كموظف */}
+                                                <button
+                                                    onClick={() => {
+                                                        // حفظ أن المدير يعمل نيابة عن الموظف
+                                                        localStorage.setItem('arba_impersonating_employee', JSON.stringify({
+                                                            employeeId: emp.id,
+                                                            employeeNumber: emp.employeeNumber,
+                                                            employeeName: emp.name,
+                                                            employeeRole: emp.role,
+                                                            impersonatedBy: '2201187',
+                                                            impersonatorName: t('المدير العام', 'General Manager'),
+                                                            startedAt: new Date().toISOString()
+                                                        }));
+                                                        // التنقل لصفحة الموظف
+                                                        onNavigate(emp.role === 'quantity_surveyor' ? 'quantity_surveyor' : emp.role);
+                                                    }}
+                                                    className="p-2 text-emerald-400 hover:bg-emerald-500/20 rounded-lg transition-colors"
+                                                    title={t('الدخول كموظف', 'Work as Employee')}
+                                                >
+                                                    <LogIn className="w-4 h-4" />
+                                                </button>
+                                                {/* زر الحذف */}
                                                 <button
                                                     onClick={() => handleDeleteEmployee(emp.id)}
                                                     className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
@@ -1095,6 +1207,164 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
                     </div>
                 )}
 
+                {/* Test Mode Tab */}
+                {activeTab === 'test_mode' && (
+                    <div className="space-y-6">
+                        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                            <Play className="w-6 h-6 text-emerald-400" />
+                            {t('اختبار الباقات', 'Test Packages')}
+                        </h2>
+                        <p className="text-slate-400">
+                            {t('اختبر البرنامج كما يراه العملاء للتأكد من صحة عمله', 'Test the software as customers see it to verify it works correctly')}
+                        </p>
+
+                        {/* Available Packages Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {(['individual', 'company', 'supplier'] as TestUserType[]).map(userType => (
+                                <div key={userType} className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50">
+                                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                                        {userType === 'individual' && <Users className="w-5 h-5 text-blue-400" />}
+                                        {userType === 'company' && <Cloud className="w-5 h-5 text-emerald-400" />}
+                                        {userType === 'supplier' && <UserCog className="w-5 h-5 text-amber-400" />}
+                                        {TEST_USER_TYPE_TRANSLATIONS[userType][language]}
+                                    </h3>
+
+                                    <div className="space-y-2">
+                                        {/* عرض الباقات حسب نوع المستخدم */}
+                                        {userType === 'individual' && (
+                                            <>
+                                                {(['free', 'professional'] as PackagePlan[]).map(plan => (
+                                                    <button
+                                                        key={`${userType}-${plan}`}
+                                                        onClick={() => {
+                                                            startTestMode('2201187', t('المدير العام', 'General Manager'), plan, userType);
+                                                            if (onStartTestMode) {
+                                                                onStartTestMode(plan, userType);
+                                                            }
+                                                        }}
+                                                        className="w-full py-2 px-4 bg-slate-700/50 hover:bg-emerald-500/20 border border-slate-600 hover:border-emerald-500/50 rounded-lg text-slate-300 hover:text-white transition-all flex items-center justify-between"
+                                                    >
+                                                        <span>{PACKAGE_TRANSLATIONS[plan][language]}</span>
+                                                        <Play className="w-4 h-4" />
+                                                    </button>
+                                                ))}
+                                            </>
+                                        )}
+                                        {userType === 'company' && (
+                                            <>
+                                                {(['free', 'pro'] as PackagePlan[]).map(plan => (
+                                                    <button
+                                                        key={`${userType}-${plan}`}
+                                                        onClick={() => {
+                                                            startTestMode('2201187', t('المدير العام', 'General Manager'), plan, userType);
+                                                            if (onStartTestMode) {
+                                                                onStartTestMode(plan, userType);
+                                                            }
+                                                        }}
+                                                        className="w-full py-2 px-4 bg-slate-700/50 hover:bg-emerald-500/20 border border-slate-600 hover:border-emerald-500/50 rounded-lg text-slate-300 hover:text-white transition-all flex items-center justify-between"
+                                                    >
+                                                        <span>{PACKAGE_TRANSLATIONS[plan][language]}</span>
+                                                        <Play className="w-4 h-4" />
+                                                    </button>
+                                                ))}
+                                            </>
+                                        )}
+                                        {userType === 'supplier' && (
+                                            <button
+                                                onClick={() => {
+                                                    startTestMode('2201187', t('المدير العام', 'General Manager'), 'network', userType);
+                                                    if (onStartTestMode) {
+                                                        onStartTestMode('network', userType);
+                                                    }
+                                                }}
+                                                className="w-full py-2 px-4 bg-slate-700/50 hover:bg-emerald-500/20 border border-slate-600 hover:border-emerald-500/50 rounded-lg text-slate-300 hover:text-white transition-all flex items-center justify-between"
+                                            >
+                                                <span>{PACKAGE_TRANSLATIONS['network'][language]}</span>
+                                                <Play className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Employee Permissions Section */}
+                        <div className="mt-8">
+                            <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                                <Key className="w-5 h-5 text-amber-400" />
+                                {t('صلاحيات الاختبار للموظفين', 'Employee Test Permissions')}
+                            </h3>
+                            <p className="text-slate-400 text-sm mb-4">
+                                {t('منح أو سحب صلاحيات الاختبار من الموظفين', 'Grant or revoke test permissions from employees')}
+                            </p>
+
+                            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden">
+                                <table className="w-full">
+                                    <thead className="bg-slate-700/50">
+                                        <tr>
+                                            <th className="text-start p-4 text-slate-300 font-medium">{t('الموظف', 'Employee')}</th>
+                                            <th className="text-center p-4 text-slate-300 font-medium">{t('أفراد', 'Individuals')}</th>
+                                            <th className="text-center p-4 text-slate-300 font-medium">{t('شركات', 'Companies')}</th>
+                                            <th className="text-center p-4 text-slate-300 font-medium">{t('موردين', 'Suppliers')}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {employees.map(emp => {
+                                            const permissions = getAllTestPermissions()[emp.employeeNumber];
+                                            return (
+                                                <tr key={emp.id} className="border-t border-slate-700/50 hover:bg-slate-700/30">
+                                                    <td className="p-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${ROLE_COLORS[emp.role]} flex items-center justify-center text-white`}>
+                                                                {roleIcons[emp.role]}
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-white font-medium">{emp.name}</p>
+                                                                <p className="text-slate-400 text-sm">{ROLE_TRANSLATIONS[emp.role][language]}</p>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    {(['individual', 'company', 'supplier'] as TestUserType[]).map(userType => {
+                                                        const permKey = userType === 'individual' ? 'canTestIndividualPackages'
+                                                            : userType === 'company' ? 'canTestCompanyPackages'
+                                                                : 'canTestSupplierPackages';
+                                                        const hasPermission = permissions?.[permKey] || false;
+
+                                                        return (
+                                                            <td key={userType} className="p-4 text-center">
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setEmployeeTestPermissions(
+                                                                            emp.employeeNumber,
+                                                                            { [permKey]: !hasPermission },
+                                                                            '2201187' // Manager's employee number
+                                                                        );
+                                                                        // Trigger re-render
+                                                                        setEmployees([...employees]);
+                                                                    }}
+                                                                    className={`w-10 h-6 rounded-full transition-all ${hasPermission
+                                                                        ? 'bg-emerald-500'
+                                                                        : 'bg-slate-600'
+                                                                        }`}
+                                                                >
+                                                                    <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${hasPermission
+                                                                        ? language === 'ar' ? '-translate-x-4' : 'translate-x-4'
+                                                                        : language === 'ar' ? 'translate-x-0' : 'translate-x-0.5'
+                                                                        }`} />
+                                                                </button>
+                                                            </td>
+                                                        );
+                                                    })}
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Edit Requests Tab */}
                 {activeTab === 'edit_requests' && (
                     <div className="space-y-6">
@@ -1185,6 +1455,129 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
                     />
                 )}
             </div>
+
+            {/* Edit Employee Modal */}
+            {showEditModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-slate-800 rounded-xl max-w-2xl w-full border border-slate-700 max-h-[90vh] overflow-y-auto">
+                        <div className="p-6">
+                            <div className="flex items-center justify-between mb-6">
+                                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                    <Edit className="w-6 h-6 text-blue-400" />
+                                    {t('تعديل بيانات الموظف', 'Edit Employee Data')}
+                                </h3>
+                                <button
+                                    onClick={() => setShowEditModal(false)}
+                                    className="p-2 hover:bg-slate-700 rounded-lg text-slate-400"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleUpdateEmployee} className="space-y-4">
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-slate-400 mb-2">{t('اسم الموظف', 'Employee Name')} *</label>
+                                        <input
+                                            type="text"
+                                            value={editEmployee.name}
+                                            onChange={(e) => setEditEmployee(prev => ({ ...prev, name: e.target.value }))}
+                                            className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-slate-400 mb-2">{t('البريد الإلكتروني', 'Email')} *</label>
+                                        <input
+                                            type="email"
+                                            value={editEmployee.email}
+                                            onChange={(e) => setEditEmployee(prev => ({ ...prev, email: e.target.value }))}
+                                            className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-slate-400 mb-2">{t('الهاتف', 'Phone')}</label>
+                                        <input
+                                            type="tel"
+                                            value={editEmployee.phone}
+                                            onChange={(e) => setEditEmployee(prev => ({ ...prev, phone: e.target.value }))}
+                                            className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-slate-400 mb-2">{t('الدور الوظيفي', 'Role')} *</label>
+                                        <select
+                                            value={editEmployee.role}
+                                            onChange={(e) => setEditEmployee(prev => ({ ...prev, role: e.target.value as EmployeeRole }))}
+                                            className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-blue-500"
+                                        >
+                                            {(Object.keys(ROLE_TRANSLATIONS) as EmployeeRole[]).filter(r => r !== 'manager').map(role => (
+                                                <option key={role} value={role}>{ROLE_TRANSLATIONS[role][language]}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="border-t border-slate-700 pt-4">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h3 className="text-white font-medium">{t('بيانات الدخول', 'Login Credentials')}</h3>
+                                    </div>
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-slate-400 mb-2">{t('رقم الموظف', 'Employee Number')}</label>
+                                            <input
+                                                type="text"
+                                                value={editEmployee.employeeNumber}
+                                                readOnly
+                                                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-slate-400 font-mono"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-slate-400 mb-2">{t('الرقم السري', 'Password')}</label>
+                                            <input
+                                                type="text"
+                                                value={editEmployee.password}
+                                                onChange={(e) => setEditEmployee(prev => ({ ...prev, password: e.target.value }))}
+                                                className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white font-mono focus:outline-none focus:border-blue-500"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="pt-2">
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={editEmployee.isActive}
+                                            onChange={(e) => setEditEmployee(prev => ({ ...prev, isActive: e.target.checked }))}
+                                            className="w-5 h-5 rounded border-slate-600 text-blue-500 focus:ring-blue-500/50 bg-slate-700"
+                                        />
+                                        <span className="text-slate-300">{t('حساب نشط', 'Active Account')}</span>
+                                    </label>
+                                </div>
+
+                                <div className="pt-4 flex gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowEditModal(false)}
+                                        className="flex-1 py-3 bg-slate-700 text-white font-medium rounded-lg hover:bg-slate-600 transition-all"
+                                    >
+                                        {t('إلغاء', 'Cancel')}
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="flex-1 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-medium rounded-lg hover:from-blue-600 hover:to-indigo-600 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <Save className="w-5 h-5" />
+                                        {t('حفظ التغييرات', 'Save Changes')}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

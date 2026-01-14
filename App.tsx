@@ -38,6 +38,7 @@ import { COMPANY_INFO, SUBSCRIPTION_PLANS, encryptSupplierName, getStorageInfo, 
 import { registerUser, loginUser, logoutUser, getCurrentUser, StoredUser } from './services/authService';
 // Firebase auth service
 import { registerWithFirebase, loginWithFirebase, logoutFromFirebase, onAuthChange, getUserData, UserData } from './firebase/authService';
+import { isInTestMode, getCurrentTestSession, endTestMode } from './services/testModeService';
 
 // Toggle Firebase mode - set to true to use Firebase
 const USE_FIREBASE = true;
@@ -808,6 +809,24 @@ const App: React.FC = () => {
                     setCurrentPage('landing');
                 }}
                 onNavigate={handleNavigate}
+                onStartTestMode={(plan, userType) => {
+                    // إنشاء مستخدم اختبار وهمي للوصول للصفحة
+                    const testUser: AuthUser = {
+                        name: userType === 'individual' ? 'مستخدم اختباري - أفراد' : userType === 'company' ? 'شركة اختبارية' : 'مورد اختباري',
+                        email: 'test@arba-sys.com',
+                        company: userType === 'company' ? 'شركة اختبارية' : undefined,
+                        plan: plan === 'professional' ? 'professional' : plan === 'pro' ? 'professional' : plan,
+                        usedProjects: 0,
+                        usedStorageMB: 0
+                    };
+                    setUser(testUser);
+                    // التنقل للصفحة المناسبة
+                    if (userType === 'supplier') {
+                        setCurrentPage('supplier');
+                    } else {
+                        setCurrentPage('dashboard');
+                    }
+                }}
             />
         );
     }
@@ -883,20 +902,54 @@ const App: React.FC = () => {
                             </div>
                         </div>
                         <button
-                            onClick={() => setCurrentPage(isManager ? 'manager' : 'employee')}
-                            className="flex items-center gap-2 px-4 py-2 bg-slate-700/50 text-slate-300 hover:bg-slate-700 rounded-lg transition-all"
+                            onClick={() => setCurrentPage('manager')}
+                            className="p-2 hover:bg-slate-700 rounded-lg text-slate-400 transition-colors"
                         >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            <span className="sr-only">{language === 'ar' ? 'عودة' : 'Back'}</span>
+                            <svg className="w-6 h-6 transform rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                             </svg>
-                            <span>{language === 'ar' ? 'رجوع' : 'Back'}</span>
                         </button>
                     </div>
                 </header>
-                <div className="p-6">
-                    <HRPage language={language} employee={hrEmployee} />
-                </div>
+                <main className="p-6">
+                    <HRPage
+                        language={language}
+                        employee={hrEmployee}
+                    />
+                </main>
             </div>
+        );
+    }
+
+    // Quantity Surveyor Page (accessed from Manager Dashboard)
+    if (currentPage === 'quantity_surveyor') {
+        const qsEmployee: Employee = currentEmployee || {
+            id: 'manager-view-qs',
+            employeeNumber: 'MGR-QS-001',
+            password: '',
+            name: isManager ? MANAGER_CREDENTIALS.name : 'مهندس الكميات',
+            email: 'qs@arba-sys.com',
+            phone: '0500000000',
+            role: 'quantity_surveyor',
+            isActive: true,
+            createdAt: new Date().toISOString()
+        };
+
+        return (
+            <QuantitySurveyorPage
+                language={language}
+                employee={qsEmployee}
+                onLogout={() => {
+                    if (isManager) {
+                        setCurrentPage('manager');
+                    } else {
+                        setUser(null);
+                        setCurrentEmployee(null);
+                        setCurrentPage('landing');
+                    }
+                }}
+            />
         );
     }
 
@@ -1118,6 +1171,41 @@ const App: React.FC = () => {
     // Dashboard (Protected)
     return (
         <div className={`flex h-screen bg-slate-100 font-sans overflow-hidden ${isRtl ? '' : 'flex-row-reverse'}`} dir={isRtl ? 'rtl' : 'ltr'}>
+
+            {/* Test Mode Banner - شريط وضع الاختبار */}
+            {isInTestMode() && (
+                <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-amber-500 to-orange-500 text-white py-2 px-4 flex items-center justify-between shadow-lg">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                            <AlertTriangle className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <span className="font-bold">
+                                {language === 'ar' ? '🧪 وضع الاختبار نشط' : '🧪 Test Mode Active'}
+                            </span>
+                            <span className="mx-2">|</span>
+                            <span>
+                                {language === 'ar'
+                                    ? `باقة: ${getCurrentTestSession()?.testingPackage.plan} - ${getCurrentTestSession()?.testingPackage.userType === 'individual' ? 'أفراد' : getCurrentTestSession()?.testingPackage.userType === 'company' ? 'شركات' : 'موردين'}`
+                                    : `Package: ${getCurrentTestSession()?.testingPackage.plan} - ${getCurrentTestSession()?.testingPackage.userType}`
+                                }
+                            </span>
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => {
+                            endTestMode();
+                            setCurrentPage('manager');
+                        }}
+                        className="px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors flex items-center gap-2"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        {language === 'ar' ? 'إنهاء الاختبار والعودة' : 'End Test & Return'}
+                    </button>
+                </div>
+            )}
 
             {/* Upgrade Modal */}
             {showUpgradeModal && (

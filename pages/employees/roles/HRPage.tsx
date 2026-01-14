@@ -56,6 +56,40 @@ const HRPage: React.FC<HRPageProps> = ({ language, employee }) => {
     const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
     const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
 
+    // حالة انتحال الصفة (المدير يعمل نيابة عن الموظف)
+    const [impersonationInfo, setImpersonationInfo] = useState<{
+        employeeId: string;
+        employeeNumber: string;
+        employeeName: string;
+        employeeRole: string;
+        impersonatedBy: string;
+        impersonatorName: string;
+        startedAt: string;
+    } | null>(null);
+
+    // التحقق من وجود انتحال صفة عند تحميل الصفحة
+    useEffect(() => {
+        const impersonationData = localStorage.getItem('arba_impersonating_employee');
+        if (impersonationData) {
+            try {
+                const data = JSON.parse(impersonationData);
+                if (data.employeeRole === 'hr') {
+                    setImpersonationInfo(data);
+                }
+            } catch (e) {
+                // تجاهل الخطأ
+            }
+        }
+    }, []);
+
+    // إنهاء انتحال الصفة
+    const endImpersonation = () => {
+        localStorage.removeItem('arba_impersonating_employee');
+        setImpersonationInfo(null);
+        // العودة لصفحة المدير
+        window.history.back();
+    };
+
     // Load employees
     useEffect(() => {
         employeeService.initializeSampleData();
@@ -1099,6 +1133,41 @@ const HRPage: React.FC<HRPageProps> = ({ language, employee }) => {
                 <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg shadow-lg z-50 ${notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
                     } text-white`}>
                     {notification.message}
+                </div>
+            )}
+
+            {/* شريط انتحال الصفة - عندما يعمل المدير نيابة عن موظف الموارد البشرية */}
+            {impersonationInfo && (
+                <div className="fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 px-4 flex items-center justify-between shadow-lg">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                            <Users className="w-6 h-6" />
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <span className="font-bold text-lg">
+                                    {t('🔐 وضع العمل نيابة عن موظف', '🔐 Working on Behalf of Employee')}
+                                </span>
+                            </div>
+                            <p className="text-white/80 text-sm">
+                                {t(
+                                    `${impersonationInfo.impersonatorName} يعمل نيابة عن ${impersonationInfo.employeeName}`,
+                                    `${impersonationInfo.impersonatorName} working as ${impersonationInfo.employeeName}`
+                                )}
+                                <span className="mx-2">•</span>
+                                <span className="text-white/70">
+                                    {t('جميع التعديلات ستُسجل باسم المدير', 'All changes will be logged under manager')}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={endImpersonation}
+                        className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors flex items-center gap-2"
+                    >
+                        <X className="w-4 h-4" />
+                        {t('إنهاء والعودة', 'End & Return')}
+                    </button>
                 </div>
             )}
 

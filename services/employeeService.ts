@@ -179,6 +179,15 @@ export interface Employee {
     lastLogin?: Date;
     passwordChangedAt?: Date;
     profileImage?: string;      // صورة الموظف
+
+    // صلاحيات وضع الاختبار
+    testModePermissions?: {
+        canTestCompanyPackages: boolean;
+        canTestIndividualPackages: boolean;
+        canTestSupplierPackages: boolean;
+        grantedBy: string;
+        grantedAt: string;
+    };
 }
 
 // بيانات المدير الافتراضية
@@ -522,18 +531,37 @@ class EmployeeService {
     // كلمة المرور الافتراضية = رقم الهوية الوطنية
     initializeSampleData(): void {
         const existing = this.getEmployees();
-        if (existing.length === 0) {
-            SAMPLE_EMPLOYEES.forEach(emp => {
+
+        SAMPLE_EMPLOYEES.forEach(sampleEmp => {
+            // التحقق مما إذا كان الموظف موجوداً مسبقاً
+            const exists = existing.some(e => e.employeeNumber === sampleEmp.employeeNumber);
+
+            if (!exists) {
                 try {
-                    this.addEmployee({
-                        ...emp as any,
-                        password: emp.nationalId // استخدام رقم الهوية ككلمة مرور
-                    });
+                    // إضافة الموظف إذا لم يكن موجوداً
+                    const newEmployee: Employee = {
+                        ...sampleEmp as any,
+                        id: crypto.randomUUID(),
+                        isActive: true,
+                        createdAt: new Date(),
+                        password: sampleEmp.nationalId, // استخدام رقم الهوية كافتراضي
+                        certificates: sampleEmp.certificates || [],
+                        experiences: sampleEmp.experiences || [],
+                        notes: sampleEmp.notes || [],
+                        warnings: sampleEmp.warnings || [],
+                        salary: sampleEmp.salary || DEFAULT_SALARY,
+                        contract: sampleEmp.contract || DEFAULT_CONTRACT
+                    };
+
+                    existing.push(newEmployee);
                 } catch (e) {
-                    // تجاهل الأخطاء
+                    console.error('Error adding sample employee:', sampleEmp.name, e);
                 }
-            });
-        }
+            }
+        });
+
+        // حفظ القائمة المحدثة
+        localStorage.setItem(this.storageKey, JSON.stringify(existing));
     }
 
     // الحصول على جميع الموظفين
