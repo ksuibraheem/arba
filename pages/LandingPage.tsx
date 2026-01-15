@@ -17,7 +17,8 @@ import {
     Check,
     Star,
     Globe,
-    Headphones
+    Headphones,
+    Eye
 } from 'lucide-react';
 import { COMPANY_INFO, SERVICES, FEATURES, SUBSCRIPTION_PLANS, PAGE_TRANSLATIONS } from '../companyData';
 
@@ -136,6 +137,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                             >
                                 {t('hero_cta')}
                                 <Arrow className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                            </button>
+                            <button
+                                onClick={() => onNavigate('demo')}
+                                className="group px-8 py-4 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-400 hover:to-indigo-400 text-white rounded-xl font-bold text-lg transition-all shadow-xl shadow-blue-500/30 flex items-center gap-2"
+                            >
+                                <Eye className="w-5 h-5" />
+                                {language === 'ar' ? 'استعرض البرنامج' : 'Preview Demo'}
                             </button>
                             <button
                                 onClick={() => onNavigate('about')}

@@ -13,6 +13,7 @@ interface ItemTableProps {
     isFreePlan?: boolean;
     encryptSupplierName?: (name: string, planId: string) => string;
     userPlan?: string;
+    isDemoMode?: boolean;
 }
 
 const SupplierBadge: React.FC<{ supplier: SupplierOption; language: Language; t: (k: string) => string; isFreePlan?: boolean }> = ({ supplier, language, t, isFreePlan }) => {
@@ -479,12 +480,18 @@ const NewItemForm: React.FC<{ onAdd: (item: BaseItem) => void; onCancel: () => v
     )
 }
 
-const ItemTable: React.FC<ItemTableProps> = ({ items, language, onParamChange, onCheckAI, onAddCustomItem, onDeleteCustomItem, isFreePlan, encryptSupplierName, userPlan }) => {
+const ItemTable: React.FC<ItemTableProps> = ({ items, language, onParamChange, onCheckAI, onAddCustomItem, onDeleteCustomItem, isFreePlan, encryptSupplierName, userPlan, isDemoMode = false }) => {
     const [isAdding, setIsAdding] = useState(false);
     const t = (key: string) => TRANSLATIONS[key]?.[language] || key;
 
+    // Filter items for demo mode - only show site (excavation) and structure (concrete)
+    const DEMO_ALLOWED_CATEGORIES = ['site', 'structure'];
+    const filteredItems = isDemoMode
+        ? items.filter(item => DEMO_ALLOWED_CATEGORIES.includes(item.category))
+        : items;
+
     // Sorting
-    const sortedItems = [...items].sort((a, b) => {
+    const sortedItems = [...filteredItems].sort((a, b) => {
         const order = { 'gov_fees': 1, 'site': 2, 'structure': 3, 'insulation': 4, 'architecture': 5, 'mep_elec': 6, 'mep_plumb': 7, 'mep_hvac': 8, 'safety': 9, 'custom': 10 };
         return (order[a.category] || 10) - (order[b.category] || 10);
     });
@@ -501,6 +508,28 @@ const ItemTable: React.FC<ItemTableProps> = ({ items, language, onParamChange, o
                             : 'Supplier names are encrypted in the free plan. Upgrade to view full names.'
                         }
                     </span>
+                </div>
+            )}
+            {/* Demo Mode Info */}
+            {isDemoMode && (
+                <div className="bg-blue-50 border-b border-blue-200 px-4 py-3 flex items-center gap-3">
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <Box className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                        <span className="text-sm font-medium text-blue-800">
+                            {language === 'ar'
+                                ? '👁️ وضع العرض التجريبي - يعرض بنود الحفر والخرسانة فقط'
+                                : '👁️ Demo Mode - Showing excavation and concrete items only'
+                            }
+                        </span>
+                        <p className="text-xs text-blue-600 mt-0.5">
+                            {language === 'ar'
+                                ? `يتم عرض ${sortedItems.length} بند من أصل ${items.length} - سجّل للوصول لجميع البنود`
+                                : `Showing ${sortedItems.length} items out of ${items.length} - Register to access all items`
+                            }
+                        </p>
+                    </div>
                 </div>
             )}
             <table className="w-full text-right">

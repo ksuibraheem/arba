@@ -43,7 +43,7 @@ import { isInTestMode, getCurrentTestSession, endTestMode } from './services/tes
 // Toggle Firebase mode - set to true to use Firebase
 const USE_FIREBASE = true;
 
-type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant' | 'password-reset' | 'cloud-sync' | 'support-center' | 'support' | 'developer' | 'marketing' | 'quality' | 'deputy' | 'supplier' | 'quantity_surveyor' | 'supplier-catalog';
+type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant' | 'password-reset' | 'cloud-sync' | 'support-center' | 'support' | 'developer' | 'marketing' | 'quality' | 'deputy' | 'supplier' | 'quantity_surveyor' | 'supplier-catalog' | 'demo';
 
 // مفتاح الوصول السري للوحة المدير - غيره لمفتاح خاص بك
 const ADMIN_SECRET_KEY = 'arba2025secure';
@@ -77,6 +77,8 @@ const App: React.FC = () => {
     const [registrationRequestId, setRegistrationRequestId] = useState<string | null>(null);
     const [pendingRegistrationEmail, setPendingRegistrationEmail] = useState<string>('');
     const [pendingRegistrationPhone, setPendingRegistrationPhone] = useState<string>('');
+    // Demo mode state
+    const [isDemoMode, setIsDemoMode] = useState(false);
 
     // Check for existing session on mount
     useEffect(() => {
@@ -184,11 +186,32 @@ const App: React.FC = () => {
 
     // Navigation Handler
     const handleNavigate = (page: string) => {
-        if (page === 'dashboard' && !user) {
+        if (page === 'dashboard' && !user && !isDemoMode) {
             setCurrentPage('login');
             return;
         }
+        // Handle demo mode
+        if (page === 'demo') {
+            setIsDemoMode(true);
+            setUser({
+                name: language === 'ar' ? 'زائر تجريبي' : 'Demo Visitor',
+                email: 'demo@arba-sys.com',
+                company: language === 'ar' ? 'شركة تجريبية' : 'Demo Company',
+                plan: 'free',
+                usedProjects: 0,
+                usedStorageMB: 0
+            });
+            setCurrentPage('dashboard');
+            return;
+        }
         setCurrentPage(page as PageRoute);
+    };
+
+    // Exit demo mode
+    const handleExitDemoMode = () => {
+        setIsDemoMode(false);
+        setUser(null);
+        setCurrentPage('landing');
     };
 
     // Auth Handlers
@@ -1207,6 +1230,52 @@ const App: React.FC = () => {
                 </div>
             )}
 
+            {/* Demo Mode Banner - شريط وضع العرض التجريبي */}
+            {isDemoMode && (
+                <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 px-4 flex items-center justify-between shadow-lg">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center animate-pulse">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <span className="font-bold">
+                                {language === 'ar' ? '👁️ وضع العرض التجريبي' : '👁️ Demo Preview Mode'}
+                            </span>
+                            <span className="mx-2">|</span>
+                            <span className="text-blue-100">
+                                {language === 'ar'
+                                    ? 'هذه بيانات تجريبية للمعاينة فقط - للتسجيل اضغط "إنشاء حساب"'
+                                    : 'This is demo data for preview only - Click "Sign Up" to register'
+                                }
+                            </span>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => {
+                                handleExitDemoMode();
+                                handleNavigate('register');
+                            }}
+                            className="px-4 py-1.5 bg-white text-blue-600 hover:bg-blue-50 rounded-lg font-bold transition-colors"
+                        >
+                            {language === 'ar' ? 'إنشاء حساب' : 'Sign Up'}
+                        </button>
+                        <button
+                            onClick={handleExitDemoMode}
+                            className="px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors flex items-center gap-2"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            {language === 'ar' ? 'إغلاق' : 'Close'}
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Upgrade Modal */}
             {showUpgradeModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -1246,7 +1315,7 @@ const App: React.FC = () => {
                 </div>
             )}
 
-            <Sidebar state={state} onChange={handleStateChange} />
+            <Sidebar state={state} onChange={handleStateChange} isDemoMode={isDemoMode} />
 
             <main className="flex-1 flex flex-col overflow-hidden">
 
@@ -1452,6 +1521,7 @@ const App: React.FC = () => {
                                 isFreePlan={isFreePlan}
                                 encryptSupplierName={encryptSupplierName}
                                 userPlan={user?.plan || 'free'}
+                                isDemoMode={isDemoMode}
                             />
                         </div>
                     </div>
