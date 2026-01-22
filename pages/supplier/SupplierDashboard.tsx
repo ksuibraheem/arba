@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Truck,
     Package,
@@ -41,11 +41,27 @@ import {
     UnitType,
     ApprovalStatus
 } from '../../services/supplierService';
+import SupplierServicesCatalogComponent from '../../components/SupplierServicesCatalog';
+import SupplierEmployeeManager from '../../components/SupplierEmployeeManager';
+import {
+    SupplierServicesCatalog as ServicesCatalogType,
+    SupplierEmployee,
+    createDefaultServicesCatalog
+} from '../../services/supplierManagementService';
+import {
+    getSupplierEmployees,
+    saveSupplierEmployees,
+    getSupplierServices,
+    saveSupplierServices,
+    initializeSupplierData
+} from '../../services/supplierStorageService';
 
 interface SupplierDashboardProps {
     language: 'ar' | 'en';
     onNavigate: (page: string) => void;
     onLogout: () => void;
+    isTestMode?: boolean;
+    supplierId?: string; // معرف المورد للتخزين
 }
 
 interface Product {
@@ -94,13 +110,51 @@ interface QuoteRequest {
     total: number;
 }
 
-const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavigate, onLogout }) => {
+const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavigate, onLogout, isTestMode = false, supplierId = 'demo_supplier' }) => {
     const isRtl = language === 'ar';
     const Arrow = isRtl ? ArrowRight : ArrowLeft;
-    const [activeTab, setActiveTab] = useState<'overview' | 'categories' | 'products' | 'sales' | 'rentals' | 'quotes' | 'analytics' | 'promotions' | 'settings'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'categories' | 'products' | 'sales' | 'rentals' | 'quotes' | 'analytics' | 'promotions' | 'services' | 'employees' | 'settings'>('overview');
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [showCreatePromotion, setShowCreatePromotion] = useState(false);
     const [selectedProductForPromo, setSelectedProductForPromo] = useState<Product | null>(null);
+
+    // Services Catalog State
+    const [servicesCatalog, setServicesCatalog] = useState<ServicesCatalogType>(createDefaultServicesCatalog());
+
+    // Employees State
+    const [employees, setEmployees] = useState<SupplierEmployee[]>([]);
+
+    // تحميل بيانات المورد عند فتح الصفحة
+    useEffect(() => {
+        if (supplierId && !isTestMode) {
+            // تهيئة بيانات المورد إذا لم تكن موجودة
+            initializeSupplierData(supplierId);
+
+            // تحميل الموظفين
+            const loadedEmployees = getSupplierEmployees(supplierId);
+            setEmployees(loadedEmployees);
+
+            // تحميل الخدمات
+            const loadedServices = getSupplierServices(supplierId);
+            setServicesCatalog(loadedServices);
+
+            console.log(`✅ تم تحميل بيانات المورد: ${supplierId}`);
+        }
+    }, [supplierId, isTestMode]);
+
+    // حفظ الموظفين عند التغيير
+    useEffect(() => {
+        if (supplierId && !isTestMode && employees.length >= 0) {
+            saveSupplierEmployees(supplierId, employees);
+        }
+    }, [employees, supplierId, isTestMode]);
+
+    // حفظ الخدمات عند التغيير
+    useEffect(() => {
+        if (supplierId && !isTestMode) {
+            saveSupplierServices(supplierId, servicesCatalog);
+        }
+    }, [servicesCatalog, supplierId, isTestMode]);
 
     // Product Categories
     const productCategories = [
@@ -227,7 +281,9 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
         rentalPeriod: { ar: 'فترة التأجير', en: 'Rental Period' },
         deposit: { ar: 'التأمين', en: 'Deposit' },
         minDuration: { ar: 'أقل مدة', en: 'Min Duration' },
-        availableForRent: { ar: 'متاح للتأجير', en: 'Available' }
+        availableForRent: { ar: 'متاح للتأجير', en: 'Available' },
+        services: { ar: 'الخدمات', en: 'Services' },
+        employees: { ar: 'الموظفين', en: 'Employees' }
     };
 
     const getLabel = (key: keyof typeof t) => t[key][language];
@@ -252,17 +308,34 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" dir={isRtl ? 'rtl' : 'ltr'}>
+            {/* Fixed Test Mode Banner - doesn't affect page layout */}
+            {isTestMode && (
+                <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-[100] pointer-events-none">
+                    <div className="pointer-events-auto bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 text-white px-6 py-2 rounded-full shadow-lg flex items-center gap-3 animate-pulse">
+                        <span className="text-lg">🧪</span>
+                        <span className="font-bold text-sm">
+                            {language === 'ar' ? 'وضع الاختبار - شبكة الموردين' : 'Test Mode - Supplier Network'}
+                        </span>
+                        <button
+                            onClick={() => onNavigate('manager')}
+                            className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full text-xs font-medium transition-colors"
+                        >
+                            {language === 'ar' ? 'إنهاء' : 'End'}
+                        </button>
+                    </div>
+                </div>
+            )}
             {/* Header */}
             <header className="bg-slate-800/50 backdrop-blur-xl border-b border-slate-700/50 sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto px-6 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <button
-                                onClick={() => onNavigate('landing')}
+                                onClick={() => onNavigate(isTestMode ? 'manager' : 'landing')}
                                 className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
                             >
                                 <Arrow className="w-5 h-5" />
-                                <span className="hidden sm:inline">{getLabel('backHome')}</span>
+                                <span className="hidden sm:inline">{isTestMode ? (language === 'ar' ? 'إنهاء الاختبار' : 'End Test') : getLabel('backHome')}</span>
                             </button>
                             <div className="h-6 w-px bg-slate-600"></div>
                             <div className="flex items-center gap-3">
@@ -298,7 +371,7 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
             <div className="max-w-7xl mx-auto px-6 py-8">
                 {/* Tabs */}
                 <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
-                    {(['overview', 'categories', 'sales', 'rentals', 'products', 'quotes', 'analytics', 'promotions', 'settings'] as const).map((tab) => (
+                    {(['overview', 'categories', 'sales', 'rentals', 'products', 'quotes', 'services', 'employees', 'analytics', 'promotions', 'settings'] as const).map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
@@ -309,6 +382,8 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                         >
                             {tab === 'sales' && <ShoppingCart className="w-4 h-4" />}
                             {tab === 'rentals' && <Wrench className="w-4 h-4" />}
+                            {tab === 'services' && <Truck className="w-4 h-4" />}
+                            {tab === 'employees' && <Users className="w-4 h-4" />}
                             {tab === 'analytics' && <BarChart2 className="w-4 h-4" />}
                             {tab === 'promotions' && <Megaphone className="w-4 h-4" />}
                             {getLabel(tab)}
@@ -1069,6 +1144,26 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                             </div>
                         </div>
                     </div>
+                )}
+
+                {/* Services Tab */}
+                {activeTab === 'services' && (
+                    <SupplierServicesCatalogComponent
+                        language={language}
+                        services={servicesCatalog}
+                        onUpdate={setServicesCatalog}
+                        readOnly={isTestMode}
+                    />
+                )}
+
+                {/* Employees Tab */}
+                {activeTab === 'employees' && (
+                    <SupplierEmployeeManager
+                        language={language}
+                        employees={employees}
+                        onUpdate={setEmployees}
+                        readOnly={isTestMode}
+                    />
                 )}
             </div>
         </div>

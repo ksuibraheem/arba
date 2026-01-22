@@ -23,7 +23,7 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
     const isRtl = language === 'ar';
     const Arrow = isRtl ? ArrowLeft : ArrowRight;
 
-    const [step, setStep] = useState<'email' | 'phone' | 'complete'>('email');
+    const [step, setStep] = useState<'email' | 'complete'>('email');
     // Changed to 4-digit codes
     const [emailCode, setEmailCode] = useState(['', '', '', '']);
     const [phoneCode, setPhoneCode] = useState(['', '', '', '']);
@@ -131,20 +131,11 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
             if (type === 'email') {
                 const result = registrationService.verifyEmailCode(registrationRequestId, fullCode);
                 if (result.success) {
-                    setStep('phone');
-                    setResendTimer(60);
-                    setCanResend(false);
-                    setCodeExpiryTimer(300); // Reset timer for phone code
-                } else {
-                    setError(result.error || (language === 'ar' ? 'الرمز غير صحيح' : 'Invalid code'));
-                }
-            } else {
-                const result = registrationService.verifyPhoneCode(registrationRequestId, fullCode);
-                if (result.success) {
+                    // Email verified - go directly to complete (skip phone)
                     setStep('complete');
-                    if (onVerificationComplete && result.nextStep) {
+                    if (onVerificationComplete) {
                         setTimeout(() => {
-                            onVerificationComplete(result.nextStep!);
+                            onVerificationComplete('payment-upload');
                         }, 2000);
                     }
                 } else {
@@ -154,18 +145,12 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
         } else {
             // Demo mode - accept any 4-digit code
             await new Promise(resolve => setTimeout(resolve, 1500));
-            if (type === 'email') {
-                setStep('phone');
-                setResendTimer(60);
-                setCanResend(false);
-                setCodeExpiryTimer(300);
-            } else {
-                setStep('complete');
-                if (onVerificationComplete) {
-                    setTimeout(() => {
-                        onVerificationComplete('dashboard');
-                    }, 2000);
-                }
+            // Email verified - go directly to complete (skip phone)
+            setStep('complete');
+            if (onVerificationComplete) {
+                setTimeout(() => {
+                    onVerificationComplete('dashboard');
+                }, 2000);
             }
         }
 
@@ -246,34 +231,29 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
                     ) : (
                         /* Verification Steps */
                         <>
-                            {/* Progress Indicator */}
+                            {/* Progress Indicator - Now single step (Email only) */}
                             <div className="flex items-center justify-center gap-2 mb-8">
-                                <div className={`w-3 h-3 rounded-full ${step === 'email' ? 'bg-emerald-500' : 'bg-emerald-500'}`} />
-                                <div className={`w-12 h-1 rounded ${step === 'phone' ? 'bg-emerald-500' : 'bg-slate-200'}`} />
-                                <div className={`w-3 h-3 rounded-full ${step === 'phone' ? 'bg-emerald-500' : 'bg-slate-200'}`} />
+                                <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                                <div className="w-12 h-1 rounded bg-slate-200" />
+                                <div className="w-3 h-3 rounded-full bg-slate-200" />
                             </div>
 
-                            {/* Step Icon */}
+                            {/* Step Icon - Email only now */}
                             <div className="flex justify-center mb-6">
-                                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${step === 'email' ? 'bg-blue-100' : 'bg-green-100'
-                                    }`}>
-                                    {step === 'email' ? (
-                                        <Mail className="w-8 h-8 text-blue-500" />
-                                    ) : (
-                                        <Phone className="w-8 h-8 text-green-500" />
-                                    )}
+                                <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-blue-100">
+                                    <Mail className="w-8 h-8 text-blue-500" />
                                 </div>
                             </div>
 
-                            {/* Title */}
+                            {/* Title - Email only */}
                             <h2 className="text-xl font-bold text-slate-800 text-center mb-2">
-                                {step === 'email' ? t('verification_email_title') : t('verification_phone_title')}
+                                {t('verification_email_title')}
                             </h2>
                             <p className="text-slate-500 text-center mb-4">
                                 {language === 'ar' ? 'أدخل الرمز المكون من 4 أرقام المرسل إلى' : 'Enter the 4-digit code sent to'}
                                 <br />
                                 <span className="font-medium text-slate-700" dir="ltr">
-                                    {step === 'email' ? email : phone}
+                                    {email}
                                 </span>
                             </p>
 
@@ -288,12 +268,9 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
                                 </div>
                             </div>
 
-                            {/* Code Inputs - Now 4 digits */}
+                            {/* Code Inputs - Now 4 digits (Email only) */}
                             <div className="mb-4">
-                                {step === 'email'
-                                    ? renderCodeInputs(emailCode, setEmailCode, emailInputRefs)
-                                    : renderCodeInputs(phoneCode, setPhoneCode, phoneInputRefs)
-                                }
+                                {renderCodeInputs(emailCode, setEmailCode, emailInputRefs)}
                             </div>
 
                             {/* Test Code Display - For testing purposes */}

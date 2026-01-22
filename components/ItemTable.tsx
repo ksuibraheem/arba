@@ -73,7 +73,12 @@ const ItemRow: React.FC<{
     const currency = t('currency');
 
     const formatCurrency = (val: number) => {
-        return new Intl.NumberFormat(language === 'ar' ? 'ar-SA' : 'en-US').format(val) + ' ' + currency;
+        // استخدام تنسيق: فاصلة للآلاف (,) ونقطة للهللات (.)
+        // مثال: 100,955.26
+        return new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(val) + ' ' + currency;
     };
 
     const isGov = item.category === 'gov_fees';

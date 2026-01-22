@@ -34,6 +34,33 @@ const PriceQuote: React.FC<PriceQuoteProps> = ({
     const [showSuppliers, setShowSuppliers] = useState(true);
     const [notes, setNotes] = useState('');
     const [showSettings, setShowSettings] = useState(false);
+    const [showPrintMenu, setShowPrintMenu] = useState(false);
+
+    // بيانات الشركة المسجلة (يتم جلبها من localStorage أو السياق)
+    const getLoggedInCompany = () => {
+        try {
+            const userData = localStorage.getItem('currentUser');
+            if (userData) {
+                const user = JSON.parse(userData);
+                return {
+                    name: user.companyName || 'اسم الشركة',
+                    phone: user.phone || '05xxxxxxxx',
+                    email: user.email || 'info@company.com',
+                    cr: user.commercialRegister || 'xxxxxxxxxx',
+                    vat: user.vatNumber || 'xxxxxxxxxx',
+                    address: user.address || 'المملكة العربية السعودية'
+                };
+            }
+        } catch (e) { }
+        return {
+            name: 'شركة العميل',
+            phone: '05xxxxxxxx',
+            email: 'info@company.com',
+            cr: '1010xxxxxx',
+            vat: '3xxxxxxxxxx',
+            address: 'المملكة العربية السعودية'
+        };
+    };
 
     const t = {
         title: { ar: 'عرض سعر', en: 'Price Quotation' },
@@ -89,7 +116,9 @@ const PriceQuote: React.FC<PriceQuoteProps> = ({
         supplier: { ar: 'المورد', en: 'Supplier' },
         alternative: { ar: 'البديل الأرخص', en: 'Cheaper Alternative' },
         noItems: { ar: 'لا توجد بنود نشطة', en: 'No active items' },
-        category: { ar: 'التصنيف', en: 'Category' }
+        category: { ar: 'التصنيف', en: 'Category' },
+        printArba: { ar: 'طباعة (آربا للتسعير)', en: 'Print (Arba Pricing)' },
+        printCompany: { ar: 'طباعة (بيانات الشركة)', en: 'Print (Company Info)' }
     };
 
     const getLabel = (key: string) => t[key as keyof typeof t]?.[language] || key;
@@ -128,41 +157,372 @@ const PriceQuote: React.FC<PriceQuoteProps> = ({
         general: { ar: 'عام', en: 'General' }
     };
 
-    const handlePrint = () => {
-        window.print();
+    const handlePrint = (printType: 'arba' | 'company') => {
+        // تحديد بيانات الشركة بناءً على نوع الطباعة
+        const companyData = printType === 'arba'
+            ? {
+                name: COMPANY_INFO.systemName[language],
+                tagline: COMPANY_INFO.tagline[language],
+                logo: 'أ',
+                color: '#059669',
+                phone: COMPANY_INFO.phone,
+                email: COMPANY_INFO.email,
+                cr: '',
+                vat: ''
+            }
+            : (() => {
+                const c = getLoggedInCompany();
+                return {
+                    name: c.name,
+                    tagline: c.address,
+                    logo: c.name.charAt(0),
+                    color: '#1e40af',
+                    phone: c.phone,
+                    email: c.email,
+                    cr: c.cr,
+                    vat: c.vat
+                };
+            })();
+
+        // إنشاء محتوى HTML للطباعة
+        const printContent = `
+        <!DOCTYPE html>
+        <html dir="rtl" lang="ar">
+        <head>
+            <meta charset="UTF-8">
+            <title>عرض سعر - ${quoteNumber}</title>
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body { 
+                    font-family: 'Segoe UI', Tahoma, sans-serif;
+                    padding: 15mm;
+                    background: white;
+                    color: #1e293b;
+                    direction: rtl;
+                    font-size: 11pt;
+                }
+                .header { 
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                    border-bottom: 3px solid ${companyData.color};
+                    padding-bottom: 15px;
+                    margin-bottom: 20px;
+                }
+                .logo { 
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+                .logo-icon {
+                    width: 50px;
+                    height: 50px;
+                    background: ${companyData.color};
+                    border-radius: 10px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-weight: bold;
+                    font-size: 20px;
+                }
+                .company-name { font-size: 20px; font-weight: bold; color: #1e293b; }
+                .tagline { font-size: 11px; color: #64748b; }
+                .company-details { font-size: 9px; color: #64748b; margin-top: 5px; }
+                .quote-title { text-align: left; }
+                .quote-title h1 { font-size: 24px; color: ${companyData.color}; margin-bottom: 5px; }
+                .quote-info { font-size: 10px; color: #64748b; }
+                
+                .project-info {
+                    background: #f8fafc;
+                    padding: 12px;
+                    border-radius: 8px;
+                    margin-bottom: 20px;
+                    display: grid;
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 15px;
+                }
+                .info-item label { font-size: 9px; color: #64748b; display: block; }
+                .info-item span { font-weight: bold; color: #1e293b; }
+                
+                table { 
+                    width: 100%; 
+                    border-collapse: collapse; 
+                    margin-bottom: 20px;
+                    font-size: 10pt;
+                }
+                th { 
+                    background: #1e293b; 
+                    color: white; 
+                    padding: 8px 6px;
+                    text-align: right;
+                    font-size: 9pt;
+                }
+                td { 
+                    padding: 6px;
+                    border-bottom: 1px solid #e2e8f0;
+                }
+                tr:nth-child(even) { background: #f8fafc; }
+                .category-row { background: #f1f5f9 !important; font-weight: bold; }
+                .number { text-align: center; }
+                .price { text-align: left; font-weight: 500; }
+                
+                .totals {
+                    margin-top: 20px;
+                    margin-right: auto;
+                    width: 300px;
+                }
+                .total-row {
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 8px 0;
+                    border-bottom: 1px solid #e2e8f0;
+                }
+                .final-total {
+                    background: ${companyData.color};
+                    color: white;
+                    padding: 12px;
+                    border-radius: 8px;
+                    font-weight: bold;
+                    font-size: 14pt;
+                }
+                
+                .amount-words {
+                    background: #fef3c7;
+                    border: 1px solid #fcd34d;
+                    padding: 12px;
+                    border-radius: 8px;
+                    margin: 20px 0;
+                }
+                .amount-words label { font-size: 10px; color: #92400e; }
+                .amount-words span { font-weight: bold; color: #78350f; font-size: 13pt; }
+                
+                .signatures {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 50px;
+                    margin-top: 40px;
+                    padding-top: 20px;
+                    border-top: 1px solid #e2e8f0;
+                }
+                .signature { text-align: center; }
+                .signature-label { font-size: 10px; color: #64748b; margin-bottom: 40px; }
+                .signature-line { border-top: 1px solid #cbd5e1; padding-top: 5px; }
+                
+                @page { size: A4; margin: 10mm; }
+                @media print { body { padding: 0; } }
+            </style>
+        </head>
+        <body>
+            <!-- Header -->
+            <div class="header">
+                <div class="logo">
+                    <div class="logo-icon">${companyData.logo}</div>
+                    <div>
+                        <div class="company-name">${companyData.name}</div>
+                        <div class="tagline">${companyData.tagline}</div>
+                        ${printType === 'company' ? `
+                        <div class="company-details">
+                            هاتف: ${companyData.phone} | البريد: ${companyData.email}<br>
+                            ${companyData.cr ? `سجل تجاري: ${companyData.cr} | ` : ''}${companyData.vat ? `الرقم الضريبي: ${companyData.vat}` : ''}
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+                <div class="quote-title">
+                    <h1>${getLabel('title')}</h1>
+                    <div class="quote-info">
+                        <div>${getLabel('quoteNumber')}: ${quoteNumber}</div>
+                        <div>${getLabel('date')}: ${formatDate(today)}</div>
+                        <div>${getLabel('validUntil')}: ${formatDate(validUntil)}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Project Info -->
+            <div class="project-info">
+                <div class="info-item">
+                    <label>${getLabel('projectType')}</label>
+                    <span>${projectTypeLabels[state.projectType]?.[language] || state.projectType}</span>
+                </div>
+                <div class="info-item">
+                    <label>${getLabel('plotArea')}</label>
+                    <span>${formatNumber(plotArea, 0, language)} ${getLabel('sqm')}</span>
+                </div>
+                <div class="info-item">
+                    <label>${getLabel('buildingArea')}</label>
+                    <span>${formatNumber(totalBuildArea, 0, language)} ${getLabel('sqm')}</span>
+                </div>
+                <div class="info-item">
+                    <label>${getLabel('floors')}</label>
+                    <span>${state.blueprint.floors.length}</span>
+                </div>
+            </div>
+            
+            <!-- Pricing Table -->
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width:30px">م</th>
+                        <th>البند</th>
+                        <th style="width:100px">المورد</th>
+                        <th style="width:50px">الوحدة</th>
+                        <th style="width:60px" class="number">الكمية</th>
+                        <th style="width:80px" class="price">سعر الوحدة</th>
+                        <th style="width:90px" class="price">الإجمالي</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${activeItems.map((item, index) => `
+                        <tr>
+                            <td class="number">${index + 1}</td>
+                            <td>${item.displayName}</td>
+                            <td>${item.selectedSupplier?.name?.[language] || '-'}</td>
+                            <td class="number">${item.unit}</td>
+                            <td class="number">${item.qty.toFixed(2)}</td>
+                            <td class="price">${item.finalUnitPrice.toFixed(2)}</td>
+                            <td class="price">${item.totalLinePrice.toFixed(2)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+            
+            <!-- Totals -->
+            <div class="totals">
+                <div class="total-row">
+                    <span>${getLabel('directCost')}</span>
+                    <span>${totals.totalDirect.toFixed(2)} ر.س</span>
+                </div>
+                ${showProfitDetails ? `
+                <div class="total-row">
+                    <span>${getLabel('overhead')} (10%)</span>
+                    <span>${totals.totalOverhead.toFixed(2)} ر.س</span>
+                </div>
+                <div class="total-row">
+                    <span>${getLabel('profit')} (15%)</span>
+                    <span>${totals.totalProfit.toFixed(2)} ر.س</span>
+                </div>
+                ` : ''}
+                <div class="total-row final-total">
+                    <span>${getLabel('finalTotal')}</span>
+                    <span>${totals.finalPrice.toFixed(2)} ر.س</span>
+                </div>
+            </div>
+            
+            <!-- Amount in Words -->
+            <div class="amount-words">
+                <label>${getLabel('amountInWords')}:</label><br>
+                <span>${language === 'ar' ? numberToArabicWords(totals.finalPrice) : formatCurrency(totals.finalPrice, language)}</span>
+            </div>
+            
+            <!-- Signatures -->
+            <div class="signatures">
+                <div class="signature">
+                    <div class="signature-label">${getLabel('preparedBy')}</div>
+                    <div class="signature-line">${companyData.name}</div>
+                </div>
+                <div class="signature">
+                    <div class="signature-label">${getLabel('clientSignature')}</div>
+                    <div class="signature-line">________________</div>
+                </div>
+            </div>
+        </body>
+        </html>
+        `;
+
+        // فتح نافذة جديدة للطباعة
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            printWindow.onload = () => {
+                printWindow.print();
+            };
+        }
     };
 
     const handleExportExcel = () => {
-        // Create CSV content
-        const headers = ['#', getLabel('item'), getLabel('unit'), getLabel('quantity'), getLabel('unitPrice'), getLabel('total')];
-        const rows = activeItems.map((item, index) => [
-            index + 1,
-            item.displayName,
-            item.unit,
-            item.qty.toFixed(2),
-            item.finalUnitPrice.toFixed(2),
-            item.totalLinePrice.toFixed(2)
-        ]);
+        // إنشاء وصف تفصيلي لكل بند
+        const generateItemDescription = (item: CalculatedItem) => {
+            const specs: string[] = [];
+            if (item.activeParams?.excavationDepth) specs.push(`عمق الحفر: ${item.activeParams.excavationDepth} م`);
+            if (item.activeParams?.subsidenceRatio) specs.push(`نسبة الهبوط: ${Math.round(item.activeParams.subsidenceRatio * 100)}%`);
+            if (item.activeParams?.backfillDensity) specs.push(`كثافة الردم: ${item.activeParams.backfillDensity} كجم/م³`);
+            if (item.activeParams?.compactionLayers) specs.push(`طبقات الدمك: ${item.activeParams.compactionLayers}`);
+            if (item.activeParams?.thickness) specs.push(`السماكة: ${item.activeParams.thickness} سم`);
+            if (item.activeParams?.steelRatio) specs.push(`نسبة الحديد: ${item.activeParams.steelRatio} كجم/م³`);
+            if (item.activeParams?.depth) specs.push(`العمق: ${item.activeParams.depth} م`);
+            if (item.activeParams?.cementContent) specs.push(`محتوى الأسمنت: ${item.activeParams.cementContent} كيس/م³`);
+            if (item.category === 'site') specs.push('التطبيق ضمن حدود الموقع');
+            if (item.category === 'structure') specs.push('وفق كود البناء السعودي');
+            return specs.length > 0 ? specs.join(' | ') : '-';
+        };
 
-        // Add totals
-        rows.push(['', '', '', '', getLabel('directCost'), totals.totalDirect.toFixed(2)]);
-        if (showProfitDetails) {
-            rows.push(['', '', '', '', getLabel('overhead'), totals.totalOverhead.toFixed(2)]);
-            rows.push(['', '', '', '', getLabel('profit'), totals.totalProfit.toFixed(2)]);
-        }
-        rows.push(['', '', '', '', getLabel('finalTotal'), totals.finalPrice.toFixed(2)]);
+        // بناء جدول HTML
+        let html = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
+        <head><meta charset="UTF-8"></head>
+        <body dir="rtl">
+        <table border="1" style="border-collapse: collapse;">
+            <tr><td colspan="10" style="font-weight:bold; background:#1e40af; color:white; font-size:16px; text-align:center;">عرض سعر - ${quoteNumber}</td></tr>
+            <tr><td colspan="10"></td></tr>
+            <tr><td style="font-weight:bold;">معلومات المشروع</td><td colspan="9"></td></tr>
+            <tr><td>نوع المشروع</td><td>${projectTypeLabels[state.projectType]?.[language] || state.projectType}</td><td colspan="8"></td></tr>
+            <tr><td>مساحة الأرض</td><td>${plotArea} م²</td><td colspan="8"></td></tr>
+            <tr><td>مساحة البناء</td><td>${totalBuildArea} م²</td><td colspan="8"></td></tr>
+            <tr><td>عدد الطوابق</td><td>${state.blueprint.floors.length}</td><td colspan="8"></td></tr>
+            <tr><td>التاريخ</td><td>${formatDate(today)}</td><td colspan="8"></td></tr>
+            <tr><td colspan="10"></td></tr>
+            <tr style="background:#1e40af; color:white; font-weight:bold;">
+                <td>م</td>
+                <td>البند</td>
+                <td>الوصف التفصيلي</td>
+                <td>التصنيف</td>
+                <td>كود SBC</td>
+                <td>المورد</td>
+                <td>الوحدة</td>
+                <td>الكمية</td>
+                <td>سعر الوحدة</td>
+                <td>الإجمالي</td>
+            </tr>`;
 
-        const csvContent = [
-            headers.join(','),
-            ...rows.map(row => row.join(','))
-        ].join('\n');
+        // إضافة البنود
+        activeItems.forEach((item, index) => {
+            const categoryLabel = categoryLabels[item.category]?.[language] || item.category;
+            const supplierName = item.selectedSupplier?.name?.[language] || '-';
+            const specs = generateItemDescription(item);
+            const bgColor = index % 2 === 0 ? '#ffffff' : '#f1f5f9';
 
-        // Add BOM for Arabic support
-        const BOM = '\uFEFF';
-        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
+            html += `
+            <tr style="background:${bgColor};">
+                <td>${index + 1}</td>
+                <td>${item.displayName}</td>
+                <td>${specs}</td>
+                <td>${categoryLabel}</td>
+                <td>${item.sbc || '-'}</td>
+                <td>${supplierName}</td>
+                <td>${item.unit}</td>
+                <td>${item.qty.toFixed(2)}</td>
+                <td>${item.finalUnitPrice.toFixed(2)}</td>
+                <td>${item.totalLinePrice.toFixed(2)}</td>
+            </tr>`;
+        });
+
+        // إضافة الإجماليات
+        html += `
+            <tr><td colspan="10"></td></tr>
+            <tr><td colspan="8"></td><td style="font-weight:bold;">التكلفة المباشرة</td><td style="font-weight:bold;">${totals.totalDirect.toFixed(2)}</td></tr>
+            <tr><td colspan="8"></td><td>المصاريف الإدارية (10%)</td><td>${totals.totalOverhead.toFixed(2)}</td></tr>
+            <tr><td colspan="8"></td><td>الربح (15%)</td><td>${totals.totalProfit.toFixed(2)}</td></tr>
+            <tr style="background:#059669; color:white;"><td colspan="8"></td><td style="font-weight:bold;">الإجمالي النهائي</td><td style="font-weight:bold; font-size:14px;">${totals.finalPrice.toFixed(2)}</td></tr>
+        </table>
+        </body>
+        </html>`;
+
+        const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = `price_quote_${quoteNumber}.csv`;
+        link.download = `عرض_سعر_${quoteNumber}.xls`;
         link.click();
     };
 
@@ -200,14 +560,34 @@ const PriceQuote: React.FC<PriceQuoteProps> = ({
                             <FileSpreadsheet className="w-4 h-4" />
                             {getLabel('exportExcel')}
                         </button>
-                        {/* Print PDF */}
-                        <button
-                            onClick={handlePrint}
-                            className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors"
-                        >
-                            <Printer className="w-4 h-4" />
-                            {getLabel('print')}
-                        </button>
+                        {/* Print PDF - Dropdown */}
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowPrintMenu(!showPrintMenu)}
+                                className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors"
+                            >
+                                <Printer className="w-4 h-4" />
+                                {getLabel('print')}
+                            </button>
+                            {showPrintMenu && (
+                                <div className="absolute top-full left-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 min-w-[200px]">
+                                    <button
+                                        onClick={() => { handlePrint('arba'); setShowPrintMenu(false); }}
+                                        className="w-full text-right px-4 py-3 hover:bg-slate-100 flex items-center gap-2 border-b border-slate-100"
+                                    >
+                                        <Building2 className="w-4 h-4 text-emerald-500" />
+                                        {getLabel('printArba')}
+                                    </button>
+                                    <button
+                                        onClick={() => { handlePrint('company'); setShowPrintMenu(false); }}
+                                        className="w-full text-right px-4 py-3 hover:bg-slate-100 flex items-center gap-2"
+                                    >
+                                        <FileText className="w-4 h-4 text-blue-500" />
+                                        {getLabel('printCompany')}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                         <button
                             onClick={onClose}
                             className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
@@ -262,7 +642,7 @@ const PriceQuote: React.FC<PriceQuoteProps> = ({
                 )}
 
                 {/* Printable Content */}
-                <div ref={printRef} className="p-8 print:p-4" dir={isRtl ? 'rtl' : 'ltr'}>
+                <div ref={printRef} className="p-8 print:p-4 print-content" dir={isRtl ? 'rtl' : 'ltr'}>
                     {/* Header */}
                     <div className="flex items-start justify-between mb-8 pb-6 border-b-4 border-emerald-500">
                         {showCompanyInfo && (
@@ -510,25 +890,58 @@ const PriceQuote: React.FC<PriceQuoteProps> = ({
             {/* Print Styles */}
             <style>{`
                 @media print {
-                    body * {
-                        visibility: hidden;
+                    /* إخفاء Modal overlay والأزرار */
+                    .fixed.inset-0.bg-black\\/50 {
+                        background: white !important;
+                        position: static !important;
+                        padding: 0 !important;
                     }
-                    .print\\:hidden {
+                    
+                    /* إخفاء Toolbar */
+                    .sticky.top-0.bg-white.border-b {
                         display: none !important;
                     }
+                    
+                    /* إزالة max-height وoverflow من الحاوية */
+                    .bg-white.rounded-2xl.shadow-2xl {
+                        max-height: none !important;
+                        overflow: visible !important;
+                        box-shadow: none !important;
+                        border-radius: 0 !important;
+                    }
+                    
+                    /* إخفاء العناصر غير المطلوبة */
+                    .print\\:hidden,
+                    button {
+                        display: none !important;
+                    }
+                    
+                    /* إظهار العناصر المخفية في الطباعة */
                     .hidden.print\\:block {
                         display: block !important;
                     }
-                    #root {
-                        visibility: visible;
-                        position: absolute;
-                        left: 0;
-                        top: 0;
-                        width: 100%;
+                    
+                    /* تنسيق المحتوى */
+                    .print-content {
+                        padding: 10mm !important;
                     }
+                    
+                    /* حجم الصفحة */
                     @page {
                         size: A4;
-                        margin: 10mm;
+                        margin: 5mm;
+                    }
+                    
+                    /* تنسيق الجداول */
+                    table {
+                        page-break-inside: auto;
+                        font-size: 10pt;
+                    }
+                    tr {
+                        page-break-inside: avoid;
+                    }
+                    thead {
+                        display: table-header-group;
                     }
                 }
             `}</style>

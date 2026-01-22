@@ -29,6 +29,7 @@ import CloudSyncPage from './pages/CloudSyncPage';
 import SupplierDashboard from './pages/supplier/SupplierDashboard';
 import QuantitySurveyorPage from './pages/employees/roles/QuantitySurveyorPage';
 import SupplierCatalog from './pages/SupplierCatalog';
+import SuppliersManagementPage from './pages/admin/SuppliersManagementPage';
 import { AppState, CalculatedItem, ProjectType, CustomParams, BlueprintConfig, SurfaceLocation, RoomFinishes, BaseItem } from './types';
 import { INITIAL_OVERHEAD, PROJECT_DEFAULTS, PROJECT_TITLES, TRANSLATIONS } from './constants';
 import { calculateProjectCosts } from './utils/calculations';
@@ -43,12 +44,13 @@ import { isInTestMode, getCurrentTestSession, endTestMode } from './services/tes
 // Toggle Firebase mode - set to true to use Firebase
 const USE_FIREBASE = true;
 
-type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant' | 'password-reset' | 'cloud-sync' | 'support-center' | 'support' | 'developer' | 'marketing' | 'quality' | 'deputy' | 'supplier' | 'quantity_surveyor' | 'supplier-catalog' | 'demo';
+type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant' | 'password-reset' | 'cloud-sync' | 'support-center' | 'support' | 'developer' | 'marketing' | 'quality' | 'deputy' | 'supplier' | 'quantity_surveyor' | 'supplier-catalog' | 'admin-suppliers' | 'demo';
 
 // مفتاح الوصول السري للوحة المدير - غيره لمفتاح خاص بك
 const ADMIN_SECRET_KEY = 'arba2025secure';
 
 interface AuthUser {
+    uid?: string; // معرف المستخدم الفريد
     name: string;
     email: string;
     company?: string;
@@ -56,6 +58,7 @@ interface AuthUser {
     plan: string;
     usedProjects: number;
     usedStorageMB: number;
+    userType?: 'individual' | 'company' | 'supplier' | 'employee';
 }
 
 const App: React.FC = () => {
@@ -89,14 +92,21 @@ const App: React.FC = () => {
                     const userData = await getUserData(firebaseUser.uid);
                     if (userData) {
                         setUser({
+                            uid: firebaseUser.uid,
                             name: userData.name,
                             email: userData.email,
                             company: userData.company,
                             companyLogo: userData.companyLogo,
                             plan: userData.plan,
                             usedProjects: userData.usedProjects,
-                            usedStorageMB: userData.usedStorageMB
+                            usedStorageMB: userData.usedStorageMB,
+                            userType: userData.userType
                         });
+
+                        // توجيه المورد تلقائياً للوحة تحكمه بعد تسجيل الدخول
+                        if (userData.userType === 'supplier' && currentPage === 'login') {
+                            setCurrentPage('supplier');
+                        }
                     }
                 } else {
                     setUser(null);
@@ -634,7 +644,12 @@ const App: React.FC = () => {
     }, [state]);
 
     const handleExport = () => {
-        // Show price quote for all users (free users get limited view if needed)
+        // Block printing for free plan and demo mode
+        if (isFreePlan || isDemoMode) {
+            // Don't allow printing - show nothing or could show upgrade message
+            return;
+        }
+        // Show price quote for paid users
         setShowPriceQuote(true);
     };
 
@@ -816,6 +831,15 @@ const App: React.FC = () => {
         return <AdminDashboard language={language} onNavigate={handleNavigate} />;
     }
 
+    // Admin Suppliers Management Page
+    if (currentPage === 'admin-suppliers') {
+        if (!adminAccessGranted || !user || user.plan !== 'enterprise') {
+            setCurrentPage('admin');
+            return null;
+        }
+        return <SuppliersManagementPage language={language} onNavigate={handleNavigate} />;
+    }
+
     // Manager Dashboard
     if (currentPage === 'manager') {
         if (!isManager) {
@@ -889,6 +913,8 @@ const App: React.FC = () => {
                     setUser(null);
                     setCurrentPage('landing');
                 }}
+                isTestMode={user.plan === 'network'}
+                supplierId={user.uid || user.email}
             />
         );
     }
@@ -1475,12 +1501,14 @@ const App: React.FC = () => {
                             </div>
                             <button
                                 onClick={handleExport}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-md transition-all font-medium text-sm ${isFreePlan
-                                    ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                                disabled={isFreePlan || isDemoMode}
+                                title={(isFreePlan || isDemoMode) ? (state.language === 'ar' ? 'غير متاح في الباقة المجانية' : 'Not available in free plan') : ''}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-md transition-all font-medium text-sm ${(isFreePlan || isDemoMode)
+                                    ? 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-60'
                                     : 'bg-slate-800 hover:bg-slate-700 text-white'
                                     }`}
                             >
-                                {isFreePlan && <Lock className="w-3 h-3" />}
+                                {(isFreePlan || isDemoMode) && <Lock className="w-3 h-3" />}
                                 <Download className="w-4 h-4" />
                                 PDF/Excel
                             </button>
