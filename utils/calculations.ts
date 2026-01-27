@@ -1,4 +1,5 @@
 import { AppState, CalculatedItem, CustomParams, SupplierOption, BaseItem, Language, AreaBreakdownSummary, BlueprintConfig } from '../types';
+import { SupplierProduct } from '../services/supplierService';
 import { ITEMS_DATABASE, REF_LAND_AREA, REF_BUILD_AREA, SOIL_MULTIPLIERS, EST_COST_PER_SQM } from '../constants';
 
 export interface CalculationResult {
@@ -171,8 +172,54 @@ export const calculateProjectCosts = (state: AppState): CalculationResult => {
     // --- 3. Prepare Items List ---
     let activeItems = ITEMS_DATABASE.filter(
         (item) => item.type === 'all' || item.type === state.projectType
-    );
+    ).map(item => ({ ...item, suppliers: [...item.suppliers] })); // Clone to avoid mutation
     activeItems = activeItems.filter(item => item.category !== 'manpower');
+
+    // --- INJECT DYNAMIC SUPPLIERS ---
+    if (state.supplierProducts && state.supplierProducts.length > 0) {
+        state.supplierProducts.forEach(product => {
+            if (product.status !== 'active') return;
+
+            // Map product category to item IDs
+            const targetIds: string[] = [];
+            if (product.category === 'steel') targetIds.push('02.04');
+            else if (product.category === 'cement') targetIds.push('02.01', '04.01');
+            else if (product.category === 'tiles') targetIds.push('04.04', '04.05', '04.06');
+            else if (product.category === 'paints') targetIds.push('04.03', '12.02');
+            else if (product.category === 'plumbing') {
+                // Add to all plumbing items
+                activeItems.filter(i => i.category === 'mep_plumb').forEach(i => targetIds.push(i.id));
+            }
+            else if (product.category === 'electrical') {
+                activeItems.filter(i => i.category === 'mep_elec').forEach(i => targetIds.push(i.id));
+            }
+
+            if (targetIds.length === 0) return;
+
+            const newOption: SupplierOption = {
+                id: product.id, // Use Product ID as Supplier Option ID to be unique
+                name: {
+                    ar: product.name.ar,
+                    en: product.name.en,
+                    fr: product.name.en,
+                    zh: product.name.en
+                },
+                tier: 'standard',
+                priceMultiplier: 1.0,
+                origin: 'Local',
+                dynamicPrice: product.price
+            };
+
+            activeItems.forEach(item => {
+                if (targetIds.includes(item.id)) {
+                    // Add if not exists
+                    if (!item.suppliers.find(s => s.id === newOption.id)) {
+                        item.suppliers.push(newOption);
+                    }
+                }
+            });
+        });
+    }
 
     // Generate Dynamic Manpower Items
     const teamItems: BaseItem[] = state.team.map((member, idx) => ({
@@ -327,7 +374,11 @@ export const calculateProjectCosts = (state: AppState): CalculationResult => {
         let matCost = item.baseMaterial;
         let labCost = item.baseLabor;
 
-        matCost = matCost * selectedSupplier.priceMultiplier;
+        if (selectedSupplier.dynamicPrice) {
+            matCost = selectedSupplier.dynamicPrice;
+        } else {
+            matCost = matCost * selectedSupplier.priceMultiplier;
+        }
 
         if (state.location === 'jeddah' && (item.category === 'structure' || item.category === 'site')) matCost *= 1.02;
         if (item.soilFactor) labCost *= SOIL_MULTIPLIERS[state.soilType];

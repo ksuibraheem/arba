@@ -1186,6 +1186,275 @@ class EmployeeService {
 
         this.saveAttendanceRecords(records);
     }
+
+    // ====================== إحصائيات الحضور المتقدمة ======================
+
+    /**
+     * تقرير الحضور الشهري للموظف
+     */
+    getMonthlyReport(employeeId: string, year: number, month: number): {
+        employeeId: string;
+        employeeName: string;
+        year: number;
+        month: number;
+        totalDays: number;
+        workingDays: number;
+        presentDays: number;
+        lateDays: number;
+        absentDays: number;
+        leaveDays: number;
+        totalWorkHours: number;
+        averageWorkHoursPerDay: number;
+        totalBreakMinutes: number;
+        attendanceRate: number; // نسبة الحضور
+        punctualityRate: number; // نسبة الانضباط (الحضور في الوقت)
+        dailyBreakdown: { date: string; status: string; workHours: number; clockIn?: string; clockOut?: string }[];
+    } | null {
+        const employee = this.getEmployeeById(employeeId);
+        if (!employee) return null;
+
+        const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+        const endDate = `${year}-${String(month).padStart(2, '0')}-${new Date(year, month, 0).getDate()}`;
+
+        const records = this.getAttendanceRecords().filter(r =>
+            r.employeeId === employeeId &&
+            r.date >= startDate &&
+            r.date <= endDate
+        );
+
+        const presentRecords = records.filter(r => r.status === 'present' || r.status === 'late');
+        const totalWorkMinutes = presentRecords.reduce((sum, r) => sum + (r.totalWorkMinutes || 0), 0);
+        const totalBreakMinutes = presentRecords.reduce((sum, r) => sum + (r.totalBreakMinutes || 0), 0);
+
+        const workingDays = records.filter(r => r.status !== 'on_leave').length;
+        const presentDays = records.filter(r => r.status === 'present').length;
+        const lateDays = records.filter(r => r.status === 'late').length;
+        const absentDays = records.filter(r => r.status === 'absent').length;
+        const leaveDays = records.filter(r => r.status === 'on_leave').length;
+
+        return {
+            employeeId,
+            employeeName: employee.name,
+            year,
+            month,
+            totalDays: records.length,
+            workingDays,
+            presentDays,
+            lateDays,
+            absentDays,
+            leaveDays,
+            totalWorkHours: Math.round(totalWorkMinutes / 60 * 10) / 10,
+            averageWorkHoursPerDay: presentRecords.length > 0 ? Math.round((totalWorkMinutes / presentRecords.length) / 60 * 10) / 10 : 0,
+            totalBreakMinutes,
+            attendanceRate: workingDays > 0 ? Math.round(((presentDays + lateDays) / workingDays) * 100) : 0,
+            punctualityRate: (presentDays + lateDays) > 0 ? Math.round((presentDays / (presentDays + lateDays)) * 100) : 0,
+            dailyBreakdown: records.map(r => ({
+                date: r.date,
+                status: r.status,
+                workHours: Math.round((r.totalWorkMinutes || 0) / 60 * 10) / 10,
+                clockIn: r.clockIn,
+                clockOut: r.clockOut
+            }))
+        };
+    }
+
+    /**
+     * إحصائيات الأسبوع/الشهر لجميع الموظفين
+     */
+    getWeeklyStats(): {
+        weekStart: string;
+        weekEnd: string;
+        totalEmployees: number;
+        averageAttendanceRate: number;
+        totalWorkHours: number;
+        lateCount: number;
+        absentCount: number;
+        topPerformers: { employeeId: string; name: string; workHours: number }[];
+        lowPerformers: { employeeId: string; name: string; workHours: number }[];
+    } {
+        const today = new Date();
+        const dayOfWeek = today.getDay();
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - dayOfWeek);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+
+        const startDate = weekStart.toISOString().split('T')[0];
+        const endDate = weekEnd.toISOString().split('T')[0];
+
+        const records = this.getAttendanceRecords().filter(r =>
+            r.date >= startDate && r.date <= endDate
+        );
+
+        const employees = this.getEmployees();
+        const employeeStats = new Map<string, { name: string; workMinutes: number; days: number; present: number }>();
+
+        records.forEach(r => {
+            if (!employeeStats.has(r.employeeId)) {
+                employeeStats.set(r.employeeId, { name: r.employeeName, workMinutes: 0, days: 0, present: 0 });
+            }
+            const stats = employeeStats.get(r.employeeId)!;
+            stats.days++;
+            if (r.status === 'present' || r.status === 'late') {
+                stats.present++;
+                stats.workMinutes += r.totalWorkMinutes || 0;
+            }
+        });
+
+        const employeeWorkHours = Array.from(employeeStats.entries()).map(([id, stats]) => ({
+            employeeId: id,
+            name: stats.name,
+            workHours: Math.round(stats.workMinutes / 60 * 10) / 10,
+            attendanceRate: stats.days > 0 ? (stats.present / stats.days) * 100 : 0
+        }));
+
+        employeeWorkHours.sort((a, b) => b.workHours - a.workHours);
+
+        const totalWorkMinutes = records.reduce((sum, r) => sum + (r.totalWorkMinutes || 0), 0);
+        const presentCount = records.filter(r => r.status === 'present' || r.status === 'late').length;
+        const avgAttendance = records.length > 0 ? (presentCount / records.length) * 100 : 0;
+
+        return {
+            weekStart: startDate,
+            weekEnd: endDate,
+            totalEmployees: employees.length,
+            averageAttendanceRate: Math.round(avgAttendance),
+            totalWorkHours: Math.round(totalWorkMinutes / 60),
+            lateCount: records.filter(r => r.status === 'late').length,
+            absentCount: records.filter(r => r.status === 'absent').length,
+            topPerformers: employeeWorkHours.slice(0, 3),
+            lowPerformers: employeeWorkHours.slice(-3).reverse()
+        };
+    }
+
+    /**
+     * الحصول على المتأخرين اليوم
+     */
+    getLateEmployeesToday(): {
+        id: string;
+        name: string;
+        employeeNumber: string;
+        clockIn: string;
+        lateMinutes: number;
+    }[] {
+        const today = new Date().toISOString().split('T')[0];
+        const records = this.getAttendanceRecords().filter(r =>
+            r.date === today && r.status === 'late' && r.clockIn
+        );
+
+        // نفترض أن وقت الدوام المعتاد 8:00 صباحاً
+        const expectedStartTime = 8 * 60; // 8:00 AM in minutes
+
+        return records.map(r => {
+            const clockInDate = new Date(r.clockIn!);
+            const clockInMinutes = clockInDate.getHours() * 60 + clockInDate.getMinutes();
+            const lateMinutes = Math.max(0, clockInMinutes - expectedStartTime);
+
+            return {
+                id: r.employeeId,
+                name: r.employeeName,
+                employeeNumber: r.employeeNumber,
+                clockIn: r.clockIn!,
+                lateMinutes
+            };
+        }).sort((a, b) => b.lateMinutes - a.lateMinutes);
+    }
+
+    /**
+     * الحصول على تنبيهات الحضور
+     */
+    getAttendanceAlerts(): {
+        type: 'late_today' | 'absent_streak' | 'low_hours' | 'frequent_late';
+        severity: 'info' | 'warning' | 'critical';
+        employeeId: string;
+        employeeName: string;
+        message: { ar: string; en: string };
+        data?: any;
+    }[] {
+        const alerts: ReturnType<typeof this.getAttendanceAlerts> = [];
+        const today = new Date().toISOString().split('T')[0];
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        const weekAgoStr = weekAgo.toISOString().split('T')[0];
+
+        const employees = this.getEmployees();
+        const records = this.getAttendanceRecords();
+
+        employees.forEach(emp => {
+            const empRecords = records.filter(r => r.employeeId === emp.id);
+            const weekRecords = empRecords.filter(r => r.date >= weekAgoStr && r.date <= today);
+
+            // تنبيه: متأخر اليوم
+            const todayRecord = empRecords.find(r => r.date === today);
+            if (todayRecord?.status === 'late') {
+                alerts.push({
+                    type: 'late_today',
+                    severity: 'warning',
+                    employeeId: emp.id,
+                    employeeName: emp.name,
+                    message: {
+                        ar: `${emp.name} وصل متأخراً اليوم`,
+                        en: `${emp.name} arrived late today`
+                    }
+                });
+            }
+
+            // تنبيه: غياب متكرر
+            const absentDays = weekRecords.filter(r => r.status === 'absent').length;
+            if (absentDays >= 3) {
+                alerts.push({
+                    type: 'absent_streak',
+                    severity: 'critical',
+                    employeeId: emp.id,
+                    employeeName: emp.name,
+                    message: {
+                        ar: `${emp.name} غاب ${absentDays} أيام خلال الأسبوع`,
+                        en: `${emp.name} was absent ${absentDays} days this week`
+                    },
+                    data: { absentDays }
+                });
+            }
+
+            // تنبيه: تأخر متكرر
+            const lateDays = weekRecords.filter(r => r.status === 'late').length;
+            if (lateDays >= 3) {
+                alerts.push({
+                    type: 'frequent_late',
+                    severity: 'warning',
+                    employeeId: emp.id,
+                    employeeName: emp.name,
+                    message: {
+                        ar: `${emp.name} تأخر ${lateDays} مرات هذا الأسبوع`,
+                        en: `${emp.name} was late ${lateDays} times this week`
+                    },
+                    data: { lateDays }
+                });
+            }
+
+            // تنبيه: ساعات عمل قليلة
+            const totalWorkHours = weekRecords.reduce((sum, r) => sum + (r.totalWorkMinutes || 0), 0) / 60;
+            const expectedHours = weekRecords.length * 8; // نفترض 8 ساعات عمل يومياً
+            if (weekRecords.length > 0 && totalWorkHours < expectedHours * 0.7) {
+                alerts.push({
+                    type: 'low_hours',
+                    severity: 'info',
+                    employeeId: emp.id,
+                    employeeName: emp.name,
+                    message: {
+                        ar: `${emp.name} عمل ${Math.round(totalWorkHours)} ساعة فقط من أصل ${expectedHours} ساعة`,
+                        en: `${emp.name} worked only ${Math.round(totalWorkHours)} hours out of ${expectedHours} expected`
+                    },
+                    data: { totalWorkHours, expectedHours }
+                });
+            }
+        });
+
+        // ترتيب حسب الأهمية
+        const severityOrder = { critical: 0, warning: 1, info: 2 };
+        alerts.sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]);
+
+        return alerts;
+    }
 }
 
 export const employeeService = new EmployeeService();

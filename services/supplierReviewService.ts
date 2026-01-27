@@ -60,6 +60,21 @@ export const REVIEW_DATA_TYPE_TRANSLATIONS: Record<ReviewDataType, { ar: string;
     category: { ar: 'تصنيف', en: 'Category' }
 };
 
+/**
+ * إخفاء اسم المهندس للخصوصية - يظهر أول اسمين فقط
+ * Mask engineer name for privacy - shows only first two names
+ * @param fullName الاسم الكامل
+ * @returns أول اسمين فقط
+ */
+export const maskEngineerName = (fullName: string): string => {
+    if (!fullName) return '';
+    const names = fullName.trim().split(/\s+/);
+    if (names.length <= 2) {
+        return fullName;
+    }
+    return `${names[0]} ${names[1]}`;
+};
+
 // ====================== خدمة مراجعة الموردين ======================
 
 class SupplierReviewService {

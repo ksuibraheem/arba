@@ -1,3 +1,5 @@
+import { Supplier, SupplierProduct } from './services/supplierService';
+
 export type ProjectType = 'villa' | 'tower' | 'rest_house' | 'factory' | 'school' | 'hospital' | 'mosque' | 'hotel' | 'residential_building' | 'sports_complex';
 export type LocationType = 'riyadh' | 'jeddah';
 export type SoilType = 'sandy' | 'clay' | 'rocky_soft' | 'rocky_hard' | 'marshy';
@@ -20,6 +22,7 @@ export interface SupplierOption {
   tier: SupplierTier;
   priceMultiplier: number; // 1.0 is base, 1.2 is 20% more expensive
   origin?: string; // e.g., "Saudi", "China", "Europe"
+  dynamicPrice?: number; // Exact price override from dynamic supplier product
 }
 
 export type RoomType = 'living' | 'bedroom' | 'kitchen' | 'bathroom' | 'majlis' | 'office' | 'shop' | 'corridor' | 'service';
@@ -252,4 +255,8 @@ export interface AppState {
   customItems: BaseItem[];
 
   itemOverrides: Record<string, CustomParams>;
+
+  // Dynamic Supplier Data
+  registeredSuppliers: Supplier[];
+  supplierProducts: SupplierProduct[];
 }

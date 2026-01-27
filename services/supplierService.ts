@@ -78,6 +78,10 @@ export interface SupplierProduct {
     specifications?: string;            // المواصفات الفنية
     images?: string[];                  // صور المنتج
     documents?: string[];               // مستندات (كتالوجات، شهادات)
+    // حقول إضافية لمهندس الكميات
+    source?: 'system' | 'supplier';     // مصدر البيانات
+    qsDescription?: string;             // شرح مفصل من مهندس الكميات
+    qsDescriptionUpdatedAt?: string;    // تاريخ تحديث الشرح
     createdAt: string;
     updatedAt: string;
 }
@@ -302,6 +306,7 @@ class SupplierService {
         const newProduct: SupplierProduct = {
             ...product,
             id: crypto.randomUUID(),
+            source: product.source || 'supplier', // الافتراضي مورد
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
@@ -611,7 +616,8 @@ class SupplierService {
                     unit: 'طن',
                     stock: 150,
                     status: 'active',
-                    approvalStatus: 'approved'
+                    approvalStatus: 'approved',
+                    source: 'system'
                 },
                 {
                     supplierId: 'sample-2',
@@ -623,7 +629,8 @@ class SupplierService {
                     unit: 'كيس',
                     stock: 5000,
                     status: 'active',
-                    approvalStatus: 'approved'
+                    approvalStatus: 'approved',
+                    source: 'system'
                 },
                 {
                     supplierId: 'sample-2',
@@ -635,7 +642,8 @@ class SupplierService {
                     unit: 'م²',
                     stock: 800,
                     status: 'active',
-                    approvalStatus: 'pending'
+                    approvalStatus: 'pending',
+                    source: 'system'
                 },
                 // منتجات تأجير
                 {
@@ -651,7 +659,8 @@ class SupplierService {
                     approvalStatus: 'approved',
                     rentalPeriod: 'daily',
                     minRentalDuration: 7,
-                    depositAmount: 1000
+                    depositAmount: 1000,
+                    source: 'system'
                 },
                 {
                     supplierId: 'sample-2',
@@ -666,7 +675,8 @@ class SupplierService {
                     approvalStatus: 'approved',
                     rentalPeriod: 'monthly',
                     minRentalDuration: 3,
-                    depositAmount: 50000
+                    depositAmount: 50000,
+                    source: 'system'
                 },
                 {
                     supplierId: 'sample-2',
@@ -681,7 +691,8 @@ class SupplierService {
                     approvalStatus: 'pending',
                     rentalPeriod: 'daily',
                     minRentalDuration: 1,
-                    depositAmount: 5000
+                    depositAmount: 5000,
+                    source: 'system'
                 },
                 {
                     supplierId: 'sample-2',
@@ -695,7 +706,8 @@ class SupplierService {
                     status: 'active',
                     approvalStatus: 'approved',
                     rentalPeriod: 'daily',
-                    minRentalDuration: 1
+                    minRentalDuration: 1,
+                    source: 'system'
                 }
             ];
 

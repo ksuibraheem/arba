@@ -22,6 +22,7 @@ import SupportPage from './roles/SupportPage';
 import MarketingPage from './roles/MarketingPage';
 import DeputyPage from './roles/DeputyPage';
 import QualityPage from './roles/QualityPage';
+import QuantitySurveyorPage from './roles/QuantitySurveyorPage';
 
 interface EmployeeDashboardProps {
     language: 'ar' | 'en';
@@ -59,7 +60,8 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
         developer: <Code className="w-6 h-6" />,
         support: <Headphones className="w-6 h-6" />,
         marketing: <Megaphone className="w-6 h-6" />,
-        quality: <CheckCircle className="w-6 h-6" />
+        quality: <CheckCircle className="w-6 h-6" />,
+        quantity_surveyor: <Calculator className="w-6 h-6" />
     };
 
     // تغيير كلمة المرور
@@ -112,6 +114,8 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
                 return <DeputyPage {...roleProps} />;
             case 'quality':
                 return <QualityPage {...roleProps} />;
+            case 'quantity_surveyor':
+                return <QuantitySurveyorPage {...roleProps} onLogout={onLogout} />;
             default:
                 return (
                     <div className="text-center py-12">
@@ -173,8 +177,8 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as any)}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${activeTab === tab.id
-                                    ? 'bg-emerald-500 text-white'
-                                    : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                                ? 'bg-emerald-500 text-white'
+                                : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
                                 }`}
                         >
                             {tab.icon}

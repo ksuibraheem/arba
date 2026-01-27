@@ -8,7 +8,8 @@ import {
     Users, UserPlus, Search, Edit2, Trash2, Eye, X, Save,
     Phone, Mail, AlertTriangle, Award, Briefcase, DollarSign,
     FileText, Calendar, Clock, ChevronDown, ChevronUp, Plus,
-    Download, Filter, UserCheck, UserX, Building, GraduationCap
+    Download, Filter, UserCheck, UserX, Building, GraduationCap,
+    Bell, TrendingUp, BarChart3, AlertCircle, Info
 } from 'lucide-react';
 import {
     Employee, EmployeeRole, Certificate, Experience, SalaryStructure,
@@ -25,7 +26,7 @@ interface HRPageProps {
     employee: Employee;
 }
 
-type ViewMode = 'list' | 'add' | 'edit' | 'view' | 'attendance';
+type ViewMode = 'list' | 'add' | 'edit' | 'view' | 'attendance' | 'reports';
 type TabType = 'info' | 'certificates' | 'experience' | 'salary' | 'contract' | 'warnings';
 
 const HRPage: React.FC<HRPageProps> = ({ language, employee }) => {
@@ -55,6 +56,14 @@ const HRPage: React.FC<HRPageProps> = ({ language, employee }) => {
     // Attendance states
     const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
     const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
+
+    // Advanced stats states
+    const [weeklyStats, setWeeklyStats] = useState<ReturnType<typeof employeeService.getWeeklyStats> | null>(null);
+    const [attendanceAlerts, setAttendanceAlerts] = useState<ReturnType<typeof employeeService.getAttendanceAlerts>>([]);
+    const [selectedReportEmployee, setSelectedReportEmployee] = useState<string>('');
+    const [reportMonth, setReportMonth] = useState(new Date().getMonth() + 1);
+    const [reportYear, setReportYear] = useState(new Date().getFullYear());
+    const [monthlyReport, setMonthlyReport] = useState<ReturnType<typeof employeeService.getMonthlyReport>>(null);
 
     // حالة انتحال الصفة (المدير يعمل نيابة عن الموظف)
     const [impersonationInfo, setImpersonationInfo] = useState<{
@@ -96,6 +105,7 @@ const HRPage: React.FC<HRPageProps> = ({ language, employee }) => {
         employeeService.initializeTodayAttendance();
         loadEmployees();
         loadAttendance();
+        loadAdvancedStats();
     }, []);
 
     const loadEmployees = () => {
@@ -104,6 +114,19 @@ const HRPage: React.FC<HRPageProps> = ({ language, employee }) => {
 
     const loadAttendance = () => {
         setAttendanceRecords(employeeService.getAttendanceByDate(attendanceDate));
+    };
+
+    const loadAdvancedStats = () => {
+        setWeeklyStats(employeeService.getWeeklyStats());
+        setAttendanceAlerts(employeeService.getAttendanceAlerts());
+    };
+
+    // Load monthly report
+    const loadMonthlyReport = () => {
+        if (selectedReportEmployee) {
+            const report = employeeService.getMonthlyReport(selectedReportEmployee, reportYear, reportMonth);
+            setMonthlyReport(report);
+        }
     };
 
     // Reload attendance when date changes
@@ -423,6 +446,204 @@ const HRPage: React.FC<HRPageProps> = ({ language, employee }) => {
         );
     };
 
+    // Render reports and statistics page
+    const renderReportsPage = () => {
+        const getSeverityIcon = (severity: 'info' | 'warning' | 'critical') => {
+            switch (severity) {
+                case 'critical': return <AlertCircle className="w-5 h-5 text-red-400" />;
+                case 'warning': return <AlertTriangle className="w-5 h-5 text-yellow-400" />;
+                default: return <Info className="w-5 h-5 text-blue-400" />;
+            }
+        };
+
+        const getSeverityColor = (severity: 'info' | 'warning' | 'critical') => {
+            switch (severity) {
+                case 'critical': return 'bg-red-500/20 border-red-500/30';
+                case 'warning': return 'bg-yellow-500/20 border-yellow-500/30';
+                default: return 'bg-blue-500/20 border-blue-500/30';
+            }
+        };
+
+        return (
+            <div className="space-y-6">
+                {/* Header */}
+                <div className="flex items-center gap-4">
+                    <button onClick={() => setViewMode('list')} className="p-2 hover:bg-slate-700 rounded-lg text-slate-400">
+                        <X className="w-5 h-5" />
+                    </button>
+                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                        <BarChart3 className="w-6 h-6 text-cyan-400" />
+                        {t('التقارير والإحصائيات', 'Reports & Statistics')}
+                    </h2>
+                </div>
+
+                {/* Alerts Section */}
+                {attendanceAlerts.length > 0 && (
+                    <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+                        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <Bell className="w-5 h-5 text-orange-400" />
+                            {t('تنبيهات الحضور', 'Attendance Alerts')}
+                            <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{attendanceAlerts.length}</span>
+                        </h3>
+                        <div className="space-y-3 max-h-60 overflow-y-auto">
+                            {attendanceAlerts.map((alert, i) => (
+                                <div key={i} className={`flex items-start gap-3 p-3 rounded-lg border ${getSeverityColor(alert.severity)}`}>
+                                    {getSeverityIcon(alert.severity)}
+                                    <div className="flex-1">
+                                        <p className="text-white text-sm">{alert.message[language]}</p>
+                                        <p className="text-slate-400 text-xs mt-1">{alert.employeeName}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Weekly Stats */}
+                {weeklyStats && (
+                    <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+                        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <TrendingUp className="w-5 h-5 text-green-400" />
+                            {t('إحصائيات الأسبوع', 'Weekly Statistics')}
+                        </h3>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div className="bg-cyan-500/10 rounded-lg p-3 border border-cyan-500/30 text-center">
+                                <p className="text-2xl font-bold text-cyan-400">{weeklyStats.totalWorkHours}</p>
+                                <p className="text-slate-400 text-sm">{t('ساعات العمل', 'Work Hours')}</p>
+                            </div>
+                            <div className="bg-green-500/10 rounded-lg p-3 border border-green-500/30 text-center">
+                                <p className="text-2xl font-bold text-green-400">{weeklyStats.averageAttendanceRate}%</p>
+                                <p className="text-slate-400 text-sm">{t('نسبة الحضور', 'Attendance Rate')}</p>
+                            </div>
+                            <div className="bg-yellow-500/10 rounded-lg p-3 border border-yellow-500/30 text-center">
+                                <p className="text-2xl font-bold text-yellow-400">{weeklyStats.lateCount}</p>
+                                <p className="text-slate-400 text-sm">{t('حالات تأخير', 'Late Cases')}</p>
+                            </div>
+                            <div className="bg-red-500/10 rounded-lg p-3 border border-red-500/30 text-center">
+                                <p className="text-2xl font-bold text-red-400">{weeklyStats.absentCount}</p>
+                                <p className="text-slate-400 text-sm">{t('حالات غياب', 'Absent Cases')}</p>
+                            </div>
+                        </div>
+
+                        <div className="grid md:grid-cols-2 gap-4">
+                            {/* Top Performers */}
+                            <div className="bg-green-500/10 rounded-lg p-3 border border-green-500/30">
+                                <h4 className="text-green-400 font-medium mb-2 flex items-center gap-2">
+                                    <Award className="w-4 h-4" />
+                                    {t('أفضل أداء', 'Top Performers')}
+                                </h4>
+                                {weeklyStats.topPerformers.map((p, i) => (
+                                    <div key={p.employeeId} className="flex justify-between items-center text-sm py-1">
+                                        <span className="text-white">{i + 1}. {p.name}</span>
+                                        <span className="text-green-400">{p.workHours}h</span>
+                                    </div>
+                                ))}
+                            </div>
+                            {/* Low Performers */}
+                            <div className="bg-red-500/10 rounded-lg p-3 border border-red-500/30">
+                                <h4 className="text-red-400 font-medium mb-2 flex items-center gap-2">
+                                    <AlertTriangle className="w-4 h-4" />
+                                    {t('يحتاج متابعة', 'Needs Follow-up')}
+                                </h4>
+                                {weeklyStats.lowPerformers.map((p, i) => (
+                                    <div key={p.employeeId} className="flex justify-between items-center text-sm py-1">
+                                        <span className="text-white">{p.name}</span>
+                                        <span className="text-red-400">{p.workHours}h</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Monthly Report Generator */}
+                <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
+                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <FileText className="w-5 h-5 text-purple-400" />
+                        {t('التقرير الشهري للموظف', 'Monthly Employee Report')}
+                    </h3>
+                    <div className="flex flex-wrap gap-3 mb-4">
+                        <select
+                            value={selectedReportEmployee}
+                            onChange={(e) => setSelectedReportEmployee(e.target.value)}
+                            className="bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-2 text-white"
+                        >
+                            <option value="">{t('اختر موظف', 'Select Employee')}</option>
+                            {employees.map(emp => (
+                                <option key={emp.id} value={emp.id}>{emp.name}</option>
+                            ))}
+                        </select>
+                        <select
+                            value={reportMonth}
+                            onChange={(e) => setReportMonth(Number(e.target.value))}
+                            className="bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-2 text-white"
+                        >
+                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => (
+                                <option key={m} value={m}>{t(`شهر ${m}`, new Date(2000, m - 1).toLocaleString('en', { month: 'long' }))}</option>
+                            ))}
+                        </select>
+                        <input
+                            type="number"
+                            value={reportYear}
+                            onChange={(e) => setReportYear(Number(e.target.value))}
+                            className="bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-2 text-white w-24"
+                        />
+                        <button
+                            onClick={loadMonthlyReport}
+                            disabled={!selectedReportEmployee}
+                            className="bg-gradient-to-r from-purple-500 to-pink-600 px-4 py-2 rounded-lg text-white disabled:opacity-50"
+                        >
+                            {t('إنشاء التقرير', 'Generate Report')}
+                        </button>
+                    </div>
+
+                    {monthlyReport && (
+                        <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
+                            <div className="flex items-center justify-between mb-4">
+                                <div>
+                                    <h4 className="text-white font-bold">{monthlyReport.employeeName}</h4>
+                                    <p className="text-slate-400 text-sm">{t(`شهر ${monthlyReport.month}`, new Date(2000, monthlyReport.month - 1).toLocaleString('en', { month: 'long' }))} {monthlyReport.year}</p>
+                                </div>
+                                <div className="flex gap-2">
+                                    <div className="text-center px-4 py-2 bg-green-500/20 rounded-lg">
+                                        <p className="text-green-400 text-2xl font-bold">{monthlyReport.attendanceRate}%</p>
+                                        <p className="text-slate-400 text-xs">{t('نسبة الحضور', 'Attendance')}</p>
+                                    </div>
+                                    <div className="text-center px-4 py-2 bg-blue-500/20 rounded-lg">
+                                        <p className="text-blue-400 text-2xl font-bold">{monthlyReport.punctualityRate}%</p>
+                                        <p className="text-slate-400 text-xs">{t('الانضباط', 'Punctuality')}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-center">
+                                <div className="bg-slate-800/50 rounded p-2">
+                                    <p className="text-white font-bold">{monthlyReport.presentDays}</p>
+                                    <p className="text-slate-400 text-xs">{t('أيام حضور', 'Present')}</p>
+                                </div>
+                                <div className="bg-slate-800/50 rounded p-2">
+                                    <p className="text-yellow-400 font-bold">{monthlyReport.lateDays}</p>
+                                    <p className="text-slate-400 text-xs">{t('أيام تأخير', 'Late')}</p>
+                                </div>
+                                <div className="bg-slate-800/50 rounded p-2">
+                                    <p className="text-red-400 font-bold">{monthlyReport.absentDays}</p>
+                                    <p className="text-slate-400 text-xs">{t('أيام غياب', 'Absent')}</p>
+                                </div>
+                                <div className="bg-slate-800/50 rounded p-2">
+                                    <p className="text-cyan-400 font-bold">{monthlyReport.totalWorkHours}</p>
+                                    <p className="text-slate-400 text-xs">{t('ساعات عمل', 'Work Hrs')}</p>
+                                </div>
+                                <div className="bg-slate-800/50 rounded p-2">
+                                    <p className="text-purple-400 font-bold">{monthlyReport.averageWorkHoursPerDay}</p>
+                                    <p className="text-slate-400 text-xs">{t('معدل يومي', 'Avg/Day')}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
     // Render stats cards
     const renderStats = () => (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -561,6 +782,16 @@ const HRPage: React.FC<HRPageProps> = ({ language, employee }) => {
                 >
                     <Clock className="w-5 h-5" />
                     {t('الحضور والانصراف', 'Attendance')}
+                </button>
+                <button
+                    onClick={() => setViewMode('reports')}
+                    className="bg-gradient-to-r from-purple-500 to-pink-600 px-4 py-2 rounded-lg text-white flex items-center gap-2 hover:opacity-90 transition"
+                >
+                    <BarChart3 className="w-5 h-5" />
+                    {t('التقارير', 'Reports')}
+                    {attendanceAlerts.length > 0 && (
+                        <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">{attendanceAlerts.length}</span>
+                    )}
                 </button>
             </div>
 

@@ -17,6 +17,7 @@ import VerificationPage from './pages/VerificationPage';
 import UnderReviewPage from './pages/UnderReviewPage';
 import PaymentUploadPage from './pages/PaymentUploadPage';
 import { registrationService } from './services/registrationService';
+import { supplierService } from './services/supplierService';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ManagerDashboard from './pages/employees/ManagerDashboard';
 import EmployeeDashboard from './pages/employees/EmployeeDashboard';
@@ -132,6 +133,26 @@ const App: React.FC = () => {
         }
     }, []);
 
+    // Load Dynamic Supplier Data
+    useEffect(() => {
+        const loadSupplierData = () => {
+            const suppliers = supplierService.getSuppliers();
+            const products = supplierService.getProducts();
+            setState(prev => ({
+                ...prev,
+                registeredSuppliers: suppliers,
+                supplierProducts: products
+            }));
+        };
+
+        loadSupplierData();
+
+        // Refresh when page changes or returns to dashboard
+        if (currentPage === 'dashboard') {
+            loadSupplierData();
+        }
+    }, [currentPage]);
+
     // Pricing Dashboard State
     const [state, setState] = useState<AppState>({
         language: 'ar',
@@ -173,6 +194,9 @@ const App: React.FC = () => {
         customItems: [],
 
         itemOverrides: {},
+
+        registeredSuppliers: [],
+        supplierProducts: [],
     });
 
     const t = (key: string) => TRANSLATIONS[key]?.[state.language] || key;
@@ -895,6 +919,25 @@ const App: React.FC = () => {
                     setCurrentPage('landing');
                 }}
                 onNavigate={handleNavigate}
+            />
+        );
+    }
+
+    // Quantity Surveyor Page (صفحة مهندس الكميات)
+    if (currentPage === 'quantity_surveyor') {
+        if (!currentEmployee) {
+            setCurrentPage('login');
+            return null;
+        }
+        return (
+            <QuantitySurveyorPage
+                language={language}
+                employee={currentEmployee}
+                onLogout={() => {
+                    setUser(null);
+                    setCurrentEmployee(null);
+                    setCurrentPage('landing');
+                }}
             />
         );
     }
