@@ -5,6 +5,7 @@
 
 import { registrationService, RegistrationRequest } from './registrationService';
 import { chartOfAccountsService, ACCOUNT_CODES, JournalEntry, VAT_RATE } from './chartOfAccountsService';
+import { ITEMS_DATABASE } from '../constants';
 
 // ====================== أنواع البيانات ======================
 
@@ -605,33 +606,327 @@ class SupplierService {
         // إضافة منتجات تجريبية للمورد sample-2
         if (this.getProducts().length === 0) {
             const sampleProducts: Omit<SupplierProduct, 'id' | 'createdAt' | 'updatedAt'>[] = [
-                // منتجات بيع
+                // =================== منتجات الحديد والصلب (supplier-steel) ===================
                 {
-                    supplierId: 'sample-2',
+                    supplierId: 'supplier-steel',
+                    name: { ar: 'حديد تسليح 8مم', en: 'Rebar 8mm' },
+                    category: 'steel',
+                    productType: 'sale',
+                    price: 3100,
+                    unitType: 'ton',
+                    unit: 'طن',
+                    stock: 200,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-steel',
+                    name: { ar: 'حديد تسليح 10مم', en: 'Rebar 10mm' },
+                    category: 'steel',
+                    productType: 'sale',
+                    price: 3150,
+                    unitType: 'ton',
+                    unit: 'طن',
+                    stock: 180,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-steel',
                     name: { ar: 'حديد تسليح 12مم', en: 'Rebar 12mm' },
                     category: 'steel',
                     productType: 'sale',
                     price: 3200,
                     unitType: 'ton',
                     unit: 'طن',
+                    stock: 250,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-steel',
+                    name: { ar: 'حديد تسليح 16مم', en: 'Rebar 16mm' },
+                    category: 'steel',
+                    productType: 'sale',
+                    price: 3250,
+                    unitType: 'ton',
+                    unit: 'طن',
                     stock: 150,
                     status: 'active',
                     approvalStatus: 'approved',
-                    source: 'system'
+                    source: 'supplier'
                 },
                 {
-                    supplierId: 'sample-2',
-                    name: { ar: 'اسمنت بورتلاندي', en: 'Portland Cement' },
+                    supplierId: 'supplier-steel',
+                    name: { ar: 'شبك حديد ملحوم', en: 'Welded Wire Mesh' },
+                    category: 'steel',
+                    productType: 'sale',
+                    price: 85,
+                    unitType: 'sqm',
+                    unit: 'م²',
+                    stock: 1000,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-steel',
+                    name: { ar: 'حديد زوايا 50×50', en: 'Angle Iron 50x50' },
+                    category: 'steel',
+                    productType: 'sale',
+                    price: 45,
+                    unitType: 'meter',
+                    unit: 'متر',
+                    stock: 500,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+
+                // =================== منتجات الإسمنت والخرسانة (supplier-cement) ===================
+                {
+                    supplierId: 'supplier-cement',
+                    name: { ar: 'إسمنت بورتلاندي عادي', en: 'Ordinary Portland Cement' },
                     category: 'cement',
                     productType: 'sale',
                     price: 18,
                     unitType: 'bag',
-                    unit: 'كيس',
+                    unit: 'كيس 50 كجم',
+                    stock: 10000,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-cement',
+                    name: { ar: 'إسمنت مقاوم للكبريتات', en: 'Sulfate Resistant Cement' },
+                    category: 'cement',
+                    productType: 'sale',
+                    price: 22,
+                    unitType: 'bag',
+                    unit: 'كيس 50 كجم',
                     stock: 5000,
                     status: 'active',
                     approvalStatus: 'approved',
-                    source: 'system'
+                    source: 'supplier'
                 },
+                {
+                    supplierId: 'supplier-cement',
+                    name: { ar: 'خرسانة جاهزة C30', en: 'Ready Mix Concrete C30' },
+                    category: 'cement',
+                    productType: 'sale',
+                    price: 280,
+                    unitType: 'cbm',
+                    unit: 'م³',
+                    stock: 500,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-cement',
+                    name: { ar: 'خرسانة جاهزة C40', en: 'Ready Mix Concrete C40' },
+                    category: 'cement',
+                    productType: 'sale',
+                    price: 320,
+                    unitType: 'cbm',
+                    unit: 'م³',
+                    stock: 300,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-cement',
+                    name: { ar: 'رمل ناعم مغسول', en: 'Fine Washed Sand' },
+                    category: 'building_materials',
+                    productType: 'sale',
+                    price: 65,
+                    unitType: 'cbm',
+                    unit: 'م³',
+                    stock: 1000,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-cement',
+                    name: { ar: 'بحص (زلط) 20مم', en: 'Aggregate 20mm' },
+                    category: 'building_materials',
+                    productType: 'sale',
+                    price: 75,
+                    unitType: 'cbm',
+                    unit: 'م³',
+                    stock: 800,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+
+                // =================== منتجات كهربائية (supplier-electrical) ===================
+                {
+                    supplierId: 'supplier-electrical',
+                    name: { ar: 'سلك كهربائي 2.5مم', en: 'Electric Wire 2.5mm' },
+                    category: 'electrical',
+                    productType: 'sale',
+                    price: 3.5,
+                    unitType: 'meter',
+                    unit: 'متر',
+                    stock: 10000,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-electrical',
+                    name: { ar: 'سلك كهربائي 4مم', en: 'Electric Wire 4mm' },
+                    category: 'electrical',
+                    productType: 'sale',
+                    price: 5.5,
+                    unitType: 'meter',
+                    unit: 'متر',
+                    stock: 8000,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-electrical',
+                    name: { ar: 'قاطع كهربائي 32 أمبير', en: 'Circuit Breaker 32A' },
+                    category: 'electrical',
+                    productType: 'sale',
+                    price: 85,
+                    unitType: 'piece',
+                    unit: 'قطعة',
+                    stock: 500,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-electrical',
+                    name: { ar: 'لوحة توزيع 12 خط', en: 'Distribution Board 12 Way' },
+                    category: 'electrical',
+                    productType: 'sale',
+                    price: 450,
+                    unitType: 'piece',
+                    unit: 'قطعة',
+                    stock: 100,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-electrical',
+                    name: { ar: 'مفتاح إنارة مزدوج', en: 'Double Light Switch' },
+                    category: 'electrical',
+                    productType: 'sale',
+                    price: 35,
+                    unitType: 'piece',
+                    unit: 'قطعة',
+                    stock: 1000,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-electrical',
+                    name: { ar: 'بريزة كهربائية مزدوجة', en: 'Double Socket Outlet' },
+                    category: 'electrical',
+                    productType: 'sale',
+                    price: 45,
+                    unitType: 'piece',
+                    unit: 'قطعة',
+                    stock: 800,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+
+                // =================== منتجات سباكة (supplier-plumbing) ===================
+                {
+                    supplierId: 'supplier-plumbing',
+                    name: { ar: 'ماسورة PPR 20مم', en: 'PPR Pipe 20mm' },
+                    category: 'plumbing',
+                    productType: 'sale',
+                    price: 12,
+                    unitType: 'meter',
+                    unit: 'متر',
+                    stock: 5000,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-plumbing',
+                    name: { ar: 'ماسورة PPR 25مم', en: 'PPR Pipe 25mm' },
+                    category: 'plumbing',
+                    productType: 'sale',
+                    price: 18,
+                    unitType: 'meter',
+                    unit: 'متر',
+                    stock: 4000,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-plumbing',
+                    name: { ar: 'صمام كروي 1 بوصة', en: 'Ball Valve 1 inch' },
+                    category: 'plumbing',
+                    productType: 'sale',
+                    price: 65,
+                    unitType: 'piece',
+                    unit: 'قطعة',
+                    stock: 300,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-plumbing',
+                    name: { ar: 'خزان مياه 1000 لتر', en: 'Water Tank 1000L' },
+                    category: 'plumbing',
+                    productType: 'sale',
+                    price: 850,
+                    unitType: 'piece',
+                    unit: 'خزان',
+                    stock: 50,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-plumbing',
+                    name: { ar: 'سخان مياه كهربائي 50 لتر', en: 'Electric Water Heater 50L' },
+                    category: 'plumbing',
+                    productType: 'sale',
+                    price: 750,
+                    unitType: 'piece',
+                    unit: 'قطعة',
+                    stock: 30,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-plumbing',
+                    name: { ar: 'مضخة مياه 1 حصان', en: 'Water Pump 1HP' },
+                    category: 'plumbing',
+                    productType: 'sale',
+                    price: 550,
+                    unitType: 'piece',
+                    unit: 'قطعة',
+                    stock: 25,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+
+                // =================== منتجات عامة (sample-2 - مؤسسة التوريد الذهبي) ===================
                 {
                     supplierId: 'sample-2',
                     name: { ar: 'بلاط سيراميك 60×60', en: 'Ceramic Tiles 60x60' },
@@ -640,66 +935,184 @@ class SupplierService {
                     price: 45,
                     unitType: 'sqm',
                     unit: 'م²',
-                    stock: 800,
+                    stock: 2000,
                     status: 'active',
-                    approvalStatus: 'pending',
-                    source: 'system'
+                    approvalStatus: 'approved',
+                    source: 'supplier'
                 },
-                // منتجات تأجير
                 {
                     supplierId: 'sample-2',
+                    name: { ar: 'بلاط بورسلين 80×80', en: 'Porcelain Tiles 80x80' },
+                    category: 'tiles',
+                    productType: 'sale',
+                    price: 95,
+                    unitType: 'sqm',
+                    unit: 'م²',
+                    stock: 1500,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'sample-2',
+                    name: { ar: 'دهان داخلي أبيض 20 لتر', en: 'Interior Paint White 20L' },
+                    category: 'paints',
+                    productType: 'sale',
+                    price: 180,
+                    unitType: 'piece',
+                    unit: 'سطل',
+                    stock: 200,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'sample-2',
+                    name: { ar: 'دهان خارجي مائي 20 لتر', en: 'Exterior Water Paint 20L' },
+                    category: 'paints',
+                    productType: 'sale',
+                    price: 250,
+                    unitType: 'piece',
+                    unit: 'سطل',
+                    stock: 150,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'sample-2',
+                    name: { ar: 'عازل مائي رول', en: 'Waterproofing Membrane Roll' },
+                    category: 'insulation',
+                    productType: 'sale',
+                    price: 120,
+                    unitType: 'sqm',
+                    unit: 'م²',
+                    stock: 500,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'sample-2',
+                    name: { ar: 'عازل حراري 5سم', en: 'Thermal Insulation 5cm' },
+                    category: 'insulation',
+                    productType: 'sale',
+                    price: 35,
+                    unitType: 'sqm',
+                    unit: 'م²',
+                    stock: 1000,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'sample-2',
+                    name: { ar: 'خشب أبلكاش 18مم', en: 'Plywood 18mm' },
+                    category: 'wood',
+                    productType: 'sale',
+                    price: 85,
+                    unitType: 'sqm',
+                    unit: 'م²',
+                    stock: 300,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'sample-2',
+                    name: { ar: 'خشب MDF 16مم', en: 'MDF Board 16mm' },
+                    category: 'wood',
+                    productType: 'sale',
+                    price: 65,
+                    unitType: 'sqm',
+                    unit: 'م²',
+                    stock: 400,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'sample-2',
+                    name: { ar: 'خوذة سلامة', en: 'Safety Helmet' },
+                    category: 'safety_equipment',
+                    productType: 'sale',
+                    price: 35,
+                    unitType: 'piece',
+                    unit: 'قطعة',
+                    stock: 500,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'sample-2',
+                    name: { ar: 'سترة عاكسة', en: 'Reflective Vest' },
+                    category: 'safety_equipment',
+                    productType: 'sale',
+                    price: 25,
+                    unitType: 'piece',
+                    unit: 'قطعة',
+                    stock: 300,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+
+                // =================== معدات تأجير (supplier-rental) ===================
+                {
+                    supplierId: 'supplier-rental',
                     name: { ar: 'سقالات معدنية', en: 'Metal Scaffolding' },
                     category: 'scaffolding',
                     productType: 'rental',
                     price: 50,
                     unitType: 'meter',
                     unit: 'متر طولي',
-                    stock: 500,
+                    stock: 1000,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    rentalPeriod: 'monthly',
+                    minRentalDuration: 1,
+                    depositAmount: 1000,
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-rental',
+                    name: { ar: 'سقالات ألمنيوم متحركة', en: 'Mobile Aluminum Scaffolding' },
+                    category: 'scaffolding',
+                    productType: 'rental',
+                    price: 150,
+                    unitType: 'piece',
+                    unit: 'وحدة',
+                    stock: 50,
                     status: 'active',
                     approvalStatus: 'approved',
                     rentalPeriod: 'daily',
-                    minRentalDuration: 7,
-                    depositAmount: 1000,
-                    source: 'system'
+                    minRentalDuration: 1,
+                    depositAmount: 2000,
+                    source: 'supplier'
                 },
                 {
-                    supplierId: 'sample-2',
+                    supplierId: 'supplier-rental',
                     name: { ar: 'رافعة برجية 40 متر', en: 'Tower Crane 40m' },
                     category: 'cranes',
                     productType: 'rental',
-                    price: 5000,
+                    price: 45000,
                     unitType: 'piece',
                     unit: 'وحدة',
-                    stock: 3,
+                    stock: 5,
                     status: 'active',
                     approvalStatus: 'approved',
                     rentalPeriod: 'monthly',
                     minRentalDuration: 3,
-                    depositAmount: 50000,
-                    source: 'system'
+                    depositAmount: 100000,
+                    source: 'supplier'
                 },
                 {
-                    supplierId: 'sample-2',
-                    name: { ar: 'مولد كهربائي 100 كيلو واط', en: 'Generator 100KW' },
-                    category: 'generators',
+                    supplierId: 'supplier-rental',
+                    name: { ar: 'رافعة متحركة 50 طن', en: 'Mobile Crane 50T' },
+                    category: 'cranes',
                     productType: 'rental',
-                    price: 500,
-                    unitType: 'piece',
-                    unit: 'وحدة',
-                    stock: 10,
-                    status: 'active',
-                    approvalStatus: 'pending',
-                    rentalPeriod: 'daily',
-                    minRentalDuration: 1,
-                    depositAmount: 5000,
-                    source: 'system'
-                },
-                {
-                    supplierId: 'sample-2',
-                    name: { ar: 'خلاطة خرسانة', en: 'Concrete Mixer' },
-                    category: 'concrete_mixers',
-                    productType: 'rental',
-                    price: 300,
+                    price: 3500,
                     unitType: 'piece',
                     unit: 'وحدة',
                     stock: 8,
@@ -707,13 +1120,494 @@ class SupplierService {
                     approvalStatus: 'approved',
                     rentalPeriod: 'daily',
                     minRentalDuration: 1,
-                    source: 'system'
+                    depositAmount: 20000,
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-rental',
+                    name: { ar: 'حفار صغير 3 طن', en: 'Mini Excavator 3T' },
+                    category: 'excavators',
+                    productType: 'rental',
+                    price: 800,
+                    unitType: 'piece',
+                    unit: 'وحدة',
+                    stock: 10,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    rentalPeriod: 'daily',
+                    minRentalDuration: 1,
+                    depositAmount: 10000,
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-rental',
+                    name: { ar: 'حفار كبير 20 طن', en: 'Excavator 20T' },
+                    category: 'excavators',
+                    productType: 'rental',
+                    price: 1500,
+                    unitType: 'piece',
+                    unit: 'وحدة',
+                    stock: 6,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    rentalPeriod: 'daily',
+                    minRentalDuration: 1,
+                    depositAmount: 25000,
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-rental',
+                    name: { ar: 'لودر أمامي', en: 'Front Loader' },
+                    category: 'loaders',
+                    productType: 'rental',
+                    price: 900,
+                    unitType: 'piece',
+                    unit: 'وحدة',
+                    stock: 12,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    rentalPeriod: 'daily',
+                    minRentalDuration: 1,
+                    depositAmount: 15000,
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-rental',
+                    name: { ar: 'مولد كهربائي 50 ك.و', en: 'Generator 50KW' },
+                    category: 'generators',
+                    productType: 'rental',
+                    price: 300,
+                    unitType: 'piece',
+                    unit: 'وحدة',
+                    stock: 20,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    rentalPeriod: 'daily',
+                    minRentalDuration: 1,
+                    depositAmount: 5000,
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-rental',
+                    name: { ar: 'مولد كهربائي 100 ك.و', en: 'Generator 100KW' },
+                    category: 'generators',
+                    productType: 'rental',
+                    price: 500,
+                    unitType: 'piece',
+                    unit: 'وحدة',
+                    stock: 15,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    rentalPeriod: 'daily',
+                    minRentalDuration: 1,
+                    depositAmount: 8000,
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-rental',
+                    name: { ar: 'خلاطة خرسانة', en: 'Concrete Mixer' },
+                    category: 'concrete_mixers',
+                    productType: 'rental',
+                    price: 250,
+                    unitType: 'piece',
+                    unit: 'وحدة',
+                    stock: 25,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    rentalPeriod: 'daily',
+                    minRentalDuration: 1,
+                    depositAmount: 3000,
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-rental',
+                    name: { ar: 'مضخة خرسانة', en: 'Concrete Pump' },
+                    category: 'concrete_pumps',
+                    productType: 'rental',
+                    price: 2500,
+                    unitType: 'piece',
+                    unit: 'وحدة',
+                    stock: 8,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    rentalPeriod: 'daily',
+                    minRentalDuration: 1,
+                    depositAmount: 15000,
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-rental',
+                    name: { ar: 'ضاغط هواء', en: 'Air Compressor' },
+                    category: 'compressors',
+                    productType: 'rental',
+                    price: 200,
+                    unitType: 'piece',
+                    unit: 'وحدة',
+                    stock: 30,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    rentalPeriod: 'daily',
+                    minRentalDuration: 1,
+                    depositAmount: 2000,
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-rental',
+                    name: { ar: 'حاوية مكتب موقع', en: 'Site Office Container' },
+                    category: 'site_offices',
+                    productType: 'rental',
+                    price: 2500,
+                    unitType: 'piece',
+                    unit: 'وحدة',
+                    stock: 15,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    rentalPeriod: 'monthly',
+                    minRentalDuration: 1,
+                    depositAmount: 5000,
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-rental',
+                    name: { ar: 'حاوية تخزين 20 قدم', en: 'Storage Container 20ft' },
+                    category: 'containers',
+                    productType: 'rental',
+                    price: 1500,
+                    unitType: 'piece',
+                    unit: 'وحدة',
+                    stock: 20,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    rentalPeriod: 'monthly',
+                    minRentalDuration: 1,
+                    depositAmount: 3000,
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-rental',
+                    name: { ar: 'حمامات متنقلة', en: 'Portable Toilets' },
+                    category: 'portable_toilets',
+                    productType: 'rental',
+                    price: 500,
+                    unitType: 'piece',
+                    unit: 'وحدة',
+                    stock: 40,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    rentalPeriod: 'monthly',
+                    minRentalDuration: 1,
+                    depositAmount: 1000,
+                    source: 'supplier'
+                },
+                // =================== رافعات شوكية (supplier-rental) ===================
+                {
+                    supplierId: 'supplier-rental',
+                    name: { ar: 'رافعة شوكية 3 طن', en: 'Forklift 3T' },
+                    category: 'forklifts',
+                    productType: 'rental',
+                    price: 400,
+                    unitType: 'piece',
+                    unit: 'وحدة',
+                    stock: 15,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    rentalPeriod: 'daily',
+                    minRentalDuration: 1,
+                    depositAmount: 8000,
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-rental',
+                    name: { ar: 'رافعة شوكية 5 طن', en: 'Forklift 5T' },
+                    category: 'forklifts',
+                    productType: 'rental',
+                    price: 600,
+                    unitType: 'piece',
+                    unit: 'وحدة',
+                    stock: 10,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    rentalPeriod: 'daily',
+                    minRentalDuration: 1,
+                    depositAmount: 12000,
+                    source: 'supplier'
+                },
+                // =================== ماكينات لحام وقطع (supplier-rental) ===================
+                {
+                    supplierId: 'supplier-rental',
+                    name: { ar: 'ماكينة لحام كهربائي 400 أمبير', en: 'Electric Welding Machine 400A' },
+                    category: 'welding_machines',
+                    productType: 'rental',
+                    price: 100,
+                    unitType: 'piece',
+                    unit: 'وحدة',
+                    stock: 30,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    rentalPeriod: 'daily',
+                    minRentalDuration: 1,
+                    depositAmount: 1500,
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-rental',
+                    name: { ar: 'ماكينة لحام أرجون', en: 'Argon Welding Machine' },
+                    category: 'welding_machines',
+                    productType: 'rental',
+                    price: 150,
+                    unitType: 'piece',
+                    unit: 'وحدة',
+                    stock: 20,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    rentalPeriod: 'daily',
+                    minRentalDuration: 1,
+                    depositAmount: 2000,
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-rental',
+                    name: { ar: 'ماكينة قطع حديد', en: 'Steel Cutting Machine' },
+                    category: 'cutting_machines',
+                    productType: 'rental',
+                    price: 120,
+                    unitType: 'piece',
+                    unit: 'وحدة',
+                    stock: 25,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    rentalPeriod: 'daily',
+                    minRentalDuration: 1,
+                    depositAmount: 1500,
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-rental',
+                    name: { ar: 'ماكينة قطع بلاط', en: 'Tile Cutting Machine' },
+                    category: 'cutting_machines',
+                    productType: 'rental',
+                    price: 80,
+                    unitType: 'piece',
+                    unit: 'وحدة',
+                    stock: 30,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    rentalPeriod: 'daily',
+                    minRentalDuration: 1,
+                    depositAmount: 800,
+                    source: 'supplier'
+                },
+                // =================== مضخات مياه (supplier-rental) ===================
+                {
+                    supplierId: 'supplier-rental',
+                    name: { ar: 'مضخة تصريف مياه غاطسة', en: 'Submersible Water Pump' },
+                    category: 'water_pumps',
+                    productType: 'rental',
+                    price: 150,
+                    unitType: 'piece',
+                    unit: 'وحدة',
+                    stock: 25,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    rentalPeriod: 'daily',
+                    minRentalDuration: 1,
+                    depositAmount: 1500,
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-rental',
+                    name: { ar: 'مضخة ضغط عالي', en: 'High Pressure Pump' },
+                    category: 'water_pumps',
+                    productType: 'rental',
+                    price: 200,
+                    unitType: 'piece',
+                    unit: 'وحدة',
+                    stock: 15,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    rentalPeriod: 'daily',
+                    minRentalDuration: 1,
+                    depositAmount: 2000,
+                    source: 'supplier'
+                },
+                // =================== أدوات وعدد (supplier-tools) ===================
+                {
+                    supplierId: 'supplier-tools',
+                    name: { ar: 'مثقاب كهربائي احترافي', en: 'Professional Electric Drill' },
+                    category: 'tools',
+                    productType: 'sale',
+                    price: 450,
+                    unitType: 'piece',
+                    unit: 'قطعة',
+                    stock: 100,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-tools',
+                    name: { ar: 'منشار دائري كهربائي', en: 'Electric Circular Saw' },
+                    category: 'tools',
+                    productType: 'sale',
+                    price: 650,
+                    unitType: 'piece',
+                    unit: 'قطعة',
+                    stock: 50,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-tools',
+                    name: { ar: 'صاروخ جلخ 7 بوصة', en: 'Angle Grinder 7 inch' },
+                    category: 'tools',
+                    productType: 'sale',
+                    price: 380,
+                    unitType: 'piece',
+                    unit: 'قطعة',
+                    stock: 80,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-tools',
+                    name: { ar: 'مفك براغي كهربائي', en: 'Electric Screwdriver' },
+                    category: 'tools',
+                    productType: 'sale',
+                    price: 280,
+                    unitType: 'piece',
+                    unit: 'قطعة',
+                    stock: 120,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-tools',
+                    name: { ar: 'طقم مفاتيح ربط 24 قطعة', en: 'Wrench Set 24 pcs' },
+                    category: 'tools',
+                    productType: 'sale',
+                    price: 350,
+                    unitType: 'piece',
+                    unit: 'طقم',
+                    stock: 60,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-tools',
+                    name: { ar: 'شريط قياس 50 متر', en: 'Measuring Tape 50m' },
+                    category: 'tools',
+                    productType: 'sale',
+                    price: 85,
+                    unitType: 'piece',
+                    unit: 'قطعة',
+                    stock: 200,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-tools',
+                    name: { ar: 'ميزان ليزر', en: 'Laser Level' },
+                    category: 'tools',
+                    productType: 'sale',
+                    price: 550,
+                    unitType: 'piece',
+                    unit: 'قطعة',
+                    stock: 40,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
+                },
+                {
+                    supplierId: 'supplier-tools',
+                    name: { ar: 'سلم ألمنيوم 6 درجات', en: 'Aluminum Ladder 6 Steps' },
+                    category: 'tools',
+                    productType: 'sale',
+                    price: 320,
+                    unitType: 'piece',
+                    unit: 'قطعة',
+                    stock: 45,
+                    status: 'active',
+                    approvalStatus: 'approved',
+                    source: 'supplier'
                 }
             ];
 
+            console.log('عدد المنتجات اليدوية:', sampleProducts.length);
             for (const product of sampleProducts) {
                 this.addProduct(product);
             }
+            console.log('تم إضافة المنتجات اليدوية، الإجمالي الآن:', this.getProducts().length);
+
+            // =================== إضافة منتجات من ITEMS_DATABASE ===================
+            // ربط تصنيفات ITEMS_DATABASE بتصنيفات الموردين والموردين المناسبين
+            const categoryMapping: Record<string, { supplierCategory: string; supplierId: string }> = {
+                'site': { supplierCategory: 'building_materials', supplierId: 'supplier-cement' },
+                'structure': { supplierCategory: 'cement', supplierId: 'supplier-cement' },
+                'architecture': { supplierCategory: 'tiles', supplierId: 'sample-2' },
+                'mep_elec': { supplierCategory: 'electrical', supplierId: 'supplier-electrical' },
+                'mep_plumb': { supplierCategory: 'plumbing', supplierId: 'supplier-plumbing' },
+                'mep_hvac': { supplierCategory: 'electrical', supplierId: 'supplier-electrical' },
+                'insulation': { supplierCategory: 'insulation', supplierId: 'sample-2' },
+                'safety': { supplierCategory: 'safety_equipment', supplierId: 'sample-2' },
+                'gov_fees': { supplierCategory: 'other', supplierId: 'sample-2' },
+                'manpower': { supplierCategory: 'other', supplierId: 'supplier-rental' },
+                'custom': { supplierCategory: 'other', supplierId: 'sample-2' }
+            };
+
+            // تحويل بنود ITEMS_DATABASE إلى منتجات
+            console.log('بدء تحميل ITEMS_DATABASE، عدد البنود:', ITEMS_DATABASE.length);
+            let addedCount = 0;
+            for (const item of ITEMS_DATABASE) {
+                try {
+                    const mapping = categoryMapping[item.category] || { supplierCategory: 'other', supplierId: 'sample-2' };
+
+                    // حساب السعر الإجمالي = تكلفة المواد + تكلفة العمالة + نسبة الهدر
+                    const basePrice = item.baseMaterial + item.baseLabor;
+                    const priceWithWaste = basePrice * (1 + item.waste);
+
+                    // تحديد نوع الوحدة بناءً على الوحدة النصية
+                    let unitType: UnitType = 'piece';
+                    const unitLower = item.unit.toLowerCase();
+                    if (unitLower.includes('م2') || unitLower.includes('sqm')) unitType = 'sqm';
+                    else if (unitLower.includes('م3') || unitLower.includes('cbm')) unitType = 'cbm';
+                    else if (unitLower.includes('م.ط') || unitLower.includes('متر') || unitLower.includes('meter')) unitType = 'meter';
+                    else if (unitLower.includes('طن') || unitLower.includes('ton')) unitType = 'ton';
+                    else if (unitLower.includes('كجم') || unitLower.includes('kg')) unitType = 'kg';
+                    else if (unitLower.includes('كيس') || unitLower.includes('bag')) unitType = 'bag';
+                    else if (unitLower.includes('لتر') || unitLower.includes('liter')) unitType = 'liter';
+
+                    const categoryInfo = PRODUCT_CATEGORIES[mapping.supplierCategory];
+                    const systemProduct: Omit<SupplierProduct, 'id' | 'createdAt' | 'updatedAt'> = {
+                        supplierId: mapping.supplierId,
+                        name: { ar: item.name.ar, en: item.name.en },
+                        category: mapping.supplierCategory,
+                        productType: 'sale',
+                        price: Math.round(priceWithWaste * 100) / 100,
+                        unitType: unitType,
+                        unit: item.unit,
+                        stock: Math.max(item.qty, 100),
+                        status: 'active',
+                        approvalStatus: 'approved',
+                        source: 'system',
+                        specifications: `كود SBC: ${item.sbc}`,
+                        description: {
+                            ar: `بند إنشائي - ${categoryInfo?.ar || mapping.supplierCategory}`,
+                            en: `Construction item - ${categoryInfo?.en || mapping.supplierCategory}`
+                        }
+                    };
+
+                    this.addProduct(systemProduct);
+                    addedCount++;
+                } catch (error) {
+                    console.error('خطأ في إضافة بند:', item.id, error);
+                }
+            }
+            console.log('تم إضافة', addedCount, 'بند من ITEMS_DATABASE');
         }
     }
 }

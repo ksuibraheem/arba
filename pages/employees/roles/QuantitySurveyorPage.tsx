@@ -41,6 +41,15 @@ import {
     PRIORITY_COLORS,
     STATUS_COLORS
 } from '../../../services/dataCorrectionService';
+import {
+    externalSupplierService,
+    ExternalSupplier,
+    ExternalPrice,
+    EXTERNAL_LINK_TYPES,
+    PRICE_SOURCES
+} from '../../../services/externalSupplierService';
+import { ITEMS_DATABASE } from '../../../constants';
+import { ProjectType, BaseItem } from '../../../types';
 
 // ====================== Props ======================
 interface QuantitySurveyorPageProps {
@@ -50,7 +59,7 @@ interface QuantitySurveyorPageProps {
 }
 
 // ====================== Tab Types ======================
-type TabType = 'dashboard' | 'products' | 'suppliers' | 'companies' | 'individuals' | 'discounts' | 'corrections';
+type TabType = 'dashboard' | 'products' | 'suppliers' | 'companies' | 'individuals' | 'discounts' | 'corrections' | 'external_pricing' | 'items_management';
 
 // ====================== Main Component ======================
 const QuantitySurveyorPage: React.FC<QuantitySurveyorPageProps> = ({
@@ -104,6 +113,73 @@ const QuantitySurveyorPage: React.FC<QuantitySurveyorPageProps> = ({
         priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent'
     });
 
+    // External Suppliers state
+    const [externalSuppliers, setExternalSuppliers] = useState<ExternalSupplier[]>([]);
+    const [externalPrices, setExternalPrices] = useState<ExternalPrice[]>([]);
+    const [showExternalSupplierModal, setShowExternalSupplierModal] = useState(false);
+    const [showExternalPriceModal, setShowExternalPriceModal] = useState(false);
+    const [selectedExternalSupplier, setSelectedExternalSupplier] = useState<ExternalSupplier | null>(null);
+    const [externalSupplierForm, setExternalSupplierForm] = useState({
+        name: { ar: '', en: '' },
+        companyName: '',
+        contactPerson: '',
+        phone: '',
+        email: '',
+        website: '',
+        linkType: 'manual' as 'manual' | 'api' | 'scraping',
+        categories: [] as string[],
+        apiEndpoint: '',
+        apiKey: '',
+        refreshInterval: 24
+    });
+    const [externalPriceForm, setExternalPriceForm] = useState({
+        externalSupplierId: '',
+        productName: { ar: '', en: '' },
+        productCode: '',
+        category: '',
+        unit: '',
+        price: 0,
+        source: 'manual_entry' as 'manual_entry' | 'api_fetch' | 'website_scrape' | 'quotation',
+        sourceReference: ''
+    });
+
+    // Items Management State
+    const [selectedProjectType, setSelectedProjectType] = useState<'all' | ProjectType | 'villa' | 'tower' | 'rest_house' | 'factory' | 'farm' | 'school' | 'hospital'>('all');
+    const [itemsSearchQuery, setItemsSearchQuery] = useState('');
+    const [selectedItemCategory, setSelectedItemCategory] = useState<string>('all');
+    const [editingItem, setEditingItem] = useState<BaseItem | null>(null);
+    const [showItemModal, setShowItemModal] = useState(false);
+    const [customItems, setCustomItems] = useState<BaseItem[]>([]);
+
+    // Project Types for filtering
+    const PROJECT_TYPES: { id: string; ar: string; en: string }[] = [
+        { id: 'all', ar: 'جميع الأنواع', en: 'All Types' },
+        { id: 'villa', ar: 'فيلا', en: 'Villa' },
+        { id: 'tower', ar: 'برج', en: 'Tower' },
+        { id: 'rest_house', ar: 'استراحة', en: 'Rest House' },
+        { id: 'factory', ar: 'مصنع', en: 'Factory' },
+        { id: 'farm', ar: 'مزرعة', en: 'Farm' },
+        { id: 'school', ar: 'مدرسة', en: 'School' },
+        { id: 'hospital', ar: 'مستشفى', en: 'Hospital' },
+        { id: 'mosque', ar: 'مسجد', en: 'Mosque' },
+        { id: 'hotel', ar: 'فندق', en: 'Hotel' },
+        { id: 'residential_building', ar: 'عمارة سكنية', en: 'Residential Building' }
+    ];
+
+    // Item Categories
+    const ITEM_CATEGORIES: { id: string; ar: string; en: string }[] = [
+        { id: 'all', ar: 'جميع التصنيفات', en: 'All Categories' },
+        { id: 'site', ar: 'أعمال الموقع', en: 'Site Work' },
+        { id: 'structure', ar: 'الهيكل الإنشائي', en: 'Structure' },
+        { id: 'architecture', ar: 'التشطيبات', en: 'Architecture' },
+        { id: 'mep_elec', ar: 'الكهرباء', en: 'Electrical' },
+        { id: 'mep_plumb', ar: 'السباكة', en: 'Plumbing' },
+        { id: 'mep_hvac', ar: 'التكييف', en: 'HVAC' },
+        { id: 'insulation', ar: 'العزل', en: 'Insulation' },
+        { id: 'safety', ar: 'السلامة', en: 'Safety' },
+        { id: 'gov_fees', ar: 'الرسوم الحكومية', en: 'Government Fees' }
+    ];
+
     // Load data
     useEffect(() => {
         loadData();
@@ -149,6 +225,11 @@ const QuantitySurveyorPage: React.FC<QuantitySurveyorPageProps> = ({
 
         // Correction requests
         setCorrectionRequests(dataCorrectionService.getRequestsByEngineer(employee.id));
+
+        // External Suppliers
+        externalSupplierService.initializeSampleData();
+        setExternalSuppliers(externalSupplierService.getSuppliers());
+        setExternalPrices(externalSupplierService.getPrices());
     };
 
     // Handle review actions
@@ -427,6 +508,8 @@ const QuantitySurveyorPage: React.FC<QuantitySurveyorPageProps> = ({
         { id: 'individuals', label: t('الأفراد', 'Individuals'), icon: <Users className="w-5 h-5" /> },
         { id: 'discounts', label: t('طلبات التخفيض', 'Discount Requests'), icon: <Percent className="w-5 h-5" />, count: discountRequests.filter(r => r.status === 'pending').length },
         { id: 'corrections', label: t('طلبات التصحيح', 'Correction Requests'), icon: <MessageSquare className="w-5 h-5" />, count: correctionRequests.filter(r => r.status === 'pending').length },
+        { id: 'external_pricing', label: t('تسعير الموردين الخارجيين', 'External Pricing'), icon: <DollarSign className="w-5 h-5" />, count: externalPrices.length },
+        { id: 'items_management', label: t('إدارة البنود', 'Items Management'), icon: <ClipboardCheck className="w-5 h-5" />, count: ITEMS_DATABASE.length },
     ];
 
     return (
@@ -997,6 +1080,433 @@ const QuantitySurveyorPage: React.FC<QuantitySurveyorPageProps> = ({
                                     ))
                                 )}
                             </div>
+                        </div>
+                    )}
+
+                    {/* External Pricing Tab */}
+                    {activeTab === 'external_pricing' && (
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-xl font-bold text-white">{t('تسعير الموردين الخارجيين', 'External Supplier Pricing')}</h3>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setShowExternalSupplierModal(true)}
+                                        className="flex items-center gap-2 px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600"
+                                    >
+                                        <Plus className="w-4 h-4" />
+                                        {t('مورد جديد', 'New Supplier')}
+                                    </button>
+                                    <button
+                                        onClick={() => setShowExternalPriceModal(true)}
+                                        className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                                    >
+                                        <Plus className="w-4 h-4" />
+                                        {t('سعر جديد', 'New Price')}
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Stats */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700/50">
+                                    <p className="text-slate-400 text-sm">{t('الموردين الخارجيين', 'External Suppliers')}</p>
+                                    <p className="text-2xl font-bold text-white">{externalSuppliers.length}</p>
+                                </div>
+                                <div className="bg-cyan-500/10 rounded-lg p-4 border border-cyan-500/30">
+                                    <p className="text-slate-400 text-sm">{t('إجمالي الأسعار', 'Total Prices')}</p>
+                                    <p className="text-2xl font-bold text-cyan-400">{externalPrices.length}</p>
+                                </div>
+                                <div className="bg-green-500/10 rounded-lg p-4 border border-green-500/30">
+                                    <p className="text-slate-400 text-sm">{t('ربط API', 'API Connected')}</p>
+                                    <p className="text-2xl font-bold text-green-400">
+                                        {externalSuppliers.filter(s => s.linkType === 'api').length}
+                                    </p>
+                                </div>
+                                <div className="bg-purple-500/10 rounded-lg p-4 border border-purple-500/30">
+                                    <p className="text-slate-400 text-sm">{t('ربط يدوي', 'Manual Entry')}</p>
+                                    <p className="text-2xl font-bold text-purple-400">
+                                        {externalSuppliers.filter(s => s.linkType === 'manual').length}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Suppliers List */}
+                            <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 overflow-hidden">
+                                <div className="px-4 py-3 bg-slate-700/50 border-b border-slate-600/50">
+                                    <h4 className="text-white font-medium">{t('الموردين الخارجيين', 'External Suppliers')}</h4>
+                                </div>
+                                {externalSuppliers.length === 0 ? (
+                                    <div className="text-center py-12 text-slate-400">
+                                        <Building2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                                        <p>{t('لا يوجد موردين خارجيين', 'No external suppliers')}</p>
+                                        <p className="text-sm mt-2">{t('أضف مورداً خارجياً لبدء مقارنة الأسعار', 'Add an external supplier to start comparing prices')}</p>
+                                    </div>
+                                ) : (
+                                    <table className="w-full">
+                                        <thead className="bg-slate-700/30">
+                                            <tr>
+                                                <th className="px-4 py-3 text-right text-sm text-slate-300">{t('المورد', 'Supplier')}</th>
+                                                <th className="px-4 py-3 text-right text-sm text-slate-300">{t('نوع الربط', 'Link Type')}</th>
+                                                <th className="px-4 py-3 text-center text-sm text-slate-300">{t('المنتجات', 'Products')}</th>
+                                                <th className="px-4 py-3 text-center text-sm text-slate-300">{t('آخر تحديث', 'Last Update')}</th>
+                                                <th className="px-4 py-3 text-center text-sm text-slate-300">{t('الإجراءات', 'Actions')}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-700/50">
+                                            {externalSuppliers.map(supplier => {
+                                                const supplierPrices = externalPrices.filter(p => p.externalSupplierId === supplier.id);
+                                                return (
+                                                    <tr key={supplier.id} className="hover:bg-slate-700/30">
+                                                        <td className="px-4 py-3">
+                                                            <p className="text-white font-medium">{supplier.name[language]}</p>
+                                                            <p className="text-slate-400 text-sm">{supplier.companyName}</p>
+                                                        </td>
+                                                        <td className="px-4 py-3">
+                                                            <span className={`px-2 py-1 rounded text-xs ${supplier.linkType === 'api' ? 'bg-green-500/20 text-green-400' :
+                                                                supplier.linkType === 'manual' ? 'bg-blue-500/20 text-blue-400' :
+                                                                    'bg-purple-500/20 text-purple-400'
+                                                                }`}>
+                                                                {EXTERNAL_LINK_TYPES[supplier.linkType]?.icon} {EXTERNAL_LINK_TYPES[supplier.linkType]?.[language]}
+                                                            </span>
+                                                        </td>
+                                                        <td className="px-4 py-3 text-center text-white">{supplierPrices.length}</td>
+                                                        <td className="px-4 py-3 text-center text-slate-400 text-sm">
+                                                            {new Date(supplier.updatedAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-center">
+                                                            <div className="flex justify-center gap-2">
+                                                                {supplier.linkType === 'api' && (
+                                                                    <button
+                                                                        onClick={async () => {
+                                                                            const result = await externalSupplierService.fetchPricesFromAPI(supplier.id);
+                                                                            if (result.success) {
+                                                                                loadData();
+                                                                                alert(t(`تم جلب ${result.count} سعر`, `Fetched ${result.count} prices`));
+                                                                            } else {
+                                                                                alert(result.error);
+                                                                            }
+                                                                        }}
+                                                                        className="p-2 bg-green-500/20 text-green-400 rounded hover:bg-green-500/30"
+                                                                        title={t('تحديث الأسعار', 'Refresh Prices')}
+                                                                    >
+                                                                        <RefreshCw className="w-4 h-4" />
+                                                                    </button>
+                                                                )}
+                                                                <button
+                                                                    onClick={() => setSelectedExternalSupplier(supplier)}
+                                                                    className="p-2 bg-cyan-500/20 text-cyan-400 rounded hover:bg-cyan-500/30"
+                                                                    title={t('عرض', 'View')}
+                                                                >
+                                                                    <Eye className="w-4 h-4" />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
+
+                            {/* Prices List */}
+                            <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 overflow-hidden">
+                                <div className="px-4 py-3 bg-slate-700/50 border-b border-slate-600/50">
+                                    <h4 className="text-white font-medium">{t('جدول الأسعار', 'Prices Table')}</h4>
+                                </div>
+                                {externalPrices.length === 0 ? (
+                                    <div className="text-center py-12 text-slate-400">
+                                        <DollarSign className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                                        <p>{t('لا توجد أسعار مسجلة', 'No prices registered')}</p>
+                                    </div>
+                                ) : (
+                                    <table className="w-full">
+                                        <thead className="bg-slate-700/30">
+                                            <tr>
+                                                <th className="px-4 py-3 text-right text-sm text-slate-300">{t('المنتج', 'Product')}</th>
+                                                <th className="px-4 py-3 text-right text-sm text-slate-300">{t('المورد', 'Supplier')}</th>
+                                                <th className="px-4 py-3 text-center text-sm text-slate-300">{t('السعر', 'Price')}</th>
+                                                <th className="px-4 py-3 text-center text-sm text-slate-300">{t('السعر الداخلي', 'Internal Price')}</th>
+                                                <th className="px-4 py-3 text-center text-sm text-slate-300">{t('الفرق', 'Difference')}</th>
+                                                <th className="px-4 py-3 text-center text-sm text-slate-300">{t('المصدر', 'Source')}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-700/50">
+                                            {externalPrices.slice(0, 20).map(price => {
+                                                const supplier = externalSuppliers.find(s => s.id === price.externalSupplierId);
+                                                const diff = price.priceDifference || 0;
+                                                return (
+                                                    <tr key={price.id} className="hover:bg-slate-700/30">
+                                                        <td className="px-4 py-3">
+                                                            <p className="text-white">{price.productName[language]}</p>
+                                                            <p className="text-slate-400 text-xs">{price.productCode} • {price.unit}</p>
+                                                        </td>
+                                                        <td className="px-4 py-3 text-slate-300">{supplier?.name[language] || '-'}</td>
+                                                        <td className="px-4 py-3 text-center text-white font-medium">
+                                                            {price.price.toLocaleString()} {price.currency}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-center text-slate-400">
+                                                            {price.internalPrice ? `${price.internalPrice.toLocaleString()} SAR` : '-'}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-center">
+                                                            {price.internalPrice ? (
+                                                                <span className={`px-2 py-1 rounded text-xs ${diff < -1 ? 'bg-green-500/20 text-green-400' :
+                                                                    diff > 1 ? 'bg-red-500/20 text-red-400' :
+                                                                        'bg-slate-500/20 text-slate-400'
+                                                                    }`}>
+                                                                    {diff > 0 ? '+' : ''}{diff.toFixed(1)}%
+                                                                </span>
+                                                            ) : '-'}
+                                                        </td>
+                                                        <td className="px-4 py-3 text-center">
+                                                            <span className="text-slate-400 text-xs">
+                                                                {PRICE_SOURCES[price.source]?.[language] || price.source}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Items Management Tab */}
+                    {activeTab === 'items_management' && (
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-xl font-bold text-white">{t('إدارة البنود حسب نوع المشروع', 'Items Management by Project Type')}</h3>
+                                <button
+                                    onClick={() => setShowItemModal(true)}
+                                    className="flex items-center gap-2 px-4 py-2 bg-cyan-500 text-white rounded-lg hover:bg-cyan-600"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    {t('بند جديد', 'New Item')}
+                                </button>
+                            </div>
+
+                            {/* Filters */}
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                {/* Search */}
+                                <div className="relative">
+                                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                                    <input
+                                        type="text"
+                                        placeholder={t('بحث عن بند...', 'Search items...')}
+                                        value={itemsSearchQuery}
+                                        onChange={(e) => setItemsSearchQuery(e.target.value)}
+                                        className="w-full bg-slate-800/50 border border-slate-700/50 rounded-lg pr-10 pl-4 py-2 text-white placeholder:text-slate-500"
+                                    />
+                                </div>
+
+                                {/* Project Type Filter */}
+                                <select
+                                    value={selectedProjectType}
+                                    onChange={(e) => setSelectedProjectType(e.target.value as any)}
+                                    className="bg-slate-800/50 border border-slate-700/50 rounded-lg px-4 py-2 text-white"
+                                >
+                                    {PROJECT_TYPES.map(type => (
+                                        <option key={type.id} value={type.id}>{type[language]}</option>
+                                    ))}
+                                </select>
+
+                                {/* Category Filter */}
+                                <select
+                                    value={selectedItemCategory}
+                                    onChange={(e) => setSelectedItemCategory(e.target.value)}
+                                    className="bg-slate-800/50 border border-slate-700/50 rounded-lg px-4 py-2 text-white"
+                                >
+                                    {ITEM_CATEGORIES.map(cat => (
+                                        <option key={cat.id} value={cat.id}>{cat[language]}</option>
+                                    ))}
+                                </select>
+
+                                {/* Count */}
+                                <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg px-4 py-2 text-center">
+                                    <span className="text-slate-400">{t('إجمالي البنود:', 'Total Items:')}</span>
+                                    <span className="text-cyan-400 font-bold mr-2">{ITEMS_DATABASE.length}</span>
+                                </div>
+                            </div>
+
+                            {/* Project Type Cards */}
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                                {PROJECT_TYPES.filter(pt => pt.id !== 'all').slice(0, 5).map(projectType => {
+                                    const itemsCount = ITEMS_DATABASE.filter(item =>
+                                        item.type === 'all' || item.type === projectType.id
+                                    ).length;
+                                    return (
+                                        <button
+                                            key={projectType.id}
+                                            onClick={() => setSelectedProjectType(projectType.id as any)}
+                                            className={`p-4 rounded-xl border transition ${selectedProjectType === projectType.id
+                                                    ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400'
+                                                    : 'bg-slate-800/50 border-slate-700/50 text-slate-300 hover:bg-slate-700/50'
+                                                }`}
+                                        >
+                                            <p className="font-medium">{projectType[language]}</p>
+                                            <p className="text-2xl font-bold mt-1">{itemsCount}</p>
+                                            <p className="text-xs text-slate-400">{t('بند', 'items')}</p>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Items Table */}
+                            <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 overflow-hidden">
+                                <div className="px-4 py-3 bg-slate-700/50 border-b border-slate-600/50">
+                                    <h4 className="text-white font-medium">
+                                        {t('جدول البنود', 'Items Table')} -
+                                        <span className="text-cyan-400 mr-2">
+                                            {PROJECT_TYPES.find(pt => pt.id === selectedProjectType)?.[language] || t('جميع الأنواع', 'All Types')}
+                                        </span>
+                                    </h4>
+                                </div>
+                                <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+                                    <table className="w-full">
+                                        <thead className="bg-slate-700/30 sticky top-0">
+                                            <tr>
+                                                <th className="px-4 py-3 text-right text-sm text-slate-300">{t('الكود', 'Code')}</th>
+                                                <th className="px-4 py-3 text-right text-sm text-slate-300">{t('البند', 'Item')}</th>
+                                                <th className="px-4 py-3 text-right text-sm text-slate-300">{t('التصنيف', 'Category')}</th>
+                                                <th className="px-4 py-3 text-center text-sm text-slate-300">{t('الوحدة', 'Unit')}</th>
+                                                <th className="px-4 py-3 text-center text-sm text-slate-300">{t('تكلفة المواد', 'Material')}</th>
+                                                <th className="px-4 py-3 text-center text-sm text-slate-300">{t('تكلفة العمالة', 'Labor')}</th>
+                                                <th className="px-4 py-3 text-center text-sm text-slate-300">{t('الهدر %', 'Waste %')}</th>
+                                                <th className="px-4 py-3 text-center text-sm text-slate-300">{t('الإجمالي', 'Total')}</th>
+                                                <th className="px-4 py-3 text-center text-sm text-slate-300">{t('الإجراءات', 'Actions')}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-700/50">
+                                            {ITEMS_DATABASE
+                                                .filter(item => {
+                                                    // Filter by project type
+                                                    if (selectedProjectType !== 'all' && item.type !== 'all' && item.type !== selectedProjectType) {
+                                                        return false;
+                                                    }
+                                                    // Filter by category
+                                                    if (selectedItemCategory !== 'all' && item.category !== selectedItemCategory) {
+                                                        return false;
+                                                    }
+                                                    // Filter by search
+                                                    if (itemsSearchQuery) {
+                                                        const searchLower = itemsSearchQuery.toLowerCase();
+                                                        return (
+                                                            item.name.ar.includes(itemsSearchQuery) ||
+                                                            item.name.en.toLowerCase().includes(searchLower) ||
+                                                            item.id.toLowerCase().includes(searchLower)
+                                                        );
+                                                    }
+                                                    return true;
+                                                })
+                                                .slice(0, 50)
+                                                .map(item => {
+                                                    const total = (item.baseMaterial + item.baseLabor) * (1 + item.waste);
+                                                    const categoryInfo = ITEM_CATEGORIES.find(c => c.id === item.category);
+                                                    return (
+                                                        <tr key={item.id} className="hover:bg-slate-700/30">
+                                                            <td className="px-4 py-3 text-cyan-400 font-mono text-sm">{item.id}</td>
+                                                            <td className="px-4 py-3">
+                                                                <p className="text-white">{item.name[language]}</p>
+                                                                <p className="text-slate-400 text-xs">{item.sbc}</p>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-slate-300 text-sm">
+                                                                {categoryInfo?.[language] || item.category}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-center text-slate-300">{item.unit}</td>
+                                                            <td className="px-4 py-3 text-center text-green-400">
+                                                                {item.baseMaterial.toLocaleString()} <span className="text-xs text-slate-400">ر.س</span>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-center text-blue-400">
+                                                                {item.baseLabor.toLocaleString()} <span className="text-xs text-slate-400">ر.س</span>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-center text-orange-400">
+                                                                {(item.waste * 100).toFixed(0)}%
+                                                            </td>
+                                                            <td className="px-4 py-3 text-center text-white font-medium">
+                                                                {total.toLocaleString(undefined, { maximumFractionDigits: 2 })} <span className="text-xs text-slate-400">ر.س</span>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-center">
+                                                                <div className="flex justify-center gap-2">
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            setEditingItem(item);
+                                                                            setShowItemModal(true);
+                                                                        }}
+                                                                        className="p-2 bg-cyan-500/20 text-cyan-400 rounded hover:bg-cyan-500/30"
+                                                                        title={t('تعديل', 'Edit')}
+                                                                    >
+                                                                        <Edit2 className="w-4 h-4" />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => setEditingItem(item)}
+                                                                        className="p-2 bg-green-500/20 text-green-400 rounded hover:bg-green-500/30"
+                                                                        title={t('عرض التفاصيل', 'View Details')}
+                                                                    >
+                                                                        <Eye className="w-4 h-4" />
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {ITEMS_DATABASE.length > 50 && (
+                                    <div className="px-4 py-3 bg-slate-700/30 text-center text-slate-400 text-sm">
+                                        {t('يُعرض أول 50 بند. استخدم البحث أو الفلاتر لعرض المزيد.', 'Showing first 50 items. Use search or filters to view more.')}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Selected Item Details */}
+                            {editingItem && !showItemModal && (
+                                <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-6">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h4 className="text-lg font-bold text-white">{editingItem.name[language]}</h4>
+                                        <button
+                                            onClick={() => setEditingItem(null)}
+                                            className="p-2 text-slate-400 hover:text-white"
+                                        >
+                                            <X className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                        <div className="bg-slate-700/30 rounded-lg p-3">
+                                            <p className="text-slate-400 text-sm">{t('الكود', 'Code')}</p>
+                                            <p className="text-white font-mono">{editingItem.id}</p>
+                                        </div>
+                                        <div className="bg-slate-700/30 rounded-lg p-3">
+                                            <p className="text-slate-400 text-sm">{t('كود SBC', 'SBC Code')}</p>
+                                            <p className="text-white">{editingItem.sbc}</p>
+                                        </div>
+                                        <div className="bg-slate-700/30 rounded-lg p-3">
+                                            <p className="text-slate-400 text-sm">{t('نوع المشروع', 'Project Type')}</p>
+                                            <p className="text-white">{editingItem.type === 'all' ? t('الكل', 'All') : editingItem.type}</p>
+                                        </div>
+                                        <div className="bg-slate-700/30 rounded-lg p-3">
+                                            <p className="text-slate-400 text-sm">{t('الكمية الافتراضية', 'Default Qty')}</p>
+                                            <p className="text-white">{editingItem.qty} {editingItem.unit}</p>
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 grid grid-cols-3 gap-4">
+                                        <div className="bg-green-500/10 rounded-lg p-3 border border-green-500/30">
+                                            <p className="text-slate-400 text-sm">{t('تكلفة المواد', 'Material Cost')}</p>
+                                            <p className="text-green-400 text-xl font-bold">{editingItem.baseMaterial.toLocaleString()} ر.س</p>
+                                        </div>
+                                        <div className="bg-blue-500/10 rounded-lg p-3 border border-blue-500/30">
+                                            <p className="text-slate-400 text-sm">{t('تكلفة العمالة', 'Labor Cost')}</p>
+                                            <p className="text-blue-400 text-xl font-bold">{editingItem.baseLabor.toLocaleString()} ر.س</p>
+                                        </div>
+                                        <div className="bg-orange-500/10 rounded-lg p-3 border border-orange-500/30">
+                                            <p className="text-slate-400 text-sm">{t('نسبة الهدر', 'Waste Ratio')}</p>
+                                            <p className="text-orange-400 text-xl font-bold">{(editingItem.waste * 100).toFixed(1)}%</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
