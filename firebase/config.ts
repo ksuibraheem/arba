@@ -10,7 +10,7 @@ import { getAnalytics } from 'firebase/analytics';
 
 // Firebase configuration from Firebase Console
 const firebaseConfig = {
-    apiKey: "AIzaSyBWMoxd-bZrwzIV7Fwz59t0t0DGkuB5h4o",
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
     authDomain: "arba-d6baf.firebaseapp.com",
     projectId: "arba-d6baf",
     storageBucket: "arba-d6baf.firebasestorage.app",
