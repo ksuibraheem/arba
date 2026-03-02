@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مهندس الكميات - تصميم جديد</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans Arabic', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            min-height: 100vh;
+            color: #e2e8f0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(71, 85, 105, 0.4);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            padding: 16px 32px;
+        }
+
+        .header-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-avatar {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: 800;
+            color: white;
+            box-shadow: 0 8px 24px rgba(6, 182, 212, 0.3);
+        }
+
+        .user-details h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .user-details .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #94a3b8;
+            font-size: 14px;
+            margin-top: 2px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #22c55e;
+            box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .notification-btn {
+            position: relative;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(51, 65, 85, 0.5);
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            color: #94a3b8;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s;
+        }
+
+        .notification-btn:hover {
+            background: rgba(71, 85, 105, 0.5);
+            color: white;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -4px;
+            left: -4px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ef4444;
+            color: white;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #f87171;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.25);
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px;
+        }
+
+        /* ===== KPI BAR ===== */
+        .kpi-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .kpi-card {
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: default;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .kpi-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.1), transparent);
+            pointer-events: none;
+        }
+
+        .kpi-1 {
+            background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(249, 115, 22, 0.15));
+            border: 1px solid rgba(234, 179, 8, 0.3);
+        }
+
+        .kpi-2 {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(16, 185, 129, 0.15));
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .kpi-3 {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(6, 182, 212, 0.15));
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .kpi-4 {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(236, 72, 153, 0.15));
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+
+        .kpi-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .kpi-icon {
+            font-size: 20px;
+        }
+
+        .kpi-label {
+            font-size: 13px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: white;
+        }
+
+        .kpi-trend {
+            font-size: 12px;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .trend-up {
+            color: #22c55e;
+        }
+
+        .trend-down {
+            color: #ef4444;
+        }
+
+        /* ===== SECTION TITLE ===== */
+        .section-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(71, 85, 105, 0.5), transparent);
+        }
+
+        /* ===== SECTION CARDS GRID ===== */
+        .sections-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .section-card {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(71, 85, 105, 0.4);
+            border-radius: 20px;
+            padding: 28px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .section-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 20px 20px 0 0;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .section-card:hover::before {
+            opacity: 1;
+        }
+
+        .section-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(100, 116, 139, 0.6);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-1::before {
+            background: linear-gradient(90deg, #06b6d4, #3b82f6);
+        }
+
+        .card-2::before {
+            background: linear-gradient(90deg, #22c55e, #10b981);
+        }
+
+        .card-3::before {
+            background: linear-gradient(90deg, #f97316, #f59e0b);
+        }
+
+        .card-4::before {
+            background: linear-gradient(90deg, #a855f7, #ec4899);
+        }
+
+        .card-5::before {
+            background: linear-gradient(90deg, #ef4444, #f43f5e);
+        }
+
+        .card-1:hover {
+            box-shadow: 0 20px 40px rgba(6, 182, 212, 0.15);
+        }
+
+        .card-2:hover {
+            box-shadow: 0 20px 40px rgba(34, 197, 94, 0.15);
+        }
+
+        .card-3:hover {
+            box-shadow: 0 20px 40px rgba(249, 115, 22, 0.15);
+        }
+
+        .card-4:hover {
+            box-shadow: 0 20px 40px rgba(168, 85, 247, 0.15);
+        }
+
+        .card-5:hover {
+            box-shadow: 0 20px 40px rgba(239, 68, 68, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .card-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .icon-1 {
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+        }
+
+        .icon-2 {
+            background: linear-gradient(135deg, #22c55e, #10b981);
+        }
+
+        .icon-3 {
+            background: linear-gradient(135deg, #f97316, #f59e0b);
+        }
+
+        .icon-4 {
+            background: linear-gradient(135deg, #a855f7, #ec4899);
+        }
+
+        .icon-5 {
+            background: linear-gradient(135deg, #ef4444, #f43f5e);
+        }
+
+        .card-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .badge-1 {
+            background: rgba(6, 182, 212, 0.15);
+            color: #22d3ee;
+            border: 1px solid rgba(6, 182, 212, 0.3);
+        }
+
+        .badge-2 {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .badge-3 {
+            background: rgba(249, 115, 22, 0.15);
+            color: #fb923c;
+            border: 1px solid rgba(249, 115, 22, 0.3);
+        }
+
+        .badge-4 {
+            background: rgba(168, 85, 247, 0.15);
+            color: #c084fc;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+
+        .badge-5 {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 6px;
+        }
+
+        .card-desc {
+            font-size: 13px;
+            color: #94a3b8;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .card-stats {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            flex: 1;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            border: 1px solid rgba(51, 65, 85, 0.5);
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: 800;
+            color: white;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .card-action {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .action-1 {
+            background: rgba(6, 182, 212, 0.15);
+            color: #22d3ee;
+            border: 1px solid rgba(6, 182, 212, 0.3);
+        }
+
+        .action-1:hover {
+            background: rgba(6, 182, 212, 0.25);
+        }
+
+        .action-2 {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .action-2:hover {
+            background: rgba(34, 197, 94, 0.25);
+        }
+
+        .action-3 {
+            background: rgba(249, 115, 22, 0.15);
+            color: #fb923c;
+            border: 1px solid rgba(249, 115, 22, 0.3);
+        }
+
+        .action-3:hover {
+            background: rgba(249, 115, 22, 0.25);
+        }
+
+        .action-4 {
+            background: rgba(168, 85, 247, 0.15);
+            color: #c084fc;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+
+        .action-4:hover {
+            background: rgba(168, 85, 247, 0.25);
+        }
+
+        .action-5 {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .action-5:hover {
+            background: rgba(239, 68, 68, 0.25);
+        }
+
+        /* ===== BOTTOM ROW ===== */
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        /* ===== ACTIVITY LOG ===== */
+        .activity-panel {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(71, 85, 105, 0.4);
+            border-radius: 20px;
+            padding: 24px;
+        }
+
+        .activity-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+        }
+
+        .activity-item:last-child {
+            border: none;
+        }
+
+        .activity-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-top: 5px;
+            flex-shrink: 0;
+        }
+
+        .dot-green {
+            background: #22c55e;
+        }
+
+        .dot-yellow {
+            background: #eab308;
+        }
+
+        .dot-blue {
+            background: #3b82f6;
+        }
+
+        .dot-red {
+            background: #ef4444;
+        }
+
+        .activity-text {
+            font-size: 13px;
+            color: #cbd5e1;
+            line-height: 1.5;
+        }
+
+        .activity-time {
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        /* ===== WATERMARK ===== */
+        .watermark {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            top: 0;
+            pointer-events: none;
+            z-index: 100;
+            background: repeating-linear-gradient(-45deg,
+                    transparent,
+                    transparent 200px,
+                    rgba(100, 116, 139, 0.03) 200px,
+                    rgba(100, 116, 139, 0.03) 201px);
+        }
+
+        .watermark-text {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-5deg);
+            color: rgba(100, 116, 139, 0.08);
+            font-size: 48px;
+            font-weight: 800;
+            pointer-events: none;
+            white-space: nowrap;
+            letter-spacing: 8px;
+        }
+
+        /* ===== PROTECTION OVERLAY ===== */
+        .protection-label {
+            position: fixed;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #f87171;
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes countUp {
+            from {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .kpi-card {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .kpi-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .kpi-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .kpi-card:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .kpi-card:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+
+        .section-card {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .section-card:nth-child(1) {
+            animation-delay: 0.3s;
+        }
+
+        .section-card:nth-child(2) {
+            animation-delay: 0.4s;
+        }
+
+        .section-card:nth-child(3) {
+            animation-delay: 0.5s;
+        }
+
+        .section-card:nth-child(4) {
+            animation-delay: 0.6s;
+        }
+
+        .section-card:nth-child(5) {
+            animation-delay: 0.7s;
+        }
+
+        .kpi-value {
+            animation: countUp 0.8s ease-out forwards;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .sections-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .kpi-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .sections-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .kpi-bar {
+                grid-template-columns: 1fr;
+            }
+
+            .main {
+                padding: 16px;
+            }
+
+            .bottom-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body oncontextmenu="return false" oncopy="return false" oncut="return false">
+
+
+    <!-- Watermark -->
+    <div class="watermark"></div>
+    <div class="watermark-text">محمد عبدالله — ARBA</div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-inner">
+            <div class="user-info">
+                <div class="user-avatar">م</div>
+                <div class="user-details">
+                    <h1>مهندس الكميات</h1>
+                    <div class="status">
+                        <span class="status-dot"></span>
+                        محمد عبدالله الزهراني | 489012345
+                    </div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="notification-btn">
+                    🔔
+                    <span class="notification-badge">3</span>
+                </button>
+                <button class="logout-btn">← تسجيل الخروج</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+
+        <!-- KPI Bar -->
+        <div class="kpi-bar">
+            <div class="kpi-card kpi-1">
+                <div class="kpi-header">
+                    <span class="kpi-icon">⏳</span>
+                    <span class="kpi-label">مراجعات معلقة</span>
+                </div>
+                <div class="kpi-value">12</div>
+                <div class="kpi-trend trend-down">↑ 3 جديدة اليوم</div>
+            </div>
+            <div class="kpi-card kpi-2">
+                <div class="kpi-header">
+                    <span class="kpi-icon">📦</span>
+                    <span class="kpi-label">البنود المحدثة</span>
+                </div>
+                <div class="kpi-value">847</div>
+                <div class="kpi-trend trend-up">✓ آخر تحديث: اليوم</div>
+            </div>
+            <div class="kpi-card kpi-3">
+                <div class="kpi-header">
+                    <span class="kpi-icon">🏢</span>
+                    <span class="kpi-label">الموردين النشطين</span>
+                </div>
+                <div class="kpi-value">24</div>
+                <div class="kpi-trend trend-up">+2 هذا الأسبوع</div>
+            </div>
+            <div class="kpi-card kpi-4">
+                <div class="kpi-header">
+                    <span class="kpi-icon">💯</span>
+                    <span class="kpi-label">صحة البيانات</span>
+                </div>
+                <div class="kpi-value">92%</div>
+                <div class="kpi-trend trend-up">↑ 5% تحسن</div>
+            </div>
+        </div>
+
+        <!-- Section Title -->
+        <div class="section-title">الأقسام الرئيسية</div>
+
+        <!-- Section Cards -->
+        <div class="sections-grid">
+            <!-- Card 1: مركز تحليل التكلفة -->
+            <div class="section-card card-1">
+                <div class="card-header">
+                    <div class="card-icon icon-1">📊</div>
+                    <span class="card-badge badge-1">3 تنبيهات</span>
+                </div>
+                <div class="card-title">مركز تحليل التكلفة</div>
+                <div class="card-desc">تحليل مرئي للتكاليف مع رسوم بيانية تفاعلية ومقارنات ومؤشرات الأداء</div>
+                <div class="card-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: #22d3ee;">52K</div>
+                        <div class="stat-label">إجمالي التكلفة</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: #22d3ee;">8.2%</div>
+                        <div class="stat-label">هامش الربح</div>
+                    </div>
+                </div>
+                <button class="card-action action-1">عرض التحليلات ←</button>
+            </div>
+
+            <!-- Card 2: مكتبة البنود والمنتجات -->
+            <div class="section-card card-2">
+                <div class="card-header">
+                    <div class="card-icon icon-2">📋</div>
+                    <span class="card-badge badge-2">96 بند</span>
+                </div>
+                <div class="card-title">مكتبة البنود والمنتجات</div>
+                <div class="card-desc">جدول بيانات متطور مع تعديل مباشر، فرز وتصفية، واستيراد Excel</div>
+                <div class="card-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: #4ade80;">96</div>
+                        <div class="stat-label">بند نشط</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: #4ade80;">34</div>
+                        <div class="stat-label">منتج</div>
+                    </div>
+                </div>
+                <button class="card-action action-2">فتح المكتبة ←</button>
+            </div>
+
+            <!-- Card 3: إدارة الموردين -->
+            <div class="section-card card-3">
+                <div class="card-header">
+                    <div class="card-icon icon-3">🏭</div>
+                    <span class="card-badge badge-3">5 معلقة</span>
+                </div>
+                <div class="card-title">إدارة الموردين</div>
+                <div class="card-desc">مراجعة بيانات الموردين المسجلين والخارجيين ومقارنة الأسعار</div>
+                <div class="card-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: #fb923c;">18</div>
+                        <div class="stat-label">مسجّل</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: #fb923c;">6</div>
+                        <div class="stat-label">خارجي</div>
+                    </div>
+                </div>
+                <button class="card-action action-3">مراجعة الموردين ←</button>
+            </div>
+
+            <!-- Card 4: طلبات التخفيض -->
+            <div class="section-card card-4">
+                <div class="card-header">
+                    <div class="card-icon icon-4">💰</div>
+                    <span class="card-badge badge-4">3 معلقة</span>
+                </div>
+                <div class="card-title">طلبات التخفيض والعملاء</div>
+                <div class="card-desc">إدارة طلبات التخفيض للشركات والأفراد ومتابعة حالاتها</div>
+                <div class="card-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: #c084fc;">7</div>
+                        <div class="stat-label">شركة</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: #c084fc;">12</div>
+                        <div class="stat-label">فرد</div>
+                    </div>
+                </div>
+                <button class="card-action action-4">عرض الطلبات ←</button>
+            </div>
+
+            <!-- Card 5: التدقيق والتحقق -->
+            <div class="section-card card-5">
+                <div class="card-header">
+                    <div class="card-icon icon-5">🔍</div>
+                    <span class="card-badge badge-5">92% صحي</span>
+                </div>
+                <div class="card-title">التدقيق والتحقق</div>
+                <div class="card-desc">محرك تدقيق ذكي — التدقيق الحسابي وفحص القيم الشاذة وتقرير صحة البيانات</div>
+                <div class="card-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: #f87171;">2</div>
+                        <div class="stat-label">خطأ</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: #fbbf24;">5</div>
+                        <div class="stat-label">تحذير</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" style="color: #4ade80;">89</div>
+                        <div class="stat-label">ناجح</div>
+                    </div>
+                </div>
+                <button class="card-action action-5">تشغيل التحقق ←</button>
+            </div>
+        </div>
+
+        <!-- Bottom Row -->
+        <div class="bottom-grid">
+            <!-- Activity Log -->
+            <div class="activity-panel">
+                <div class="activity-title">📜 سجل النشاط الأخير</div>
+                <div class="activity-item">
+                    <span class="activity-dot dot-green"></span>
+                    <div>
+                        <div class="activity-text">تم اعتماد مراجعة بيانات <strong>شركة الوطن للمقاولات</strong></div>
+                        <div class="activity-time">منذ 15 دقيقة</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <span class="activity-dot dot-yellow"></span>
+                    <div>
+                        <div class="activity-text">تحذير: سعر <strong>حديد التسليح</strong> مرتفع 23% عن المعدل</div>
+                        <div class="activity-time">منذ ساعة</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <span class="activity-dot dot-blue"></span>
+                    <div>
+                        <div class="activity-text">تم تحديث <strong>28 بند</strong> في قسم الأعمال الإنشائية</div>
+                        <div class="activity-time">منذ 3 ساعات</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <span class="activity-dot dot-red"></span>
+                    <div>
+                        <div class="activity-text">طلب تصحيح مرفوض — <strong>مؤسسة البناء المتقدم</strong></div>
+                        <div class="activity-time">أمس 4:30 م</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Shortcuts -->
+            <div class="activity-panel">
+                <div class="activity-title">⌨️ اختصارات سريعة</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px;">
+                    <div
+                        style="background: rgba(15,23,42,0.5); border: 1px solid rgba(51,65,85,0.5); border-radius: 12px; padding: 16px; text-align: center;">
+                        <div style="font-size: 28px; margin-bottom: 8px;">📥</div>
+                        <div style="font-size: 13px; color: #94a3b8;">استيراد Excel</div>
+                    </div>
+                    <div
+                        style="background: rgba(15,23,42,0.5); border: 1px solid rgba(51,65,85,0.5); border-radius: 12px; padding: 16px; text-align: center;">
+                        <div style="font-size: 28px; margin-bottom: 8px;">🔄</div>
+                        <div style="font-size: 13px; color: #94a3b8;">تشغيل التحقق</div>
+                    </div>
+                    <div
+                        style="background: rgba(15,23,42,0.5); border: 1px solid rgba(51,65,85,0.5); border-radius: 12px; padding: 16px; text-align: center;">
+                        <div style="font-size: 28px; margin-bottom: 8px;">➕</div>
+                        <div style="font-size: 13px; color: #94a3b8;">بند جديد</div>
+                    </div>
+                    <div
+                        style="background: rgba(15,23,42,0.5); border: 1px solid rgba(51,65,85,0.5); border-radius: 12px; padding: 16px; text-align: center;">
+                        <div style="font-size: 28px; margin-bottom: 8px;">💰</div>
+                        <div style="font-size: 13px; color: #94a3b8;">طلب تخفيض</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+</body>
+
+</html>
