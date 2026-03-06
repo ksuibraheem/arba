@@ -7,6 +7,14 @@ import BlueprintEditor from './components/BlueprintEditor';
 import InteriorEditor from './components/InteriorEditor';
 import AreaBreakdownDisplay from './components/AreaBreakdown';
 import PriceQuote from './components/PriceQuote';
+import UniversalImporter from './components/UniversalImporter';
+import SaaSDashboard from './components/dashboard/SaaSDashboard';
+import EmployeeWorkspace from './components/zones/EmployeeWorkspace';
+import ClientPortal from './components/zones/ClientPortal';
+import ZoneGuard from './components/zones/ZoneGuard';
+import SecurityRedirect from './components/zones/SecurityRedirect';
+import { RoleProvider, useRole } from './contexts/RoleContext';
+import { ArbaProject, ROLE_ZONE } from './services/projectTypes';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage, { RegisterData } from './pages/RegisterPage';
@@ -34,7 +42,7 @@ import SuppliersManagementPage from './pages/admin/SuppliersManagementPage';
 import { AppState, CalculatedItem, ProjectType, CustomParams, BlueprintConfig, SurfaceLocation, RoomFinishes, BaseItem } from './types';
 import { INITIAL_OVERHEAD, PROJECT_DEFAULTS, PROJECT_TITLES, TRANSLATIONS } from './constants';
 import { calculateProjectCosts } from './utils/calculations';
-import { Download, Calendar, User, Briefcase, Hash, LogOut, Calculator, Lock, Crown, AlertTriangle, HardDrive, FolderOpen, Upload, Image } from 'lucide-react';
+import { Download, Calendar, User, Briefcase, Hash, LogOut, Calculator, Lock, Crown, AlertTriangle, HardDrive, FolderOpen, Upload, Image, Zap } from 'lucide-react';
 import { COMPANY_INFO, SUBSCRIPTION_PLANS, encryptSupplierName, getStorageInfo, getRemainingProjects, FREE_PLAN_RESTRICTIONS } from './companyData';
 // Local auth service (fallback)
 import { registerUser, loginUser, logoutUser, getCurrentUser, StoredUser } from './services/authService';
@@ -45,7 +53,7 @@ import { isInTestMode, getCurrentTestSession, endTestMode } from './services/tes
 // Toggle Firebase mode - set to true to use Firebase
 const USE_FIREBASE = true;
 
-type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant' | 'password-reset' | 'cloud-sync' | 'support-center' | 'support' | 'developer' | 'marketing' | 'quality' | 'deputy' | 'supplier' | 'quantity_surveyor' | 'supplier-catalog' | 'admin-suppliers' | 'demo';
+type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'pricing-calc' | 'client-portal' | 'security-403' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant' | 'password-reset' | 'cloud-sync' | 'support-center' | 'support' | 'developer' | 'marketing' | 'quality' | 'deputy' | 'supplier' | 'quantity_surveyor' | 'supplier-catalog' | 'admin-suppliers' | 'demo';
 
 // مفتاح الوصول السري للوحة المدير - غيره لمفتاح خاص بك
 const ADMIN_SECRET_KEY = 'arba2025secure';
@@ -70,6 +78,7 @@ const App: React.FC = () => {
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [upgradeFeature, setUpgradeFeature] = useState('');
     const [showPriceQuote, setShowPriceQuote] = useState(false);
+    const [showUniversalImporter, setShowUniversalImporter] = useState(false);
     const [loginError, setLoginError] = useState<string>('');
     const [adminAccessGranted, setAdminAccessGranted] = useState(false);
     const [adminKeyInput, setAdminKeyInput] = useState('');
@@ -83,6 +92,8 @@ const App: React.FC = () => {
     const [pendingRegistrationPhone, setPendingRegistrationPhone] = useState<string>('');
     // Demo mode state
     const [isDemoMode, setIsDemoMode] = useState(false);
+    // Active project from SaaS Dashboard
+    const [activeProject, setActiveProject] = useState<ArbaProject | null>(null);
 
     // Check for existing session on mount
     useEffect(() => {
@@ -1260,7 +1271,59 @@ const App: React.FC = () => {
         );
     }
 
-    // Dashboard (Protected)
+    // ═══════ DUAL-ZONE ROUTING ═══════
+
+    // Zone A: Employee Workspace (Admin & QS Engineers)
+    if (currentPage === 'dashboard') {
+        if (!user && !isDemoMode) {
+            setCurrentPage('login');
+            return null;
+        }
+        return (
+            <ZoneGuard requiredZone="A" language={language} isDemoMode={isDemoMode}>
+                <EmployeeWorkspace
+                    language={language}
+                    onOpenPricing={(project) => {
+                        setActiveProject(project || null);
+                        setCurrentPage('pricing-calc');
+                    }}
+                    onLogout={handleLogout}
+                    userId={user?.uid || user?.email || 'demo'}
+                    userName={user?.name || 'Demo'}
+                    isDemoMode={isDemoMode}
+                />
+            </ZoneGuard>
+        );
+    }
+
+    // Zone B: Client Portal (Clients & Viewers)
+    if (currentPage === 'client-portal') {
+        if (!user) {
+            setCurrentPage('login');
+            return null;
+        }
+        return (
+            <ZoneGuard requiredZone="B" language={language}>
+                <ClientPortal
+                    language={language}
+                    onLogout={handleLogout}
+                />
+            </ZoneGuard>
+        );
+    }
+
+    // 403 Security Redirect
+    if (currentPage === 'security-403') {
+        return (
+            <SecurityRedirect
+                language={language}
+                attemptedZone="A"
+                onGoBack={() => setCurrentPage('landing')}
+            />
+        );
+    }
+
+    // Pricing Calculator (Protected)
     return (
         <div className={`flex h-screen bg-slate-100 font-sans overflow-hidden ${isRtl ? '' : 'flex-row-reverse'}`} dir={isRtl ? 'rtl' : 'ltr'}>
 
@@ -1543,6 +1606,19 @@ const App: React.FC = () => {
                                 </div>
                             </div>
                             <button
+                                onClick={() => setShowUniversalImporter(true)}
+                                disabled={isFreePlan || isDemoMode}
+                                title={(isFreePlan || isDemoMode) ? (state.language === 'ar' ? 'غير متاح في الباقة المجانية' : 'Not available in free plan') : (state.language === 'ar' ? 'محلل Arba الذكي' : 'Arba Intelligence Parser')}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-md transition-all font-medium text-sm ${(isFreePlan || isDemoMode)
+                                    ? 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-60'
+                                    : 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-violet-500/20'
+                                    }`}
+                            >
+                                {(isFreePlan || isDemoMode) && <Lock className="w-3 h-3" />}
+                                <Zap className="w-4 h-4" />
+                                {state.language === 'ar' ? 'استيراد ذكي' : 'Smart Import'}
+                            </button>
+                            <button
                                 onClick={handleExport}
                                 disabled={isFreePlan || isDemoMode}
                                 title={(isFreePlan || isDemoMode) ? (state.language === 'ar' ? 'غير متاح في الباقة المجانية' : 'Not available in free plan') : ''}
@@ -1627,6 +1703,42 @@ const App: React.FC = () => {
                     }}
                     language={state.language}
                     onClose={() => setShowPriceQuote(false)}
+                />
+            )}
+
+            {/* Universal Intelligence Parser Modal */}
+            {showUniversalImporter && (
+                <UniversalImporter
+                    language={state.language}
+                    onImport={(items) => {
+                        // Add imported items to customItems
+                        const newItems: BaseItem[] = items.map((item: any) => ({
+                            id: item.id || `imported_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                            category: item.category || 'custom',
+                            type: 'all' as any,
+                            name: item.name || { ar: '', en: '', fr: '', zh: '' },
+                            unit: item.unit || 'm²',
+                            qty: item.qty || 1,
+                            baseMaterial: item.totalUnitCost || 0,
+                            baseLabor: 0,
+                            waste: 0,
+                            suppliers: [],
+                            sbc: item.sbc || 'N/A',
+                            soilFactor: false,
+                            isCustom: true,
+                        }));
+                        setState(prev => ({
+                            ...prev,
+                            customItems: [...prev.customItems, ...newItems]
+                        }));
+                        setShowUniversalImporter(false);
+                    }}
+                    onClose={() => setShowUniversalImporter(false)}
+                    overheadConfig={{
+                        overheadMultiplier: 1 + (state.fixedOverhead / 100),
+                        profitMargin: state.profitMargin / 100,
+                        contingency: 0.05,
+                    }}
                 />
             )}
         </div>

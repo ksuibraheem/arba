@@ -1,8 +1,9 @@
 import React, { useRef, useState } from 'react';
-import { X, Printer, Building2, Phone, Mail, MapPin, FileText, FileSpreadsheet, Download, Eye, EyeOff, MessageSquare, Settings2 } from 'lucide-react';
+import { X, Printer, Building2, Phone, Mail, MapPin, FileText, FileSpreadsheet, Download, Eye, EyeOff, MessageSquare, Settings2, Loader2 } from 'lucide-react';
 import { AppState, CalculatedItem, Language } from '../types';
 import { formatCurrency, formatNumber, numberToArabicWords } from '../utils/formatting';
 import { COMPANY_INFO } from '../companyData';
+import { generatePricingPDF, downloadPDF, PDFExportConfig } from '../services/pdfExportService';
 
 interface PriceQuoteProps {
     state: AppState;
@@ -35,6 +36,7 @@ const PriceQuote: React.FC<PriceQuoteProps> = ({
     const [notes, setNotes] = useState('');
     const [showSettings, setShowSettings] = useState(false);
     const [showPrintMenu, setShowPrintMenu] = useState(false);
+    const [pdfLoading, setPdfLoading] = useState(false);
 
     // بيانات الشركة المسجلة (يتم جلبها من localStorage أو السياق)
     const getLoggedInCompany = () => {
@@ -526,6 +528,70 @@ const PriceQuote: React.FC<PriceQuoteProps> = ({
         link.click();
     };
 
+    // =================== Professional PDF Export ===================
+    const handleExportPDF = async (mode: 'arba' | 'company') => {
+        setPdfLoading(true);
+        setShowPrintMenu(false);
+        try {
+            // Get user info from localStorage
+            let userId = 'ARBA_USER';
+            let empName = 'Arba User';
+            let empId = 'EMP-000';
+            try {
+                const userData = localStorage.getItem('currentUser');
+                if (userData) {
+                    const user = JSON.parse(userData);
+                    userId = user.uid || user.id || userId;
+                    empName = user.name || user.companyName || empName;
+                    empId = user.employeeId || user.id?.substring(0, 8) || empId;
+                }
+            } catch (e) { /* fallback */ }
+
+            const totalBuildAreaPDF = state.blueprint.floors.reduce((sum: number, f: any) => sum + f.area, 0);
+            const plotAreaPDF = state.blueprint.plotLength * state.blueprint.plotWidth;
+
+            const companyData = mode === 'company' ? (() => {
+                const c = getLoggedInCompany();
+                return { name: c.name, phone: c.phone, email: c.email, cr: c.cr, vat: c.vat, address: c.address };
+            })() : undefined;
+
+            const config: PDFExportConfig = {
+                items: activeItems.map(item => ({
+                    id: item.id,
+                    displayName: item.displayName,
+                    category: item.category,
+                    unit: item.unit,
+                    qty: item.qty,
+                    finalUnitPrice: item.finalUnitPrice,
+                    totalLinePrice: item.totalLinePrice,
+                    sbc: item.sbc,
+                })),
+                totals,
+                projectType: state.projectType,
+                plotArea: plotAreaPDF,
+                buildArea: totalBuildAreaPDF,
+                floorsCount: state.blueprint.floors.length,
+                language,
+                quoteNumber,
+                showProfitDetails,
+                userId,
+                employeeName: empName,
+                employeeId: empId,
+                brandingMode: mode,
+                companyInfo: companyData,
+            };
+
+            const blob = await generatePricingPDF(config);
+            downloadPDF(blob, `Arba_Quote_${quoteNumber}.pdf`);
+        } catch (err: any) {
+            console.error('PDF Export Error:', err);
+            const errMsg = err?.message || String(err);
+            alert(language === 'ar' ? `فشل في إنشاء ملف PDF:\n${errMsg}` : `Failed to generate PDF:\n${errMsg}`);
+        } finally {
+            setPdfLoading(false);
+        }
+    };
+
     // Group items by category
     const groupedItems = activeItems.reduce((acc, item) => {
         const cat = item.category || 'general';
@@ -560,6 +626,18 @@ const PriceQuote: React.FC<PriceQuoteProps> = ({
                             <FileSpreadsheet className="w-4 h-4" />
                             {getLabel('exportExcel')}
                         </button>
+                        {/* Professional PDF Export */}
+                        <button
+                            onClick={() => handleExportPDF('arba')}
+                            disabled={pdfLoading}
+                            className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-lg transition-all shadow-sm disabled:opacity-50"
+                        >
+                            {pdfLoading
+                                ? <Loader2 className="w-4 h-4 animate-spin" />
+                                : <Download className="w-4 h-4" />
+                            }
+                            {language === 'ar' ? 'تصدير PDF احترافي' : 'Export Pro PDF'}
+                        </button>
                         {/* Print PDF - Dropdown */}
                         <div className="relative">
                             <button
@@ -580,10 +658,18 @@ const PriceQuote: React.FC<PriceQuoteProps> = ({
                                     </button>
                                     <button
                                         onClick={() => { handlePrint('company'); setShowPrintMenu(false); }}
-                                        className="w-full text-right px-4 py-3 hover:bg-slate-100 flex items-center gap-2"
+                                        className="w-full text-right px-4 py-3 hover:bg-slate-100 flex items-center gap-2 border-b border-slate-100"
                                     >
                                         <FileText className="w-4 h-4 text-blue-500" />
                                         {getLabel('printCompany')}
+                                    </button>
+                                    <button
+                                        onClick={() => handleExportPDF('company')}
+                                        disabled={pdfLoading}
+                                        className="w-full text-right px-4 py-3 hover:bg-slate-100 flex items-center gap-2"
+                                    >
+                                        <Download className="w-4 h-4 text-teal-500" />
+                                        {language === 'ar' ? 'PDF احترافي (بيانات الشركة)' : 'Pro PDF (Company Info)'}
                                     </button>
                                 </div>
                             )}

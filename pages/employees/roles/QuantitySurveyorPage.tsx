@@ -50,6 +50,8 @@ import {
 } from '../../../services/externalSupplierService';
 import { ITEMS_DATABASE } from '../../../constants';
 import { ProjectType, BaseItem } from '../../../types';
+import QSDataGrid from '../../../components/QSDataGrid';
+import QSSmartImporter from '../../../components/QSSmartImporter';
 
 // ====================== Props ======================
 interface QuantitySurveyorPageProps {
@@ -59,7 +61,7 @@ interface QuantitySurveyorPageProps {
 }
 
 // ====================== Tab Types ======================
-type TabType = 'dashboard' | 'products' | 'suppliers' | 'companies' | 'individuals' | 'discounts' | 'corrections' | 'external_pricing' | 'items_management';
+type TabType = 'dashboard' | 'products' | 'suppliers' | 'companies' | 'individuals' | 'discounts' | 'corrections' | 'external_pricing' | 'items_management' | 'data_grid' | 'health_report' | 'action_log';
 type SectionType = 'home' | 'cost_center' | 'items_library' | 'suppliers_mgmt' | 'discounts_clients' | 'verification';
 
 // ====================== Main Component ======================
@@ -151,6 +153,7 @@ const QuantitySurveyorPage: React.FC<QuantitySurveyorPageProps> = ({
     const [selectedItemCategory, setSelectedItemCategory] = useState<string>('all');
     const [editingItem, setEditingItem] = useState<BaseItem | null>(null);
     const [showItemModal, setShowItemModal] = useState(false);
+    const [showImporterModal, setShowImporterModal] = useState(false);
     const [customItems, setCustomItems] = useState<BaseItem[]>([]);
 
     // Project Type management
@@ -618,7 +621,8 @@ const QuantitySurveyorPage: React.FC<QuantitySurveyorPageProps> = ({
         ],
         items_library: [
             { id: 'products', label: t('دليل المنتجات', 'Products'), icon: <Package className="w-4 h-4" />, count: supplierProducts.length },
-            { id: 'items_management', label: t('إدارة البنود', 'Items'), icon: <ClipboardCheck className="w-4 h-4" />, count: ITEMS_DATABASE.length }
+            { id: 'items_management', label: t('إدارة البنود', 'Items'), icon: <ClipboardCheck className="w-4 h-4" />, count: ITEMS_DATABASE.length },
+            { id: 'data_grid', label: t('جدول البيانات', 'Data Grid'), icon: <FileText className="w-4 h-4" />, count: ITEMS_DATABASE.length + customItems.length }
         ],
         suppliers_mgmt: [
             { id: 'suppliers', label: t('الموردين المسجلين', 'Registered'), icon: <Building2 className="w-4 h-4" />, count: suppliers.length },
@@ -1523,6 +1527,34 @@ const QuantitySurveyorPage: React.FC<QuantitySurveyorPageProps> = ({
                                             </table>
                                         )}
                                     </div>
+                                </div>
+                            )}
+
+                            {/* Data Grid Tab — Excel-like */}
+                            {activeTab === 'data_grid' && (
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-xl font-bold text-white">{t('جدول البيانات المتطور', 'Advanced Data Grid')}</h3>
+                                        <button
+                                            onClick={() => setShowImporterModal(true)}
+                                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:shadow-lg hover:shadow-green-500/20 transition text-sm"
+                                        >
+                                            <Plus className="w-4 h-4" />
+                                            {t('استيراد Excel', 'Import Excel')}
+                                        </button>
+                                    </div>
+                                    <QSDataGrid
+                                        items={[...ITEMS_DATABASE, ...customItems]}
+                                        language={language}
+                                        employeeName={employee.name}
+                                        employeeId={employee.employeeNumber || employee.id}
+                                        onItemUpdate={(itemId, field, value) => {
+                                            // Update custom items or log the edit
+                                            setCustomItems(prev => prev.map(item =>
+                                                item.id === itemId ? { ...item, [field]: field === 'waste' ? value / 100 : value } : item
+                                            ));
+                                        }}
+                                    />
                                 </div>
                             )}
 

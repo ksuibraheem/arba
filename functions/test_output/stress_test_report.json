@@ -1,0 +1,152 @@
+{
+  "testSuite": "Arba API Gateway — Full-Spectrum Stress Test",
+  "timestamp": "2026-03-05T23:54:59.200Z",
+  "environment": "local_node",
+  "totalDurationMs": 20,
+  "summary": {
+    "total": 5,
+    "passed": 5,
+    "failed": 0
+  },
+  "results": [
+    {
+      "testName": "File Parsing",
+      "status": "PASS",
+      "expected": "Parse Excel file successfully",
+      "actual": "Parsed 1 sheet(s), 5 rows",
+      "durationMs": 11
+    },
+    {
+      "testName": "RegEx Security Scan — BLOCKED Detection",
+      "status": "PASS",
+      "expected": "securityAlertLevel = BLOCKED",
+      "actual": "securityAlertLevel = BLOCKED, 7 matches",
+      "durationMs": 6,
+      "details": {
+        "totalMatches": 7,
+        "criticalCount": 7,
+        "warningCount": 0,
+        "detectedCompanies": [
+          {
+            "name": "Arab Contractors",
+            "severity": "critical",
+            "category": "construction"
+          },
+          {
+            "name": "Arab Contractors",
+            "severity": "critical",
+            "category": "construction"
+          },
+          {
+            "name": "Saudi Binladin Group",
+            "severity": "critical",
+            "category": "construction"
+          },
+          {
+            "name": "Nesma",
+            "severity": "critical",
+            "category": "construction"
+          },
+          {
+            "name": "Arab Contractors",
+            "severity": "critical",
+            "category": "construction"
+          },
+          {
+            "name": "Saudi Binladin Group",
+            "severity": "critical",
+            "category": "construction"
+          },
+          {
+            "name": "Arab Contractors",
+            "severity": "critical",
+            "category": "construction"
+          }
+        ]
+      }
+    },
+    {
+      "testName": "Purge — Competitor Stripping",
+      "status": "PASS",
+      "expected": "Competitor names and metadata stripped",
+      "actual": "7 items purged",
+      "durationMs": 2,
+      "details": {
+        "removedCount": 7,
+        "samples": [
+          "Metadata [author]: \"Ahmed - Arab Contractors مهندس\" → stripped",
+          "Metadata [company]: \"المقاولون العرب - Arab Contractors Co.\" → stripped",
+          "Metadata [title]: \"Saudi Binladin Group - Confidential Pricing\" → stripped",
+          "Metadata [comments]: \"Internal pricing document - Nesma Holdings review\" → stripped",
+          "Cell: \"Supply and installation of concrete as per Arab Co\" → competitor name stripped"
+        ]
+      }
+    },
+    {
+      "testName": "Formula Engine — [(400×1.1)+50]×1.15 = 563.50",
+      "status": "PASS",
+      "expected": "563.5",
+      "actual": "563.5",
+      "durationMs": 0,
+      "details": {
+        "materialWithWaste": 440.00000000000006,
+        "directCost": 490.00000000000006,
+        "overheadAmount": 73.49999999999994,
+        "totalUnitCost": 563.5
+      }
+    },
+    {
+      "testName": "Column Auto-Mapping",
+      "status": "PASS",
+      "expected": "Auto-map columns to Arba schema",
+      "actual": "7 columns mapped",
+      "durationMs": 0,
+      "details": {
+        "Item Description": "name_ar",
+        "Unit": "unit",
+        "Quantity": "qty",
+        "Material Cost": "materials",
+        "Labor Cost": "labor",
+        "Equipment Cost": "equipment",
+        "Wastage %": "waste"
+      }
+    }
+  ],
+  "pipelineLog": [
+    {
+      "stage": "Parse",
+      "status": "PASS",
+      "detail": "1 sheets, 5 rows, type: excel",
+      "ms": 11
+    },
+    {
+      "stage": "Security Scan",
+      "status": "PASS",
+      "detail": "Alert: BLOCKED, Matches: 7, Critical: 7",
+      "ms": 6
+    },
+    {
+      "stage": "Purge",
+      "status": "PASS",
+      "detail": "Removed 7 competitor references",
+      "ms": 2
+    },
+    {
+      "stage": "Formula Engine",
+      "status": "PASS",
+      "detail": "Result: 563.5, Expected: 563.5",
+      "ms": 0
+    },
+    {
+      "stage": "Column Auto-Map",
+      "status": "PASS",
+      "detail": "7 columns auto-mapped from 7 headers",
+      "ms": 0
+    }
+  ],
+  "formulas": {
+    "locked": true,
+    "formula": "Total = [(Materials × Wastage) + Labor + Equipment] × Overheads",
+    "executionEnv": "Cloud Functions only"
+  }
+}
