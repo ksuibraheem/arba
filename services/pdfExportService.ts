@@ -11,7 +11,6 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { applyWatermark, WatermarkConfig } from './pdfWatermark';
 import { processForRTL, formatArabicNumber } from './arabicTextShaper';
-import { AMIRI_REGULAR_BASE64 } from './fonts/amiriBase64';
 import { COMPANY_INFO } from '../companyData';
 
 // =================== TYPES ===================
@@ -145,7 +144,10 @@ function numberToArabicWordsPDF(amount: number): string {
 
 // =================== FONT REGISTRATION ===================
 
-function registerAmiriFont(doc: jsPDF): void {
+async function registerAmiriFont(doc: jsPDF): Promise<void> {
+    // Dynamically import the font only when PDF is being generated
+    const { AMIRI_REGULAR_BASE64 } = await import('./fonts/amiriBase64');
+
     // Add Amiri font to jsPDF VFS
     doc.addFileToVFS('Amiri-Regular.ttf', AMIRI_REGULAR_BASE64);
     doc.addFont('Amiri-Regular.ttf', 'Amiri', 'normal');
@@ -190,7 +192,7 @@ export async function generatePricingPDF(config: PDFExportConfig): Promise<Blob>
     });
 
     // ── Register Arabic Font ──
-    registerAmiriFont(doc);
+    await registerAmiriFont(doc);
 
     const pageW = doc.internal.pageSize.getWidth();   // 210mm
     const pageH = doc.internal.pageSize.getHeight();   // 297mm

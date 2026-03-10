@@ -41,7 +41,7 @@ export async function createClient(data: Partial<ArbaClient>): Promise<string> {
 
 export async function getClient(id: string): Promise<ArbaClient | null> {
     const snap = await getDoc(doc(db, CLIENTS_COL, id));
-    return snap.exists() ? ({ ...snap.data(), id: snap.id } as ArbaClient) : null;
+    return snap.exists() ? ({ ...(snap.data() as Record<string, any>), id: snap.id } as ArbaClient) : null;
 }
 
 export async function updateClient(id: string, updates: Partial<ArbaClient>): Promise<void> {
@@ -72,7 +72,7 @@ export async function getAllClients(ownerId?: string): Promise<ArbaClient[]> {
         );
     }
     const snap = await getDocs(q);
-    return snap.docs.map(d => ({ ...d.data(), id: d.id } as ArbaClient));
+    return snap.docs.map(d => ({ ...(d.data() as Record<string, any>), id: d.id } as ArbaClient));
 }
 
 export async function searchClients(searchTerm: string): Promise<ArbaClient[]> {

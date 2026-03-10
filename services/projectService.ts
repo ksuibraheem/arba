@@ -66,10 +66,11 @@ export async function deleteProject(id: string): Promise<void> {
 /**
  * Get projects for a user based on their role.
  * Admin sees all, QS engineer sees only owned/assigned.
+ * Clients see ONLY projects where they are explicitly the owner or assigned.
  */
 export async function getUserProjects(
     userId: string,
-    role: UserRole
+    role: UserRole | 'client'
 ): Promise<ArbaProject[]> {
     let q;
 
@@ -78,8 +79,15 @@ export async function getUserProjects(
             collection(db, PROJECTS_COL),
             orderBy('updatedAt', 'desc')
         );
+    } else if (role === 'client') {
+        // Identity Guard: Clients ONLY see projects they own
+        q = query(
+            collection(db, PROJECTS_COL),
+            where('ownerId', '==', userId),
+            orderBy('updatedAt', 'desc')
+        );
     } else {
-        // QS Engineer & Viewer: only see projects they own or are assigned to
+        // QS Engineer: only see projects they own or are assigned to
         q = query(
             collection(db, PROJECTS_COL),
             where('assignedTo', 'array-contains', userId),

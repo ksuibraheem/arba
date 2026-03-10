@@ -13,6 +13,7 @@ import EmployeeWorkspace from './components/zones/EmployeeWorkspace';
 import ClientPortal from './components/zones/ClientPortal';
 import ZoneGuard from './components/zones/ZoneGuard';
 import SecurityRedirect from './components/zones/SecurityRedirect';
+import PrivatePortal from './components/zones/PrivatePortal';
 import { RoleProvider, useRole } from './contexts/RoleContext';
 import { ArbaProject, ROLE_ZONE } from './services/projectTypes';
 import LandingPage from './pages/LandingPage';
@@ -53,7 +54,7 @@ import { isInTestMode, getCurrentTestSession, endTestMode } from './services/tes
 // Toggle Firebase mode - set to true to use Firebase
 const USE_FIREBASE = true;
 
-type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'pricing-calc' | 'client-portal' | 'security-403' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant' | 'password-reset' | 'cloud-sync' | 'support-center' | 'support' | 'developer' | 'marketing' | 'quality' | 'deputy' | 'supplier' | 'quantity_surveyor' | 'supplier-catalog' | 'admin-suppliers' | 'demo';
+type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'pricing-calc' | 'client-portal' | 'private' | 'security-403' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant' | 'password-reset' | 'cloud-sync' | 'support-center' | 'support' | 'developer' | 'marketing' | 'quality' | 'deputy' | 'supplier' | 'quantity_surveyor' | 'supplier-catalog' | 'admin-suppliers' | 'demo';
 
 // مفتاح الوصول السري للوحة المدير - غيره لمفتاح خاص بك
 const ADMIN_SECRET_KEY = 'arba2025secure';
@@ -71,9 +72,25 @@ interface AuthUser {
 }
 
 const App: React.FC = () => {
+    // Role Context Hook Setup
+    const { setRoleData, clearRole } = useRole();
+
     // Auth & Routing State
     const [currentPage, setCurrentPage] = useState<PageRoute>('landing');
-    const [user, setUser] = useState<AuthUser | null>(null);
+
+    // Role Caching: Initialize user from localStorage if available
+    const [user, setUser] = useState<AuthUser | null>(() => {
+        try {
+            const cachedUser = localStorage.getItem('arba_cached_user');
+            if (cachedUser) {
+                return JSON.parse(cachedUser);
+            }
+        } catch (e) {
+            console.error('Failed to parse cached user', e);
+        }
+        return null;
+    });
+
     const [language, setLanguage] = useState<'ar' | 'en'>('ar');
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [upgradeFeature, setUpgradeFeature] = useState('');
@@ -94,6 +111,18 @@ const App: React.FC = () => {
     const [isDemoMode, setIsDemoMode] = useState(false);
     // Active project from SaaS Dashboard
     const [activeProject, setActiveProject] = useState<ArbaProject | null>(null);
+    const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
+
+    // Initial check for 'redirectTo' parameter handling Identity Guard Firebase links
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const redirectTo = params.get('redirectTo');
+        if (redirectTo) {
+            setRedirectUrl(redirectTo);
+            // Optional: clean URL
+            // window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }, []);
 
     // Check for existing session on mount
     useEffect(() => {
@@ -103,7 +132,7 @@ const App: React.FC = () => {
                 if (firebaseUser) {
                     const userData = await getUserData(firebaseUser.uid);
                     if (userData) {
-                        setUser({
+                        const verifiedUser = {
                             uid: firebaseUser.uid,
                             name: userData.name,
                             email: userData.email,
@@ -113,15 +142,36 @@ const App: React.FC = () => {
                             usedProjects: userData.usedProjects,
                             usedStorageMB: userData.usedStorageMB,
                             userType: userData.userType
-                        });
+                        };
+                        setUser(verifiedUser);
+                        localStorage.setItem('arba_cached_user', JSON.stringify(verifiedUser));
 
-                        // توجيه المورد تلقائياً للوحة تحكمه بعد تسجيل الدخول
-                        if (userData.userType === 'supplier' && currentPage === 'login') {
-                            setCurrentPage('supplier');
+                        // Link Role Context
+                        setRoleData(firebaseUser.uid, userData.name || '', userData.email || '').catch(console.error);
+
+                        // ── REDIRECT LOGIC for Deep Links / Route Protection ──
+                        if (redirectUrl) {
+                            if (redirectUrl.startsWith('/private')) {
+                                setCurrentPage('private');
+                            } else if (redirectUrl.startsWith('/portal')) {
+                                setCurrentPage('client-portal');
+                            } else {
+                                setCurrentPage('dashboard');
+                            }
+                            setRedirectUrl(null);
+                        } else {
+                            // Default Login Routing
+                            if (userData.userType === 'supplier' && currentPage === 'login') {
+                                setCurrentPage('supplier');
+                            } else if (currentPage === 'login') {
+                                setCurrentPage('dashboard');
+                            }
                         }
                     }
                 } else {
                     setUser(null);
+                    localStorage.removeItem('arba_cached_user');
+                    clearRole();
                 }
                 setIsLoading(false);
             });
@@ -139,10 +189,13 @@ const App: React.FC = () => {
                     usedProjects: currentUser.usedProjects,
                     usedStorageMB: currentUser.usedStorageMB
                 });
+                setRoleData(currentUser.id || 'local', currentUser.name || '', currentUser.email || '').catch(console.error);
+            } else {
+                clearRole();
             }
             setIsLoading(false);
         }
-    }, []);
+    }, [redirectUrl, currentPage]);
 
     // Load Dynamic Supplier Data
     useEffect(() => {
@@ -1312,6 +1365,20 @@ const App: React.FC = () => {
         );
     }
 
+    // Private Tier: Individuals / Direct consumers
+    if (currentPage === 'private') {
+        return (
+            <PrivatePortal
+                language={language}
+                onNavigate={handleNavigate}
+                onLogout={handleLogout}
+                userId={user?.uid || user?.email || 'guest'}
+                userName={user?.name || 'Guest'}
+                isDemoMode={isDemoMode}
+            />
+        )
+    }
+
     // 403 Security Redirect
     if (currentPage === 'security-403') {
         return (
@@ -1745,4 +1812,10 @@ const App: React.FC = () => {
     );
 };
 
-export default App;
+const RootApp = () => (
+    <RoleProvider>
+        <App />
+    </RoleProvider>
+);
+
+export default RootApp;
