@@ -195,10 +195,10 @@ const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
                                     onClick={() => !method.comingSoon && handleMethodSelect(method.id)}
                                     disabled={method.comingSoon}
                                     className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 relative ${method.comingSoon
-                                            ? 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed opacity-60'
-                                            : selectedMethod === method.id
-                                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                                                : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                                        ? 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed opacity-60'
+                                        : selectedMethod === method.id
+                                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                            : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                                         }`}
                                 >
                                     {method.comingSoon && (

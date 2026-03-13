@@ -368,8 +368,8 @@ const ClientPortal: React.FC<ClientPortalProps> = ({ language, onLogout }) => {
                             key={item.id}
                             onClick={() => setSection(item.id)}
                             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${section === item.id
-                                    ? 'bg-indigo-500/15 text-indigo-400 shadow-sm'
-                                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                                ? 'bg-indigo-500/15 text-indigo-400 shadow-sm'
+                                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                                 }`}
                         >
                             <span className="text-lg flex-shrink-0">{item.icon}</span>

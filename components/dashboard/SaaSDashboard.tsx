@@ -309,8 +309,8 @@ const SaaSDashboard: React.FC<SaaSDashboardProps> = ({
                             key={item.id}
                             onClick={() => setSection(item.id)}
                             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${section === item.id
-                                    ? 'bg-emerald-500/15 text-emerald-400 shadow-sm'
-                                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+                                ? 'bg-emerald-500/15 text-emerald-400 shadow-sm'
+                                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                                 }`}
                             title={sidebarCollapsed ? item.label[language] : undefined}
                         >
@@ -392,8 +392,8 @@ const SaaSDashboard: React.FC<SaaSDashboardProps> = ({
                         <div className="flex items-center gap-3">
                             {/* Role badge */}
                             <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase border ${userRole === 'admin'
-                                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                                    : 'bg-blue-500/10 text-blue-400 border-blue-500/30'
+                                ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                                : 'bg-blue-500/10 text-blue-400 border-blue-500/30'
                                 }`}>
                                 {userRole === 'admin' ? 'ADMIN' : 'QS'}
                             </span>

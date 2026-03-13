@@ -334,6 +334,7 @@ const App: React.FC = () => {
                         usedProjects: 0,
                         usedStorageMB: 0
                     });
+                    setRoleData('manager', MANAGER_CREDENTIALS.name, 'manager@arba-sys.com').catch(console.error);
                     setCurrentPage('manager');
                 } else if ('employeeNumber' in result.employee && result.employee.employeeNumber === MANAGER_CREDENTIALS.employeeNumber) {
                     // المدير (من بيانات الدخول الثابتة)
@@ -346,6 +347,7 @@ const App: React.FC = () => {
                         usedProjects: 0,
                         usedStorageMB: 0
                     });
+                    setRoleData('manager', MANAGER_CREDENTIALS.name, 'manager@arba-sys.com').catch(console.error);
                     setCurrentPage('manager');
                 } else {
                     // موظف عادي
@@ -359,6 +361,7 @@ const App: React.FC = () => {
                         usedProjects: 0,
                         usedStorageMB: 0
                     });
+                    setRoleData(emp.id || emp.employeeNumber, emp.name, emp.email).catch(console.error);
                     setCurrentPage('employee');
                 }
                 return;
@@ -484,6 +487,7 @@ const App: React.FC = () => {
                     usedProjects: result.user.usedProjects,
                     usedStorageMB: result.user.usedStorageMB
                 });
+                setRoleData(result.user.id || 'local', result.user.name || '', result.user.email || '').catch(console.error);
                 setCurrentPage('dashboard');
             }
         }
@@ -595,6 +599,7 @@ const App: React.FC = () => {
                     usedProjects: result.user.usedProjects,
                     usedStorageMB: result.user.usedStorageMB
                 });
+                setRoleData(result.user.id || 'local', result.user.name || '', result.user.email || '').catch(console.error);
                 setCurrentPage('dashboard');
             }
         }
