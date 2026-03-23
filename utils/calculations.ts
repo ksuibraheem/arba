@@ -1,3 +1,16 @@
+/**
+ * Arba Local Pricing Engine — Frontend Calculator (Unlimited, Free)
+ * محرك التسعير المحلي — حسابات فورية مجانية
+ * 
+ * PRICING HIERARCHY (v2 — Hybrid Triple-Source):
+ * 1. Manual User Override (manualPrice) — highest priority
+ * 2. Supplier Link (dynamicPrice from linked supplier)
+ * 3. Dynamic API (market rates from getMarketRates)
+ * 4. Arba Benchmark (baseMaterial/baseLabor defaults)
+ * 
+ * This is the client-side engine: unlimited free local calculations.
+ * For "Certified Prices" use the server-side certifyPrice() Cloud Function.
+ */
 import { AppState, CalculatedItem, CustomParams, SupplierOption, BaseItem, Language, AreaBreakdownSummary, BlueprintConfig } from '../types';
 import { SupplierProduct } from '../services/supplierService';
 import { ITEMS_DATABASE, REF_LAND_AREA, REF_BUILD_AREA, SOIL_MULTIPLIERS, EST_COST_PER_SQM } from '../constants';

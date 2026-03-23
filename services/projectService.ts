@@ -96,7 +96,7 @@ export async function getUserProjects(
     }
 
     const snap = await getDocs(q);
-    return snap.docs.map(d => ({ ...d.data(), id: d.id } as ArbaProject));
+    return snap.docs.map(d => ({ ...(d.data() as Record<string, unknown>), id: d.id } as ArbaProject));
 }
 
 export async function getProjectsByStatus(status: ProjectStatus): Promise<ArbaProject[]> {
@@ -106,7 +106,7 @@ export async function getProjectsByStatus(status: ProjectStatus): Promise<ArbaPr
         orderBy('updatedAt', 'desc')
     );
     const snap = await getDocs(q);
-    return snap.docs.map(d => ({ ...d.data(), id: d.id } as ArbaProject));
+    return snap.docs.map(d => ({ ...(d.data() as Record<string, unknown>), id: d.id } as ArbaProject));
 }
 
 // =================== QUOTE LINKING ===================
@@ -167,7 +167,7 @@ export async function getDashboardStats(
     let alerts: SecurityAlert[] = [];
     try {
         const alertSnap = await getDocs(alertsQuery);
-        alerts = alertSnap.docs.map(d => ({ ...d.data(), id: d.id } as SecurityAlert));
+        alerts = alertSnap.docs.map(d => ({ ...(d.data() as Record<string, unknown>), id: d.id } as SecurityAlert));
     } catch { /* collection may not exist yet */ }
 
     // Get clients count

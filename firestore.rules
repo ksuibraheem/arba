@@ -1,0 +1,211 @@
+rules_version = '2';
+
+/**
+ * Arba Pricing — Firestore Security Rules
+ * قواعد أمان Firestore لمنصة أربا
+ * 
+ * Zero-Knowledge Architecture:
+ * - SuperAdmins CANNOT read calculation details or private customer data
+ * - B2B subscribers own data is fully isolated
+ * - All collections require authentication
+ * 
+ * 🏰 THE FORTRESS — Data Privacy & Security
+ */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =================== HELPER FUNCTIONS ===================
+
+    // Check if user is authenticated
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Get user role from userRoles collection
+    function getUserRole() {
+      return get(/databases/$(database)/documents/userRoles/$(request.auth.uid)).data.role;
+    }
+
+    // Check if user has a specific role
+    function hasRole(role) {
+      return isAuth() && getUserRole() == role;
+    }
+
+    // Check if user is admin
+    function isAdmin() {
+      return hasRole('admin');
+    }
+
+    // Check if user is superadmin
+    function isSuperAdmin() {
+      return hasRole('superadmin');
+    }
+
+    // Check if user is a QS engineer
+    function isEngineer() {
+      return hasRole('qs_engineer');
+    }
+
+    // Check if user is the document owner
+    function isOwner(ownerId) {
+      return isAuth() && request.auth.uid == ownerId;
+    }
+
+    // Check if user is assigned to a project
+    function isAssigned(assignedTo) {
+      return isAuth() && request.auth.uid in assignedTo;
+    }
+
+    // =================== USER ROLES ===================
+    // Users can read their own role, admins can read/write all
+    match /userRoles/{uid} {
+      allow read: if isAuth() && (request.auth.uid == uid || isAdmin());
+      allow write: if isAdmin();
+      // SuperAdmins can read roles but NOT modify them
+      allow read: if isSuperAdmin();
+    }
+
+    // =================== PROJECTS ===================
+    // Owner and assigned engineers can read/write
+    // SuperAdmins can list projects (metadata only) but NOT read calculation sub-collections
+    match /projects/{projectId} {
+      allow read: if isAuth() && (
+        isOwner(resource.data.ownerId) ||
+        isAssigned(resource.data.assignedTo) ||
+        isAdmin() ||
+        isSuperAdmin()
+      );
+      allow create: if isAuth() && (isEngineer() || isAdmin());
+      allow update: if isAuth() && (
+        isOwner(resource.data.ownerId) ||
+        isAssigned(resource.data.assignedTo) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+
+      // 🔒 ZERO-KNOWLEDGE: Calculation details sub-collection
+      // SuperAdmins are BLOCKED from reading calculations
+      match /calculations/{calcId} {
+        allow read: if isAuth() && (
+          isOwner(get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId) ||
+          isAssigned(get(/databases/$(database)/documents/projects/$(projectId)).data.assignedTo) ||
+          isAdmin()
+        ) && !isSuperAdmin();
+        allow write: if isAuth() && (
+          isOwner(get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId) ||
+          isEngineer() ||
+          isAdmin()
+        );
+      }
+
+      // 🔒 ZERO-KNOWLEDGE: Price history / audit trail sub-collection
+      // SuperAdmins BLOCKED — only owner, assigned, and admin can read
+      match /priceHistory/{historyId} {
+        allow read: if isAuth() && (
+          isOwner(get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId) ||
+          isAssigned(get(/databases/$(database)/documents/projects/$(projectId)).data.assignedTo) ||
+          isAdmin()
+        ) && !isSuperAdmin();
+        allow create: if isAuth(); // Any authenticated user can log price changes
+        allow update, delete: if false; // Immutable audit trail
+      }
+
+      // Quotes sub-collection — accessible to project stakeholders
+      match /quotes/{quoteId} {
+        allow read: if isAuth() && (
+          isOwner(get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId) ||
+          isAssigned(get(/databases/$(database)/documents/projects/$(projectId)).data.assignedTo) ||
+          isAdmin()
+        );
+        allow write: if isAuth() && (isEngineer() || isAdmin());
+      }
+    }
+
+    // =================== CLIENTS ===================
+    // 🔒 ZERO-KNOWLEDGE: SuperAdmins CANNOT see client private data
+    match /clients/{clientId} {
+      allow read: if isAuth() && (
+        isOwner(resource.data.ownerId) ||
+        isAdmin()
+      ) && !isSuperAdmin();
+      allow create: if isAuth() && (isEngineer() || isAdmin());
+      allow update: if isAuth() && (isOwner(resource.data.ownerId) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // =================== USER IMPORTS ===================
+    // Only the importing user and admins can access
+    match /users/{userId}/imports/{importId} {
+      allow read, write: if isAuth() && (request.auth.uid == userId || isAdmin());
+
+      match /items/{itemId} {
+        allow read, write: if isAuth() && (request.auth.uid == userId || isAdmin());
+      }
+    }
+
+    // =================== SUBSCRIPTIONS ===================
+    // Users can read their own, admins can manage all
+    match /subscriptions/{subId} {
+      allow read: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if false; // Never delete subscription records
+    }
+
+    // =================== BILLING / PAYMENTS ===================
+    // Only the user themselves and accountant/admin can see payment records
+    match /payments/{paymentId} {
+      allow read: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      ) && !isSuperAdmin();
+      allow create: if isAuth();
+      allow update: if isAdmin(); // Only admin/accountant can approve
+      allow delete: if false;
+    }
+
+    // =================== SECURITY ALERTS ===================
+    match /security_alerts/{alertId} {
+      allow read: if isAuth() && (isAdmin() || isEngineer());
+      allow create: if isAuth();
+      allow update: if isAdmin();
+      allow delete: if false;
+    }
+
+    // =================== ACTION LOGS ===================
+    // Write-only for authenticated users, read for admin
+    match /action_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAuth();
+      allow update, delete: if false; // Immutable
+    }
+
+    // =================== SUPPLIER DATA ===================
+    // Suppliers can manage their own data
+    match /suppliers/{supplierId} {
+      allow read: if isAuth();
+      allow write: if isAuth() && (
+        isOwner(resource.data.ownerId) ||
+        isAdmin()
+      );
+
+      match /products/{productId} {
+        allow read: if isAuth();
+        allow write: if isAuth() && (
+          isOwner(get(/databases/$(database)/documents/suppliers/$(supplierId)).data.ownerId) ||
+          isAdmin()
+        );
+      }
+    }
+
+    // =================== DEFAULT: DENY ALL ===================
+    // Any collection not explicitly matched is denied
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -17,7 +17,8 @@ import { onSchedule } from 'firebase-functions/v2/scheduler';
 import * as admin from 'firebase-admin';
 import { parseFile, autoMapColumns, ARBA_SCHEMA_FIELDS } from './fileParser';
 import { scanForFingerprints, executePurge, applyWhiteLabel } from './sanitizationEngine';
-import { mapRowsToItems, processImportedItems, OverheadConfig } from './formulaEngine';
+import { mapRowsToItems, processImportedItems, certifyPrice, OverheadConfig, PricingSource } from './formulaEngine';
+import { generateSignature, verifySignature } from './signatureManager';
 import { scanImagesForBranding, extractImagesFromExcel, isImageScannable } from './ocrEngine';
 import { executeFullPipeline, getGatewayStats } from './apiGateway';
 import { createSession, getSession, deleteSession, cleanupExpiredSessions } from './sessionManager';
@@ -560,10 +561,120 @@ export const getHealthStatus = onCall({
             'parseAndScan',
             'sanitizeAndProcess',
             'autoProcessFile',
+            'certifyProjectPrice',
             'getMarketRates',
             'getHealthStatus',
         ],
     };
+});
+
+// =================== Function 6: Certify Price ===================
+
+/**
+ * certifyProjectPrice — Generate an Official Certified Price
+ * 
+ * Part of Arba Hybrid Pricing Engine v2 🏗️
+ * 
+ * Processes items through the secret formula with 4-decimal precision,
+ * generates HMAC integrity packet and QR verification hash.
+ * 
+ * Used by:
+ * - B2C Portal: Display "Certified Final Price" + QR Code
+ * - B2B Portal: Request official certification for quotes
+ * 
+ * ⚠️ Formula lockdown: Total = [(Materials × Wastage) + Labor + Equipment] × Overheads
+ */
+export const certifyProjectPrice = onCall({
+    maxInstances: 10,
+    timeoutSeconds: 60,
+    memory: '512MiB',
+    region: 'us-central1',
+}, async (request) => {
+    // Auth check
+    if (!request.auth) {
+        throw new HttpsError('unauthenticated', 'يجب تسجيل الدخول / Authentication required');
+    }
+
+    const { projectId, items, overheadConfig: clientOverhead, pricingSource } = request.data;
+
+    if (!projectId || !items || !Array.isArray(items) || items.length === 0) {
+        throw new HttpsError('invalid-argument', 'Project ID and items array are required');
+    }
+
+    try {
+        const overheadConfig: OverheadConfig = {
+            overheadMultiplier: clientOverhead?.overheadMultiplier || 1.15,
+            profitMargin: clientOverhead?.profitMargin || 0.10,
+            contingency: clientOverhead?.contingency || 0.05,
+        };
+
+        // Run certification through the secret formula
+        const result = certifyPrice(
+            request.auth.uid,
+            projectId,
+            items,
+            overheadConfig,
+            (pricingSource as PricingSource) || 'arba_benchmark'
+        );
+
+        // Save certified result to Firestore
+        const certRef = db.collection('projects').doc(projectId)
+            .collection('certifications').doc(`cert_${Date.now()}`);
+        
+        await certRef.set({
+            userId: request.auth.uid,
+            finalPrice: result.finalPrice,
+            totalItems: result.totalItems,
+            integrity: result.integrity,
+            qrVerificationHash: result.qrVerificationHash,
+            certifiedAt: result.certifiedAt,
+            pricingSource: result.pricingSource,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        // Log the certification action
+        await db.collection('action_logs').add({
+            userId: request.auth.uid,
+            action: 'price_certification',
+            target: projectId,
+            metadata: {
+                finalPrice: result.finalPrice,
+                totalItems: result.totalItems,
+                pricingSource: result.pricingSource,
+                engineVersion: result.integrity.engineVersion,
+            },
+            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        // Return safe data to client (no formula details)
+        return {
+            success: true,
+            projectId: result.projectId,
+            finalPrice: result.finalPrice,
+            totalItems: result.totalItems,
+            certifiedAt: result.certifiedAt,
+            qrVerificationHash: result.qrVerificationHash,
+            integrity: {
+                signature: result.integrity.signature,
+                version: result.integrity.version,
+                engineVersion: result.integrity.engineVersion,
+            },
+            // Safe item summaries (no formula breakdown)
+            items: result.items.map(item => ({
+                id: item.id,
+                name: item.name,
+                unit: item.unit,
+                qty: item.qty,
+                totalUnitCost: Math.round(item.totalUnitCost * 10000) / 10000,
+                totalLinePrice: Math.round(item.totalLinePrice * 10000) / 10000,
+                category: item.category,
+            })),
+        };
+    } catch (error: any) {
+        console.error('certifyProjectPrice error:', error);
+        if (error instanceof HttpsError) throw error;
+        throw new HttpsError('internal', `Certification failed: ${error.message}`);
+    }
 });
 
 // =================== Scheduled: Session Cleanup ===================
