@@ -134,6 +134,18 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // =================== USERS ===================
+    // Authenticated users can create and manage their own profile document
+    // This is REQUIRED for the registration flow (setDoc after createUserWithEmailAndPassword)
+    match /users/{userId} {
+      // Users can create their own document on sign-up
+      allow create: if isAuth() && request.auth.uid == userId;
+      // Users can read and update their own data
+      allow read, update: if isAuth() && request.auth.uid == userId;
+      // Admins can read/write all user documents
+      allow read, write: if isAdmin();
+    }
+
     // =================== USER IMPORTS ===================
     // Only the importing user and admins can access
     match /users/{userId}/imports/{importId} {

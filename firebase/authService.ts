@@ -6,11 +6,26 @@
 import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
+    sendEmailVerification,
     signOut,
     onAuthStateChanged,
     updateProfile,
     User as FirebaseUser
 } from 'firebase/auth';
+
+/**
+ * Timeout wrapper — يمنع تعليق الواجهة
+ * Races a promise against a timer. If the promise doesn't resolve
+ * within `ms` milliseconds, it rejects with a descriptive error.
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number, errorMsg: string): Promise<T> {
+    return Promise.race([
+        promise,
+        new Promise<T>((_, reject) =>
+            setTimeout(() => reject(new Error(errorMsg)), ms)
+        ),
+    ]);
+}
 import {
     doc,
     setDoc,
@@ -60,22 +75,32 @@ export const registerWithFirebase = async (userData: {
     plan: string;
 }): Promise<AuthResult> => {
     try {
-        // إنشاء حساب في Firebase Auth
-        const userCredential = await createUserWithEmailAndPassword(
-            auth,
-            userData.email,
-            userData.password
+        // إنشاء حساب في Firebase Auth (مع حماية من التعليق)
+        const userCredential = await withTimeout(
+            createUserWithEmailAndPassword(auth, userData.email, userData.password),
+            10000,
+            'انتهت مهلة إنشاء الحساب. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.'
         );
 
         const firebaseUser = userCredential.user;
 
         // تحديث اسم المستخدم
-        await updateProfile(firebaseUser, {
-            displayName: userData.name
-        });
+        await withTimeout(
+            updateProfile(firebaseUser, { displayName: userData.name }),
+            10000,
+            'انتهت مهلة تحديث بيانات الحساب. يرجى المحاولة مرة أخرى.'
+        );
+
+        // إرسال رابط التحقق من البريد الإلكتروني
+        await withTimeout(
+            sendEmailVerification(firebaseUser),
+            10000,
+            'تعذر إرسال رابط التحقق من البريد الإلكتروني. يرجى المحاولة لاحقاً.'
+        );
 
         // حفظ بيانات المستخدم في Firestore
         const userDoc = {
+            uid: firebaseUser.uid,
             userType: userData.userType,
             name: userData.name,
             email: userData.email,
@@ -89,7 +114,11 @@ export const registerWithFirebase = async (userData: {
             createdAt: serverTimestamp()
         };
 
-        await setDoc(doc(db, 'users', firebaseUser.uid), userDoc);
+        await withTimeout(
+            setDoc(doc(db, 'users', firebaseUser.uid), userDoc),
+            10000,
+            'انتهت مهلة حفظ بيانات المستخدم. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.'
+        );
 
         return {
             success: true,
@@ -110,6 +139,15 @@ export const registerWithFirebase = async (userData: {
         };
     } catch (error: any) {
         console.error('Registration error:', error);
+
+        // Handle timeout errors
+        if (error.message && !error.code) {
+            return {
+                success: false,
+                error: error.message,
+                errorCode: 'timeout'
+            };
+        }
 
         let errorMessage = 'حدث خطأ أثناء التسجيل';
 
@@ -141,7 +179,11 @@ export const loginWithFirebase = async (
     password: string
 ): Promise<AuthResult> => {
     try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await withTimeout(
+            signInWithEmailAndPassword(auth, email, password),
+            10000,
+            'انتهت مهلة تسجيل الدخول. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.'
+        );
         const firebaseUser = userCredential.user;
 
         // جلب بيانات المستخدم من Firestore
@@ -176,6 +218,15 @@ export const loginWithFirebase = async (
         }
     } catch (error: any) {
         console.error('Login error:', error);
+
+        // Handle timeout errors
+        if (error.message && !error.code) {
+            return {
+                success: false,
+                error: error.message,
+                errorCode: 'timeout'
+            };
+        }
 
         let errorMessage = 'حدث خطأ أثناء تسجيل الدخول';
 

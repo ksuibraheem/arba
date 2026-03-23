@@ -255,17 +255,7 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ language, onNavig
                                 <span className="font-medium text-slate-700" dir="ltr">{phone}</span>
                             </p>
 
-                            {/* Test Code Display */}
-                            {generatedCode && (
-                                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 mb-4 text-center">
-                                    <p className="text-xs text-emerald-600 mb-1">
-                                        {language === 'ar' ? '🧪 للتجربة - الرمز هو:' : '🧪 For testing - Code is:'}
-                                    </p>
-                                    <p className="text-2xl font-bold text-emerald-700 tracking-widest" dir="ltr">
-                                        {generatedCode}
-                                    </p>
-                                </div>
-                            )}
+
 
                             {/* Code Inputs */}
                             <div className="flex gap-4 justify-center mb-6" dir="ltr">
