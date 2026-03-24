@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import Sidebar from './components/Sidebar';
 import StatsGrid from './components/StatsGrid';
@@ -116,6 +116,16 @@ const App: React.FC = () => {
     const [activeProject, setActiveProject] = useState<ArbaProject | null>(null);
     const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
 
+    // Ref to track currentPage without triggering useEffect re-runs
+    const currentPageRef = useRef(currentPage);
+    useEffect(() => { currentPageRef.current = currentPage; }, [currentPage]);
+
+    // Ref to track manager/employee state for onAuthChange guard
+    const isManagerRef = useRef(isManager);
+    const currentEmployeeRef = useRef(currentEmployee);
+    useEffect(() => { isManagerRef.current = isManager; }, [isManager]);
+    useEffect(() => { currentEmployeeRef.current = currentEmployee; }, [currentEmployee]);
+
     // Initial check for 'redirectTo' parameter handling Identity Guard Firebase links
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -151,7 +161,13 @@ const App: React.FC = () => {
     // Check for existing session on mount
     useEffect(() => {
         if (USE_FIREBASE) {
-            // Firebase auth state listener
+            // Show cached user instantly while Firestore loads
+            const cached = localStorage.getItem('arba_cached_user');
+            if (cached) {
+                try { setUser(JSON.parse(cached)); } catch { /* ignore */ }
+            }
+
+            // Firebase auth state listener — runs ONCE on mount
             const unsubscribe = onAuthChange(async (firebaseUser) => {
                 if (firebaseUser) {
                     const userData = await getUserData(firebaseUser.uid);
@@ -189,8 +205,9 @@ const App: React.FC = () => {
                             }
                             setRedirectUrl(null);
                         } else {
-                            // Default Login Routing based on userType
-                            if (currentPage === 'login') {
+                            // Default Login Routing based on userType (use ref to avoid re-subscription)
+                            const page = currentPageRef.current;
+                            if (page === 'login') {
                                 if (userData.userType === 'supplier') {
                                     setCurrentPage('supplier');
                                 } else if (userData.userType === 'individual') {
@@ -205,7 +222,7 @@ const App: React.FC = () => {
                     }
                 } else {
                     // ── GUARD: لا تمسح الجلسة إذا المستخدم مدير أو موظف (تسجيل دخولهم محلي) ──
-                    if (isManager || currentEmployee) {
+                    if (isManagerRef.current || currentEmployeeRef.current) {
                         // Manager/employee logged in locally — don't clear session
                         setIsLoading(false);
                         return;
@@ -236,7 +253,8 @@ const App: React.FC = () => {
             }
             setIsLoading(false);
         }
-    }, [redirectUrl, currentPage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // ← Empty deps: subscribe ONCE on mount, use refs for latest values
 
     // Load Dynamic Supplier Data
     useEffect(() => {
