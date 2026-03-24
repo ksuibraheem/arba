@@ -569,8 +569,16 @@ const App: React.FC = () => {
                 setLoginError(result.error || 'حدث خطأ أثناء التسجيل');
                 return;
             }
-            // User state will be updated by onAuthChange listener
-            setCurrentPage('dashboard');
+
+            // Email verification sent — redirect to verification screen
+            if (result.emailVerificationSent) {
+                setPendingRegistrationEmail(data.email);
+                setCurrentPage('verification');
+                console.log('📧 تم إرسال رابط التحقق — يرجى فحص البريد الإلكتروني');
+            } else {
+                // Fallback: onAuthChange listener will handle state
+                setCurrentPage('verification');
+            }
         } else {
             // Local registration
             const result = registerUser({

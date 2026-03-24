@@ -10,7 +10,8 @@ import {
     signOut,
     onAuthStateChanged,
     updateProfile,
-    User as FirebaseUser
+    User as FirebaseUser,
+    ActionCodeSettings
 } from 'firebase/auth';
 
 /**
@@ -36,6 +37,15 @@ import {
 } from 'firebase/firestore';
 import { auth, db } from './config';
 
+/**
+ * إعدادات رابط التحقق — Action Code Settings
+ * يُعاد توجيه المستخدم لهذا الرابط بعد الضغط على رابط التحقق في الإيميل
+ */
+const ARBA_ACTION_CODE_SETTINGS: ActionCodeSettings = {
+    url: 'https://arba-sys.com/login',
+    handleCodeInApp: true,
+};
+
 // نوع بيانات المستخدم
 export interface UserData {
     uid: string;
@@ -58,6 +68,7 @@ export interface AuthResult {
     user?: UserData;
     error?: string;
     errorCode?: string;
+    emailVerificationSent?: boolean;
 }
 
 /**
@@ -91,12 +102,14 @@ export const registerWithFirebase = async (userData: {
             'انتهت مهلة تحديث بيانات الحساب. يرجى المحاولة مرة أخرى.'
         );
 
-        // إرسال رابط التحقق من البريد الإلكتروني
+        // إرسال رابط التحقق من البريد الإلكتروني مع إعدادات الإجراء
         await withTimeout(
-            sendEmailVerification(firebaseUser),
+            sendEmailVerification(firebaseUser, ARBA_ACTION_CODE_SETTINGS),
             10000,
             'تعذر إرسال رابط التحقق من البريد الإلكتروني. يرجى المحاولة لاحقاً.'
         );
+
+        console.log('✅ تم إنشاء الحساب وإرسال رابط التحقق إلى:', userData.email);
 
         // حفظ بيانات المستخدم في Firestore
         const userDoc = {
@@ -122,6 +135,7 @@ export const registerWithFirebase = async (userData: {
 
         return {
             success: true,
+            emailVerificationSent: true,
             user: {
                 uid: firebaseUser.uid,
                 userType: userData.userType,

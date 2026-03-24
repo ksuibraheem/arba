@@ -10,9 +10,19 @@ import {
     sendPasswordResetEmail,
     signOut,
     onAuthStateChanged,
-    User
+    User,
+    ActionCodeSettings
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
+
+/**
+ * إعدادات رابط التحقق — Action Code Settings
+ * يُعاد توجيه المستخدم لهذا الرابط بعد الضغط على رابط التحقق في الإيميل
+ */
+const ARBA_ACTION_CODE_SETTINGS: ActionCodeSettings = {
+    url: 'https://arba-sys.com/login',
+    handleCodeInApp: true,
+};
 
 // =================== تسجيل مستخدم جديد ===================
 
@@ -45,8 +55,8 @@ export async function registerWithEmail(data: RegisterData): Promise<AuthResult>
             data.password
         );
 
-        // إرسال رابط التحقق من البريد
-        await sendEmailVerification(userCredential.user);
+        // إرسال رابط التحقق من البريد مع إعدادات الإجراء
+        await sendEmailVerification(userCredential.user, ARBA_ACTION_CODE_SETTINGS);
 
         console.log('✅ تم إنشاء الحساب وإرسال رابط التحقق');
 
@@ -178,7 +188,7 @@ export async function resendVerificationEmail(): Promise<AuthResult> {
             };
         }
 
-        await sendEmailVerification(user);
+        await sendEmailVerification(user, ARBA_ACTION_CODE_SETTINGS);
         console.log('✅ تم إعادة إرسال رابط التحقق');
 
         return { success: true };
