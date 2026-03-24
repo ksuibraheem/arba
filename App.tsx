@@ -59,6 +59,9 @@ type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payme
 // مفتاح الوصول السري للوحة المدير - غيره لمفتاح خاص بك
 const ADMIN_SECRET_KEY = 'arba2025secure';
 
+// Super Admin — full access bypass
+const SUPER_ADMIN_EMAIL = 'info@arba-sys.com';
+
 interface AuthUser {
     uid?: string; // معرف المستخدم الفريد
     name: string;
@@ -146,7 +149,12 @@ const App: React.FC = () => {
                         setUser(verifiedUser);
                         localStorage.setItem('arba_cached_user', JSON.stringify(verifiedUser));
 
-                        // Link Role Context
+                        // Super Admin auto-grant
+                        if (userData.email?.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()) {
+                            verifiedUser.plan = 'enterprise';
+                            setUser(verifiedUser);
+                            setAdminAccessGranted(true);
+                        }
                         setRoleData(firebaseUser.uid, userData.name || '', userData.email || '').catch(console.error);
 
                         // ── REDIRECT LOGIC for Deep Links / Route Protection ──
@@ -169,6 +177,12 @@ const App: React.FC = () => {
                         }
                     }
                 } else {
+                    // ── GUARD: لا تمسح الجلسة إذا المستخدم مدير أو موظف (تسجيل دخولهم محلي) ──
+                    if (isManager || currentEmployee) {
+                        // Manager/employee logged in locally — don't clear session
+                        setIsLoading(false);
+                        return;
+                    }
                     setUser(null);
                     localStorage.removeItem('arba_cached_user');
                     clearRole();
@@ -463,6 +477,10 @@ const App: React.FC = () => {
                 return;
             }
             // User state will be updated by onAuthChange listener
+            // Super Admin: auto-grant full access
+            if (email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()) {
+                setAdminAccessGranted(true);
+            }
             setCurrentPage('dashboard');
         } else {
             // Local login
@@ -494,65 +512,9 @@ const App: React.FC = () => {
     };
 
     const handleRegister = async (data: RegisterData) => {
-        // For individuals, use the new registration workflow with verification
-        if (data.userType === 'individual') {
-            const result = registrationService.createRegistrationRequest({
-                name: data.name,
-                email: data.email,
-                phone: data.phone || '',
-                password: data.password,
-                plan: (data.plan === 'free' || data.plan === 'professional') ? data.plan : 'free'
-            });
-
-            if (!result.success) {
-                console.error('Registration failed:', result.error);
-                setLoginError(result.error || 'حدث خطأ أثناء التسجيل');
-                return;
-            }
-
-            if (result.request) {
-                setRegistrationRequestId(result.request.id);
-                setPendingRegistrationEmail(result.request.email);
-                setPendingRegistrationPhone(result.request.phone);
-                setCurrentPage('verification');
-            }
-            return;
-        }
-
-        // For companies and suppliers, use the new workflow with commercial register verification
-        if (data.userType === 'company' || data.userType === 'supplier') {
-            const result = registrationService.createCompanyRegistrationRequest({
-                userType: data.userType,
-                name: data.name,
-                email: data.email,
-                phone: data.phone || '',
-                password: data.password,
-                companyName: data.company || '',
-                commercialRegister: data.commercialRegister || '',
-                businessType: data.businessType,
-                // الموردين مجاناً دائماً، الشركات حسب اختيارهم
-                plan: data.userType === 'supplier' ? 'free' : ((data.plan === 'free' || data.plan === 'professional') ? data.plan : 'professional')
-            });
-
-            if (!result.success) {
-                console.error('Registration failed:', result.error);
-                setLoginError(result.error || 'حدث خطأ أثناء التسجيل');
-                return;
-            }
-
-            if (result.request) {
-                setRegistrationRequestId(result.request.id);
-                setPendingRegistrationEmail(result.request.email);
-                setPendingRegistrationPhone(result.request.phone);
-                setCurrentPage('verification');
-            }
-            return;
-        }
-
-        // For employees, use existing Firebase flow
+        // ── All user types: create Firebase account first ──
         if (USE_FIREBASE) {
             try {
-                // Firebase registration
                 const result = await registerWithFirebase({
                     userType: data.userType,
                     name: data.name,
@@ -562,7 +524,7 @@ const App: React.FC = () => {
                     commercialRegister: data.commercialRegister,
                     businessType: data.businessType,
                     password: data.password,
-                    plan: data.plan
+                    plan: data.userType === 'supplier' ? 'free' : ((data.plan === 'free' || data.plan === 'professional') ? data.plan : 'free')
                 });
 
                 if (!result.success) {
@@ -574,15 +536,33 @@ const App: React.FC = () => {
                                 const { checkEmailVerified, resendVerificationEmail } = await import('./firebase/authService');
                                 const isVerified = await checkEmailVerified();
                                 if (!isVerified) {
-                                    // User exists but not verified — resend and redirect
                                     await resendVerificationEmail();
                                     setPendingRegistrationEmail(data.email);
                                     setCurrentPage('verification');
-                                    console.log('📧 المستخدم موجود لكن غير مفعّل — تم إعادة إرسال رابط التحقق');
                                     return;
                                 } else {
-                                    // Already verified — go to dashboard
-                                    setCurrentPage('dashboard');
+                                    // Already verified
+                                    if (data.userType === 'company' || data.userType === 'supplier') {
+                                        // Continue to CR review flow
+                                        const crResult = registrationService.createCompanyRegistrationRequest({
+                                            userType: data.userType,
+                                            name: data.name,
+                                            email: data.email,
+                                            phone: data.phone || '',
+                                            password: data.password,
+                                            companyName: data.company || '',
+                                            commercialRegister: data.commercialRegister || '',
+                                            businessType: data.businessType,
+                                            plan: data.userType === 'supplier' ? 'free' : ((data.plan === 'free' || data.plan === 'professional') ? data.plan : 'professional')
+                                        });
+                                        if (crResult.request) {
+                                            setRegistrationRequestId(crResult.request.id);
+                                            setPendingRegistrationEmail(crResult.request.email);
+                                            setCurrentPage('under-review');
+                                        }
+                                    } else {
+                                        setCurrentPage('dashboard');
+                                    }
                                     return;
                                 }
                             }
@@ -602,7 +582,23 @@ const App: React.FC = () => {
                     return;
                 }
 
-                // Email verification sent — redirect to verification screen
+                // Firebase account created successfully
+                // For companies/suppliers: also create local registration request for CR tracking
+                if (data.userType === 'company' || data.userType === 'supplier') {
+                    registrationService.createCompanyRegistrationRequest({
+                        userType: data.userType,
+                        name: data.name,
+                        email: data.email,
+                        phone: data.phone || '',
+                        password: data.password,
+                        companyName: data.company || '',
+                        commercialRegister: data.commercialRegister || '',
+                        businessType: data.businessType,
+                        plan: data.userType === 'supplier' ? 'free' : ((data.plan === 'free' || data.plan === 'professional') ? data.plan : 'professional')
+                    });
+                }
+
+                // Redirect to verification screen
                 setPendingRegistrationEmail(data.email);
                 setCurrentPage('verification');
                 if (result.emailVerificationSent) {
@@ -618,37 +614,85 @@ const App: React.FC = () => {
                         : 'An unexpected error occurred during registration. Please try again.'
                 );
             }
-        } else {
-            // Local registration
-            const result = registerUser({
+            return;
+        }
+
+        // ── Fallback: Local registration (when USE_FIREBASE is false) ──
+        if (data.userType === 'individual') {
+            const result = registrationService.createRegistrationRequest({
+                name: data.name,
+                email: data.email,
+                phone: data.phone || '',
+                password: data.password,
+                plan: (data.plan === 'free' || data.plan === 'professional') ? data.plan : 'free'
+            });
+            if (!result.success) {
+                setLoginError(result.error || 'حدث خطأ أثناء التسجيل');
+                return;
+            }
+            if (result.request) {
+                setRegistrationRequestId(result.request.id);
+                setPendingRegistrationEmail(result.request.email);
+                setPendingRegistrationPhone(result.request.phone);
+                setCurrentPage('verification');
+            }
+            return;
+        }
+
+        if (data.userType === 'company' || data.userType === 'supplier') {
+            const result = registrationService.createCompanyRegistrationRequest({
                 userType: data.userType,
                 name: data.name,
                 email: data.email,
-                phone: data.phone,
-                company: data.company,
-                commercialRegister: data.commercialRegister,
-                businessType: data.businessType,
+                phone: data.phone || '',
                 password: data.password,
-                plan: data.plan
+                companyName: data.company || '',
+                commercialRegister: data.commercialRegister || '',
+                businessType: data.businessType,
+                plan: data.userType === 'supplier' ? 'free' : ((data.plan === 'free' || data.plan === 'professional') ? data.plan : 'professional')
             });
-
             if (!result.success) {
-                console.error('Registration failed:', result.error);
+                setLoginError(result.error || 'حدث خطأ أثناء التسجيل');
                 return;
             }
-
-            if (result.user) {
-                setUser({
-                    name: result.user.name,
-                    email: result.user.email,
-                    company: result.user.company,
-                    plan: result.user.plan,
-                    usedProjects: result.user.usedProjects,
-                    usedStorageMB: result.user.usedStorageMB
-                });
-                setRoleData(result.user.id || 'local', result.user.name || '', result.user.email || '').catch(console.error);
-                setCurrentPage('dashboard');
+            if (result.request) {
+                setRegistrationRequestId(result.request.id);
+                setPendingRegistrationEmail(result.request.email);
+                setPendingRegistrationPhone(result.request.phone);
+                setCurrentPage('verification');
             }
+            return;
+        }
+
+        // Local employee registration fallback (non-Firebase mode)
+        const result = registerUser({
+            userType: data.userType,
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            company: data.company,
+            commercialRegister: data.commercialRegister,
+            businessType: data.businessType,
+            password: data.password,
+            plan: data.plan
+        });
+
+        if (!result.success) {
+            console.error('Registration failed:', result.error);
+            return;
+        }
+
+        if (result.user) {
+            setUser({
+                name: result.user.name,
+                email: result.user.email,
+                company: result.user.company,
+                plan: result.user.plan,
+                usedProjects: result.user.usedProjects,
+                usedStorageMB: result.user.usedStorageMB
+            });
+            setRoleData(result.user.id || 'local', result.user.name || '', result.user.email || '').catch(console.error);
+            setCurrentPage('dashboard');
         }
     };
 
@@ -661,6 +705,11 @@ const App: React.FC = () => {
         setUser(null);
         setLoginError('');
         setAdminAccessGranted(false);
+        setIsManager(false);
+        setCurrentEmployee(null);
+        // مسح جلسة الاختبار من الجهاز
+        sessionStorage.removeItem('arba_test_mode_token');
+        sessionStorage.removeItem('arba_test_mode_manager');
         setCurrentPage('landing');
     };
 
@@ -997,6 +1046,11 @@ const App: React.FC = () => {
                 }}
                 onNavigate={handleNavigate}
                 onStartTestMode={(plan, userType) => {
+                    // تحقق أماني: تأكد إن المدير مسجل دخول على نفس الجهاز
+                    const deviceToken = Date.now().toString(36) + Math.random().toString(36).substr(2);
+                    sessionStorage.setItem('arba_test_mode_token', deviceToken);
+                    sessionStorage.setItem('arba_test_mode_manager', 'true');
+
                     // إنشاء مستخدم اختبار وهمي للوصول للصفحة
                     const testUser: AuthUser = {
                         name: userType === 'individual' ? 'مستخدم اختباري - أفراد' : userType === 'company' ? 'شركة اختبارية' : 'مورد اختباري',
@@ -1381,6 +1435,13 @@ const App: React.FC = () => {
     // Zone A: Employee Workspace (Admin & QS Engineers)
     if (currentPage === 'dashboard') {
         if (!user && !isDemoMode) {
+            setCurrentPage('login');
+            return null;
+        }
+        // تحقق أماني: إذا المستخدم اختباري، تأكد إنه على نفس الجهاز الي بدأ الاختبار
+        if (user?.email === 'test@arba-sys.com' && !sessionStorage.getItem('arba_test_mode_manager')) {
+            // External access — no valid test session on this device
+            setUser(null);
             setCurrentPage('login');
             return null;
         }
