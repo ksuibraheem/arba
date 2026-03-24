@@ -122,8 +122,29 @@ const App: React.FC = () => {
         const redirectTo = params.get('redirectTo');
         if (redirectTo) {
             setRedirectUrl(redirectTo);
-            // Optional: clean URL
-            // window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        // ── Handle Firebase email action links (verification, password reset) ──
+        const mode = params.get('mode');
+        const oobCode = params.get('oobCode');
+        if (mode && oobCode) {
+            (async () => {
+                try {
+                    if (mode === 'verifyEmail') {
+                        const { handleVerificationReturn } = await import('./firebase/authService');
+                        const result = await handleVerificationReturn(oobCode);
+                        if (result.success) {
+                            console.log('✅ تم تفعيل البريد من الرابط');
+                            // Clean URL and redirect to dashboard
+                            window.history.replaceState({}, document.title, window.location.pathname);
+                            setCurrentPage('login');
+                        }
+                    }
+                    // mode === 'resetPassword' is handled by Firebase's built-in page
+                } catch (error) {
+                    console.error('Error processing email action:', error);
+                }
+            })();
         }
     }, []);
 

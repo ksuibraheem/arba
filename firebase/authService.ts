@@ -11,6 +11,7 @@ import {
     signOut,
     onAuthStateChanged,
     updateProfile,
+    applyActionCode,
     User as FirebaseUser,
     ActionCodeSettings
 } from 'firebase/auth';
@@ -361,11 +362,35 @@ export const checkEmailVerified = async (): Promise<boolean> => {
     try {
         const user = auth.currentUser;
         if (!user) return false;
+        // Force refresh the auth token to get latest emailVerified status
+        await user.getIdToken(true);
         await user.reload();
         return user.emailVerified;
     } catch (error) {
         console.error('Check email verified error:', error);
         return false;
+    }
+};
+
+/**
+ * معالجة عودة المستخدم من رابط التحقق — يطبّق الـ Action Code مباشرة
+ */
+export const handleVerificationReturn = async (oobCode: string): Promise<AuthResult> => {
+    try {
+        await applyActionCode(auth, oobCode);
+        // Reload user to reflect new emailVerified status
+        if (auth.currentUser) {
+            await auth.currentUser.reload();
+        }
+        console.log('✅ تم تفعيل البريد بنجاح');
+        return { success: true };
+    } catch (error: any) {
+        console.error('Apply action code error:', error);
+        return {
+            success: false,
+            error: error.message || 'حدث خطأ في تفعيل البريد',
+            errorCode: error.code || 'unknown'
+        };
     }
 };
 
@@ -399,6 +424,7 @@ export default {
     resetPasswordWithFirebase,
     resendVerificationEmail,
     checkEmailVerified,
+    handleVerificationReturn,
     getCurrentFirebaseUser,
     onAuthChange,
     getUserData
