@@ -189,11 +189,17 @@ const App: React.FC = () => {
                             }
                             setRedirectUrl(null);
                         } else {
-                            // Default Login Routing
-                            if (userData.userType === 'supplier' && currentPage === 'login') {
-                                setCurrentPage('supplier');
-                            } else if (currentPage === 'login') {
-                                setCurrentPage('dashboard');
+                            // Default Login Routing based on userType
+                            if (currentPage === 'login') {
+                                if (userData.userType === 'supplier') {
+                                    setCurrentPage('supplier');
+                                } else if (userData.userType === 'individual') {
+                                    setCurrentPage('pricing-calc');
+                                } else if (userData.userType === 'company') {
+                                    setCurrentPage('pricing-calc');
+                                } else {
+                                    setCurrentPage('dashboard');
+                                }
                             }
                         }
                     }
@@ -1466,6 +1472,25 @@ const App: React.FC = () => {
             setCurrentPage('login');
             return null;
         }
+        // Regular Firebase users (individual/company) — skip ZoneGuard, give direct access
+        const userType = (user as any)?.userType;
+        if (userType === 'individual' || userType === 'company') {
+            return (
+                <EmployeeWorkspace
+                    language={language}
+                    onOpenPricing={(project) => {
+                        setActiveProject(project || null);
+                        setCurrentPage('pricing-calc');
+                    }}
+                    onLogout={handleLogout}
+                    userId={user?.uid || user?.email || 'demo'}
+                    userName={user?.name || 'Demo'}
+                    isDemoMode={isDemoMode}
+                />
+            );
+        }
+
+        // Employees/Admins — require Zone A access
         return (
             <ZoneGuard requiredZone="A" language={language} isDemoMode={isDemoMode}>
                 <EmployeeWorkspace
