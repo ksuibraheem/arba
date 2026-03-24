@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Mail, Phone, ArrowRight, ArrowLeft, Check, RefreshCw, Shield, Clock } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Mail, ArrowRight, ArrowLeft, Check, RefreshCw, Shield, ExternalLink } from 'lucide-react';
 import { PAGE_TRANSLATIONS } from '../companyData';
-import { registrationService } from '../services/registrationService';
+import { resendVerificationEmail, checkEmailVerified } from '../firebase/authService';
 
 interface VerificationPageProps {
     language: 'ar' | 'en';
@@ -15,183 +15,123 @@ interface VerificationPageProps {
 const VerificationPage: React.FC<VerificationPageProps> = ({
     language,
     onNavigate,
-    email = 'user@example.com',
-    phone = '+966501234567',
+    email = '',
+    phone,
     registrationRequestId,
     onVerificationComplete
 }) => {
     const isRtl = language === 'ar';
     const Arrow = isRtl ? ArrowLeft : ArrowRight;
 
-    const [step, setStep] = useState<'email' | 'complete'>('email');
-    // Changed to 4-digit codes
-    const [emailCode, setEmailCode] = useState(['', '', '', '']);
-    const [phoneCode, setPhoneCode] = useState(['', '', '', '']);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isVerified, setIsVerified] = useState(false);
+    const [isChecking, setIsChecking] = useState(false);
+    const [isResending, setIsResending] = useState(false);
     const [error, setError] = useState('');
-    const [resendTimer, setResendTimer] = useState(60);
-    const [canResend, setCanResend] = useState(false);
-    const [codeExpiryTimer, setCodeExpiryTimer] = useState(300); // 5 minutes in seconds
-
-
-    const emailInputRefs = useRef<(HTMLInputElement | null)[]>([]);
-    const phoneInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+    const [successMessage, setSuccessMessage] = useState('');
+    const [resendCooldown, setResendCooldown] = useState(0);
 
     const t = (key: string) => PAGE_TRANSLATIONS[key]?.[language] || key;
 
-
-
-    // Resend timer
+    // Resend cooldown timer
     useEffect(() => {
-        if (resendTimer > 0) {
-            const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
-            return () => clearTimeout(timer);
-        } else {
-            setCanResend(true);
-        }
-    }, [resendTimer]);
-
-    // Code expiry timer (5 minutes)
-    useEffect(() => {
-        if (codeExpiryTimer > 0) {
-            const timer = setTimeout(() => setCodeExpiryTimer(codeExpiryTimer - 1), 1000);
+        if (resendCooldown > 0) {
+            const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
             return () => clearTimeout(timer);
         }
-    }, [codeExpiryTimer]);
+    }, [resendCooldown]);
 
-    const formatExpiryTime = (seconds: number) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
+    // Auto-polling: check verification status every 5 seconds
+    useEffect(() => {
+        if (isVerified) return;
 
-    const handleCodeChange = (
-        index: number,
-        value: string,
-        codeArray: string[],
-        setCodeArray: React.Dispatch<React.SetStateAction<string[]>>,
-        refs: React.MutableRefObject<(HTMLInputElement | null)[]>
-    ) => {
-        if (value.length > 1) value = value[0];
-        if (!/^\d*$/.test(value)) return;
-
-        const newCode = [...codeArray];
-        newCode[index] = value;
-        setCodeArray(newCode);
-        setError('');
-
-        // Auto-focus next input (now max index is 3 for 4-digit)
-        if (value && index < 3) {
-            refs.current[index + 1]?.focus();
-        }
-    };
-
-    const handleKeyDown = (
-        index: number,
-        e: React.KeyboardEvent,
-        codeArray: string[],
-        setCodeArray: React.Dispatch<React.SetStateAction<string[]>>,
-        refs: React.MutableRefObject<(HTMLInputElement | null)[]>
-    ) => {
-        if (e.key === 'Backspace' && !codeArray[index] && index > 0) {
-            refs.current[index - 1]?.focus();
-        }
-    };
-
-    const handleVerify = async (type: 'email' | 'phone') => {
-        const code = type === 'email' ? emailCode : phoneCode;
-        const fullCode = code.join('');
-
-        // Check for 4-digit code
-        if (fullCode.length !== 4) {
-            setError(language === 'ar' ? 'يرجى إدخال الرمز المكون من 4 أرقام' : 'Please enter the 4-digit code');
-            return;
-        }
-
-        // Check if code expired
-        if (codeExpiryTimer === 0) {
-            setError(language === 'ar' ? 'انتهت صلاحية الرمز. يرجى طلب رمز جديد.' : 'Code expired. Please request a new one.');
-            return;
-        }
-
-        setIsLoading(true);
-        setError('');
-
-        // Use registration service if we have a request ID
-        if (registrationRequestId) {
-            if (type === 'email') {
-                const result = registrationService.verifyEmailCode(registrationRequestId, fullCode);
-                if (result.success) {
-                    // Email verified - go directly to complete (skip phone)
-                    setStep('complete');
-                    if (onVerificationComplete) {
-                        setTimeout(() => {
-                            onVerificationComplete('payment-upload');
-                        }, 2000);
-                    }
-                } else {
-                    setError(result.error || (language === 'ar' ? 'الرمز غير صحيح' : 'Invalid code'));
+        const pollInterval = setInterval(async () => {
+            try {
+                const verified = await checkEmailVerified();
+                if (verified) {
+                    setIsVerified(true);
+                    clearInterval(pollInterval);
+                    // Auto-redirect after 2 seconds
+                    setTimeout(() => {
+                        if (onVerificationComplete) {
+                            onVerificationComplete('dashboard');
+                        } else {
+                            onNavigate('dashboard');
+                        }
+                    }, 2000);
                 }
+            } catch {
+                // Silently fail — will retry on next poll
             }
-        } else {
-            // Demo mode - accept any 4-digit code
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            // Email verified - go directly to complete (skip phone)
-            setStep('complete');
-            if (onVerificationComplete) {
+        }, 5000);
+
+        return () => clearInterval(pollInterval);
+    }, [isVerified, onVerificationComplete, onNavigate]);
+
+    // Manual check verification status
+    const handleCheckStatus = useCallback(async () => {
+        setIsChecking(true);
+        setError('');
+        setSuccessMessage('');
+
+        try {
+            const verified = await checkEmailVerified();
+            if (verified) {
+                setIsVerified(true);
                 setTimeout(() => {
-                    onVerificationComplete('dashboard');
+                    if (onVerificationComplete) {
+                        onVerificationComplete('dashboard');
+                    } else {
+                        onNavigate('dashboard');
+                    }
                 }, 2000);
-            }
-        }
-
-        setIsLoading(false);
-    };
-
-    const handleResend = async () => {
-        if (!canResend) return;
-
-        setIsLoading(true);
-
-        if (registrationRequestId) {
-            if (step === 'email') {
-                registrationService.resendEmailCode(registrationRequestId);
             } else {
-                registrationService.resendPhoneCode(registrationRequestId);
+                setError(
+                    language === 'ar'
+                        ? 'لم يتم التحقق بعد. يرجى الضغط على الرابط المرسل إلى بريدك الإلكتروني.'
+                        : 'Not verified yet. Please click the link sent to your email.'
+                );
             }
+        } catch {
+            setError(
+                language === 'ar'
+                    ? 'حدث خطأ أثناء التحقق. يرجى المحاولة مرة أخرى.'
+                    : 'Error checking status. Please try again.'
+            );
+        } finally {
+            setIsChecking(false);
         }
+    }, [language, onVerificationComplete, onNavigate]);
 
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setResendTimer(60);
-        setCanResend(false);
-        setCodeExpiryTimer(300); // Reset expiry timer
-        setIsLoading(false);
-    };
+    // Resend verification email
+    const handleResend = useCallback(async () => {
+        if (resendCooldown > 0) return;
 
-    const renderCodeInputs = (
-        codeArray: string[],
-        setCodeArray: React.Dispatch<React.SetStateAction<string[]>>,
-        refs: React.MutableRefObject<(HTMLInputElement | null)[]>
-    ) => (
-        <div className="flex gap-4 justify-center" dir="ltr">
-            {codeArray.map((digit, index) => (
-                <input
-                    key={index}
-                    ref={el => refs.current[index] = el}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={digit}
-                    onChange={(e) => handleCodeChange(index, e.target.value, codeArray, setCodeArray, refs)}
-                    onKeyDown={(e) => handleKeyDown(index, e, codeArray, setCodeArray, refs)}
-                    className={`w-14 h-16 text-center text-3xl font-bold rounded-xl border-2 transition-all outline-none ${digit
-                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                        : 'border-slate-200 bg-white text-slate-800 focus:border-emerald-500'
-                        }`}
-                />
-            ))}
-        </div>
-    );
+        setIsResending(true);
+        setError('');
+        setSuccessMessage('');
+
+        try {
+            const result = await resendVerificationEmail();
+            if (result.success) {
+                setSuccessMessage(
+                    language === 'ar'
+                        ? 'تم إعادة إرسال رابط التحقق بنجاح ✅'
+                        : 'Verification link resent successfully ✅'
+                );
+                setResendCooldown(60);
+            } else {
+                setError(result.error || (language === 'ar' ? 'حدث خطأ' : 'An error occurred'));
+            }
+        } catch {
+            setError(
+                language === 'ar'
+                    ? 'تعذر إرسال الرابط. يرجى المحاولة لاحقاً.'
+                    : 'Failed to send link. Please try later.'
+            );
+        } finally {
+            setIsResending(false);
+        }
+    }, [language, resendCooldown]);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 flex items-center justify-center p-6" dir={isRtl ? 'rtl' : 'ltr'}>
@@ -206,105 +146,118 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
 
                 {/* Verification Card */}
                 <div className="bg-white rounded-3xl p-8 shadow-2xl">
-                    {step === 'complete' ? (
-                        /* Complete State */
+                    {isVerified ? (
+                        /* ✅ Verified State */
                         <div className="text-center">
                             <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
                                 <Check className="w-10 h-10 text-emerald-500" />
                             </div>
-                            <h2 className="text-2xl font-bold text-slate-800 mb-2">{t('verification_complete')}</h2>
-                            <p className="text-slate-500 mb-8">{t('verification_complete_message')}</p>
+                            <h2 className="text-2xl font-bold text-slate-800 mb-2">
+                                {language === 'ar' ? 'تم التحقق بنجاح!' : 'Email Verified!'}
+                            </h2>
+                            <p className="text-slate-500 mb-8">
+                                {language === 'ar'
+                                    ? 'تم تفعيل حسابك في أربا بنجاح. جاري التحويل...'
+                                    : 'Your Arba account has been activated. Redirecting...'}
+                            </p>
                             <div className="flex items-center justify-center gap-2 text-slate-400">
                                 <RefreshCw className="w-5 h-5 animate-spin" />
                                 <span>{language === 'ar' ? 'جاري التحويل...' : 'Redirecting...'}</span>
                             </div>
                         </div>
                     ) : (
-                        /* Verification Steps */
+                        /* 📧 Check Your Email State */
                         <>
-                            {/* Progress Indicator - Now single step (Email only) */}
-                            <div className="flex items-center justify-center gap-2 mb-8">
-                                <div className="w-3 h-3 rounded-full bg-emerald-500" />
-                                <div className="w-12 h-1 rounded bg-slate-200" />
-                                <div className="w-3 h-3 rounded-full bg-slate-200" />
-                            </div>
-
-                            {/* Step Icon - Email only now */}
+                            {/* Email Icon */}
                             <div className="flex justify-center mb-6">
-                                <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-blue-100">
-                                    <Mail className="w-8 h-8 text-blue-500" />
+                                <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center">
+                                    <Mail className="w-10 h-10 text-blue-500" />
                                 </div>
                             </div>
 
-                            {/* Title - Email only */}
+                            {/* Title */}
                             <h2 className="text-xl font-bold text-slate-800 text-center mb-2">
-                                {t('verification_email_title')}
+                                {language === 'ar' ? 'تفقّد بريدك الإلكتروني' : 'Check Your Email'}
                             </h2>
-                            <p className="text-slate-500 text-center mb-4">
-                                {language === 'ar' ? 'أدخل الرمز المكون من 4 أرقام المرسل إلى' : 'Enter the 4-digit code sent to'}
-                                <br />
-                                <span className="font-medium text-slate-700" dir="ltr">
-                                    {email}
-                                </span>
+
+                            {/* Message */}
+                            <p className="text-slate-500 text-center mb-2">
+                                {language === 'ar'
+                                    ? 'أرسلنا رابط تحقق إلى بريدك الإلكتروني. اضغط عليه لتفعيل حسابك في أربا.'
+                                    : 'We sent a verification link to your email. Click it to activate your Arba account.'}
                             </p>
 
-                            {/* Code Expiry Warning */}
-                            <div className={`text-center mb-4 px-4 py-2 rounded-lg ${codeExpiryTimer <= 60 ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'
-                                }`}>
-                                <div className="flex items-center justify-center gap-2">
-                                    <Clock className="w-4 h-4" />
-                                    <span className="text-sm font-medium">
-                                        {language === 'ar' ? 'صلاحية الرمز:' : 'Code expires in:'} {formatExpiryTime(codeExpiryTimer)}
+                            {/* Email Address */}
+                            {email && (
+                                <div className="text-center mb-6">
+                                    <span className="inline-block px-4 py-2 bg-slate-100 rounded-xl text-sm font-medium text-slate-700" dir="ltr">
+                                        {email}
                                     </span>
                                 </div>
-                            </div>
-
-                            {/* Code Inputs - Now 4 digits (Email only) */}
-                            <div className="mb-4">
-                                {renderCodeInputs(emailCode, setEmailCode, emailInputRefs)}
-                            </div>
-
-
-
-                            {/* Error */}
-                            {error && (
-                                <p className="text-red-500 text-center text-sm mb-4">{error}</p>
                             )}
 
-                            {/* Resend Timer */}
-                            <div className="text-center mb-6">
-                                {canResend ? (
-                                    <button
-                                        onClick={handleResend}
-                                        disabled={isLoading}
-                                        className="text-emerald-600 font-medium flex items-center gap-2 mx-auto hover:underline disabled:opacity-50"
-                                    >
-                                        <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                                        {t('verification_resend')}
-                                    </button>
-                                ) : (
-                                    <p className="text-slate-400 flex items-center justify-center gap-2">
-                                        <Clock className="w-4 h-4" />
-                                        {t('verification_resend_in')} {resendTimer} {t('verification_seconds')}
-                                    </p>
-                                )}
+                            {/* Auto-polling indicator */}
+                            <div className="flex items-center justify-center gap-2 mb-6 px-4 py-3 bg-emerald-50 rounded-xl">
+                                <RefreshCw className="w-4 h-4 text-emerald-600 animate-spin" />
+                                <span className="text-sm text-emerald-700">
+                                    {language === 'ar'
+                                        ? 'نتحقق تلقائياً... اضغط على الرابط في بريدك'
+                                        : 'Auto-checking... Click the link in your email'}
+                                </span>
                             </div>
 
-                            {/* Verify Button */}
+                            {/* Success Message */}
+                            {successMessage && (
+                                <p className="text-emerald-600 text-center text-sm mb-4 px-4 py-2 bg-emerald-50 rounded-lg">
+                                    {successMessage}
+                                </p>
+                            )}
+
+                            {/* Error Message */}
+                            {error && (
+                                <p className="text-red-500 text-center text-sm mb-4 px-4 py-2 bg-red-50 rounded-lg">
+                                    {error}
+                                </p>
+                            )}
+
+                            {/* Check Status Button */}
                             <button
-                                onClick={() => handleVerify(step)}
-                                disabled={isLoading || codeExpiryTimer === 0}
-                                className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:from-emerald-400 hover:to-teal-400 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                onClick={handleCheckStatus}
+                                disabled={isChecking}
+                                className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:from-emerald-400 hover:to-teal-400 transition-all disabled:opacity-50 flex items-center justify-center gap-2 mb-3"
                             >
-                                {isLoading ? (
+                                {isChecking ? (
                                     <>
                                         <RefreshCw className="w-5 h-5 animate-spin" />
-                                        {t('verification_verifying')}
+                                        {language === 'ar' ? 'جاري التحقق...' : 'Checking...'}
                                     </>
                                 ) : (
                                     <>
-                                        {t('verification_verify')}
-                                        <Arrow className="w-5 h-5" />
+                                        <Check className="w-5 h-5" />
+                                        {language === 'ar' ? 'تحقق من حالة التفعيل' : 'Check Verification Status'}
+                                    </>
+                                )}
+                            </button>
+
+                            {/* Resend Button */}
+                            <button
+                                onClick={handleResend}
+                                disabled={isResending || resendCooldown > 0}
+                                className="w-full py-3 border-2 border-slate-200 text-slate-700 rounded-xl font-medium hover:border-emerald-500 hover:text-emerald-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {isResending ? (
+                                    <>
+                                        <RefreshCw className="w-4 h-4 animate-spin" />
+                                        {language === 'ar' ? 'جاري الإرسال...' : 'Sending...'}
+                                    </>
+                                ) : resendCooldown > 0 ? (
+                                    <span className="text-slate-400">
+                                        {language === 'ar' ? `إعادة الإرسال بعد ${resendCooldown} ثانية` : `Resend in ${resendCooldown}s`}
+                                    </span>
+                                ) : (
+                                    <>
+                                        <Mail className="w-4 h-4" />
+                                        {language === 'ar' ? 'إعادة إرسال رابط التحقق' : 'Resend Verification Link'}
                                     </>
                                 )}
                             </button>
@@ -312,14 +265,16 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
                     )}
                 </div>
 
-                {/* Back to Home */}
-                <button
-                    onClick={() => onNavigate('landing')}
-                    className="w-full mt-6 text-slate-400 hover:text-white transition-colors flex items-center justify-center gap-2"
-                >
-                    <Arrow className="w-4 h-4 rotate-180" />
-                    {t('verification_back_to_home')}
-                </button>
+                {/* Fallback: Go to Login */}
+                {!isVerified && (
+                    <button
+                        onClick={() => onNavigate('login')}
+                        className="w-full mt-6 text-slate-400 hover:text-white transition-colors flex items-center justify-center gap-2"
+                    >
+                        <ExternalLink className="w-4 h-4" />
+                        {language === 'ar' ? 'الانتقال لصفحة تسجيل الدخول' : 'Go to Login Page'}
+                    </button>
+                )}
             </div>
         </div>
     );

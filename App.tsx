@@ -551,33 +551,72 @@ const App: React.FC = () => {
 
         // For employees, use existing Firebase flow
         if (USE_FIREBASE) {
-            // Firebase registration
-            const result = await registerWithFirebase({
-                userType: data.userType,
-                name: data.name,
-                email: data.email,
-                phone: data.phone,
-                company: data.company,
-                commercialRegister: data.commercialRegister,
-                businessType: data.businessType,
-                password: data.password,
-                plan: data.plan
-            });
+            try {
+                // Firebase registration
+                const result = await registerWithFirebase({
+                    userType: data.userType,
+                    name: data.name,
+                    email: data.email,
+                    phone: data.phone,
+                    company: data.company,
+                    commercialRegister: data.commercialRegister,
+                    businessType: data.businessType,
+                    password: data.password,
+                    plan: data.plan
+                });
 
-            if (!result.success) {
-                console.error('Registration failed:', result.error);
-                setLoginError(result.error || 'حدث خطأ أثناء التسجيل');
-                return;
-            }
+                if (!result.success) {
+                    // Handle email-already-in-use: check if unverified, resend verification
+                    if (result.errorCode === 'auth/email-already-in-use') {
+                        try {
+                            const loginResult = await loginWithFirebase(data.email, data.password);
+                            if (loginResult.success) {
+                                const { checkEmailVerified, resendVerificationEmail } = await import('./firebase/authService');
+                                const isVerified = await checkEmailVerified();
+                                if (!isVerified) {
+                                    // User exists but not verified — resend and redirect
+                                    await resendVerificationEmail();
+                                    setPendingRegistrationEmail(data.email);
+                                    setCurrentPage('verification');
+                                    console.log('📧 المستخدم موجود لكن غير مفعّل — تم إعادة إرسال رابط التحقق');
+                                    return;
+                                } else {
+                                    // Already verified — go to dashboard
+                                    setCurrentPage('dashboard');
+                                    return;
+                                }
+                            }
+                        } catch (innerError) {
+                            console.error('Error handling existing user:', innerError);
+                        }
+                        setLoginError(
+                            language === 'ar'
+                                ? 'البريد الإلكتروني مستخدم مسبقاً. إذا سبق التسجيل، حاول تسجيل الدخول.'
+                                : 'Email already in use. If you already registered, try logging in.'
+                        );
+                        return;
+                    }
 
-            // Email verification sent — redirect to verification screen
-            if (result.emailVerificationSent) {
+                    console.error('Registration failed:', result.error);
+                    setLoginError(result.error || 'حدث خطأ أثناء التسجيل');
+                    return;
+                }
+
+                // Email verification sent — redirect to verification screen
                 setPendingRegistrationEmail(data.email);
                 setCurrentPage('verification');
-                console.log('📧 تم إرسال رابط التحقق — يرجى فحص البريد الإلكتروني');
-            } else {
-                // Fallback: onAuthChange listener will handle state
-                setCurrentPage('verification');
+                if (result.emailVerificationSent) {
+                    console.log('📧 تم إرسال رابط التحقق — يرجى فحص البريد الإلكتروني');
+                } else {
+                    console.log('⚠️ تم إنشاء الحساب لكن تعذر إرسال رابط التحقق — يمكن إعادة الإرسال من صفحة التحقق');
+                }
+            } catch (error: any) {
+                console.error('Registration error (caught):', error);
+                setLoginError(
+                    language === 'ar'
+                        ? 'حدث خطأ غير متوقع أثناء التسجيل. يرجى المحاولة مرة أخرى.'
+                        : 'An unexpected error occurred during registration. Please try again.'
+                );
             }
         } else {
             // Local registration

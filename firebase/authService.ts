@@ -326,6 +326,50 @@ export const onAuthChange = (callback: (user: FirebaseUser | null) => void) => {
 };
 
 /**
+ * إعادة إرسال رابط التحقق من البريد الإلكتروني
+ */
+export const resendVerificationEmail = async (): Promise<AuthResult> => {
+    try {
+        const user = auth.currentUser;
+        if (!user) {
+            return { success: false, error: 'لا يوجد مستخدم مسجل الدخول' };
+        }
+        if (user.emailVerified) {
+            return { success: true }; // Already verified
+        }
+        await withTimeout(
+            sendEmailVerification(user, ARBA_ACTION_CODE_SETTINGS),
+            10000,
+            'تعذر إرسال رابط التحقق. يرجى المحاولة لاحقاً.'
+        );
+        console.log('✅ تم إعادة إرسال رابط التحقق');
+        return { success: true };
+    } catch (error: any) {
+        console.error('Resend verification error:', error);
+        return {
+            success: false,
+            error: error.message || 'حدث خطأ في إرسال رابط التحقق',
+            errorCode: error.code || 'unknown'
+        };
+    }
+};
+
+/**
+ * التحقق من حالة تأكيد البريد (يُعيد تحميل بيانات المستخدم من Firebase)
+ */
+export const checkEmailVerified = async (): Promise<boolean> => {
+    try {
+        const user = auth.currentUser;
+        if (!user) return false;
+        await user.reload();
+        return user.emailVerified;
+    } catch (error) {
+        console.error('Check email verified error:', error);
+        return false;
+    }
+};
+
+/**
  * جلب بيانات المستخدم من Firestore
  */
 export const getUserData = async (uid: string): Promise<UserData | null> => {
@@ -353,6 +397,8 @@ export default {
     loginWithFirebase,
     logoutFromFirebase,
     resetPasswordWithFirebase,
+    resendVerificationEmail,
+    checkEmailVerified,
     getCurrentFirebaseUser,
     onAuthChange,
     getUserData
