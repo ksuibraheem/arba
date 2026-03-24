@@ -141,27 +141,15 @@ export const loginUser = (
     if (userType === 'supplier') {
         user = findUserByPhone(identifier);
     } else if (userType === 'employee') {
-        // الموظفين - للعرض التجريبي فقط
-        if (identifier === 'admin' && password === 'admin123') {
-            const employeeUser: StoredUser = {
-                id: 'employee_admin',
-                userType: 'employee',
-                name: 'مدير النظام',
-                email: 'admin@arba-sys.com',
-                password: password,
-                plan: 'enterprise',
-                usedProjects: 0,
-                usedStorageMB: 0,
-                createdAt: new Date().toISOString()
+        // تسجيل دخول الموظفين — يتم عبر Firebase Auth
+        user = findUserByEmail(identifier);
+        if (!user) {
+            return {
+                success: false,
+                error: 'بيانات الدخول غير صحيحة. يرجى استخدام البريد الإلكتروني المسجل.',
+                errorType: 'user_not_found'
             };
-            setCurrentUser(employeeUser);
-            return { success: true, user: employeeUser };
         }
-        return {
-            success: false,
-            error: 'رقم الموظف أو كلمة المرور غير صحيحة',
-            errorType: 'wrong_password'
-        };
     } else {
         user = findUserByEmail(identifier);
     }

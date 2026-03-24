@@ -15,7 +15,7 @@ import {
     Timestamp,
     serverTimestamp
 } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { db } from '../../firebase/config';
 import { encrypt, decrypt } from '../utils/encryption';
 
 // =================== أنواع البيانات ===================

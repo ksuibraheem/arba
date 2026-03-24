@@ -7,6 +7,7 @@ import {
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     sendEmailVerification,
+    sendPasswordResetEmail,
     signOut,
     onAuthStateChanged,
     updateProfile,
@@ -43,7 +44,7 @@ import { auth, db } from './config';
  */
 const ARBA_ACTION_CODE_SETTINGS: ActionCodeSettings = {
     url: 'https://arba-sys.com/login',
-    handleCodeInApp: true,
+    handleCodeInApp: false,
 };
 
 // نوع بيانات المستخدم
@@ -103,13 +104,20 @@ export const registerWithFirebase = async (userData: {
         );
 
         // إرسال رابط التحقق من البريد الإلكتروني مع إعدادات الإجراء
-        await withTimeout(
-            sendEmailVerification(firebaseUser, ARBA_ACTION_CODE_SETTINGS),
-            10000,
-            'تعذر إرسال رابط التحقق من البريد الإلكتروني. يرجى المحاولة لاحقاً.'
-        );
-
-        console.log('✅ تم إنشاء الحساب وإرسال رابط التحقق إلى:', userData.email);
+        // Fallback: if verification email fails, registration still succeeds
+        let emailVerificationSent = false;
+        try {
+            await withTimeout(
+                sendEmailVerification(firebaseUser, ARBA_ACTION_CODE_SETTINGS),
+                10000,
+                'تعذر إرسال رابط التحقق من البريد الإلكتروني. يرجى المحاولة لاحقاً.'
+            );
+            emailVerificationSent = true;
+            console.log('✅ تم إنشاء الحساب وإرسال رابط التحقق إلى:', userData.email);
+        } catch (verifyError) {
+            console.warn('⚠️ تم إنشاء الحساب لكن تعذر إرسال رابط التحقق:', verifyError);
+            console.info('ℹ️ يمكن للمستخدم طلب إعادة إرسال الرابط لاحقاً أو الانتقال يدوياً إلى صفحة تسجيل الدخول.');
+        }
 
         // حفظ بيانات المستخدم في Firestore
         const userDoc = {
@@ -135,7 +143,7 @@ export const registerWithFirebase = async (userData: {
 
         return {
             success: true,
-            emailVerificationSent: true,
+            emailVerificationSent,
             user: {
                 uid: firebaseUser.uid,
                 userType: userData.userType,
@@ -278,6 +286,32 @@ export const logoutFromFirebase = async (): Promise<void> => {
 };
 
 /**
+ * إعادة تعيين كلمة المرور عبر البريد الإلكتروني
+ */
+export const resetPasswordWithFirebase = async (email: string): Promise<AuthResult> => {
+    try {
+        await withTimeout(
+            sendPasswordResetEmail(auth, email, ARBA_ACTION_CODE_SETTINGS),
+            10000,
+            'تعذر إرسال رابط إعادة تعيين كلمة المرور. يرجى المحاولة لاحقاً.'
+        );
+        console.log('✅ تم إرسال رابط إعادة تعيين كلمة المرور إلى:', email);
+        return { success: true };
+    } catch (error: any) {
+        console.error('Password reset error:', error);
+        let errorMessage = 'حدث خطأ أثناء إرسال رابط الاستعادة';
+        if (error.code === 'auth/user-not-found') {
+            errorMessage = 'البريد الإلكتروني غير مسجل';
+        } else if (error.code === 'auth/invalid-email') {
+            errorMessage = 'البريد الإلكتروني غير صالح';
+        } else if (error.message && !error.code) {
+            errorMessage = error.message;
+        }
+        return { success: false, error: errorMessage, errorCode: error.code || 'timeout' };
+    }
+};
+
+/**
  * الحصول على المستخدم الحالي
  */
 export const getCurrentFirebaseUser = (): FirebaseUser | null => {
@@ -318,6 +352,7 @@ export default {
     registerWithFirebase,
     loginWithFirebase,
     logoutFromFirebase,
+    resetPasswordWithFirebase,
     getCurrentFirebaseUser,
     onAuthChange,
     getUserData
