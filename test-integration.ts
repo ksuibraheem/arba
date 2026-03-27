@@ -51,7 +51,7 @@ const reviews = testProducts.map(product => ({
     dataId: product.id,
     dataName: product.name.ar,
     dataAfter: product,
-    status: 'pending' as const,
+    status: 'pending' as 'pending' | 'approved' | 'rejected' | 'revision_requested',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
 }));
@@ -63,16 +63,16 @@ console.log('\n4️⃣ مهندس الكميات يراجع المنتجات...'
 const engineerInfo = { id: '489012345', name: 'محمد الزهراني' };
 
 // المنتج الأول: موافقة
-reviews[0].status = 'approved' as const;
+reviews[0].status = 'approved';
 console.log(`   ✅ موافقة على: ${reviews[0].dataName}`);
 
 // المنتج الثاني: طلب تعديل
-reviews[1].status = 'revision_requested' as const;
+reviews[1].status = 'revision_requested';
 (reviews[1] as any).revisionNotes = 'السعر يحتاج مراجعة';
 console.log(`   ✏️ طلب تعديل: ${reviews[1].dataName} - "${(reviews[1] as any).revisionNotes}"`);
 
 // المنتج الثالث: رفض
-reviews[2].status = 'rejected' as const;
+reviews[2].status = 'rejected';
 (reviews[2] as any).rejectionReason = 'المنتج غير مطابق للمواصفات';
 console.log(`   ❌ رفض: ${reviews[2].dataName} - "${(reviews[2] as any).rejectionReason}"`);
 

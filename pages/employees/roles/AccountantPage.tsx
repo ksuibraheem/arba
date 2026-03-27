@@ -34,7 +34,7 @@ import {
     Account, JournalEntry, TrialBalance, IncomeStatement,
     ACCOUNT_CODES, ACCOUNT_TYPE_TRANSLATIONS, JOURNAL_SOURCE_TRANSLATIONS
 } from '../../../services/chartOfAccountsService';
-import { employeeService, calculateTotalSalary } from '../../../services/employeeService';
+import { employeeService, calculateTotalSalary, ROLE_TRANSLATIONS } from '../../../services/employeeService';
 import { taxInvoiceService } from '../../../services/taxInvoiceService';
 import { invoiceEditRequestService, InvoiceEditRequest, EDIT_REQUEST_STATUS_TRANSLATIONS } from '../../../services/invoiceEditRequestService';
 import { excelExportService } from '../../../services/excelExportService';
@@ -2620,7 +2620,7 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
                                         {employeeService.getEmployees().map(emp => (
                                             <tr key={emp.id} className="hover:bg-slate-700/30">
                                                 <td className="px-3 py-2 text-white">{emp.name}</td>
-                                                <td className="px-3 py-2 text-center text-slate-400">{emp.department}</td>
+                                                <td className="px-3 py-2 text-center text-slate-400">{ROLE_TRANSLATIONS[emp.role][language]}</td>
                                                 <td className="px-3 py-2 text-center text-green-400 font-bold">{calculateTotalSalary(emp.salary).toLocaleString()}</td>
                                             </tr>
                                         ))}

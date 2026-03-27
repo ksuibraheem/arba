@@ -433,6 +433,16 @@ export const employeeService = {
             punctualityRate: 91,
         };
     },
+
+    changePassword(employeeNumber: string, oldPassword: string, newPassword: string): { success: boolean; error?: string } {
+        const employees = getStoredEmployees();
+        const emp = employees.find(e => e.employeeNumber === employeeNumber);
+        if (!emp) return { success: false, error: 'الموظف غير موجود' };
+        if (emp.password !== oldPassword) return { success: false, error: 'كلمة المرور الحالية غير صحيحة' };
+        emp.password = newPassword;
+        saveEmployees(employees);
+        return { success: true };
+    },
 };
 
 // ========================
