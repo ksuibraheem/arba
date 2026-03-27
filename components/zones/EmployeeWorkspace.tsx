@@ -465,9 +465,8 @@ const EmployeeWorkspace: React.FC<EmployeeWorkspaceProps> = ({
                             <button
                                 onClick={() => setSection(item.id)}
                                 title={sidebarCollapsed ? item.label[language] : undefined}
-                                className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                                    section === item.id ? 'text-white bg-white/5' : 'text-slate-400 hover:text-white hover:bg-white/[0.02]'
-                                } ${sidebarCollapsed ? 'justify-center' : ''}`}
+                                className={`group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all ${section === item.id ? 'text-white bg-white/5' : 'text-slate-400 hover:text-white hover:bg-white/[0.02]'
+                                    } ${sidebarCollapsed ? 'justify-center' : ''}`}
                             >
                                 {section === item.id && <div className={`absolute ${isAr ? 'right-0' : 'left-0'} top-0 bottom-0 w-0.5 bg-emerald-400 rounded-full shadow-[0_0_8px_rgba(52,211,153,0.8)]`} />}
                                 <span className={`text-lg flex-shrink-0 transition-transform ${section === item.id ? 'scale-110' : 'group-hover:scale-105'}`}>{item.icon}</span>
@@ -546,9 +545,8 @@ const EmployeeWorkspace: React.FC<EmployeeWorkspaceProps> = ({
                                     {item.divider && <div className="my-3 border-t border-white/5" />}
                                     <button
                                         onClick={() => { setSection(item.id); setMobileDrawerOpen(false); }}
-                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${
-                                            section === item.id ? 'text-white bg-white/10' : 'text-slate-400 hover:text-white hover:bg-white/5'
-                                        }`}
+                                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all ${section === item.id ? 'text-white bg-white/10' : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                            }`}
                                     >
                                         <span className="text-xl">{item.icon}</span>
                                         <span>{item.label[language]}</span>
@@ -632,9 +630,8 @@ const EmployeeWorkspace: React.FC<EmployeeWorkspaceProps> = ({
                         <button
                             key={item.id}
                             onClick={() => setSection(item.id)}
-                            className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl flex-1 transition-all ${
-                                section === item.id ? 'text-white bg-white/5' : 'text-slate-500'
-                            }`}
+                            className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl flex-1 transition-all ${section === item.id ? 'text-white bg-white/5' : 'text-slate-500'
+                                }`}
                         >
                             <span className={`text-xl transition-transform ${section === item.id ? 'scale-110' : ''}`}>{item.icon}</span>
                             <span className="text-[9px] font-semibold truncate max-w-[60px]">{item.label[language]}</span>
