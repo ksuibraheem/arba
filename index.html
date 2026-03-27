@@ -38,6 +38,32 @@
 <body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
-</body>
+    <script>
+        // Auto-recovery: if app fails to load in 5s, force reload without cache
+        setTimeout(function() {
+            var root = document.getElementById('root');
+            if (root && root.children.length === 0) {
+                // Unregister any stale service workers
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(regs) {
+                        regs.forEach(function(r) { r.unregister(); });
+                    });
+                }
+                // Clear caches
+                if ('caches' in window) {
+                    caches.keys().then(function(names) {
+                        names.forEach(function(n) { caches.delete(n); });
+                    });
+                }
+                // Force reload without cache (only once)
+                if (!sessionStorage.getItem('_reload')) {
+                    sessionStorage.setItem('_reload', '1');
+                    location.reload();
+                }
+            } else {
+                sessionStorage.removeItem('_reload');
+            }
+        }, 5000);
+    </script>
 
 </html>
