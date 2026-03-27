@@ -122,34 +122,35 @@ const ItemRow: React.FC<{
                 className={`hover:bg-slate-50 transition-colors border-b border-slate-200 cursor-pointer ${isExpanded ? 'bg-slate-50' : ''} ${isGov ? 'bg-purple-50/30' : ''} ${item.isOptimalPrice ? 'bg-amber-50/50' : ''}`}
                 onClick={() => setIsExpanded(!isExpanded)}
             >
-                <td className="p-4 text-slate-500 font-mono text-sm">{item.id}</td>
-                <td className="p-4">
+                <td className="p-2 sm:p-4 text-slate-500 font-mono text-sm">{item.id}</td>
+                <td className="p-2 sm:p-4">
                     <div className="flex flex-col">
-                        <span className={`font-bold text-base flex items-center gap-2 ${isGov ? 'text-purple-900' : 'text-slate-800'}`}>
+                        <span className={`font-bold text-sm sm:text-base flex items-center gap-1 sm:gap-2 ${isGov ? 'text-purple-900' : 'text-slate-800'}`}>
                             {item.displayName}
-                            {hasParams && !isGov && <Settings2 className="w-3 h-3 text-slate-400" />}
-                            {item.isOptimalPrice && <span className="text-[10px] bg-amber-200 text-amber-800 px-1 rounded">{t('optimal')}</span>}
-                            {item.isManualPrice && <span className="text-[10px] bg-blue-100 text-blue-800 px-1 rounded flex items-center gap-1"><Edit3 className="w-3 h-3" /> {t('edit')}</span>}
+                            {hasParams && !isGov && <Settings2 className="w-3 h-3 text-slate-400 hidden sm:inline" />}
+                            {item.isOptimalPrice && <span className="text-[10px] bg-amber-200 text-amber-800 px-1 rounded hidden sm:inline">{t('optimal')}</span>}
+                            {item.isManualPrice && <span className="text-[10px] bg-blue-100 text-blue-800 px-1 rounded hidden sm:inline-flex items-center gap-1"><Edit3 className="w-3 h-3" /> {t('edit')}</span>}
                         </span>
-                        <span className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                        <span className="text-xs text-slate-500 mt-1 hidden sm:flex items-center gap-1">
                             {getTypeBadge(item.type, item.category, item.isCustom)}
                         </span>
                     </div>
                 </td>
-                <td className="p-4" onClick={(e) => e.stopPropagation()}>
+                <td className="p-2 sm:p-4" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-1">
                         <input
                             type="number"
                             value={item.qty}
                             onChange={(e) => handleManualQtyChange(e.target.value)}
-                            className={`w-16 bg-transparent border-b ${item.isManualQty ? 'border-blue-500 text-blue-700 font-bold' : 'border-slate-300 text-slate-700'} text-center outline-none focus:border-emerald-500`}
+                            className={`w-12 sm:w-16 bg-transparent border-b ${item.isManualQty ? 'border-blue-500 text-blue-700 font-bold' : 'border-slate-300 text-slate-700'} text-center outline-none focus:border-emerald-500 text-sm`}
                         />
-                        <span className="text-slate-400 text-sm">{item.unit}</span>
+                        <span className="text-slate-400 text-xs sm:text-sm">{item.unit}</span>
                     </div>
                 </td>
 
                 {/* Supplier Dropdown Column */}
-                <td className="p-4 w-64" onClick={(e) => e.stopPropagation()}>
+                {/* Supplier - hidden on mobile */}
+                <td className="p-2 sm:p-4 w-48 sm:w-64 hidden md:table-cell" onClick={(e) => e.stopPropagation()}>
                     <div className="relative group">
                         <select
                             className="w-full opacity-0 absolute inset-0 cursor-pointer z-10"
@@ -174,25 +175,26 @@ const ItemRow: React.FC<{
                     </div>
                 </td>
 
-                <td className="p-4">
+                {/* SBC Code - hidden on mobile */}
+                <td className="p-2 sm:p-4 hidden lg:table-cell">
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200">
                         <ShieldCheck className="w-3 h-3" /> {item.sbc}
                     </span>
                 </td>
-                <td className="p-4 text-right">
+                <td className="p-2 sm:p-4 text-right">
                     <div className="flex flex-col items-end">
-                        <span className={`font-bold ${item.isManualPrice ? 'text-blue-700' : 'text-emerald-700'}`}>
+                        <span className={`font-bold text-sm sm:text-base ${item.isManualPrice ? 'text-blue-700' : 'text-emerald-700'}`}>
                             {formatCurrency(item.usedPrice)}
                         </span>
                         {item.isManualPrice && (
-                            <span className="text-[10px] text-slate-400 line-through decoration-slate-400">
+                            <span className="text-[10px] text-slate-400 line-through decoration-slate-400 hidden sm:block">
                                 {formatCurrency(item.finalUnitPrice)}
                             </span>
                         )}
                     </div>
                 </td>
-                <td className="p-4 text-right font-bold text-slate-800">{formatCurrency(item.totalLinePrice)}</td>
-                <td className="p-4 text-center text-slate-400">
+                <td className="p-2 sm:p-4 text-right font-bold text-slate-800 text-sm sm:text-base">{formatCurrency(item.totalLinePrice)}</td>
+                <td className="p-2 sm:p-4 text-center text-slate-400">
                     {item.isCustom ? (
                         <button
                             onClick={(e) => { e.stopPropagation(); onDeleteCustomItem(item.id); }}
@@ -537,17 +539,18 @@ const ItemTable: React.FC<ItemTableProps> = ({ items, language, onParamChange, o
                     </div>
                 </div>
             )}
-            <table className="w-full text-right">
+            <div className="overflow-x-auto">
+            <table className="w-full text-right min-w-[640px]">
                 <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-sm uppercase tracking-wider">
-                        <th className="p-4 font-semibold w-16">#</th>
-                        <th className="p-4 font-semibold">{t('item_desc')}</th>
-                        <th className="p-4 font-semibold w-24">{t('qty')}</th>
-                        <th className="p-4 font-semibold w-64">{t('supplier')}</th>
-                        <th className="p-4 font-semibold w-32">{t('sbc_code')}</th>
-                        <th className="p-4 font-semibold text-right">{t('unit_price')}</th>
-                        <th className="p-4 font-semibold text-right">{t('total')}</th>
-                        <th className="p-4 font-semibold w-12"></th>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs sm:text-sm uppercase tracking-wider">
+                        <th className="p-2 sm:p-4 font-semibold w-12 sm:w-16">#</th>
+                        <th className="p-2 sm:p-4 font-semibold">{t('item_desc')}</th>
+                        <th className="p-2 sm:p-4 font-semibold w-20 sm:w-24">{t('qty')}</th>
+                        <th className="p-2 sm:p-4 font-semibold w-48 sm:w-64 hidden md:table-cell">{t('supplier')}</th>
+                        <th className="p-2 sm:p-4 font-semibold w-32 hidden lg:table-cell">{t('sbc_code')}</th>
+                        <th className="p-2 sm:p-4 font-semibold text-right">{t('unit_price')}</th>
+                        <th className="p-2 sm:p-4 font-semibold text-right">{t('total')}</th>
+                        <th className="p-2 sm:p-4 font-semibold w-10 sm:w-12"></th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -567,6 +570,7 @@ const ItemTable: React.FC<ItemTableProps> = ({ items, language, onParamChange, o
                     {isAdding && <NewItemForm onAdd={onAddCustomItem} onCancel={() => setIsAdding(false)} />}
                 </tbody>
             </table>
+            </div>
 
             {!isAdding && (
                 <div className="p-4 bg-slate-50 border-t border-slate-200 flex justify-center">

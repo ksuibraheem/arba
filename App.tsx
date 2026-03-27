@@ -118,7 +118,7 @@ const App: React.FC = () => {
     const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
 
     // Sidebar collapse state
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 1024 : true);
     // Demo/Test banner visibility states
     const [showDemoBanner, setShowDemoBanner] = useState(true);
     const [showTestBanner, setShowTestBanner] = useState(true);
@@ -1637,17 +1637,17 @@ const App: React.FC = () => {
 
             {/* Test Mode Banner - شريط وضع الاختبار */}
             {(isInTestMode() && showTestBanner) && (
-                <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-amber-500 to-orange-500 text-white py-2 px-4 flex items-center justify-between shadow-lg">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                            <AlertTriangle className="w-5 h-5" />
+                <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-amber-500 to-orange-500 text-white py-2 px-3 md:px-4 flex flex-col sm:flex-row items-start sm:items-center justify-between shadow-lg gap-2 sm:gap-0">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-white/20 rounded-lg flex items-center justify-center shrink-0">
+                            <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
                         </div>
-                        <div>
-                            <span className="font-bold">
+                        <div className="min-w-0">
+                            <span className="font-bold text-sm sm:text-base">
                                 {language === 'ar' ? '🧪 وضع الاختبار نشط' : '🧪 Test Mode Active'}
                             </span>
-                            <span className="mx-2">|</span>
-                            <span>
+                            <span className="hidden sm:inline mx-2">|</span>
+                            <span className="hidden sm:inline text-sm">
                                 {language === 'ar'
                                     ? `باقة: ${getCurrentTestSession()?.testingPackage.plan} - ${getCurrentTestSession()?.testingPackage.userType === 'individual' ? 'أفراد' : getCurrentTestSession()?.testingPackage.userType === 'company' ? 'شركات' : 'موردين'}`
                                     : `Package: ${getCurrentTestSession()?.testingPackage.plan} - ${getCurrentTestSession()?.testingPackage.userType}`
@@ -1655,22 +1655,23 @@ const App: React.FC = () => {
                             </span>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3 self-end sm:self-auto shrink-0">
                         <button
                             onClick={() => {
                                 endTestMode();
                                 setCurrentPage('manager');
                             }}
-                            className="px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors flex items-center gap-2"
+                            className="px-3 sm:px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors flex items-center gap-2 text-sm"
                         >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                             </svg>
-                            {language === 'ar' ? 'إنهاء الاختبار والعودة' : 'End Test & Return'}
+                            <span className="hidden sm:inline">{language === 'ar' ? 'إنهاء الاختبار والعودة' : 'End Test & Return'}</span>
+                            <span className="sm:hidden">{language === 'ar' ? 'إنهاء' : 'End'}</span>
                         </button>
                         <button
                             onClick={() => setShowTestBanner(false)}
-                            className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-colors ms-2"
+                            className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
                             title={language === 'ar' ? 'إخفاء الشريط' : 'Dismiss Banner'}
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1683,20 +1684,20 @@ const App: React.FC = () => {
 
             {/* Demo Mode Banner - شريط وضع العرض التجريبي */}
             {(isDemoMode && showDemoBanner) && (
-                <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 px-4 flex items-center justify-between shadow-lg">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center animate-pulse">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-2 sm:py-3 px-3 md:px-4 flex flex-col sm:flex-row items-start sm:items-center justify-between shadow-lg gap-2 sm:gap-0">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 bg-white/20 rounded-lg flex items-center justify-center animate-pulse shrink-0">
+                            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                             </svg>
                         </div>
-                        <div>
-                            <span className="font-bold">
+                        <div className="min-w-0">
+                            <span className="font-bold text-sm sm:text-base">
                                 {language === 'ar' ? '👁️ وضع العرض التجريبي' : '👁️ Demo Preview Mode'}
                             </span>
-                            <span className="mx-2">|</span>
-                            <span className="text-blue-100">
+                            <span className="hidden sm:inline mx-2">|</span>
+                            <span className="hidden sm:inline text-blue-100 text-sm">
                                 {language === 'ar'
                                     ? 'هذه بيانات تجريبية للمعاينة فقط - للتسجيل اضغط "إنشاء حساب"'
                                     : 'This is demo data for preview only - Click "Sign Up" to register'
@@ -1704,26 +1705,26 @@ const App: React.FC = () => {
                             </span>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3 self-end sm:self-auto shrink-0">
                         <button
                             onClick={() => {
                                 handleExitDemoMode();
                                 handleNavigate('register');
                             }}
-                            className="px-4 py-1.5 bg-white text-blue-600 hover:bg-blue-50 rounded-lg font-bold transition-colors"
+                            className="px-3 sm:px-4 py-1.5 bg-white text-blue-600 hover:bg-blue-50 rounded-lg font-bold transition-colors text-sm sm:text-base"
                         >
                             {language === 'ar' ? 'إنشاء حساب' : 'Sign Up'}
                         </button>
                         <button
                             onClick={handleExitDemoMode}
-                            className="px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors flex items-center gap-2"
+                            className="px-3 sm:px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors flex items-center gap-1 sm:gap-2 text-sm"
                         >
                             <LogOut className="w-4 h-4" />
-                            {language === 'ar' ? 'خروج من العرض' : 'Exit Demo'}
+                            <span className="hidden sm:inline">{language === 'ar' ? 'خروج من العرض' : 'Exit Demo'}</span>
                         </button>
                         <button
                             onClick={() => setShowDemoBanner(false)}
-                            className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-colors ms-2"
+                            className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
                             title={language === 'ar' ? 'إخفاء الشريط' : 'Dismiss Banner'}
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1774,11 +1775,18 @@ const App: React.FC = () => {
             )}
 
             {/* Settings Sidebar with Collapse Toggle */}
-            <div className="relative shrink-0 flex items-center z-40 h-full">
+            {/* Mobile/Tablet: overlay mode with backdrop */}
+            {isSidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black/40 z-30 lg:hidden"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+            <div className={`relative shrink-0 flex items-center z-40 h-full ${isSidebarOpen ? 'max-lg:fixed max-lg:top-0 max-lg:bottom-0 max-lg:z-40' : ''} ${isRtl ? (isSidebarOpen ? 'max-lg:right-0' : '') : (isSidebarOpen ? 'max-lg:left-0' : '')}`}>
                 {/* The animated container that hides its overflow */}
-                <div className={`transition-all h-full duration-300 ease-in-out shrink-0 overflow-hidden ${isSidebarOpen ? 'w-80' : 'w-0'}`}>
+                <div className={`transition-all h-full duration-300 ease-in-out shrink-0 overflow-hidden ${isSidebarOpen ? 'w-72 sm:w-80' : 'w-0'}`}>
                     {/* Fixed width inner container prevents squishing during animation */}
-                    <div className="w-80 h-full bg-slate-900 border-l border-slate-800">
+                    <div className="w-72 sm:w-80 h-full bg-slate-900 border-l border-slate-800">
                         <Sidebar state={state} onChange={handleStateChange} isDemoMode={isDemoMode} />
                     </div>
                 </div>
@@ -1799,14 +1807,23 @@ const App: React.FC = () => {
             <main className="flex-1 flex flex-col overflow-hidden bg-slate-50 relative z-10 transition-all duration-300">
 
                 {/* Header */}
-                <header className="bg-white border-b border-slate-200 px-8 py-4 shadow-sm z-10">
-                    <div className="flex justify-between items-start mb-4 border-b border-slate-100 pb-4">
+                <header className="bg-white border-b border-slate-200 px-3 sm:px-5 md:px-8 py-3 sm:py-4 shadow-sm z-10">
+                    <div className="flex justify-between items-start mb-3 sm:mb-4 border-b border-slate-100 pb-3 sm:pb-4">
                         <div className="flex items-center gap-4">
-                            {/* Back to Dashboard Button */}
+                            {/* Back to Dashboard Button / Exit Demo */}
                             <button
-                                onClick={() => handleNavigate('dashboard')}
+                                onClick={() => {
+                                    if (isDemoMode) {
+                                        handleExitDemoMode();
+                                    } else {
+                                        handleNavigate('dashboard');
+                                    }
+                                }}
                                 className="w-10 h-10 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-slate-300 flex items-center justify-center text-slate-500 hover:text-slate-700 transition-all shadow-sm shrink-0"
-                                title={language === 'ar' ? 'العودة للوحة التحكم' : 'Back to Dashboard'}
+                                title={isDemoMode 
+                                    ? (language === 'ar' ? 'خروج من العرض التجريبي' : 'Exit Demo')
+                                    : (language === 'ar' ? 'العودة للوحة التحكم' : 'Back to Dashboard')
+                                }
                             >
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isRtl ? "M9 5l7 7-7 7" : "M15 19l-7-7 7-7"} />
