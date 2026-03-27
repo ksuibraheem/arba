@@ -218,3 +218,47 @@ export async function getSecurityAlerts(limitCount: number = 50): Promise<Securi
     const snap = await getDocs(q);
     return snap.docs.map(d => ({ ...d.data(), id: d.id } as SecurityAlert));
 }
+
+// =================== DEMO SESSION STORAGE ===================
+// Ephemeral storage for demo/test mode — scoped to a session ID.
+// Employees can read all demo data; only the session owner can write.
+
+const DEMO_COL = 'demoSessions';
+
+export async function saveDemoProject(
+    sessionId: string,
+    projectData: Partial<ArbaProject> & { clients?: any[] }
+): Promise<string> {
+    const id = projectData.id || generateId('demo_proj');
+    await setDoc(
+        doc(db, DEMO_COL, sessionId, 'projects', id),
+        {
+            ...projectData,
+            id,
+            sessionId,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+        }
+    );
+    return id;
+}
+
+export async function updateDemoProject(
+    sessionId: string,
+    projectId: string,
+    updates: Partial<ArbaProject> & { clients?: any[] }
+): Promise<void> {
+    await updateDoc(
+        doc(db, DEMO_COL, sessionId, 'projects', projectId),
+        { ...updates, updatedAt: serverTimestamp() }
+    );
+}
+
+export async function getDemoProjects(sessionId: string): Promise<ArbaProject[]> {
+    const q = query(
+        collection(db, DEMO_COL, sessionId, 'projects'),
+        orderBy('updatedAt', 'desc')
+    );
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({ ...(d.data() as Record<string, unknown>), id: d.id } as ArbaProject));
+}

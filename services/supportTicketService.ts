@@ -5,6 +5,15 @@
  * Ready for Firebase Integration
  */
 
+import {
+    sendTicketConfirmation,
+    sendResponseNotification,
+    sendInquiryNotification,
+    sendTicketClosedNotification,
+    sendNewTicketAlertToStaff,
+    sendResponseAlertToStaff
+} from './emailNotificationService';
+import { notificationService } from './notificationService';
 // ====================== Types ======================
 
 export type TicketCategory = 'technical_bug' | 'finance_boq' | 'hr_general' | 'feature_request' | 'other';
@@ -210,6 +219,37 @@ class SupportTicketService {
         tickets.unshift(newTicket);
         saveTickets(tickets);
 
+        // Send confirmation to user
+        sendTicketConfirmation({
+            userEmail: data.userEmail,
+            userName: data.userName,
+            ticketNumber: newTicket.ticketNumber,
+            subject: data.subject,
+            category: CATEGORY_TRANSLATIONS[data.category]?.ar || data.category,
+            priority: PRIORITY_TRANSLATIONS[data.priority]?.ar || data.priority,
+        }).catch(() => {});
+
+        // Send alert to staff
+        sendNewTicketAlertToStaff({
+            ticketNumber: newTicket.ticketNumber,
+            subject: data.subject,
+            category: CATEGORY_TRANSLATIONS[data.category]?.ar || data.category,
+            priority: PRIORITY_TRANSLATIONS[data.priority]?.ar || data.priority,
+            userName: data.userName,
+            userEmail: data.userEmail,
+        }).catch(() => {});
+
+        // In-app notification to manager
+        if (route === 'admin') {
+            notificationService.notifyManagerNewTicket({
+                ticketNumber: newTicket.ticketNumber,
+                subject: data.subject,
+                userName: data.userName,
+                category: CATEGORY_TRANSLATIONS[data.category]?.ar || data.category,
+                ticketId: newTicket.id,
+            });
+        }
+
         return newTicket;
     }
 
@@ -333,6 +373,18 @@ class SupportTicketService {
         }
 
         saveTickets(tickets);
+
+        // Send closure email when resolved or closed
+        if (status === 'resolved' || status === 'closed') {
+            sendTicketClosedNotification({
+                userEmail: tickets[index].userEmail,
+                userName: tickets[index].userName,
+                ticketNumber: tickets[index].ticketNumber,
+                subject: tickets[index].subject,
+                resolution: status,
+            }).catch(() => {});
+        }
+
         return tickets[index];
     }
 
@@ -412,6 +464,103 @@ class SupportTicketService {
         }
 
         saveTickets(tickets);
+
+        // Send emails
+        if (response.responderRole !== 'user' && !response.isInternal) {
+            // Support/Admin responded -> notify user
+            sendResponseNotification({
+                userEmail: tickets[index].userEmail,
+                userName: tickets[index].userName,
+                ticketNumber: tickets[index].ticketNumber,
+                subject: tickets[index].subject,
+                responderName: response.responderName,
+                responsePreview: response.message,
+            }).catch(() => {});
+        } else if (response.responderRole === 'user') {
+            // User responded -> notify staff
+            sendResponseAlertToStaff({
+                ticketNumber: tickets[index].ticketNumber,
+                subject: tickets[index].subject,
+                userName: response.responderName,
+                responsePreview: response.message,
+            }).catch(() => {});
+        }
+
+        // In-app notifications
+        if (response.responderRole !== 'user') {
+            // Staff/Admin responded -> notify support role (generic notification)
+            notificationService.notifyTicketResponse({
+                ticketNumber: tickets[index].ticketNumber,
+                responderName: response.responderName,
+                targetRole: 'support',
+                preview: response.message,
+                ticketId: ticketId,
+            });
+        } else {
+            // User responded -> notify manager + support
+            notificationService.notifyTicketResponse({
+                ticketNumber: tickets[index].ticketNumber,
+                responderName: response.responderName,
+                targetRole: 'manager',
+                preview: response.message,
+                ticketId: ticketId,
+            });
+            notificationService.notifyTicketResponse({
+                ticketNumber: tickets[index].ticketNumber,
+                responderName: response.responderName,
+                targetRole: 'support',
+                preview: response.message,
+                ticketId: ticketId,
+            });
+        }
+
+        return tickets[index];
+    }
+
+    /**
+     * Send inquiry from support to user
+     * إرسال استفسار من الدعم الفني للمستفيد
+     */
+    sendInquiry(ticketId: string, inquiry: {
+        agentId: string;
+        agentName: string;
+        message: string;
+        attachments?: Attachment[];
+    }): SupportTicket | null {
+        const tickets = getTickets();
+        const index = tickets.findIndex(t => t.id === ticketId);
+
+        if (index === -1) return null;
+
+        // Add inquiry as a response
+        const inquiryResponse: TicketResponse = {
+            id: generateId(),
+            ticketId,
+            responderId: inquiry.agentId,
+            responderName: inquiry.agentName,
+            responderRole: 'support',
+            message: `📋 استفسار: ${inquiry.message}`,
+            attachments: inquiry.attachments || [],
+            createdAt: new Date().toISOString(),
+            isInternal: false
+        };
+
+        tickets[index].responses.push(inquiryResponse);
+        tickets[index].status = 'waiting_response';
+        tickets[index].updatedAt = new Date().toISOString();
+
+        saveTickets(tickets);
+
+        // Send inquiry email to user
+        sendInquiryNotification({
+            userEmail: tickets[index].userEmail,
+            userName: tickets[index].userName,
+            ticketNumber: tickets[index].ticketNumber,
+            subject: tickets[index].subject,
+            inquiryMessage: inquiry.message,
+            supportAgentName: inquiry.agentName,
+        }).catch(() => {});
+
         return tickets[index];
     }
 

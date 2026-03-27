@@ -3,14 +3,14 @@
  * Support Center Page - Accessible to all users
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Headphones, Send, Paperclip, Search, ChevronLeft, ChevronRight,
     MessageSquare, Clock, CheckCircle, AlertCircle, X, Upload,
-    FileText, Image, ArrowLeft, Eye, Plus, HelpCircle
+    FileText, Image, ArrowLeft, Eye, Plus, HelpCircle, Download, Trash2
 } from 'lucide-react';
 import {
-    supportTicketService, SupportTicket, TicketCategory, TicketPriority, UserType,
+    supportTicketService, SupportTicket, TicketCategory, TicketPriority, UserType, Attachment,
     CATEGORY_TRANSLATIONS, PRIORITY_TRANSLATIONS, STATUS_TRANSLATIONS,
     PRIORITY_COLORS, STATUS_COLORS
 } from '../services/supportTicketService';
@@ -62,6 +62,61 @@ const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
     // Response form
     const [responseMessage, setResponseMessage] = useState('');
 
+    // File attachments
+    const [ticketFiles, setTicketFiles] = useState<Attachment[]>([]);
+    const [responseFiles, setResponseFiles] = useState<Attachment[]>([]);
+    const ticketFileRef = useRef<HTMLInputElement>(null);
+    const responseFileRef = useRef<HTMLInputElement>(null);
+
+    // File upload handler
+    const handleFileUpload = (files: FileList | null, target: 'ticket' | 'response') => {
+        if (!files) return;
+        const setFiles = target === 'ticket' ? setTicketFiles : setResponseFiles;
+        const currentFiles = target === 'ticket' ? ticketFiles : responseFiles;
+
+        Array.from(files).forEach(file => {
+            // Validate: images and PDFs only, max 5MB
+            const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+            if (!validTypes.includes(file.type)) {
+                alert(t('نوع الملف غير مدعوم. يُسمح فقط بالصور و PDF', 'File type not supported. Only images and PDF allowed'));
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                alert(t('حجم الملف يتجاوز 5 ميجابايت', 'File size exceeds 5MB'));
+                return;
+            }
+            if (currentFiles.length >= 3) {
+                alert(t('الحد الأقصى 3 ملفات', 'Maximum 3 files'));
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const attachment: Attachment = {
+                    id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+                    fileName: file.name,
+                    fileType: file.type,
+                    fileSize: file.size,
+                    url: e.target?.result as string,
+                    uploadedAt: new Date().toISOString()
+                };
+                setFiles(prev => [...prev, attachment]);
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
+    const removeFile = (id: string, target: 'ticket' | 'response') => {
+        const setFiles = target === 'ticket' ? setTicketFiles : setResponseFiles;
+        setFiles(prev => prev.filter(f => f.id !== id));
+    };
+
+    const formatFileSize = (bytes: number) => {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    };
+
     // Load demo data and user tickets
     useEffect(() => {
         supportTicketService.initializeDemoData();
@@ -99,7 +154,8 @@ const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
                 category: ticketForm.category,
                 priority: ticketForm.priority,
                 subject: ticketForm.subject,
-                description: ticketForm.description
+                description: ticketForm.description,
+                attachments: ticketFiles
             });
 
             setSubmittedTicket(newTicket);
@@ -115,6 +171,7 @@ const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
                 subject: '',
                 description: ''
             });
+            setTicketFiles([]);
 
             // Refresh my tickets
             if (userId !== 'guest') {
@@ -146,19 +203,105 @@ const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
 
     // Handle adding response
     const handleAddResponse = () => {
-        if (!selectedTicket || !responseMessage.trim()) return;
+        if (!selectedTicket || (!responseMessage.trim() && responseFiles.length === 0)) return;
 
         const updatedTicket = supportTicketService.addResponse(selectedTicket.id, {
             responderId: userId,
             responderName: userName || ticketForm.name || t('زائر', 'Guest'),
             responderRole: 'user',
-            message: responseMessage
+            message: responseMessage,
+            attachments: responseFiles
         });
 
         if (updatedTicket) {
             setSelectedTicket(updatedTicket);
             setResponseMessage('');
+            setResponseFiles([]);
         }
+    };
+
+    // Render file attachment component
+    const renderFileUpload = (target: 'ticket' | 'response') => {
+        const files = target === 'ticket' ? ticketFiles : responseFiles;
+        const fileRef = target === 'ticket' ? ticketFileRef : responseFileRef;
+
+        return (
+            <div className="space-y-3">
+                {/* Upload Button */}
+                <div
+                    onClick={() => fileRef.current?.click()}
+                    className="border-2 border-dashed border-slate-600 hover:border-orange-500 rounded-xl p-4 cursor-pointer transition-colors group"
+                >
+                    <input
+                        ref={fileRef}
+                        type="file"
+                        className="hidden"
+                        accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
+                        multiple
+                        onChange={(e) => handleFileUpload(e.target.files, target)}
+                    />
+                    <div className="flex items-center justify-center gap-3 text-slate-400 group-hover:text-orange-400">
+                        <Upload className="w-5 h-5" />
+                        <span className="text-sm">
+                            {t('اضغط لإرفاق ملفات (صور أو PDF - حد أقصى 5MB)', 'Click to attach files (images or PDF - max 5MB)')}
+                        </span>
+                    </div>
+                </div>
+
+                {/* File List */}
+                {files.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                        {files.map(file => (
+                            <div key={file.id} className="flex items-center gap-2 bg-slate-700/50 rounded-lg px-3 py-2 text-sm">
+                                {file.fileType.startsWith('image/') ? (
+                                    <Image className="w-4 h-4 text-blue-400" />
+                                ) : (
+                                    <FileText className="w-4 h-4 text-red-400" />
+                                )}
+                                <span className="text-slate-300 max-w-[150px] truncate">{file.fileName}</span>
+                                <span className="text-slate-500 text-xs">({formatFileSize(file.fileSize)})</span>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); removeFile(file.id, target); }}
+                                    className="text-slate-500 hover:text-red-400 transition-colors"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    // Render attachments in a message
+    const renderAttachments = (attachments: Attachment[]) => {
+        if (!attachments || attachments.length === 0) return null;
+        return (
+            <div className="mt-3 flex flex-wrap gap-2">
+                {attachments.map(att => (
+                    <a
+                        key={att.id}
+                        href={att.url}
+                        download={att.fileName}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 bg-slate-600/30 hover:bg-slate-600/50 rounded-lg px-3 py-2 text-sm transition-colors"
+                    >
+                        {att.fileType.startsWith('image/') ? (
+                            <img src={att.url} alt={att.fileName} className="w-10 h-10 object-cover rounded" />
+                        ) : (
+                            <FileText className="w-5 h-5 text-red-400" />
+                        )}
+                        <div>
+                            <p className="text-slate-300 text-xs truncate max-w-[120px]">{att.fileName}</p>
+                            <p className="text-slate-500 text-xs">{formatFileSize(att.fileSize)}</p>
+                        </div>
+                        <Download className="w-4 h-4 text-slate-400" />
+                    </a>
+                ))}
+            </div>
+        );
     };
 
     // FAQ Data
@@ -456,6 +599,14 @@ const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
                             />
                         </div>
 
+                        {/* File Attachments */}
+                        <div>
+                            <label className="block text-slate-400 mb-2 text-sm">
+                                {t('مرفقات', 'Attachments')} ({t('اختياري', 'Optional')})
+                            </label>
+                            {renderFileUpload('ticket')}
+                        </div>
+
                         {/* Submit Button */}
                         <button
                             type="submit"
@@ -636,6 +787,7 @@ const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
                                         </span>
                                     </div>
                                     <p className="text-slate-300 whitespace-pre-wrap">{response.message}</p>
+                                    {renderAttachments(response.attachments)}
                                 </div>
                             ))
                         )}
@@ -645,17 +797,20 @@ const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
                     {selectedTicket.status !== 'closed' && (
                         <div className="border-t border-slate-700 pt-4">
                             <div className="flex gap-3">
-                                <textarea
-                                    value={responseMessage}
-                                    onChange={(e) => setResponseMessage(e.target.value)}
-                                    className="flex-1 bg-slate-700/50 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 resize-none"
-                                    rows={2}
-                                    placeholder={t('اكتب ردك هنا...', 'Write your response here...')}
-                                />
+                                <div className="flex-1 space-y-3">
+                                    <textarea
+                                        value={responseMessage}
+                                        onChange={(e) => setResponseMessage(e.target.value)}
+                                        className="w-full bg-slate-700/50 border border-slate-600 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 resize-none"
+                                        rows={2}
+                                        placeholder={t('اكتب ردك هنا...', 'Write your response here...')}
+                                    />
+                                    {renderFileUpload('response')}
+                                </div>
                                 <button
                                     onClick={handleAddResponse}
-                                    disabled={!responseMessage.trim()}
-                                    className="px-6 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    disabled={!responseMessage.trim() && responseFiles.length === 0}
+                                    className="px-6 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed self-start"
                                 >
                                     <Send className="w-5 h-5" />
                                 </button>

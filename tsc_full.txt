@@ -1,0 +1,22 @@
+pages/employees/EmployeeDashboard.tsx(83,40): error TS2339: Property 'changePassword' does not exist on type '{ getEmployees(): Employee[]; addEmployee(data: Omit<Employee, "isActive" | "createdAt" | "id"> & { id?: string; isActive?: boolean; }): Employee; ... 13 more ...; getMonthlyReport(employeeId: string, year: number, month: number): { ...; }; }'.
+pages/employees/ManagerDashboard.tsx(239,14): error TS2339: Property 'state' does not exist on type 'DashboardErrorBoundary'.
+pages/employees/ManagerDashboard.tsx(245,18): error TS2339: Property 'state' does not exist on type 'DashboardErrorBoundary'.
+pages/employees/ManagerDashboard.tsx(249,67): error TS2339: Property 'state' does not exist on type 'DashboardErrorBoundary'.
+pages/employees/ManagerDashboard.tsx(250,67): error TS2339: Property 'state' does not exist on type 'DashboardErrorBoundary'.
+pages/employees/ManagerDashboard.tsx(254,21): error TS2339: Property 'props' does not exist on type 'DashboardErrorBoundary'.
+pages/employees/ManagerDashboard.tsx(358,48): error TS2551: Property 'getTickets' does not exist on type 'SupportTicketService'. Did you mean 'getTicket'?
+pages/employees/roles/AccountantPage.tsx(2623,107): error TS2339: Property 'department' does not exist on type 'Employee'.
+services/employeeService.ts(331,27): error TS2552: Cannot find name 'getEmployees'. Did you mean 'employees'?
+services/employeeService.ts(340,16): error TS2304: Cannot find name 'getEmployees'.
+services/employeeService.ts(344,27): error TS2552: Cannot find name 'getEmployees'. Did you mean 'employees'?
+services/employeeService.ts(360,27): error TS2552: Cannot find name 'getEmployees'. Did you mean 'employees'?
+services/employeeService.ts(374,31): error TS2552: Cannot find name 'getEmployees'. Did you mean 'employees'?
+services/employeeService.ts(421,21): error TS2304: Cannot find name 'getEmployees'.
+test-integration.ts(66,1): error TS2322: Type '"approved"' is not assignable to type '"pending"'.
+test-integration.ts(70,1): error TS2322: Type '"revision_requested"' is not assignable to type '"pending"'.
+test-integration.ts(75,1): error TS2322: Type '"rejected"' is not assignable to type '"pending"'.
+test-integration.ts(85,25): error TS2367: This comparison appears to be unintentional because the types '"pending"' and '"approved"' have no overlap.
+test-integration.ts(85,57): error TS2367: This comparison appears to be unintentional because the types '"pending"' and '"rejected"' have no overlap.
+test-integration.ts(86,24): error TS2367: This comparison appears to be unintentional because the types '"pending"' and '"approved"' have no overlap.
+test-integration.ts(86,60): error TS2367: This comparison appears to be unintentional because the types '"pending"' and '"rejected"' have no overlap.
+test-integration.ts(93,46): error TS2367: This comparison appears to be unintentional because the types '"pending"' and '"approved"' have no overlap.

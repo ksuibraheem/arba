@@ -1,164 +1,310 @@
 /**
- * Payment Service
- * خدمة الدفع - جاهزة للربط مع بوابة الدفع لاحقاً
+ * Payment Service — Tap Payments Integration
+ * خدمة الدفع — تكامل مع بوابة Tap
  * 
- * سيتم تفعيل هذه الخدمة عند الربط مع شركة الدفع المحلية
+ * مسارا الدفع:
+ * 1. إلكتروني (Tap) → تلقائي فوري
+ * 2. تحويل بنكي → مراجعة المحاسب
  */
 
 import { createPaymentRecord, updatePaymentStatus, createSubscription } from './firestoreService';
 import { Timestamp } from 'firebase/firestore';
 
+// =================== إعدادات Tap ===================
+
+const TAP_CONFIG = {
+    secretKey: import.meta.env.VITE_TAP_SECRET_KEY || '',
+    publicKey: import.meta.env.VITE_TAP_PUBLIC_KEY || '',
+    apiUrl: 'https://api.tap.company/v2',
+    redirectUrl: (import.meta.env.VITE_APP_URL || 'https://arba-sys.com') + '/login',
+    currency: 'SAR',
+    isEnabled: true
+};
+
+// =================== الأسعار ===================
+
+export const PLAN_PRICES = {
+    free: 0,
+    professional: 299 // ريال سعودي / سنة
+} as const;
+
 // =================== أنواع البيانات ===================
 
-export type PaymentGateway = 'moyasar' | 'tap' | 'hyperpay' | 'pending';
+export type PaymentGateway = 'tap' | 'bank_transfer';
+
+export type PaymentStatus = 
+    | 'pending'           // بانتظار الدفع
+    | 'pending_review'    // تحويل بنكي — بانتظار مراجعة المحاسب
+    | 'completed'         // تم الدفع والتفعيل
+    | 'failed'            // فشل الدفع
+    | 'rejected'          // رفض المحاسب
+    | 'amount_mismatch';  // المبلغ غير مطابق
 
 export interface PaymentRequest {
     userId: string;
+    userEmail: string;
+    userName: string;
     amount: number;
-    currency: string;
     plan: 'professional';
-    description?: string;
+    gateway: PaymentGateway;
+    receiptFile?: string;
+    receiptFileName?: string;
 }
 
 export interface PaymentResult {
     success: boolean;
     paymentId?: string;
-    paymentUrl?: string;
+    paymentUrl?: string; // رابط صفحة Tap للدفع الإلكتروني
     error?: string;
 }
 
 export interface PaymentVerification {
     success: boolean;
     transactionId?: string;
-    status: 'completed' | 'failed' | 'pending';
+    status: PaymentStatus;
+    amountPaid?: number;
     error?: string;
 }
 
-// =================== إعدادات بوابة الدفع ===================
+// =================== رسائل المستخدم ===================
 
-// سيتم تفعيلها لاحقاً
-const PAYMENT_CONFIG = {
-    gateway: 'pending' as PaymentGateway,
-    apiKey: import.meta.env.VITE_PAYMENT_API_KEY || '',
-    secretKey: import.meta.env.VITE_PAYMENT_SECRET_KEY || '',
-    callbackUrl: import.meta.env.VITE_APP_URL + '/payment/callback',
-    isEnabled: false // سيتم تفعيله عند الربط
+export const PAYMENT_MESSAGES = {
+    electronic_success: {
+        ar: '✅ تم الدفع وتفعيل حسابك بنجاح!',
+        en: '✅ Payment successful! Your account has been activated.'
+    },
+    bank_submitted: {
+        ar: '⏳ تم استلام إيصال الدفع. بانتظار مراجعة المحاسب.',
+        en: '⏳ Receipt received. Awaiting accountant review.'
+    },
+    accountant_approved: {
+        ar: '✅ تمت الموافقة على الدفع وتفعيل حسابك.',
+        en: '✅ Payment approved. Your account is now active.'
+    },
+    accountant_rejected: {
+        ar: '❌ تم رفض إيصال الدفع. يرجى التواصل مع الدعم.',
+        en: '❌ Payment receipt rejected. Please contact support.'
+    },
+    payment_failed: {
+        ar: '❌ فشلت عملية الدفع. يرجى المحاولة مرة أخرى.',
+        en: '❌ Payment failed. Please try again.'
+    },
+    amount_mismatch: {
+        ar: '⚠️ المبلغ المدفوع لا يتطابق مع المطلوب.',
+        en: '⚠️ Paid amount does not match the required amount.'
+    }
 };
 
-// =================== أسعار الباقات ===================
-
-export const PLAN_PRICES = {
-    free: 0,
-    professional: 299 // ريال سعودي
-} as const;
-
-// =================== وظائف الدفع ===================
+// =================== الدفع الإلكتروني (Tap) ===================
 
 /**
- * بدء عملية الدفع
- * ملاحظة: حالياً تُنشئ سجل دفع فقط - سيتم الربط مع البوابة لاحقاً
+ * إنشاء عملية دفع إلكتروني — يحوّل المستخدم لصفحة Tap
  */
-export async function initiatePayment(request: PaymentRequest): Promise<PaymentResult> {
-    console.log('📤 بدء عملية الدفع:', request);
+export async function initiateElectronicPayment(request: PaymentRequest): Promise<PaymentResult> {
+    console.log('💳 بدء الدفع الإلكتروني:', request.userEmail);
 
-    // إنشاء سجل دفع مؤقت
+    // إنشاء سجل دفع في Firestore
     const paymentId = await createPaymentRecord({
         userId: request.userId,
-        gateway: 'pending',
+        gateway: 'tap',
         amount: request.amount,
-        currency: request.currency || 'SAR',
-        status: 'pending'
+        currency: TAP_CONFIG.currency,
+        status: 'pending',
+        metadata: {
+            userEmail: request.userEmail,
+            userName: request.userName,
+            plan: request.plan
+        }
     });
 
     if (!paymentId) {
+        return { success: false, error: 'فشل في إنشاء سجل الدفع' };
+    }
+
+    // إنشاء Charge في Tap
+    try {
+        const response = await fetch(`${TAP_CONFIG.apiUrl}/charges`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${TAP_CONFIG.secretKey}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                amount: request.amount,
+                currency: TAP_CONFIG.currency,
+                customer_initiated: true,
+                threeDSecure: true,
+                save_card: false,
+                description: `اشتراك Arba - الباقة الاحترافية`,
+                metadata: {
+                    arba_payment_id: paymentId,
+                    arba_user_id: request.userId,
+                    arba_plan: request.plan
+                },
+                receipt: {
+                    email: true,
+                    sms: false
+                },
+                customer: {
+                    first_name: request.userName,
+                    email: request.userEmail
+                },
+                source: { type: 'src_all' }, // يسمح لـ Tap بعرض كل خيارات الدفع
+                redirect: {
+                    url: `${TAP_CONFIG.redirectUrl}?tap_id={charge_id}&arba_pid=${paymentId}`
+                }
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.transaction && data.transaction.url) {
+            return {
+                success: true,
+                paymentId,
+                paymentUrl: data.transaction.url
+            };
+        }
+
+        // إذا فيه خطأ
+        console.error('Tap API error:', data);
+        await updatePaymentStatus(paymentId, 'failed', undefined);
         return {
             success: false,
-            error: 'فشل في إنشاء سجل الدفع'
-        };
-    }
-
-    // في الوقت الحالي - إرجاع نجاح وهمي
-    // TODO: استبدال بالربط الفعلي مع بوابة الدفع
-    if (!PAYMENT_CONFIG.isEnabled) {
-        console.log('⚠️ بوابة الدفع غير مفعلة - سجل الدفع تم إنشاؤه بانتظار الربط');
-
-        return {
-            success: true,
             paymentId,
-            paymentUrl: undefined // سيتم إضافة رابط الدفع لاحقاً
+            error: data.errors?.[0]?.description || 'خطأ في بوابة الدفع'
         };
-    }
 
-    // الكود التالي سيُفعّل عند ربط بوابة الدفع:
-    /*
-    try {
-      const response = await fetch('https://api.moyasar.com/v1/payments', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${btoa(PAYMENT_CONFIG.apiKey + ':')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          amount: request.amount * 100, // بالهللات
-          currency: 'SAR',
-          description: request.description || 'اشتراك ARBA',
-          callback_url: PAYMENT_CONFIG.callbackUrl,
-          source: { type: 'creditcard' }
-        })
-      });
-  
-      const data = await response.json();
-  
-      if (data.id) {
+    } catch (error: any) {
+        console.error('Tap API call failed:', error);
+        await updatePaymentStatus(paymentId, 'failed', undefined);
         return {
-          success: true,
-          paymentId,
-          paymentUrl: data.source.transaction_url
+            success: false,
+            paymentId,
+            error: 'تعذر الاتصال ببوابة الدفع. يرجى المحاولة لاحقاً.'
         };
-      }
-    } catch (error) {
-      console.error('خطأ في بوابة الدفع:', error);
     }
-    */
-
-    return {
-        success: true,
-        paymentId
-    };
 }
 
 /**
- * التحقق من حالة الدفع
- * سيتم استخدامها في Callback من بوابة الدفع
+ * التحقق من الدفع بعد العودة من Tap — مع مطابقة المبلغ
  */
-export async function verifyPayment(
-    paymentId: string,
-    gatewayTransactionId: string
+export async function verifyTapPayment(
+    tapChargeId: string,
+    arbaPaymentId: string,
+    expectedAmount: number
 ): Promise<PaymentVerification> {
-    console.log('🔍 التحقق من الدفع:', { paymentId, gatewayTransactionId });
+    console.log('🔍 التحقق من الدفع:', { tapChargeId, arbaPaymentId });
 
-    // TODO: استعلام بوابة الدفع عن حالة العملية
+    try {
+        const response = await fetch(`${TAP_CONFIG.apiUrl}/charges/${tapChargeId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${TAP_CONFIG.secretKey}`,
+                'Accept': 'application/json'
+            }
+        });
 
-    // حالياً - تحديث السجل يدوياً (للاختبار)
-    const updated = await updatePaymentStatus(paymentId, 'completed', gatewayTransactionId);
+        const charge = await response.json();
 
-    if (updated) {
+        // التحقق من حالة العملية
+        if (charge.status !== 'CAPTURED') {
+            await updatePaymentStatus(arbaPaymentId, 'failed', tapChargeId);
+            return {
+                success: false,
+                status: 'failed',
+                error: `حالة العملية: ${charge.status}`
+            };
+        }
+
+        // مطابقة المبلغ
+        if (charge.amount !== expectedAmount) {
+            await updatePaymentStatus(arbaPaymentId, 'failed', tapChargeId);
+            return {
+                success: false,
+                status: 'amount_mismatch',
+                amountPaid: charge.amount,
+                error: `المبلغ المدفوع (${charge.amount}) لا يتطابق مع المطلوب (${expectedAmount})`
+            };
+        }
+
+        // ✅ الدفع ناجح — تحديث السجل
+        await updatePaymentStatus(arbaPaymentId, 'completed', tapChargeId);
+
         return {
             success: true,
-            transactionId: gatewayTransactionId,
-            status: 'completed'
+            transactionId: tapChargeId,
+            status: 'completed',
+            amountPaid: charge.amount
+        };
+
+    } catch (error: any) {
+        console.error('Tap verification failed:', error);
+        return {
+            success: false,
+            status: 'failed',
+            error: 'تعذر التحقق من العملية'
         };
     }
+}
 
-    return {
-        success: false,
-        status: 'failed',
-        error: 'فشل في تحديث حالة الدفع'
-    };
+// =================== التحويل البنكي ===================
+
+/**
+ * رفع إيصال تحويل بنكي — يحتاج مراجعة المحاسب
+ */
+export async function submitBankTransfer(request: PaymentRequest): Promise<PaymentResult> {
+    console.log('🏦 تسجيل تحويل بنكي:', request.userEmail);
+
+    const paymentId = await createPaymentRecord({
+        userId: request.userId,
+        gateway: 'bank_transfer',
+        amount: request.amount,
+        currency: TAP_CONFIG.currency,
+        status: 'pending_review',
+        metadata: {
+            userEmail: request.userEmail,
+            userName: request.userName,
+            plan: request.plan,
+            receiptFile: request.receiptFile || '',
+            receiptFileName: request.receiptFileName || ''
+        }
+    });
+
+    if (!paymentId) {
+        return { success: false, error: 'فشل في تسجيل طلب الدفع' };
+    }
+
+    return { success: true, paymentId };
 }
 
 /**
- * تفعيل الاشتراك بعد الدفع الناجح
+ * المحاسب يوافق على التحويل البنكي → تفعيل الاشتراك تلقائياً
+ */
+export async function approvePayment(paymentId: string, userId: string, plan: 'professional'): Promise<boolean> {
+    console.log('✅ المحاسب وافق على الدفع:', paymentId);
+
+    // تحديث حالة الدفع
+    const updated = await updatePaymentStatus(paymentId, 'completed', undefined);
+    if (!updated) return false;
+
+    // تفعيل الاشتراك
+    return await activateSubscription(userId, plan, paymentId);
+}
+
+/**
+ * المحاسب يرفض التحويل البنكي
+ */
+export async function rejectPayment(paymentId: string, reason?: string): Promise<boolean> {
+    console.log('❌ المحاسب رفض الدفع:', paymentId, reason);
+    return await updatePaymentStatus(paymentId, 'rejected', undefined);
+}
+
+// =================== تفعيل الاشتراك ===================
+
+/**
+ * تفعيل الاشتراك بعد الدفع الناجح (يُستدعى تلقائياً للدفع الإلكتروني)
  */
 export async function activateSubscription(
     userId: string,
@@ -167,7 +313,6 @@ export async function activateSubscription(
 ): Promise<boolean> {
     console.log('🎉 تفعيل الاشتراك:', { userId, plan, paymentId });
 
-    // حساب تاريخ انتهاء الاشتراك (سنة واحدة)
     const expiresAt = new Date();
     expiresAt.setFullYear(expiresAt.getFullYear() + 1);
 
@@ -175,7 +320,7 @@ export async function activateSubscription(
         userId,
         plan,
         amount: PLAN_PRICES[plan],
-        currency: 'SAR',
+        currency: TAP_CONFIG.currency,
         status: 'active',
         paymentId,
         expiresAt: Timestamp.fromDate(expiresAt)
@@ -184,16 +329,12 @@ export async function activateSubscription(
     return subscriptionId !== null;
 }
 
-/**
- * التحقق من تفعيل بوابة الدفع
- */
+// =================== أدوات مساعدة ===================
+
 export function isPaymentEnabled(): boolean {
-    return PAYMENT_CONFIG.isEnabled;
+    return TAP_CONFIG.isEnabled;
 }
 
-/**
- * الحصول على بوابة الدفع الحالية
- */
-export function getCurrentGateway(): PaymentGateway {
-    return PAYMENT_CONFIG.gateway;
+export function getTapPublicKey(): string {
+    return TAP_CONFIG.publicKey;
 }

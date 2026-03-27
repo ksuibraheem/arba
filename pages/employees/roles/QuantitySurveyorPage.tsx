@@ -48,7 +48,7 @@ import {
     EXTERNAL_LINK_TYPES,
     PRICE_SOURCES
 } from '../../../services/externalSupplierService';
-import { ITEMS_DATABASE } from '../../../constants';
+import { FULL_ITEMS_DATABASE } from '../../../constants';
 import { ProjectType, BaseItem } from '../../../types';
 import QSDataGrid from '../../../components/QSDataGrid';
 import QSSmartImporter from '../../../components/QSSmartImporter';
@@ -552,9 +552,9 @@ const QuantitySurveyorPage: React.FC<QuantitySurveyorPageProps> = ({
             desc: t('جدول بيانات متطور مع تعديل مباشر، فرز وتصفية، واستيراد Excel', 'Advanced data grid with inline editing, sorting, and Excel import'),
             icon: '📋', gradient: 'from-green-500 to-emerald-600', borderColor: 'border-green-500/30',
             badgeColor: 'bg-green-500/15 text-green-400 border-green-500/30',
-            badge: `${ITEMS_DATABASE.length} ${t('بند', 'items')}`,
+            badge: `${FULL_ITEMS_DATABASE.length} ${t('بند', 'items')}`,
             stats: [
-                { value: ITEMS_DATABASE.length, label: t('بند نشط', 'Active Items'), color: 'text-green-400' },
+                { value: FULL_ITEMS_DATABASE.length, label: t('بند نشط', 'Active Items'), color: 'text-green-400' },
                 { value: supplierProducts.length, label: t('منتج', 'Products'), color: 'text-green-400' }
             ],
             actionLabel: t('فتح المكتبة', 'Open Library'), actionColor: 'bg-green-500/15 text-green-400 border-green-500/30 hover:bg-green-500/25'
@@ -621,8 +621,8 @@ const QuantitySurveyorPage: React.FC<QuantitySurveyorPageProps> = ({
         ],
         items_library: [
             { id: 'products', label: t('دليل المنتجات', 'Products'), icon: <Package className="w-4 h-4" />, count: supplierProducts.length },
-            { id: 'items_management', label: t('إدارة البنود', 'Items'), icon: <ClipboardCheck className="w-4 h-4" />, count: ITEMS_DATABASE.length },
-            { id: 'data_grid', label: t('جدول البيانات', 'Data Grid'), icon: <FileText className="w-4 h-4" />, count: ITEMS_DATABASE.length + customItems.length }
+            { id: 'items_management', label: t('إدارة البنود', 'Items'), icon: <ClipboardCheck className="w-4 h-4" />, count: FULL_ITEMS_DATABASE.length },
+            { id: 'data_grid', label: t('جدول البيانات', 'Data Grid'), icon: <FileText className="w-4 h-4" />, count: FULL_ITEMS_DATABASE.length + customItems.length }
         ],
         suppliers_mgmt: [
             { id: 'suppliers', label: t('الموردين المسجلين', 'Registered'), icon: <Building2 className="w-4 h-4" />, count: suppliers.length },
@@ -676,22 +676,22 @@ const QuantitySurveyorPage: React.FC<QuantitySurveyorPageProps> = ({
                     <>
                         {/* KPI Bar */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                            <div className="bg-gradient-to-br from-yellow-500/15 to-orange-500/15 rounded-2xl p-5 border border-yellow-500/30">
+                            <div onClick={() => navigateToSection('suppliers_mgmt')} className="bg-gradient-to-br from-yellow-500/15 to-orange-500/15 rounded-2xl p-5 border border-yellow-500/30 cursor-pointer hover:border-yellow-400/60 hover:-translate-y-0.5 transition-all">
                                 <div className="flex items-center gap-2 mb-2"><span className="text-lg">⏳</span><span className="text-slate-400 text-sm">{t('مراجعات معلقة', 'Pending Reviews')}</span></div>
                                 <p className="text-3xl font-extrabold text-white">{stats.pendingReviews}</p>
                                 <p className="text-xs text-yellow-400 mt-1">↑ {t('جديدة اليوم', 'new today')}</p>
                             </div>
-                            <div className="bg-gradient-to-br from-green-500/15 to-emerald-500/15 rounded-2xl p-5 border border-green-500/30">
+                            <div onClick={() => navigateToSection('items_library')} className="bg-gradient-to-br from-green-500/15 to-emerald-500/15 rounded-2xl p-5 border border-green-500/30 cursor-pointer hover:border-green-400/60 hover:-translate-y-0.5 transition-all">
                                 <div className="flex items-center gap-2 mb-2"><span className="text-lg">📦</span><span className="text-slate-400 text-sm">{t('البنود المحدثة', 'Updated Items')}</span></div>
-                                <p className="text-3xl font-extrabold text-white">{ITEMS_DATABASE.length}</p>
+                                <p className="text-3xl font-extrabold text-white">{FULL_ITEMS_DATABASE.length}</p>
                                 <p className="text-xs text-green-400 mt-1">✓ {t('آخر تحديث: اليوم', 'Last update: today')}</p>
                             </div>
-                            <div className="bg-gradient-to-br from-blue-500/15 to-cyan-500/15 rounded-2xl p-5 border border-blue-500/30">
+                            <div onClick={() => navigateToSection('suppliers_mgmt')} className="bg-gradient-to-br from-blue-500/15 to-cyan-500/15 rounded-2xl p-5 border border-blue-500/30 cursor-pointer hover:border-blue-400/60 hover:-translate-y-0.5 transition-all">
                                 <div className="flex items-center gap-2 mb-2"><span className="text-lg">🏢</span><span className="text-slate-400 text-sm">{t('الموردين النشطين', 'Active Suppliers')}</span></div>
                                 <p className="text-3xl font-extrabold text-white">{suppliers.length}</p>
                                 <p className="text-xs text-blue-400 mt-1">+{externalSuppliers.length} {t('خارجي', 'external')}</p>
                             </div>
-                            <div className="bg-gradient-to-br from-purple-500/15 to-pink-500/15 rounded-2xl p-5 border border-purple-500/30">
+                            <div onClick={() => navigateToSection('verification')} className="bg-gradient-to-br from-purple-500/15 to-pink-500/15 rounded-2xl p-5 border border-purple-500/30 cursor-pointer hover:border-purple-400/60 hover:-translate-y-0.5 transition-all">
                                 <div className="flex items-center gap-2 mb-2"><span className="text-lg">💯</span><span className="text-slate-400 text-sm">{t('صحة البيانات', 'Data Health')}</span></div>
                                 <p className="text-3xl font-extrabold text-white">{Math.round(100 - (stats.pendingCorrections / Math.max(1, stats.pendingCorrections + stats.completedCorrections)) * 100)}%</p>
                                 <p className="text-xs text-purple-400 mt-1">↑ {t('تحسن', 'improved')}</p>
@@ -1544,7 +1544,7 @@ const QuantitySurveyorPage: React.FC<QuantitySurveyorPageProps> = ({
                                         </button>
                                     </div>
                                     <QSDataGrid
-                                        items={[...ITEMS_DATABASE, ...customItems]}
+                                        items={[...FULL_ITEMS_DATABASE, ...customItems]}
                                         language={language}
                                         employeeName={employee.name}
                                         employeeId={employee.employeeNumber || employee.id}
@@ -1620,14 +1620,14 @@ const QuantitySurveyorPage: React.FC<QuantitySurveyorPageProps> = ({
                                         {/* Count */}
                                         <div className="bg-slate-800/50 border border-slate-700/50 rounded-lg px-4 py-2 text-center">
                                             <span className="text-slate-400">{t('إجمالي البنود:', 'Total Items:')}</span>
-                                            <span className="text-cyan-400 font-bold mr-2">{ITEMS_DATABASE.length}</span>
+                                            <span className="text-cyan-400 font-bold mr-2">{FULL_ITEMS_DATABASE.length}</span>
                                         </div>
                                     </div>
 
                                     {/* Project Type Cards */}
                                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                                         {PROJECT_TYPES.filter(pt => pt.id !== 'all').slice(0, 5).map(projectType => {
-                                            const itemsCount = ITEMS_DATABASE.filter(item =>
+                                            const itemsCount = FULL_ITEMS_DATABASE.filter(item =>
                                                 item.type === 'all' || item.type === projectType.id
                                             ).length;
                                             return (
@@ -1673,7 +1673,7 @@ const QuantitySurveyorPage: React.FC<QuantitySurveyorPageProps> = ({
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-700/50">
-                                                    {ITEMS_DATABASE
+                                                    {FULL_ITEMS_DATABASE
                                                         .filter(item => {
                                                             // Filter by project type
                                                             if (selectedProjectType !== 'all' && item.type !== 'all' && item.type !== selectedProjectType) {
@@ -1748,7 +1748,7 @@ const QuantitySurveyorPage: React.FC<QuantitySurveyorPageProps> = ({
                                                 </tbody>
                                             </table>
                                         </div>
-                                        {ITEMS_DATABASE.length > 50 && (
+                                        {FULL_ITEMS_DATABASE.length > 50 && (
                                             <div className="px-4 py-3 bg-slate-700/30 text-center text-slate-400 text-sm">
                                                 {t('يُعرض أول 50 بند. استخدم البحث أو الفلاتر لعرض المزيد.', 'Showing first 50 items. Use search or filters to view more.')}
                                             </div>

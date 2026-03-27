@@ -174,7 +174,7 @@ export interface CustomParams {
 export interface BaseItem {
   id: string;
   category: 'site' | 'structure' | 'architecture' | 'mep_elec' | 'mep_plumb' | 'mep_hvac' | 'insulation' | 'safety' | 'gov_fees' | 'production' | 'manpower' | 'custom';
-  type: 'all' | 'villa' | 'tower' | 'rest_house' | 'factory';
+  type: 'all' | ProjectType;
   name: Record<Language, string>; // Changed to support multiple languages
   unit: string;
   qty: number;

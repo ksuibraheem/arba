@@ -4,6 +4,8 @@
  */
 
 import { Invoice } from './accountingService';
+import { sendEditRequestAlertToManager, sendEditRequestDecisionToEmployee } from './emailNotificationService';
+import { notificationService } from './notificationService';
 
 // ====================== أنواع البيانات ======================
 
@@ -115,6 +117,21 @@ class InvoiceEditRequestService {
 
         requests.push(newRequest);
         this.saveRequests(requests);
+
+        // Send email + in-app notification to manager
+        sendEditRequestAlertToManager({
+            invoiceNumber,
+            requestedByName,
+            reason: requestReason,
+        }).catch(() => {});
+
+        notificationService.notifyManagerEditRequest({
+            invoiceNumber,
+            requestedByName,
+            reason: requestReason,
+            requestId: newRequest.id,
+        });
+
         return newRequest;
     }
 
@@ -152,6 +169,24 @@ class InvoiceEditRequestService {
         };
 
         this.saveRequests(requests);
+
+        // Notify the employee who requested the edit
+        sendEditRequestDecisionToEmployee({
+            employeeEmail: 'info@arba-sys.com', // Will be replaced with actual employee email
+            employeeName: request.requestedByName,
+            invoiceNumber: request.invoiceNumber,
+            decision: 'approved',
+            decisionByName: approvedByName,
+        }).catch(() => {});
+
+        notificationService.notifyEmployeeEditDecision({
+            invoiceNumber: request.invoiceNumber,
+            decision: 'approved',
+            decisionByName: approvedByName,
+            targetRole: 'accountant',
+            requestId: requestId,
+        });
+
         return requests[index];
     }
 
@@ -186,6 +221,26 @@ class InvoiceEditRequestService {
         };
 
         this.saveRequests(requests);
+
+        // Notify the employee about rejection
+        sendEditRequestDecisionToEmployee({
+            employeeEmail: 'info@arba-sys.com', // Will be replaced with actual employee email
+            employeeName: request.requestedByName,
+            invoiceNumber: request.invoiceNumber,
+            decision: 'rejected',
+            decisionByName: rejectedByName,
+            reason: rejectionReason,
+        }).catch(() => {});
+
+        notificationService.notifyEmployeeEditDecision({
+            invoiceNumber: request.invoiceNumber,
+            decision: 'rejected',
+            decisionByName: rejectedByName,
+            targetRole: 'accountant',
+            requestId: requestId,
+            reason: rejectionReason,
+        });
+
         return requests[index];
     }
 

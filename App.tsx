@@ -38,6 +38,7 @@ import SupportCenterPage from './pages/SupportCenterPage';
 import CloudSyncPage from './pages/CloudSyncPage';
 import SupplierDashboard from './pages/supplier/SupplierDashboard';
 import QuantitySurveyorPage from './pages/employees/roles/QuantitySurveyorPage';
+import SupportPage from './pages/employees/roles/SupportPage';
 import SupplierCatalog from './pages/SupplierCatalog';
 import SuppliersManagementPage from './pages/admin/SuppliersManagementPage';
 import { AppState, CalculatedItem, ProjectType, CustomParams, BlueprintConfig, SurfaceLocation, RoomFinishes, BaseItem } from './types';
@@ -116,6 +117,12 @@ const App: React.FC = () => {
     const [activeProject, setActiveProject] = useState<ArbaProject | null>(null);
     const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
 
+    // Sidebar collapse state
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    // Demo/Test banner visibility states
+    const [showDemoBanner, setShowDemoBanner] = useState(true);
+    const [showTestBanner, setShowTestBanner] = useState(true);
+
     // Ref to track currentPage without triggering useEffect re-runs
     const currentPageRef = useRef(currentPage);
     useEffect(() => { currentPageRef.current = currentPage; }, [currentPage]);
@@ -153,6 +160,51 @@ const App: React.FC = () => {
                     // mode === 'resetPassword' is handled by Firebase's built-in page
                 } catch (error) {
                     console.error('Error processing email action:', error);
+                }
+            })();
+        }
+
+        // ── Handle Tap Payments callback (after redirect from payment page) ──
+        const tapId = params.get('tap_id');
+        const arbaPid = params.get('arba_pid');
+        if (tapId && arbaPid) {
+            (async () => {
+                try {
+                    const { verifyTapPayment, activateSubscription, PLAN_PRICES, PAYMENT_MESSAGES } = await import('./src/services/paymentService');
+                    const { getUserData } = await import('./firebase/authService');
+
+                    console.log('💳 معالجة callback من Tap:', tapId);
+
+                    const result = await verifyTapPayment(tapId, arbaPid, PLAN_PRICES.professional);
+
+                    // Clean URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+
+                    if (result.success) {
+                        // Get user ID from current auth state
+                        const { getAuth } = await import('firebase/auth');
+                        const auth = getAuth();
+                        const currentUser = auth.currentUser;
+
+                        if (currentUser) {
+                            // Auto-activate subscription for electronic payment
+                            await activateSubscription(currentUser.uid, 'professional', arbaPid);
+
+                            // Update user plan in state
+                            setUser(prev => prev ? { ...prev, plan: 'professional' } : prev);
+                            alert(PAYMENT_MESSAGES.electronic_success[language]);
+                            setCurrentPage('pricing-calc');
+                        }
+                    } else {
+                        const msg = result.status === 'amount_mismatch'
+                            ? PAYMENT_MESSAGES.amount_mismatch[language]
+                            : PAYMENT_MESSAGES.payment_failed[language];
+                        alert(msg);
+                        setCurrentPage('payment');
+                    }
+                } catch (error) {
+                    console.error('Error processing Tap callback:', error);
+                    setCurrentPage('payment');
                 }
             })();
         }
@@ -347,7 +399,7 @@ const App: React.FC = () => {
             setCurrentPage('login');
             return;
         }
-        // Handle demo mode
+        // Handle demo mode — only access the pricing calculator
         if (page === 'demo') {
             setIsDemoMode(true);
             setUser({
@@ -358,7 +410,7 @@ const App: React.FC = () => {
                 usedProjects: 0,
                 usedStorageMB: 0
             });
-            setCurrentPage('dashboard');
+            setCurrentPage('pricing-calc');
             return;
         }
         setCurrentPage(page as PageRoute);
@@ -1103,7 +1155,8 @@ const App: React.FC = () => {
                         company: userType === 'company' ? 'شركة اختبارية' : undefined,
                         plan: plan === 'professional' ? 'professional' : plan === 'pro' ? 'professional' : plan,
                         usedProjects: 0,
-                        usedStorageMB: 0
+                        usedStorageMB: 0,
+                        userType: userType as 'individual' | 'company' | 'supplier'
                     };
                     setUser(testUser);
                     // التنقل للصفحة المناسبة
@@ -1138,24 +1191,6 @@ const App: React.FC = () => {
         );
     }
 
-    // Quantity Surveyor Page (صفحة مهندس الكميات)
-    if (currentPage === 'quantity_surveyor') {
-        if (!currentEmployee) {
-            setCurrentPage('login');
-            return null;
-        }
-        return (
-            <QuantitySurveyorPage
-                language={language}
-                employee={currentEmployee}
-                onLogout={() => {
-                    setUser(null);
-                    setCurrentEmployee(null);
-                    setCurrentPage('landing');
-                }}
-            />
-        );
-    }
 
     // Supplier Dashboard (لوحة تحكم الموردين)
     if (currentPage === 'supplier') {
@@ -1244,19 +1279,21 @@ const App: React.FC = () => {
         };
 
         return (
-            <QuantitySurveyorPage
-                language={language}
-                employee={qsEmployee}
-                onLogout={() => {
-                    if (isManager) {
-                        setCurrentPage('manager');
-                    } else {
-                        setUser(null);
-                        setCurrentEmployee(null);
-                        setCurrentPage('landing');
-                    }
-                }}
-            />
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+                <QuantitySurveyorPage
+                    language={language}
+                    employee={qsEmployee}
+                    onLogout={() => {
+                        if (isManager) {
+                            setCurrentPage('manager');
+                        } else {
+                            setUser(null);
+                            setCurrentEmployee(null);
+                            setCurrentPage('landing');
+                        }
+                    }}
+                />
+            </div>
         );
     }
 
@@ -1319,8 +1356,7 @@ const App: React.FC = () => {
             createdAt: new Date().toISOString()
         };
 
-        // Import SupportPage dynamically
-        const SupportPage = require('./pages/employees/roles/SupportPage').default;
+        // SupportPage is now imported statically at the top of the file
 
         return (
             <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -1496,8 +1532,23 @@ const App: React.FC = () => {
             return (
                 <EmployeeWorkspace
                     language={language}
-                    onOpenPricing={(project) => {
+                    onOpenPricing={(project, setupData) => {
                         setActiveProject(project || null);
+                        // Apply setup modal data to the pricing metadata
+                        if (setupData && !setupData.skipped) {
+                            const firstClient = setupData.clients[0];
+                            setState(prev => ({
+                                ...prev,
+                                location: setupData.location || prev.location,
+                                metadata: {
+                                    ...prev.metadata,
+                                    projectName: setupData.projectName || prev.metadata.projectName,
+                                    clientName: firstClient?.name || prev.metadata.clientName,
+                                    tenderNumber: firstClient?.tenderNumber || firstClient?.crNumber || prev.metadata.tenderNumber,
+                                    companyName: firstClient?.type === 'company' ? firstClient.name : prev.metadata.companyName,
+                                }
+                            }));
+                        }
                         setCurrentPage('pricing-calc');
                     }}
                     onLogout={handleLogout}
@@ -1513,8 +1564,21 @@ const App: React.FC = () => {
             <ZoneGuard requiredZone="A" language={language} isDemoMode={isDemoMode}>
                 <EmployeeWorkspace
                     language={language}
-                    onOpenPricing={(project) => {
+                    onOpenPricing={(project, setupData) => {
                         setActiveProject(project || null);
+                        if (setupData && !setupData.skipped) {
+                            const firstClient = setupData.clients[0];
+                            setState(prev => ({
+                                ...prev,
+                                metadata: {
+                                    ...prev.metadata,
+                                    projectName: setupData.projectName || prev.metadata.projectName,
+                                    clientName: firstClient?.name || prev.metadata.clientName,
+                                    tenderNumber: firstClient?.tenderNumber || firstClient?.crNumber || prev.metadata.tenderNumber,
+                                    companyName: firstClient?.type === 'company' ? firstClient.name : prev.metadata.companyName,
+                                }
+                            }));
+                        }
                         setCurrentPage('pricing-calc');
                     }}
                     onLogout={handleLogout}
@@ -1572,7 +1636,7 @@ const App: React.FC = () => {
         <div className={`flex h-screen bg-slate-100 font-sans overflow-hidden ${isRtl ? '' : 'flex-row-reverse'}`} dir={isRtl ? 'rtl' : 'ltr'}>
 
             {/* Test Mode Banner - شريط وضع الاختبار */}
-            {isInTestMode() && (
+            {(isInTestMode() && showTestBanner) && (
                 <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-amber-500 to-orange-500 text-white py-2 px-4 flex items-center justify-between shadow-lg">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
@@ -1591,23 +1655,34 @@ const App: React.FC = () => {
                             </span>
                         </div>
                     </div>
-                    <button
-                        onClick={() => {
-                            endTestMode();
-                            setCurrentPage('manager');
-                        }}
-                        className="px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors flex items-center gap-2"
-                    >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                        {language === 'ar' ? 'إنهاء الاختبار والعودة' : 'End Test & Return'}
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => {
+                                endTestMode();
+                                setCurrentPage('manager');
+                            }}
+                            className="px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors flex items-center gap-2"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                            {language === 'ar' ? 'إنهاء الاختبار والعودة' : 'End Test & Return'}
+                        </button>
+                        <button
+                            onClick={() => setShowTestBanner(false)}
+                            className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-colors ms-2"
+                            title={language === 'ar' ? 'إخفاء الشريط' : 'Dismiss Banner'}
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             )}
 
             {/* Demo Mode Banner - شريط وضع العرض التجريبي */}
-            {isDemoMode && (
+            {(isDemoMode && showDemoBanner) && (
                 <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 px-4 flex items-center justify-between shadow-lg">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center animate-pulse">
@@ -1643,10 +1718,17 @@ const App: React.FC = () => {
                             onClick={handleExitDemoMode}
                             className="px-4 py-1.5 bg-white/20 hover:bg-white/30 rounded-lg font-medium transition-colors flex items-center gap-2"
                         >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <LogOut className="w-4 h-4" />
+                            {language === 'ar' ? 'خروج من العرض' : 'Exit Demo'}
+                        </button>
+                        <button
+                            onClick={() => setShowDemoBanner(false)}
+                            className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-colors ms-2"
+                            title={language === 'ar' ? 'إخفاء الشريط' : 'Dismiss Banner'}
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                             </svg>
-                            {language === 'ar' ? 'إغلاق' : 'Close'}
                         </button>
                     </div>
                 </div>
@@ -1691,14 +1773,45 @@ const App: React.FC = () => {
                 </div>
             )}
 
-            <Sidebar state={state} onChange={handleStateChange} isDemoMode={isDemoMode} />
+            {/* Settings Sidebar with Collapse Toggle */}
+            <div className="relative shrink-0 flex items-center z-40 h-full">
+                {/* The animated container that hides its overflow */}
+                <div className={`transition-all h-full duration-300 ease-in-out shrink-0 overflow-hidden ${isSidebarOpen ? 'w-80' : 'w-0'}`}>
+                    {/* Fixed width inner container prevents squishing during animation */}
+                    <div className="w-80 h-full bg-slate-900 border-l border-slate-800">
+                        <Sidebar state={state} onChange={handleStateChange} isDemoMode={isDemoMode} />
+                    </div>
+                </div>
+                
+                {/* Collapse Toggle Button - positioned absolutely to stick to the sidebar's edge */}
+                <button
+                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                    className={`absolute ${isRtl ? 'right-full' : 'left-full'} top-1/2 -translate-y-1/2 w-8 h-16 bg-white border border-slate-200 ${isRtl ? 'rounded-l-xl border-r-0' : 'rounded-r-xl border-l-0'} flex items-center justify-center text-slate-400 hover:text-emerald-500 shadow-md z-50 transition-colors`}
+                >
+                    {isRtl ? (
+                        <svg className={`w-5 h-5 transition-transform duration-300 ${!isSidebarOpen ? 'rotate-180' : 'rotate-0'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
+                    ) : (
+                        <svg className={`w-5 h-5 transition-transform duration-300 ${!isSidebarOpen ? 'rotate-180' : 'rotate-0'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+                    )}
+                </button>
+            </div>
 
-            <main className="flex-1 flex flex-col overflow-hidden">
+            <main className="flex-1 flex flex-col overflow-hidden bg-slate-50 relative z-10 transition-all duration-300">
 
                 {/* Header */}
                 <header className="bg-white border-b border-slate-200 px-8 py-4 shadow-sm z-10">
                     <div className="flex justify-between items-start mb-4 border-b border-slate-100 pb-4">
                         <div className="flex items-center gap-4">
+                            {/* Back to Dashboard Button */}
+                            <button
+                                onClick={() => handleNavigate('dashboard')}
+                                className="w-10 h-10 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 hover:border-slate-300 flex items-center justify-center text-slate-500 hover:text-slate-700 transition-all shadow-sm shrink-0"
+                                title={language === 'ar' ? 'العودة للوحة التحكم' : 'Back to Dashboard'}
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isRtl ? "M9 5l7 7-7 7" : "M15 19l-7-7 7-7"} />
+                                </svg>
+                            </button>
                             {/* Company Logo Section */}
                             <div className="relative group">
                                 {user?.companyLogo ? (
@@ -1833,46 +1946,51 @@ const App: React.FC = () => {
                     )}
 
                     <div className="flex items-center justify-between">
-                        <div className="flex flex-col gap-1">
-                            <h1 className="text-lg font-bold text-slate-700 flex items-center gap-2">
-                                <span className="bg-emerald-500 text-white p-0.5 px-2 rounded-md text-xs">PRO</span>
-                                {state.viewMode === 'pricing' ? t('boq_title') : state.viewMode === 'blueprint' ? t('blueprint_title') : t('materials')}
-                            </h1>
-                            <p className="text-slate-400 text-xs flex items-center gap-2">
-                                {PROJECT_TITLES[state.projectType]}
-                            </p>
-                        </div>
                         <div className="flex items-center gap-4">
-                            <div className="text-xs text-slate-500 bg-slate-50 p-2 rounded border border-slate-100 flex gap-4">
-                                <div className="flex items-center gap-1">
-                                    <Calendar className="w-3 h-3 text-slate-400" />
-                                    <span>{state.metadata.pricingDate}</span>
-                                </div>
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white">
+                                <Calculator className="w-6 h-6" />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <h1 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-3">
+                                    {state.viewMode === 'pricing' ? t('boq_title') : state.viewMode === 'blueprint' ? t('blueprint_title') : t('materials')}
+                                    <span className="bg-gradient-to-r from-emerald-400 to-emerald-600 text-white p-1 px-3 rounded-lg text-[10px] font-bold shadow-sm shadow-emerald-500/20 uppercase tracking-widest">PRO</span>
+                                </h1>
+                                <p className="text-slate-500 text-sm font-medium flex items-center gap-2">
+                                    {PROJECT_TITLES[state.projectType]}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="text-sm font-medium text-slate-600 bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-2">
+                                <Calendar className="w-4 h-4 text-emerald-500" />
+                                <span>{state.metadata.pricingDate}</span>
                             </div>
                             <button
                                 onClick={() => setShowUniversalImporter(true)}
                                 disabled={isFreePlan || isDemoMode}
                                 title={(isFreePlan || isDemoMode) ? (state.language === 'ar' ? 'غير متاح في الباقة المجانية' : 'Not available in free plan') : (state.language === 'ar' ? 'محلل Arba الذكي' : 'Arba Intelligence Parser')}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-md transition-all font-medium text-sm ${(isFreePlan || isDemoMode)
-                                    ? 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-60'
-                                    : 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-violet-500/20'
-                                    }`}
+                                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all font-bold text-sm shadow-lg ${
+                                    (isFreePlan || isDemoMode)
+                                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
+                                    : 'bg-gradient-to-r from-violet-600 hover:from-violet-500 to-indigo-600 hover:to-indigo-500 text-white shadow-indigo-500/25 border border-indigo-400/30 active:scale-95'
+                                }`}
                             >
-                                {(isFreePlan || isDemoMode) && <Lock className="w-3 h-3" />}
-                                <Zap className="w-4 h-4" />
+                                {(isFreePlan || isDemoMode) && <Lock className="w-4 h-4" />}
+                                <Zap className={`w-4 h-4 ${(isFreePlan || isDemoMode) ? '' : 'text-yellow-300 fill-yellow-300'}`} />
                                 {state.language === 'ar' ? 'استيراد ذكي' : 'Smart Import'}
                             </button>
                             <button
                                 onClick={handleExport}
                                 disabled={isFreePlan || isDemoMode}
                                 title={(isFreePlan || isDemoMode) ? (state.language === 'ar' ? 'غير متاح في الباقة المجانية' : 'Not available in free plan') : ''}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-md transition-all font-medium text-sm ${(isFreePlan || isDemoMode)
-                                    ? 'bg-slate-300 text-slate-500 cursor-not-allowed opacity-60'
-                                    : 'bg-slate-800 hover:bg-slate-700 text-white'
-                                    }`}
+                                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all font-bold text-sm shadow-md ${
+                                    (isFreePlan || isDemoMode)
+                                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
+                                    : 'bg-slate-900 hover:bg-slate-800 text-white border border-slate-700 active:scale-95'
+                                }`}
                             >
-                                {(isFreePlan || isDemoMode) && <Lock className="w-3 h-3" />}
-                                <Download className="w-4 h-4" />
+                                {(isFreePlan || isDemoMode) && <Lock className="w-4 h-4" />}
+                                <Download className="w-4 h-4 text-emerald-400" />
                                 PDF/Excel
                             </button>
                         </div>

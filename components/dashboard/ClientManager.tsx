@@ -4,7 +4,8 @@
  */
 
 import React, { useState } from 'react';
-import { ArbaClient } from '../../services/projectTypes';
+import { ArbaClient, getDocumentStatus } from '../../services/projectTypes';
+import ClientProfileModal from '../modals/ClientProfileModal';
 
 interface ClientManagerProps {
     clients: ArbaClient[];
@@ -23,6 +24,7 @@ const ClientManager: React.FC<ClientManagerProps> = ({
     const [showForm, setShowForm] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [profileClient, setProfileClient] = useState<ArbaClient | null>(null);
     const [formData, setFormData] = useState({
         name: '', phone: '', email: '', company: '', cr: '', vat: '', address: '', city: '', notes: '',
     });
@@ -55,7 +57,10 @@ const ClientManager: React.FC<ClientManagerProps> = ({
         setShowForm(true);
     };
 
-    const formatValue = (v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v.toFixed(0);
+    const formatValue = (v?: number) => {
+        const value = v || 0;
+        return value >= 1000 ? `${(value / 1000).toFixed(0)}K` : value.toFixed(0);
+    };
 
     return (
         <div className="space-y-4">
@@ -147,12 +152,13 @@ const ClientManager: React.FC<ClientManagerProps> = ({
                     {filtered.map(client => (
                         <div
                             key={client.id}
-                            className="rounded-xl bg-slate-800/40 border border-slate-700/60 p-4 flex items-center justify-between hover:border-purple-500/30 transition-all group"
+                            onClick={() => setProfileClient(client)}
+                            className="rounded-xl bg-slate-800/40 border border-slate-700/60 p-4 flex items-center justify-between hover:border-purple-500/30 transition-all group cursor-pointer"
                         >
                             <div className="flex items-center gap-4 flex-1 min-w-0">
-                                {/* Avatar */}
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                                    {client.name.charAt(0)}
+                                {/* Avatar / Logo */}
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 overflow-hidden">
+                                    {client.logoUrl ? <img src={client.logoUrl} alt="" className="w-full h-full object-cover" /> : client.name.charAt(0)}
                                 </div>
                                 {/* Info */}
                                 <div className="min-w-0">
@@ -161,12 +167,19 @@ const ClientManager: React.FC<ClientManagerProps> = ({
                                         {client.company && `${client.company} • `}
                                         {client.phone || client.email}
                                     </p>
+                                    {/* Expiry warnings */}
+                                    {(client.documents || []).some(d => getDocumentStatus(d) === 'expired') && (
+                                        <span className="inline-block w-2 h-2 rounded-full bg-red-500 ms-1" title={isAr ? 'وثائق منتهية' : 'Expired docs'} />
+                                    )}
+                                    {(client.documents || []).some(d => getDocumentStatus(d) === 'expiring_soon') && (
+                                        <span className="inline-block w-2 h-2 rounded-full bg-amber-500 ms-1" title={isAr ? 'وثائق قاربت الانتهاء' : 'Expiring docs'} />
+                                    )}
                                 </div>
                             </div>
 
                             {/* Projects count */}
                             <div className="text-center mx-4">
-                                <span className="text-emerald-400 font-bold text-sm">{client.projectIds.length}</span>
+                                <span className="text-emerald-400 font-bold text-sm">{(client.projectIds || []).length}</span>
                                 <p className="text-slate-500 text-[10px]">{isAr ? 'مشاريع' : 'projects'}</p>
                             </div>
 
@@ -178,13 +191,27 @@ const ClientManager: React.FC<ClientManagerProps> = ({
 
                             {/* Actions */}
                             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onClick={() => onViewProjects(client.id)} className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 text-xs" title={isAr ? 'المشاريع' : 'Projects'}>📁</button>
-                                <button onClick={() => handleEdit(client)} className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 text-xs" title={isAr ? 'تعديل' : 'Edit'}>✏️</button>
-                                <button onClick={() => onDeleteClient(client.id)} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs" title={isAr ? 'حذف' : 'Delete'}>🗑</button>
+                                <button onClick={(e) => { e.stopPropagation(); setProfileClient(client); }} className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 text-xs" title={isAr ? 'الملف' : 'Profile'}>📋</button>
+                                <button onClick={(e) => { e.stopPropagation(); onViewProjects(client.id); }} className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 text-xs" title={isAr ? 'المشاريع' : 'Projects'}>📁</button>
+                                <button onClick={(e) => { e.stopPropagation(); handleEdit(client); }} className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 text-xs" title={isAr ? 'تعديل' : 'Edit'}>✏️</button>
+                                <button onClick={(e) => { e.stopPropagation(); onDeleteClient(client.id); }} className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 text-xs" title={isAr ? 'حذف' : 'Delete'}>🗑</button>
                             </div>
                         </div>
                     ))}
                 </div>
+            )}
+
+            {/* Client Profile Modal */}
+            {profileClient && (
+                <ClientProfileModal
+                    client={profileClient}
+                    language={language}
+                    onClose={() => setProfileClient(null)}
+                    onClientUpdated={(updated) => {
+                        setProfileClient(updated);
+                        onUpdateClient(updated.id, updated);
+                    }}
+                />
             )}
         </div>
     );

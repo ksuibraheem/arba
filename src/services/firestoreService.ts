@@ -56,11 +56,12 @@ export interface SubscriptionData {
 
 export interface PaymentData {
     userId: string;
-    gateway: 'moyasar' | 'tap' | 'pending';
+    gateway: 'tap' | 'bank_transfer' | 'pending';
     gatewayTransactionId?: string;
     amount: number;
     currency: string;
-    status: 'pending' | 'completed' | 'failed' | 'refunded';
+    status: 'pending' | 'pending_review' | 'completed' | 'failed' | 'rejected' | 'amount_mismatch' | 'refunded';
+    metadata?: Record<string, any>;
     createdAt: Timestamp;
 }
 

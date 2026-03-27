@@ -3,15 +3,16 @@
  * Technical Support Page - Employee Dashboard
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Headphones, MessageSquare, Phone, Mail, Clock, CheckCircle, Search,
     Filter, User, ChevronDown, Send, AlertCircle, X, RefreshCw,
-    GitBranch, Building, Users, Eye, ArrowRight
+    GitBranch, Building, Users, Eye, ArrowRight, Upload, Download, FileText,
+    Image as ImageIcon, Paperclip, HelpCircle
 } from 'lucide-react';
 import { Employee } from '../../../services/employeeService';
 import {
-    supportTicketService, SupportTicket, TicketCategory, TicketPriority, TicketStatus,
+    supportTicketService, SupportTicket, TicketCategory, TicketPriority, TicketStatus, Attachment,
     CATEGORY_TRANSLATIONS, PRIORITY_TRANSLATIONS, STATUS_TRANSLATIONS,
     PRIORITY_COLORS, STATUS_COLORS
 } from '../../../services/supportTicketService';
@@ -32,6 +33,9 @@ const SupportPage: React.FC<SupportPageProps> = ({ language, employee }) => {
     const [filterCategory, setFilterCategory] = useState<TicketCategory | 'all'>('all');
     const [responseMessage, setResponseMessage] = useState('');
     const [isInternalNote, setIsInternalNote] = useState(false);
+    const [isInquiryMode, setIsInquiryMode] = useState(false);
+    const [responseFiles, setResponseFiles] = useState<Attachment[]>([]);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [stats, setStats] = useState({
         total: 0,
         open: 0,
@@ -97,13 +101,14 @@ const SupportPage: React.FC<SupportPageProps> = ({ language, employee }) => {
 
     // Handle send response
     const handleSendResponse = () => {
-        if (!selectedTicket || !responseMessage.trim()) return;
+        if (!selectedTicket || (!responseMessage.trim() && responseFiles.length === 0)) return;
 
         const updated = supportTicketService.addResponse(selectedTicket.id, {
             responderId: employee.id,
             responderName: employee.name,
             responderRole: 'support',
             message: responseMessage,
+            attachments: responseFiles,
             isInternal: isInternalNote
         });
 
@@ -111,8 +116,60 @@ const SupportPage: React.FC<SupportPageProps> = ({ language, employee }) => {
             setSelectedTicket(updated);
             setResponseMessage('');
             setIsInternalNote(false);
+            setResponseFiles([]);
             loadTickets();
         }
+    };
+
+    // Handle send inquiry
+    const handleSendInquiry = () => {
+        if (!selectedTicket || !responseMessage.trim()) return;
+
+        const updated = supportTicketService.sendInquiry(selectedTicket.id, {
+            agentId: employee.id,
+            agentName: employee.name,
+            message: responseMessage,
+            attachments: responseFiles
+        });
+
+        if (updated) {
+            setSelectedTicket(updated);
+            setResponseMessage('');
+            setIsInquiryMode(false);
+            setResponseFiles([]);
+            loadTickets();
+        }
+    };
+
+    // File upload handler
+    const handleFileUpload = (files: FileList | null) => {
+        if (!files) return;
+        Array.from(files).forEach(file => {
+            const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+            if (!validTypes.includes(file.type)) return;
+            if (file.size > 5 * 1024 * 1024) return;
+            if (responseFiles.length >= 3) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const attachment: Attachment = {
+                    id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+                    fileName: file.name,
+                    fileType: file.type,
+                    fileSize: file.size,
+                    url: e.target?.result as string,
+                    uploadedAt: new Date().toISOString()
+                };
+                setResponseFiles(prev => [...prev, attachment]);
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
+    const formatFileSize = (bytes: number) => {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
     };
 
     // Get route icon
@@ -375,6 +432,29 @@ const SupportPage: React.FC<SupportPageProps> = ({ language, employee }) => {
                                             </span>
                                         </div>
                                         <p className="text-slate-300">{response.message}</p>
+                                        {/* Attachments */}
+                                        {response.attachments && response.attachments.length > 0 && (
+                                            <div className="mt-2 flex flex-wrap gap-2">
+                                                {response.attachments.map(att => (
+                                                    <a
+                                                        key={att.id}
+                                                        href={att.url}
+                                                        download={att.fileName}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="flex items-center gap-1.5 bg-slate-600/30 hover:bg-slate-600/50 rounded-lg px-2 py-1.5 text-xs transition-colors"
+                                                    >
+                                                        {att.fileType.startsWith('image/') ? (
+                                                            <img src={att.url} alt={att.fileName} className="w-8 h-8 object-cover rounded" />
+                                                        ) : (
+                                                            <FileText className="w-4 h-4 text-red-400" />
+                                                        )}
+                                                        <span className="text-slate-300 truncate max-w-[80px]">{att.fileName}</span>
+                                                        <Download className="w-3 h-3 text-slate-400" />
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -387,31 +467,81 @@ const SupportPage: React.FC<SupportPageProps> = ({ language, employee }) => {
                                             <input
                                                 type="checkbox"
                                                 checked={isInternalNote}
-                                                onChange={(e) => setIsInternalNote(e.target.checked)}
+                                                onChange={(e) => { setIsInternalNote(e.target.checked); setIsInquiryMode(false); }}
                                                 className="rounded border-slate-600 text-amber-500 focus:ring-amber-500"
+                                                disabled={isInquiryMode}
                                             />
                                             {t('ملاحظة داخلية', 'Internal Note')}
                                         </label>
+                                        <span className="text-slate-600">|</span>
+                                        <button
+                                            onClick={() => { setIsInquiryMode(!isInquiryMode); setIsInternalNote(false); }}
+                                            className={`flex items-center gap-1.5 text-sm px-3 py-1 rounded-lg transition-colors ${
+                                                isInquiryMode
+                                                    ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30'
+                                                    : 'text-slate-400 hover:text-cyan-400 hover:bg-slate-700/50'
+                                            }`}
+                                        >
+                                            <HelpCircle className="w-4 h-4" />
+                                            {t('إرسال استفسار', 'Send Inquiry')}
+                                        </button>
                                     </div>
                                     <div className="flex gap-2">
-                                        <textarea
-                                            value={responseMessage}
-                                            onChange={(e) => setResponseMessage(e.target.value)}
-                                            placeholder={isInternalNote
-                                                ? t('اكتب ملاحظة داخلية...', 'Write internal note...')
-                                                : t('اكتب ردك...', 'Write your response...')}
-                                            className="flex-1 bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-orange-500 resize-none"
-                                            rows={2}
-                                        />
+                                        <div className="flex-1 space-y-2">
+                                            <textarea
+                                                value={responseMessage}
+                                                onChange={(e) => setResponseMessage(e.target.value)}
+                                                placeholder={isInquiryMode
+                                                    ? t('اكتب استفسارك للمستفيد...', 'Write your inquiry to the user...')
+                                                    : isInternalNote
+                                                        ? t('اكتب ملاحظة داخلية...', 'Write internal note...')
+                                                        : t('اكتب ردك...', 'Write your response...')}
+                                                className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-orange-500 resize-none"
+                                                rows={2}
+                                            />
+                                            {/* File attachment area */}
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => fileInputRef.current?.click()}
+                                                    className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-orange-400 px-2 py-1.5 rounded-lg hover:bg-slate-700/50 transition-colors"
+                                                >
+                                                    <Paperclip className="w-4 h-4" />
+                                                    {t('إرفاق ملف', 'Attach File')}
+                                                </button>
+                                                <input
+                                                    ref={fileInputRef}
+                                                    type="file"
+                                                    className="hidden"
+                                                    accept="image/jpeg,image/png,image/gif,image/webp,application/pdf"
+                                                    multiple
+                                                    onChange={(e) => handleFileUpload(e.target.files)}
+                                                />
+                                                {responseFiles.length > 0 && (
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {responseFiles.map(f => (
+                                                            <span key={f.id} className="flex items-center gap-1 bg-slate-700 rounded px-2 py-1 text-xs text-slate-300">
+                                                                {f.fileType.startsWith('image/') ? <ImageIcon className="w-3 h-3 text-blue-400" /> : <FileText className="w-3 h-3 text-red-400" />}
+                                                                <span className="truncate max-w-[80px]">{f.fileName}</span>
+                                                                <button onClick={() => setResponseFiles(prev => prev.filter(x => x.id !== f.id))} className="text-slate-500 hover:text-red-400">
+                                                                    <X className="w-3 h-3" />
+                                                                </button>
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
                                         <button
-                                            onClick={handleSendResponse}
-                                            disabled={!responseMessage.trim()}
-                                            className={`px-4 rounded-lg transition-colors disabled:opacity-50 ${isInternalNote
-                                                    ? 'bg-amber-500 text-white hover:bg-amber-600'
-                                                    : 'bg-orange-500 text-white hover:bg-orange-600'
+                                            onClick={isInquiryMode ? handleSendInquiry : handleSendResponse}
+                                            disabled={!responseMessage.trim() && responseFiles.length === 0}
+                                            className={`px-4 rounded-lg transition-colors disabled:opacity-50 self-start ${isInquiryMode
+                                                    ? 'bg-cyan-500 text-white hover:bg-cyan-600'
+                                                    : isInternalNote
+                                                        ? 'bg-amber-500 text-white hover:bg-amber-600'
+                                                        : 'bg-orange-500 text-white hover:bg-orange-600'
                                                 }`}
                                         >
-                                            <Send className="w-5 h-5" />
+                                            {isInquiryMode ? <HelpCircle className="w-5 h-5" /> : <Send className="w-5 h-5" />}
                                         </button>
                                     </div>
                                 </div>

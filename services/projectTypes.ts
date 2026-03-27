@@ -40,20 +40,166 @@ export interface ArbaProject {
     updatedAt: Timestamp | Date;
 }
 
+// =================== CLIENT DOCUMENT ===================
+
+export type DocumentType =
+    // Company documents
+    | 'commercial_registration'  // السجل التجاري
+    | 'national_address'         // العنوان الوطني
+    | 'vat_certificate'          // شهادة ضريبة القيمة المضافة
+    | 'chamber_of_commerce'      // شهادة الغرفة التجارية
+    | 'saudization'              // شهادة السعودة (نطاقات)
+    | 'gosi'                     // التأمينات الاجتماعية
+    | 'qiwa'                     // شهادة قوى
+    | 'muqeem'                   // شهادة مقيم
+    | 'municipal_license'        // رخصة البلدية
+    | 'momra_license'            // رخصة وزارة الشؤون البلدية
+    | 'contractor_classification'// تصنيف المقاولين
+    | 'engineering_license'      // ترخيص هيئة المهندسين
+    | 'bank_certificate'         // شهادة بنكية / IBAN
+    | 'zakat_certificate'        // شهادة الزكاة والدخل
+    | 'insurance_certificate'    // شهادة التأمين
+    // Individual documents
+    | 'national_id'              // الهوية الوطنية / الإقامة
+    | 'freelance_certificate'    // وثيقة العمل الحر
+    // General
+    | 'custom';                  // وثيقة مخصصة
+
+export type DocumentStatus = 'valid' | 'expiring_soon' | 'expired' | 'no_expiry';
+
+export interface ClientDocument {
+    id: string;
+    type: DocumentType;
+    customName?: string;          // Only for 'custom' type
+    number?: string;              // Document number (e.g. CR number)
+    fileUrl?: string;             // Firebase Storage download URL
+    storagePath?: string;         // Firebase Storage path (for deletion)
+    fileName?: string;            // Original file name
+    fileSize?: number;            // Bytes
+    issueDate?: string;           // yyyy-mm-dd
+    expiryDate?: string;          // yyyy-mm-dd
+    notes?: string;
+    uploadedAt?: Timestamp | Date;
+}
+
+export const DOCUMENT_LABELS: Record<DocumentType, { ar: string; en: string }> = {
+    commercial_registration:   { ar: 'السجل التجاري', en: 'Commercial Registration' },
+    national_address:          { ar: 'العنوان الوطني', en: 'National Address' },
+    vat_certificate:           { ar: 'شهادة ضريبة القيمة المضافة', en: 'VAT Certificate' },
+    chamber_of_commerce:       { ar: 'شهادة الغرفة التجارية', en: 'Chamber of Commerce' },
+    saudization:               { ar: 'شهادة السعودة (نطاقات)', en: 'Saudization (Nitaqat)' },
+    gosi:                      { ar: 'التأمينات الاجتماعية', en: 'GOSI Certificate' },
+    qiwa:                      { ar: 'شهادة قوى', en: 'Qiwa Certificate' },
+    muqeem:                    { ar: 'شهادة مقيم', en: 'Muqeem Certificate' },
+    municipal_license:         { ar: 'رخصة البلدية', en: 'Municipal License' },
+    momra_license:             { ar: 'رخصة وزارة الشؤون البلدية', en: 'MOMRA License' },
+    contractor_classification: { ar: 'تصنيف المقاولين', en: 'Contractor Classification' },
+    engineering_license:       { ar: 'ترخيص هيئة المهندسين', en: 'Engineering License' },
+    bank_certificate:          { ar: 'شهادة بنكية / IBAN', en: 'Bank Certificate / IBAN' },
+    zakat_certificate:         { ar: 'شهادة الزكاة والدخل', en: 'Zakat Certificate' },
+    insurance_certificate:     { ar: 'شهادة التأمين', en: 'Insurance Certificate' },
+    national_id:               { ar: 'الهوية الوطنية / الإقامة', en: 'National ID / Iqama' },
+    freelance_certificate:     { ar: 'وثيقة العمل الحر', en: 'Freelance Certificate' },
+    custom:                    { ar: 'وثيقة مخصصة', en: 'Custom Document' },
+};
+
+export function getDocumentStatus(doc: ClientDocument): DocumentStatus {
+    if (!doc.expiryDate) return 'no_expiry';
+    const now = new Date();
+    const expiry = new Date(doc.expiryDate);
+    const daysLeft = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    if (daysLeft < 0) return 'expired';
+    if (daysLeft <= 30) return 'expiring_soon';
+    return 'valid';
+}
+
+// =================== COMPANY EMPLOYEE ===================
+
+export type EmployeePermission =
+    | 'pricing'          // تسجيل أسعار — إدخال وتعديل الأسعار في المُسعّر
+    | 'print'            // طباعة — طباعة العروض والتقارير
+    | 'download'         // تحميل ملفات — تحميل الوثائق والملفات
+    | 'upload'           // رفع ملفات — رفع وثائق جديدة
+    | 'view_docs'        // عرض الوثائق — الاطلاع على سجلات الشركة
+    | 'edit_info'        // تعديل البيانات — تعديل بيانات العميل
+    | 'manage_projects'; // إدارة المشاريع — إنشاء وتعديل المشاريع
+
+export const EMPLOYEE_PERMISSION_LABELS: Record<EmployeePermission, { ar: string; en: string; icon: string }> = {
+    pricing:          { ar: 'تسجيل أسعار',    en: 'Pricing',         icon: '🧮' },
+    print:            { ar: 'طباعة',           en: 'Print',           icon: '🖨️' },
+    download:         { ar: 'تحميل ملفات',     en: 'Download Files',  icon: '📥' },
+    upload:           { ar: 'رفع ملفات',       en: 'Upload Files',    icon: '📤' },
+    view_docs:        { ar: 'عرض الوثائق',     en: 'View Documents',  icon: '👁️' },
+    edit_info:        { ar: 'تعديل البيانات',   en: 'Edit Info',       icon: '✏️' },
+    manage_projects:  { ar: 'إدارة المشاريع',  en: 'Manage Projects', icon: '📁' },
+};
+
+export interface CompanyEmployee {
+    id: string;
+    name: string;
+    username: string;
+    passwordHash: string;         // Stored hashed (bcrypt or SHA-256)
+    permissions: EmployeePermission[];
+    isActive: boolean;
+    lastLogin?: Timestamp | Date;
+    createdAt: Timestamp | Date;
+}
+
+// =================== PLAN LIMITS & PRICING ===================
+
+export interface PlanLimits {
+    maxEmployees: number;         // Included free seats (including owner)
+    storageMB: number;            // Base storage in MB
+    maxProjects: number;          // Max active projects
+    price: number;                // Monthly price SAR
+}
+
+/** Seat pricing and storage pricing */
+export const PLAN_EMPLOYEE_LIMITS: Record<SubscriptionPlan, PlanLimits> = {
+    free:       { maxEmployees: 1, storageMB: 200,   maxProjects: 2,  price: 0 },
+    basic:      { maxEmployees: 2, storageMB: 1024,  maxProjects: 5,  price: 0 }, // included in basic subscription
+    pro:        { maxEmployees: 4, storageMB: 5120,  maxProjects: 20, price: 299 },
+    enterprise: { maxEmployees: 10, storageMB: 20480, maxProjects: 100, price: 599 },
+};
+
+// Extra seats beyond plan limit (6+ users)
+export const EXTRA_SEAT_PRICE_SAR = 79; // per additional user/month
+
+// Extra storage: cloud cost + 60% markup
+// Firebase Storage ≈ 0.10 SAR/GB/month → with 60% markup = 0.16 SAR/GB
+// Rounded up to package pricing for UX:
+export const EXTRA_STORAGE_PACKAGES = [
+    { gb: 5,  priceSAR: 19 },    // ~3.80 SAR/GB  (cloud cost ~0.50 + huge margin)
+    { gb: 20, priceSAR: 59 },    // ~2.95 SAR/GB
+    { gb: 50, priceSAR: 129 },   // ~2.58 SAR/GB
+];
+
+// Storage markup multiplier (cloud cost × 1.6)
+export const STORAGE_MARKUP = 1.60;
+
 // =================== CLIENT ===================
+
+export type ClientType = 'individual' | 'company' | 'tender' | 'government';
 
 export interface ArbaClient {
     id: string;
     ownerId: string;
+    clientType: ClientType;
     name: string;
     phone: string;
     email: string;
     company?: string;
-    cr?: string;                  // Commercial Register
+    cr?: string;                  // Commercial Register number
     vat?: string;
+    nationalId?: string;          // National ID / Iqama number
     address?: string;
     city?: string;
     notes?: string;
+    logoUrl?: string;             // Firebase Storage URL
+    logoStoragePath?: string;     // Firebase Storage path
+    documents: ClientDocument[];  // All uploaded documents
+    employees: CompanyEmployee[]; // Company employees with credentials
+    storageUsedBytes: number;     // Current storage usage in bytes
     projectIds: string[];
     totalValue: number;           // Sum of linked project values
     createdAt: Timestamp | Date;

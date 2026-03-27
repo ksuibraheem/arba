@@ -1,0 +1,58 @@
+/**
+ * بنود خاصة بالاستراحات والشاليهات
+ * Rest House / Chalet Specific Construction Items
+ */
+
+import { BaseItem } from '../types';
+import {
+    SUPPLIERS_TILES, SUPPLIERS_SANITARY, SUPPLIERS_KITCHENS,
+    SUPPLIERS_HVAC, SUPPLIERS_FACADES, SUPPLIERS_PAINT,
+    SUPPLIERS_CONCRETE, SUPPLIERS_INSULATION,
+    SUPPLIERS_PLUMBING, SUPPLIERS_ELECTRICAL,
+    SUPPLIERS_LANDSCAPING, SUPPLIERS_FIRE_SAFETY, SUPPLIERS_SMART_SECURITY,
+    SUPPLIERS_BLOCKS, SUPPLIERS_STEEL
+} from './suppliers';
+
+export const REST_HOUSE_ITEMS: BaseItem[] = [
+    // ================= R01. المسبح والألعاب المائية =================
+    { id: "R01.01", category: "structure", type: "rest_house", name: { ar: "مسبح كبير (10×5م) — خرسانة + عزل", en: "Large Pool (10x5m) — Concrete & Waterproofing", fr: "Grande Piscine (10x5m)", zh: "大型泳池(10x5米)" }, unit: "مجموعة", qty: 1, baseMaterial: 28000, baseLabor: 12000, waste: 0.05, suppliers: SUPPLIERS_CONCRETE, sbc: "SBC 304-Pool", soilFactor: false, dependency: 'fixed' },
+    { id: "R01.02", category: "architecture", type: "rest_house", name: { ar: "بلاط مسابح (موزاييك فاخر)", en: "Premium Pool Mosaic", fr: "Mosaïque Piscine Luxe", zh: "高级泳池马赛克" }, unit: "م2", qty: 80, baseMaterial: 130, baseLabor: 65, waste: 0.1, suppliers: SUPPLIERS_TILES, sbc: "SBC 201-Pool", soilFactor: false, dependency: 'fixed' },
+    { id: "R01.03", category: "mep_plumb", type: "rest_house", name: { ar: "نظام فلترة وتنقية مسبح (سعة كبيرة)", en: "Large Pool Filtration System", fr: "Système Filtration Grand Bassin", zh: "大型泳池过滤系统" }, unit: "مجموعة", qty: 1, baseMaterial: 9000, baseLabor: 3000, waste: 0, suppliers: SUPPLIERS_PLUMBING, sbc: "SBC 701-Pool", soilFactor: false, dependency: 'fixed' },
+    { id: "R01.04", category: "structure", type: "rest_house", name: { ar: "مسبح أطفال (3×2م)", en: "Children's Pool (3x2m)", fr: "Piscine Enfants (3x2m)", zh: "儿童泳池(3x2米)" }, unit: "مجموعة", qty: 1, baseMaterial: 8000, baseLabor: 4000, waste: 0.05, suppliers: SUPPLIERS_CONCRETE, sbc: "SBC 304-KPool", soilFactor: false, dependency: 'fixed' },
+    { id: "R01.05", category: "mep_elec", type: "rest_house", name: { ar: "إنارة مسبح ملونة (RGB LED)", en: "Pool RGB LED Lighting", fr: "Éclairage Piscine RGB LED", zh: "泳池RGB LED灯" }, unit: "مجموعة", qty: 1, baseMaterial: 3000, baseLabor: 800, waste: 0, suppliers: SUPPLIERS_ELECTRICAL, sbc: "SBC 401-PoolLt", soilFactor: false, dependency: 'fixed' },
+    { id: "R01.06", category: "mep_plumb", type: "rest_house", name: { ar: "جاكوزي خارجي ساخن (4 أشخاص)", en: "Outdoor Hot Tub (4 Person)", fr: "Jacuzzi Extérieur (4 Pers)", zh: "室外热水浴缸(4人)" }, unit: "مجموعة", qty: 1, baseMaterial: 12000, baseLabor: 3000, waste: 0, suppliers: SUPPLIERS_SANITARY, sbc: "SBC 701-Jacz", soilFactor: false, dependency: 'fixed' },
+    { id: "R01.07", category: "architecture", type: "rest_house", name: { ar: "صالة مسبح (Deck خشبي مقاوم للماء)", en: "Pool Deck (Waterproof Timber)", fr: "Terrasse Piscine (Bois)", zh: "泳池平台(防水木材)" }, unit: "م2", qty: 40, baseMaterial: 200, baseLabor: 80, waste: 0.08, suppliers: SUPPLIERS_TILES, sbc: "SBC 201-Deck", soilFactor: false, dependency: 'fixed' },
+
+    // ================= R02. المجالس والجلسات =================
+    { id: "R02.01", category: "structure", type: "rest_house", name: { ar: "مجلس رجال كبير (مع خدمات)", en: "Large Men's Majlis (with Services)", fr: "Grand Majlis Hommes", zh: "大型男士客厅(含配套)" }, unit: "م2", qty: 60, baseMaterial: 380, baseLabor: 200, waste: 0.05, suppliers: SUPPLIERS_CONCRETE, sbc: "SBC 304-Mjls", soilFactor: false, dependency: 'fixed' },
+    { id: "R02.02", category: "structure", type: "rest_house", name: { ar: "مجلس نساء (مع خدمات)", en: "Women's Majlis", fr: "Majlis Femmes", zh: "女士客厅" }, unit: "م2", qty: 40, baseMaterial: 380, baseLabor: 200, waste: 0.05, suppliers: SUPPLIERS_CONCRETE, sbc: "SBC 304-MjlsW", soilFactor: false, dependency: 'fixed' },
+    { id: "R02.03", category: "architecture", type: "rest_house", name: { ar: "جلسة خارجية (بيرجولا + أثاث ثابت)", en: "Outdoor Seating (Pergola + Fixed Furniture)", fr: "Salon Extérieur (Pergola)", zh: "室外休息区(廊架+固定家具)" }, unit: "م2", qty: 30, baseMaterial: 400, baseLabor: 180, waste: 0.05, suppliers: SUPPLIERS_FACADES, sbc: "SBC-Perg", soilFactor: false, dependency: 'fixed' },
+    { id: "R02.04", category: "architecture", type: "rest_house", name: { ar: "بيت شعر تقليدي كبير", en: "Large Traditional Tent (Beit Sha'r)", fr: "Grande Tente Traditionnelle", zh: "大型传统帐篷" }, unit: "م2", qty: 50, baseMaterial: 280, baseLabor: 120, waste: 0.05, suppliers: SUPPLIERS_FACADES, sbc: "SBC-Tent", soilFactor: false, dependency: 'fixed' },
+
+    // ================= R03. المطبخ وخدمات الضيافة =================
+    { id: "R03.01", category: "architecture", type: "rest_house", name: { ar: "مطبخ تجهيزي كبير (خدمة مجالس)", en: "Large Prep Kitchen (Majlis Service)", fr: "Grande Cuisine de Préparation", zh: "大型配餐厨房" }, unit: "م.ط", qty: 12, baseMaterial: 1100, baseLabor: 280, waste: 0, suppliers: SUPPLIERS_KITCHENS, sbc: "SBC-Kit", soilFactor: false, dependency: 'fixed' },
+    { id: "R03.02", category: "architecture", type: "rest_house", name: { ar: "منطقة شواء (BBQ) مبنية", en: "Built-in BBQ Area", fr: "Zone BBQ Intégrée", zh: "内置烧烤区" }, unit: "مجموعة", qty: 1, baseMaterial: 5000, baseLabor: 2000, waste: 0.05, suppliers: SUPPLIERS_CONCRETE, sbc: "SBC-BBQ", soilFactor: false, dependency: 'fixed' },
+    { id: "R03.03", category: "mep_plumb", type: "rest_house", name: { ar: "تمديدات غاز للمشب والمطبخ", en: "Gas Lines for BBQ & Kitchen", fr: "Conduites Gaz", zh: "烧烤和厨房燃气管道" }, unit: "نقطة", qty: 6, baseMaterial: 220, baseLabor: 150, waste: 0.05, suppliers: SUPPLIERS_PLUMBING, sbc: "SBC 701-Gas", soilFactor: false, dependency: 'fixed' },
+
+    // ================= R04. الملاعب والترفيه =================
+    { id: "R04.01", category: "architecture", type: "rest_house", name: { ar: "ملعب كرة قدم (عشب صناعي 15×10م)", en: "Mini Football Field (Artificial Turf 15x10m)", fr: "Mini Terrain Football (Gazon)", zh: "迷你足球场(人工草坪15x10米)" }, unit: "م2", qty: 150, baseMaterial: 120, baseLabor: 40, waste: 0.05, suppliers: SUPPLIERS_LANDSCAPING, sbc: "SBC-Sport", soilFactor: false, dependency: 'fixed' },
+    { id: "R04.02", category: "architecture", type: "rest_house", name: { ar: "ملعب كرة طائرة/تنس شاطئي (رمل)", en: "Beach Volleyball Court (Sand)", fr: "Terrain Volley (Sable)", zh: "沙滩排球场" }, unit: "م2", qty: 100, baseMaterial: 50, baseLabor: 30, waste: 0.1, suppliers: SUPPLIERS_LANDSCAPING, sbc: "SBC-Sport2", soilFactor: false, dependency: 'fixed' },
+    { id: "R04.03", category: "architecture", type: "rest_house", name: { ar: "منطقة ألعاب أطفال (أرجوحة + زحليقة)", en: "Children's Play Area", fr: "Aire de Jeux Enfants", zh: "儿童游乐区" }, unit: "مجموعة", qty: 1, baseMaterial: 8000, baseLabor: 2000, waste: 0, suppliers: SUPPLIERS_LANDSCAPING, sbc: "SBC-Play", soilFactor: false, dependency: 'fixed' },
+    { id: "R04.04", category: "architecture", type: "rest_house", name: { ar: "صالة بلياردو/ترفيه داخلية", en: "Indoor Game Room (Billiards)", fr: "Salle de Jeux Intérieure", zh: "室内台球/娱乐室" }, unit: "م2", qty: 25, baseMaterial: 200, baseLabor: 80, waste: 0.05, suppliers: SUPPLIERS_TILES, sbc: "SBC 201-Game", soilFactor: false, dependency: 'fixed' },
+    { id: "R04.05", category: "architecture", type: "rest_house", name: { ar: "مسرح منزلي (صوت + شاشة)", en: "Home Theater Setup", fr: "Cinéma Maison", zh: "家庭影院" }, unit: "مجموعة", qty: 1, baseMaterial: 15000, baseLabor: 3000, waste: 0, suppliers: SUPPLIERS_SMART_SECURITY, sbc: "SBC 401-HT", soilFactor: false, dependency: 'fixed' },
+
+    // ================= R05. التنسيق والحدائق =================
+    { id: "R05.01", category: "architecture", type: "rest_house", name: { ar: "تنسيق حدائق واسعة (عشب + أشجار نخيل)", en: "Large Landscaping (Grass + Palm Trees)", fr: "Grand Aménagement Paysager", zh: "大面积景观(草坪+棕榈树)" }, unit: "م2", qty: 200, baseMaterial: 90, baseLabor: 55, waste: 0.1, suppliers: SUPPLIERS_LANDSCAPING, sbc: "SBC-Land", soilFactor: false, dependency: 'land_area' },
+    { id: "R05.02", category: "mep_plumb", type: "rest_house", name: { ar: "شبكة ري أوتوماتيكية كبيرة", en: "Large Automatic Irrigation System", fr: "Grand Système d'Irrigation", zh: "大型自动灌溉系统" }, unit: "مجموعة", qty: 1, baseMaterial: 5000, baseLabor: 2000, waste: 0.05, suppliers: SUPPLIERS_PLUMBING, sbc: "SBC 701-Irr", soilFactor: false, dependency: 'fixed' },
+    { id: "R05.03", category: "architecture", type: "rest_house", name: { ar: "ممرات حجرية وإنارة حدائق", en: "Stone Paths & Garden Lighting", fr: "Allées et Éclairage Jardin", zh: "石材小路和花园照明" }, unit: "م2", qty: 60, baseMaterial: 130, baseLabor: 60, waste: 0.08, suppliers: SUPPLIERS_TILES, sbc: "SBC 201-Path", soilFactor: false, dependency: 'land_area' },
+    { id: "R05.04", category: "architecture", type: "rest_house", name: { ar: "شلال مائي + بحيرة صناعية صغيرة", en: "Waterfall + Small Artificial Lake", fr: "Cascade + Petit Lac Artificiel", zh: "人工瀑布+小型人工湖" }, unit: "مجموعة", qty: 1, baseMaterial: 12000, baseLabor: 5000, waste: 0, suppliers: SUPPLIERS_LANDSCAPING, sbc: "SBC-Water", soilFactor: false, dependency: 'fixed' },
+    { id: "R05.05", category: "architecture", type: "rest_house", name: { ar: "مظلات كبيرة (شد انشائي/PVC)", en: "Large Shade Structures (Tensile/PVC)", fr: "Grandes Structures d'Ombrage", zh: "大型遮阳结构(张拉膜/PVC)" }, unit: "م2", qty: 80, baseMaterial: 220, baseLabor: 100, waste: 0.05, suppliers: SUPPLIERS_STEEL, sbc: "SBC-Shade", soilFactor: false, dependency: 'fixed' },
+
+    // ================= R06. المرافق الخدمية =================
+    { id: "R06.01", category: "structure", type: "rest_house", name: { ar: "غرفة حارس + حمام", en: "Guard Room + Bathroom", fr: "Loge Gardien + SDB", zh: "保安室+浴室" }, unit: "م2", qty: 12, baseMaterial: 500, baseLabor: 250, waste: 0.05, suppliers: SUPPLIERS_CONCRETE, sbc: "SBC 304-Grd", soilFactor: false, dependency: 'fixed' },
+    { id: "R06.02", category: "mep_plumb", type: "rest_house", name: { ar: "دورات مياه خارجية (2 وحدة)", en: "External Restrooms (2 Units)", fr: "Sanitaires Extérieurs (2 Unités)", zh: "室外卫生间(2个)" }, unit: "مجموعة", qty: 2, baseMaterial: 4000, baseLabor: 1500, waste: 0, suppliers: SUPPLIERS_SANITARY, sbc: "SBC 701-ExtWC", soilFactor: false, dependency: 'fixed' },
+    { id: "R06.03", category: "mep_elec", type: "rest_house", name: { ar: "نظام كاميرات مراقبة خارجية (12 كاميرا)", en: "CCTV System (12 Outdoor Cameras)", fr: "Système CCTV (12 Caméras Ext)", zh: "监控系统(12个室外摄像头)" }, unit: "مجموعة", qty: 1, baseMaterial: 7000, baseLabor: 2000, waste: 0, suppliers: SUPPLIERS_SMART_SECURITY, sbc: "SBC 401-CCTV", soilFactor: false, dependency: 'fixed' },
+    { id: "R06.04", category: "mep_elec", type: "rest_house", name: { ar: "نظام صوت خارجي (مكبرات مقاومة للماء)", en: "Outdoor Sound System (Weatherproof Speakers)", fr: "Système Son Extérieur", zh: "室外音响系统(防水)" }, unit: "مجموعة", qty: 1, baseMaterial: 5000, baseLabor: 1500, waste: 0, suppliers: SUPPLIERS_SMART_SECURITY, sbc: "SBC 401-OutAud", soilFactor: false, dependency: 'fixed' },
+    { id: "R06.05", category: "mep_elec", type: "rest_house", name: { ar: "مولد كهرباء (30 كيلو)", en: "Power Generator (30kW)", fr: "Générateur (30kW)", zh: "发电机(30千瓦)" }, unit: "عدد", qty: 1, baseMaterial: 25000, baseLabor: 4000, waste: 0, suppliers: SUPPLIERS_ELECTRICAL, sbc: "SBC 401-Gen", soilFactor: false, dependency: 'fixed' },
+    { id: "R06.06", category: "architecture", type: "rest_house", name: { ar: "مواقف سيارات مظللة (6 سيارات)", en: "Shaded Parking (6 Cars)", fr: "Parking Couvert (6 Places)", zh: "遮阳停车场(6辆)" }, unit: "م2", qty: 90, baseMaterial: 200, baseLabor: 90, waste: 0.05, suppliers: SUPPLIERS_STEEL, sbc: "SBC-Shade", soilFactor: false, dependency: 'fixed' },
+];

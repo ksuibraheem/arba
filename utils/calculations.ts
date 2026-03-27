@@ -13,7 +13,7 @@
  */
 import { AppState, CalculatedItem, CustomParams, SupplierOption, BaseItem, Language, AreaBreakdownSummary, BlueprintConfig } from '../types';
 import { SupplierProduct } from '../services/supplierService';
-import { ITEMS_DATABASE, REF_LAND_AREA, REF_BUILD_AREA, SOIL_MULTIPLIERS, EST_COST_PER_SQM } from '../constants';
+import { FULL_ITEMS_DATABASE, REF_LAND_AREA, REF_BUILD_AREA, SOIL_MULTIPLIERS, EST_COST_PER_SQM } from '../constants';
 
 export interface CalculationResult {
     items: CalculatedItem[];
@@ -183,7 +183,7 @@ export const calculateProjectCosts = (state: AppState): CalculationResult => {
     const estimatedProjectValue = state.buildArea * (EST_COST_PER_SQM[state.projectType] || 1800);
 
     // --- 3. Prepare Items List ---
-    let activeItems = ITEMS_DATABASE.filter(
+    let activeItems = FULL_ITEMS_DATABASE.filter(
         (item) => item.type === 'all' || item.type === state.projectType
     ).map(item => ({ ...item, suppliers: [...item.suppliers] })); // Clone to avoid mutation
     activeItems = activeItems.filter(item => item.category !== 'manpower');

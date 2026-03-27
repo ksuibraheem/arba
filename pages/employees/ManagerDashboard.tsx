@@ -3,13 +3,14 @@
  * Manager Dashboard
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
     Crown, Users, UserPlus, Settings, LogOut, Home, LogIn,
     Calculator, Code, Headphones, Megaphone, CheckCircle,
     UserCog, Edit, Trash2, Key, Mail, Phone, Eye, EyeOff, Save,
     Copy, Check, AlertCircle, AlertTriangle, X, Search, Filter, Cloud, FileText, Clock,
-    Play, ClipboardCheck
+    Play, ClipboardCheck, TrendingUp, Shield, Activity, BarChart3, ArrowUpRight, Sparkles,
+    Bell, BellRing
 } from 'lucide-react';
 import {
     Employee, EmployeeRole, employeeService,
@@ -17,6 +18,8 @@ import {
 } from '../../services/employeeService';
 import { invoiceEditRequestService, InvoiceEditRequest, EDIT_REQUEST_STATUS_TRANSLATIONS } from '../../services/invoiceEditRequestService';
 import { registrationService, RegistrationRequest, USER_TYPE_TRANSLATIONS, REGISTRATION_STATUS_TRANSLATIONS } from '../../services/registrationService';
+import { supportTicketService, SupportTicket, Attachment } from '../../services/supportTicketService';
+import { notificationService, AppNotification, NOTIFICATION_TYPE_TRANSLATIONS } from '../../services/notificationService';
 import {
     getAllTestPermissions,
     setEmployeeTestPermissions,
@@ -232,18 +235,29 @@ const ManagerSettingsTab: React.FC<ManagerSettingsTabProps> = ({ language, t, on
     );
 };
 
+
 // ================= Main Manager Dashboard Component =================
 const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout, onNavigate, onStartTestMode }) => {
     const isRtl = language === 'ar';
-    const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'add' | 'accounts' | 'edit_requests' | 'test_mode' | 'settings'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'employees' | 'add' | 'accounts' | 'edit_requests' | 'support_tickets' | 'test_mode' | 'settings'>('overview');
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [editRequests, setEditRequests] = useState<InvoiceEditRequest[]>([]);
     const [accounts, setAccounts] = useState<RegistrationRequest[]>([]);
+    const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterRole, setFilterRole] = useState<EmployeeRole | 'all'>('all');
     const [showPassword, setShowPassword] = useState<Record<string, boolean>>({});
     const [copiedId, setCopiedId] = useState<string | null>(null);
     const [accountsFilter, setAccountsFilter] = useState<'all' | 'active' | 'suspended'>('all');
+
+    // Support tickets state
+    const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
+    const [ticketReply, setTicketReply] = useState('');
+
+    // Notification state
+    const [notifications, setNotifications] = useState<AppNotification[]>([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [showNotifications, setShowNotifications] = useState(false);
 
     // حالة نافذة الحظر/التنبيه
     const [showSuspendModal, setShowSuspendModal] = useState(false);
@@ -323,16 +337,59 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
     const [formSuccess, setFormSuccess] = useState('');
 
 
+    const loadData = () => {
+        setEmployees(employeeService.getEmployees());
+        setEditRequests(invoiceEditRequestService.getRequests());
+        setAccounts(registrationService.getRequests());
+        setSupportTickets(supportTicketService.getTicketsByRoute('admin'));
+    };
+
     // تحميل الموظفين وطلبات التعديل والحسابات
     useEffect(() => {
-        // تهيئة البيانات التجريبية إذا لم تكن موجودة
-        employeeService.initializeSampleData();
-        setEmployees(employeeService.getEmployees());
-        setEditRequests(invoiceEditRequestService.getPendingRequests());
-        setAccounts(registrationService.getAllApprovedAccounts());
+        loadData();
     }, []);
 
+    // Notification polling (every 15 seconds)
+    const loadNotifications = useCallback(() => {
+        const notifs = notificationService.getNotifications('manager');
+        setNotifications(notifs);
+        setUnreadCount(notificationService.getUnreadCount('manager'));
+    }, []);
+
+    useEffect(() => {
+        loadNotifications();
+        const interval = setInterval(loadNotifications, 15000);
+        return () => clearInterval(interval);
+    }, [loadNotifications]);
+
     // توليد بيانات عشوائية
+    const handleGenerateDemoData = () => {
+        loadData();
+    };
+
+    const handleTicketReply = () => {
+        if (!selectedTicket || !ticketReply.trim()) return;
+
+        const updatedTicket = supportTicketService.addResponse(selectedTicket.id, {
+            responderId: 'manager',
+            responderName: t('المدير العام', 'General Manager'),
+            responderRole: 'admin',
+            message: ticketReply.trim(),
+            isInternal: false
+        });
+
+        if (updatedTicket) {
+            setTicketReply('');
+            setSelectedTicket(updatedTicket);
+            loadData(); // To refresh tickets list
+        }
+    };
+
+    const handleCloseTicket = (ticketId: string) => {
+        supportTicketService.updateStatus(ticketId, 'closed');
+        setSelectedTicket(null);
+        loadData();
+    };
     const generateCredentials = () => {
         setNewEmployee(prev => ({
             ...prev,
@@ -406,147 +463,352 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
     const t = (ar: string, en: string) => language === 'ar' ? ar : en;
 
     const roleIcons: Record<EmployeeRole, React.ReactNode> = {
-        manager: <Crown className="w-5 h-5" />,
-        deputy: <UserCog className="w-5 h-5" />,
-        accountant: <Calculator className="w-5 h-5" />,
-        hr: <Users className="w-5 h-5" />,
-        developer: <Code className="w-5 h-5" />,
-        support: <Headphones className="w-5 h-5" />,
-        marketing: <Megaphone className="w-5 h-5" />,
-        quality: <CheckCircle className="w-5 h-5" />,
-        quantity_surveyor: <ClipboardCheck className="w-5 h-5" />
+        manager: <Crown className="w-6 h-6" />,
+        deputy: <UserCog className="w-6 h-6" />,
+        accountant: <Calculator className="w-6 h-6" />,
+        hr: <Users className="w-6 h-6" />,
+        developer: <Code className="w-6 h-6" />,
+        support: <Headphones className="w-6 h-6" />,
+        marketing: <Megaphone className="w-6 h-6" />,
+        quality: <CheckCircle className="w-6 h-6" />,
+        quantity_surveyor: <ClipboardCheck className="w-6 h-6" />
+    };
+
+    // Premium glow colors for each role (used for accent stripe & icon glow)
+    const roleGlowColors: Record<EmployeeRole, { glow: string; border: string; text: string; bg: string }> = {
+        manager: { glow: 'shadow-amber-500/40', border: 'border-amber-500/30', text: 'text-amber-400', bg: 'bg-amber-500/15' },
+        deputy: { glow: 'shadow-purple-500/40', border: 'border-purple-500/30', text: 'text-purple-400', bg: 'bg-purple-500/15' },
+        accountant: { glow: 'shadow-emerald-500/40', border: 'border-emerald-500/30', text: 'text-emerald-400', bg: 'bg-emerald-500/15' },
+        hr: { glow: 'shadow-blue-500/40', border: 'border-blue-500/30', text: 'text-blue-400', bg: 'bg-blue-500/15' },
+        developer: { glow: 'shadow-violet-500/40', border: 'border-violet-500/30', text: 'text-violet-400', bg: 'bg-violet-500/15' },
+        support: { glow: 'shadow-orange-500/40', border: 'border-orange-500/30', text: 'text-orange-400', bg: 'bg-orange-500/15' },
+        marketing: { glow: 'shadow-pink-500/40', border: 'border-pink-500/30', text: 'text-pink-400', bg: 'bg-pink-500/15' },
+        quality: { glow: 'shadow-lime-500/40', border: 'border-lime-500/30', text: 'text-lime-400', bg: 'bg-lime-500/15' },
+        quantity_surveyor: { glow: 'shadow-sky-500/40', border: 'border-sky-500/30', text: 'text-sky-400', bg: 'bg-sky-500/15' },
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" dir={isRtl ? 'rtl' : 'ltr'}>
-            {/* Header */}
-            <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="min-h-screen bg-[#0a0e1a]" dir={isRtl ? 'rtl' : 'ltr'}
+             style={{ background: 'linear-gradient(135deg, #0a0e1a 0%, #111827 40%, #0f172a 70%, #0a0e1a 100%)' }}>
+            {/* ============ PREMIUM HEADER ============ */}
+            <header className="sticky top-0 z-50" style={{
+                background: 'rgba(15, 23, 42, 0.75)',
+                backdropFilter: 'blur(20px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                borderBottom: '1px solid rgba(148, 163, 184, 0.08)'
+            }}>
+                <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center">
-                            <Crown className="w-7 h-7 text-white" />
+                        {/* Premium Crown Badge */}
+                        <div className="relative">
+                            <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                                 style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%)', boxShadow: '0 0 24px rgba(245, 158, 11, 0.3)' }}>
+                                <Crown className="w-6 h-6 text-white" />
+                            </div>
+                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-[#0f172a] flex items-center justify-center">
+                                <Sparkles className="w-2.5 h-2.5 text-white" />
+                            </div>
                         </div>
                         <div>
-                            <h1 className="text-xl font-bold text-white">{t('لوحة تحكم المدير', 'Manager Dashboard')}</h1>
-                            <p className="text-slate-400 text-sm">{MANAGER_CREDENTIALS.name}</p>
+                            <h1 className="text-lg font-bold text-white tracking-tight">{t('لوحة تحكم المدير', 'Manager Dashboard')}</h1>
+                            <p className="text-slate-500 text-xs font-medium">{MANAGER_CREDENTIALS.name} • {t('مدير عام', 'General Manager')}</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                        {/* Notification Bell */}
+                        <div className="relative">
+                            <button
+                                onClick={() => { setShowNotifications(!showNotifications); loadNotifications(); }}
+                                className={`relative p-2.5 rounded-xl transition-all duration-300 ${
+                                    unreadCount > 0 ? 'text-amber-400 hover:bg-amber-500/10' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-700/30'
+                                }`}
+                                title={t('الإشعارات', 'Notifications')}
+                            >
+                                {unreadCount > 0 ? <BellRing className="w-5 h-5" /> : <Bell className="w-5 h-5" />}
+                                {unreadCount > 0 && (
+                                    <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold text-white rounded-full px-1"
+                                          style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)', boxShadow: '0 0 8px rgba(239,68,68,0.5)' }}>
+                                        {unreadCount > 9 ? '9+' : unreadCount}
+                                    </span>
+                                )}
+                            </button>
+
+                            {/* Notifications Dropdown */}
+                            {showNotifications && (
+                                <div className="absolute top-full mt-2 w-96 max-h-96 overflow-y-auto rounded-2xl z-[100]"
+                                     style={{
+                                         background: 'rgba(15, 23, 42, 0.95)',
+                                         backdropFilter: 'blur(20px)',
+                                         border: '1px solid rgba(148, 163, 184, 0.12)',
+                                         boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+                                         [isRtl ? 'left' : 'right']: 0
+                                     }}>
+                                    <div className="p-4 border-b border-slate-700/50 flex items-center justify-between">
+                                        <h3 className="text-white font-semibold text-sm">{t('الإشعارات', 'Notifications')}</h3>
+                                        <div className="flex items-center gap-2">
+                                            {unreadCount > 0 && (
+                                                <button
+                                                    onClick={() => { notificationService.markAllAsRead('manager'); loadNotifications(); }}
+                                                    className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors"
+                                                >
+                                                    {t('تحديد الكل كمقروء', 'Mark all read')}
+                                                </button>
+                                            )}
+                                            <button onClick={() => setShowNotifications(false)} className="text-slate-500 hover:text-white">
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {notifications.length === 0 ? (
+                                        <div className="p-8 text-center">
+                                            <Bell className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                                            <p className="text-slate-500 text-sm">{t('لا توجد إشعارات', 'No notifications')}</p>
+                                        </div>
+                                    ) : (
+                                        <div className="divide-y divide-slate-700/30">
+                                            {notifications.slice(0, 15).map(notif => (
+                                                <div
+                                                    key={notif.id}
+                                                    onClick={() => { notificationService.markAsRead(notif.id); loadNotifications(); }}
+                                                    className={`p-3 cursor-pointer transition-colors duration-200 ${
+                                                        !notif.isRead ? 'bg-emerald-500/5 hover:bg-emerald-500/10' : 'hover:bg-slate-800/50'
+                                                    }`}
+                                                >
+                                                    <div className="flex items-start gap-3">
+                                                        <div className={`mt-0.5 w-2 h-2 rounded-full flex-shrink-0 ${!notif.isRead ? 'bg-emerald-400' : 'bg-transparent'}`} />
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className={`text-sm font-medium truncate ${!notif.isRead ? 'text-white' : 'text-slate-400'}`}>
+                                                                {notif.title}
+                                                            </p>
+                                                            <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{notif.message}</p>
+                                                            <p className="text-[10px] text-slate-600 mt-1">
+                                                                {new Date(notif.createdAt).toLocaleString('ar-SA', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                         <button
                             onClick={() => onNavigate('landing')}
-                            className="p-2 text-slate-400 hover:text-emerald-400 hover:bg-slate-700/50 rounded-lg transition-all"
+                            className="p-2.5 text-slate-500 hover:text-emerald-400 rounded-xl transition-all duration-300 hover:bg-emerald-500/10"
                             title={t('الصفحة الرئيسية', 'Home')}
                         >
                             <Home className="w-5 h-5" />
                         </button>
                         <button
                             onClick={onLogout}
-                            className="flex items-center gap-2 px-4 py-2 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg transition-all"
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 text-red-400/70 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20"
                         >
                             <LogOut className="w-4 h-4" />
-                            <span>{t('خروج', 'Logout')}</span>
+                            <span className="text-sm font-medium">{t('خروج', 'Logout')}</span>
                         </button>
                     </div>
                 </div>
             </header>
 
-            <div className="max-w-7xl mx-auto px-6 py-8">
-                {/* Tabs */}
-                <div className="flex gap-2 mb-8 bg-slate-800/50 p-2 rounded-xl w-fit">
-                    {[
-                        { id: 'overview', label: t('نظرة عامة', 'Overview'), icon: <Home className="w-4 h-4" /> },
-                        { id: 'employees', label: t('الموظفين', 'Employees'), icon: <Users className="w-4 h-4" /> },
-                        { id: 'add', label: t('إضافة موظف', 'Add Employee'), icon: <UserPlus className="w-4 h-4" /> },
-                        { id: 'accounts', label: t('إدارة الحسابات', 'Accounts'), icon: <UserCog className="w-4 h-4" />, badge: accounts.filter(a => a.isSuspended).length },
-                        { id: 'edit_requests', label: t('طلبات التعديل', 'Edit Requests'), icon: <FileText className="w-4 h-4" />, badge: editRequests.length },
-                        { id: 'test_mode', label: t('اختبار الباقات', 'Test Packages'), icon: <Play className="w-4 h-4" /> },
-                        { id: 'settings', label: t('الإعدادات', 'Settings'), icon: <Settings className="w-4 h-4" /> }
-                    ].map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id as any)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${activeTab === tab.id
-                                ? 'bg-emerald-500 text-white'
-                                : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+            <div className="max-w-7xl mx-auto px-6 py-6">
+                {/* ============ PREMIUM TABS NAVIGATION ============ */}
+                <div className="mb-8 overflow-x-auto scrollbar-hide">
+                    <div className="inline-flex gap-1 p-1.5 rounded-2xl" style={{
+                        background: 'rgba(30, 41, 59, 0.5)',
+                        backdropFilter: 'blur(12px)',
+                        border: '1px solid rgba(148, 163, 184, 0.08)'
+                    }}>
+                        {[
+                            { id: 'overview', label: t('نظرة عامة', 'Overview'), icon: <BarChart3 className="w-4 h-4" /> },
+                            { id: 'employees', label: t('الموظفين', 'Employees'), icon: <Users className="w-4 h-4" /> },
+                            { id: 'add', label: t('إضافة موظف', 'Add'), icon: <UserPlus className="w-4 h-4" /> },
+                            { id: 'accounts', label: t('الحسابات', 'Accounts'), icon: <UserCog className="w-4 h-4" />, badge: accounts.filter(a => a.isSuspended).length },
+                            { id: 'edit_requests', label: t('الطلبات', 'Requests'), icon: <FileText className="w-4 h-4" />, badge: editRequests.length },
+                            { id: 'support_tickets', label: t('الدعم', 'Support'), icon: <Headphones className="w-4 h-4" />, badge: supportTickets.filter(r => r.status === 'open' || r.status === 'waiting_response').length },
+                            { id: 'test_mode', label: t('الاختبار', 'Test'), icon: <Play className="w-4 h-4" /> },
+                            { id: 'settings', label: t('الإعدادات', 'Settings'), icon: <Settings className="w-4 h-4" /> }
+                        ].map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id as any)}
+                                className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 whitespace-nowrap ${
+                                    activeTab === tab.id
+                                        ? 'text-white'
+                                        : 'text-slate-500 hover:text-slate-300'
                                 }`}
-                        >
-                            {tab.icon}
-                            <span>{tab.label}</span>
-                            {(tab as any).badge > 0 && (
-                                <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">{(tab as any).badge}</span>
-                            )}
-                        </button>
-                    ))}
+                                style={activeTab === tab.id ? {
+                                    background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(6, 182, 212, 0.15) 100%)',
+                                    boxShadow: '0 0 20px rgba(16, 185, 129, 0.15), inset 0 1px 0 rgba(255,255,255,0.05)',
+                                    border: '1px solid rgba(16, 185, 129, 0.25)'
+                                } : { border: '1px solid transparent' }}
+                            >
+                                {tab.icon}
+                                <span>{tab.label}</span>
+                                {(tab as any).badge > 0 && (
+                                    <span className="min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold rounded-full px-1"
+                                          style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)', boxShadow: '0 0 8px rgba(239, 68, 68, 0.4)' }}>
+                                        {(tab as any).badge}
+                                    </span>
+                                )}
+                            </button>
+                        ))}
+                    </div>
                 </div>
 
-                {/* Overview Tab */}
+                {/* ============ OVERVIEW TAB - PREMIUM ============ */}
                 {activeTab === 'overview' && (
-                    <div className="space-y-6">
-                        {/* Stats Grid */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                                        <Users className="w-6 h-6 text-emerald-400" />
-                                    </div>
+                    <div className="space-y-8">
+                        {/* ---- Top Stats Row ---- */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {/* Total Employees */}
+                            <div className="group relative rounded-2xl p-5 transition-all duration-500 hover:-translate-y-1 cursor-default" style={{
+                                background: 'rgba(30, 41, 59, 0.4)',
+                                backdropFilter: 'blur(16px)',
+                                border: '1px solid rgba(148, 163, 184, 0.08)',
+                                boxShadow: '0 4px 24px rgba(0,0,0,0.2)'
+                            }}>
+                                <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{boxShadow: '0 0 40px rgba(16, 185, 129, 0.1)'}} />
+                                <div className="relative flex items-center justify-between">
                                     <div>
-                                        <p className="text-3xl font-bold text-white">{stats.total}</p>
-                                        <p className="text-slate-400 text-sm">{t('إجمالي الموظفين', 'Total Employees')}</p>
+                                        <p className="text-slate-500 text-xs font-medium mb-1 uppercase tracking-wider">{t('إجمالي الموظفين', 'Total Employees')}</p>
+                                        <p className="text-4xl font-black text-white tracking-tight">{stats.total}</p>
+                                    </div>
+                                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(16, 185, 129, 0.12)' }}>
+                                        <Users className="w-6 h-6 text-emerald-400" />
                                     </div>
                                 </div>
                             </div>
-                            <div className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-slate-700/50">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
-                                        <CheckCircle className="w-6 h-6 text-green-400" />
-                                    </div>
+
+                            {/* Active */}
+                            <div className="group relative rounded-2xl p-5 transition-all duration-500 hover:-translate-y-1 cursor-default" style={{
+                                background: 'rgba(30, 41, 59, 0.4)',
+                                backdropFilter: 'blur(16px)',
+                                border: '1px solid rgba(148, 163, 184, 0.08)',
+                                boxShadow: '0 4px 24px rgba(0,0,0,0.2)'
+                            }}>
+                                <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{boxShadow: '0 0 40px rgba(34, 197, 94, 0.1)'}} />
+                                <div className="relative flex items-center justify-between">
                                     <div>
-                                        <p className="text-3xl font-bold text-white">{stats.active}</p>
-                                        <p className="text-slate-400 text-sm">{t('موظف نشط', 'Active')}</p>
+                                        <p className="text-slate-500 text-xs font-medium mb-1 uppercase tracking-wider">{t('نشط', 'Active')}</p>
+                                        <p className="text-4xl font-black text-white tracking-tight">{stats.active}</p>
+                                    </div>
+                                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(34, 197, 94, 0.12)' }}>
+                                        <Activity className="w-6 h-6 text-green-400" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Open Support Tickets */}
+                            <div className="group relative rounded-2xl p-5 transition-all duration-500 hover:-translate-y-1 cursor-pointer"
+                                 onClick={() => setActiveTab('support_tickets')}
+                                 style={{
+                                background: 'rgba(30, 41, 59, 0.4)',
+                                backdropFilter: 'blur(16px)',
+                                border: '1px solid rgba(148, 163, 184, 0.08)',
+                                boxShadow: '0 4px 24px rgba(0,0,0,0.2)'
+                            }}>
+                                <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{boxShadow: '0 0 40px rgba(249, 115, 22, 0.1)'}} />
+                                <div className="relative flex items-center justify-between">
+                                    <div>
+                                        <p className="text-slate-500 text-xs font-medium mb-1 uppercase tracking-wider">{t('تذاكر مفتوحة', 'Open Tickets')}</p>
+                                        <p className="text-4xl font-black text-white tracking-tight">{supportTickets.filter(r => r.status === 'open' || r.status === 'waiting_response').length}</p>
+                                    </div>
+                                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(249, 115, 22, 0.12)' }}>
+                                        <Headphones className="w-6 h-6 text-orange-400" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Edit Requests */}
+                            <div className="group relative rounded-2xl p-5 transition-all duration-500 hover:-translate-y-1 cursor-pointer"
+                                 onClick={() => setActiveTab('edit_requests')}
+                                 style={{
+                                background: 'rgba(30, 41, 59, 0.4)',
+                                backdropFilter: 'blur(16px)',
+                                border: '1px solid rgba(148, 163, 184, 0.08)',
+                                boxShadow: '0 4px 24px rgba(0,0,0,0.2)'
+                            }}>
+                                <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{boxShadow: '0 0 40px rgba(139, 92, 246, 0.1)'}} />
+                                <div className="relative flex items-center justify-between">
+                                    <div>
+                                        <p className="text-slate-500 text-xs font-medium mb-1 uppercase tracking-wider">{t('طلبات التعديل', 'Edit Requests')}</p>
+                                        <p className="text-4xl font-black text-white tracking-tight">{editRequests.length}</p>
+                                    </div>
+                                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(139, 92, 246, 0.12)' }}>
+                                        <FileText className="w-6 h-6 text-violet-400" />
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Roles Grid */}
+                        {/* ---- Section Title ---- */}
+                        <div className="flex items-center gap-3">
+                            <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.15), transparent)' }} />
+                            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-widest">{t('الأقسام', 'Departments')}</h2>
+                            <div className="h-px flex-1" style={{ background: 'linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.15), transparent)' }} />
+                        </div>
+
+                        {/* ---- Department Roles Grid ---- */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {(Object.keys(ROLE_TRANSLATIONS) as EmployeeRole[]).filter(r => r !== 'manager').map(role => (
-                                <div
-                                    key={role}
-                                    className={`bg-gradient-to-br ${ROLE_COLORS[role]} rounded-xl p-4 cursor-pointer hover:scale-105 transition-transform`}
-                                    onClick={() => {
-                                        // فتح صفحة الدور الخاصة إذا كانت موجودة
-                                        if (role === 'hr') {
-                                            onNavigate('hr');
-                                        } else if (role === 'accountant') {
-                                            onNavigate('accountant');
-                                        } else if (role === 'support') {
-                                            onNavigate('support');
-                                        } else if (role === 'developer') {
-                                            onNavigate('developer');
-                                        } else if (role === 'marketing') {
-                                            onNavigate('marketing');
-                                        } else if (role === 'quality') {
-                                            onNavigate('quality');
-                                        } else if (role === 'deputy') {
-                                            onNavigate('deputy');
-                                        } else {
-                                            setFilterRole(role);
-                                            setActiveTab('employees');
-                                        }
-                                    }}
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center text-white">
-                                            {roleIcons[role]}
-                                        </div>
-                                        <div>
-                                            <p className="text-2xl font-bold text-white">{stats.byRole[role] || 0}</p>
-                                            <p className="text-white/80 text-sm">{ROLE_TRANSLATIONS[role][language]}</p>
+                            {(Object.keys(ROLE_TRANSLATIONS) as EmployeeRole[]).filter(r => r !== 'manager').map(role => {
+                                const colors = roleGlowColors[role];
+                                return (
+                                    <div
+                                        key={role}
+                                        className={`group relative rounded-2xl p-5 cursor-pointer transition-all duration-500 hover:-translate-y-1.5 overflow-hidden`}
+                                        style={{
+                                            background: 'rgba(30, 41, 59, 0.35)',
+                                            backdropFilter: 'blur(16px)',
+                                            border: '1px solid rgba(148, 163, 184, 0.08)',
+                                            boxShadow: '0 4px 24px rgba(0,0,0,0.15)'
+                                        }}
+                                        onClick={() => {
+                                            if (role === 'hr') onNavigate('hr');
+                                            else if (role === 'accountant') onNavigate('accountant');
+                                            else if (role === 'support') onNavigate('support');
+                                            else if (role === 'developer') onNavigate('developer');
+                                            else if (role === 'marketing') onNavigate('marketing');
+                                            else if (role === 'quality') onNavigate('quality');
+                                            else if (role === 'deputy') onNavigate('deputy');
+                                            else { setFilterRole(role); setActiveTab('employees'); }
+                                        }}
+                                    >
+                                        {/* Glow accent stripe */}
+                                        <div className={`absolute ${isRtl ? 'right-0' : 'left-0'} top-0 bottom-0 w-1 rounded-full transition-all duration-500 opacity-50 group-hover:opacity-100`}
+                                             style={{ background: `var(--stripe-color-${role})` }} />
+                                        <style>{`
+                                            :root {
+                                                --stripe-color-deputy: #a855f7;
+                                                --stripe-color-accountant: #10b981;
+                                                --stripe-color-hr: #3b82f6;
+                                                --stripe-color-developer: #8b5cf6;
+                                                --stripe-color-support: #f97316;
+                                                --stripe-color-marketing: #ec4899;
+                                                --stripe-color-quality: #84cc16;
+                                                --stripe-color-quantity_surveyor: #0ea5e9;
+                                            }
+                                        `}</style>
+
+                                        {/* Hover glow background */}
+                                        <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"
+                                             style={{ background: `radial-gradient(circle at ${isRtl ? '90%' : '10%'} 30%, var(--stripe-color-${role})15, transparent 60%)` }} />
+
+                                        <div className="relative flex items-center gap-4">
+                                            {/* Icon with glow */}
+                                            <div className={`w-12 h-12 rounded-2xl ${colors.bg} flex items-center justify-center ${colors.text} transition-all duration-500 group-hover:scale-110`}
+                                                 style={{ boxShadow: 'none' }}>
+                                                {roleIcons[role]}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-3xl font-black text-white tracking-tight">{stats.byRole[role] || 0}</p>
+                                                <p className="text-slate-500 text-sm font-medium truncate group-hover:text-slate-300 transition-colors duration-300">{ROLE_TRANSLATIONS[role][language]}</p>
+                                            </div>
+                                            <ArrowUpRight className="w-4 h-4 text-slate-600 opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                                         </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 )}
@@ -1453,6 +1715,138 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
                         t={t}
                         onNavigate={onNavigate}
                     />
+                )}
+
+                {/* Support Tickets Tab */}
+                {activeTab === 'support_tickets' && (
+                    <div className="space-y-6">
+                        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                            <Headphones className="w-6 h-6 text-purple-400" />
+                            {t('تذاكر الدعم الموجهة للإدارة', 'Support Tickets Escalated To Admin')}
+                        </h2>
+
+                        {!selectedTicket ? (
+                            supportTickets.length === 0 ? (
+                                <div className="text-center py-12 bg-slate-800/50 rounded-xl border border-slate-700/50">
+                                    <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
+                                    <p className="text-slate-400">{t('لا توجد تذاكر دعم معلقة', 'No pending support tickets')}</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {supportTickets.map(ticket => (
+                                        <div key={ticket.id} className="bg-slate-800/50 backdrop-blur-sm rounded-xl p-6 border border-purple-500/30">
+                                            <div className="flex items-start justify-between">
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-white">
+                                                        {ticket.ticketNumber} - {ticket.subject}
+                                                    </h3>
+                                                    <p className="text-slate-400 text-sm mt-1">
+                                                        {t('بواسطة:', 'By:')} <span className="text-white">{ticket.userName}</span>
+                                                    </p>
+                                                    <p className="text-slate-400 text-sm">
+                                                        {t('التاريخ:', 'Date:')} {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString('ar-SA') : t('غير متوفر', 'N/A')}
+                                                    </p>
+                                                </div>
+                                                <div className="flex flex-col items-end gap-2">
+                                                    <span className={`px-3 py-1 rounded-full text-sm ${ticket.status === 'open' ? 'bg-amber-500/20 text-amber-400' :
+                                                            ticket.status === 'in_progress' ? 'bg-blue-500/20 text-blue-400' :
+                                                                ticket.status === 'waiting_response' ? 'bg-orange-500/20 text-orange-400' :
+                                                                    'bg-green-500/20 text-green-400'
+                                                        }`}>
+                                                        {ticket.status}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => setSelectedTicket(ticket)}
+                                                        className="px-4 py-1.5 bg-purple-500/20 text-purple-400 rounded-lg hover:bg-purple-500/30 transition-colors text-sm"
+                                                    >
+                                                        {t('عرض التفاصيل', 'View Details')}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )
+                        ) : (
+                            <div className="space-y-6">
+                                <button
+                                    onClick={() => setSelectedTicket(null)}
+                                    className="px-4 py-2 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors flex items-center gap-2"
+                                >
+                                    <X className="w-4 h-4" />
+                                    {t('رجوع للقائمة', 'Back to list')}
+                                </button>
+                                
+                                <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
+                                    <h3 className="text-xl font-bold text-white mb-2">{selectedTicket.ticketNumber} - {selectedTicket.subject}</h3>
+                                    <div className="p-4 bg-slate-900/50 rounded-lg border border-slate-700/50 mb-6">
+                                        <p className="text-slate-300 whitespace-pre-wrap">{selectedTicket.description}</p>
+                                        
+                                        {selectedTicket.attachments && selectedTicket.attachments.length > 0 && (
+                                            <div className="mt-4 pt-4 border-t border-slate-700/50">
+                                                <h4 className="text-sm font-semibold text-slate-400 mb-2">{t('المرفقات', 'Attachments')}:</h4>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {selectedTicket.attachments.map((att, i) => (
+                                                        <a
+                                                            key={i}
+                                                            href={att.url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-lg text-sm text-blue-400 hover:text-blue-300 flex items-center gap-2"
+                                                        >
+                                                            {att.type === 'image' ? <Eye className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+                                                            {att.name}
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    
+                                    <div className="space-y-4 mb-6 max-h-96 overflow-y-auto pr-2">
+                                        {(selectedTicket.responses || []).map(res => (
+                                            <div key={res.id} className={`p-4 rounded-xl ${res.responderRole === 'user' ? 'bg-slate-700/50 ml-8' : 'bg-purple-900/20 border border-purple-500/20 mr-8'}`}>
+                                                <div className="flex justify-between items-start mb-2">
+                                                    <span className={`font-semibold text-sm ${res.responderRole === 'user' ? 'text-white' : 'text-purple-400'}`}>
+                                                        {res.responderName}
+                                                        {res.responderRole !== 'user' && ` (${t('الإدارة', 'Admin')})`}
+                                                    </span>
+                                                    <span className="text-xs text-slate-500">{res.createdAt ? new Date(res.createdAt).toLocaleString('ar-SA') : ''}</span>
+                                                </div>
+                                                <p className="text-slate-300 text-sm whitespace-pre-wrap">{res.message}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    
+                                    {selectedTicket.status !== 'closed' && (
+                                        <div className="space-y-4 pt-4 border-t border-slate-700">
+                                            <textarea
+                                                value={ticketReply}
+                                                onChange={(e) => setTicketReply(e.target.value)}
+                                                placeholder={t('اكتب ردك هنا...', 'Write your reply here...')}
+                                                className="w-full h-32 bg-slate-900 border border-slate-600 rounded-xl p-4 text-white placeholder-slate-500 focus:border-purple-500 focus:outline-none resize-none"
+                                            />
+                                            <div className="flex gap-3 justify-end">
+                                                <button
+                                                    onClick={() => handleCloseTicket(selectedTicket.id)}
+                                                    className="px-6 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 transition-colors"
+                                                >
+                                                    {t('إغلاق التذكرة', 'Close Ticket')}
+                                                </button>
+                                                <button
+                                                    onClick={handleTicketReply}
+                                                    disabled={!ticketReply.trim()}
+                                                    className="px-6 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white font-medium rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    {t('إرسال الرد', 'Send Reply')}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 )}
             </div>
 

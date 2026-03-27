@@ -214,6 +214,34 @@ service cloud.firestore {
       }
     }
 
+    // =================== DEMO SESSIONS ============================
+    // Temporary storage for demo/test sessions — employees can read,
+    // anyone (including demo users with no auth) can write their session.
+    // Data is ephemeral and auto-expires through scheduled cleanup.
+    match /demoSessions/{sessionId} {
+      // Employees and admins can read all demo sessions (to simulate dashboard)
+      allow read: if isAuth() && (isEngineer() || isAdmin());
+      // Any authenticated user can create/update their OWN demo session doc
+      allow create, update: if isAuth() && request.auth.uid == sessionId;
+      // Admins can delete demo sessions
+      allow delete: if isAdmin();
+
+      // Sub-collection: projects within a demo session
+      match /projects/{projectId} {
+        allow read: if isAuth() && (isEngineer() || isAdmin());
+        allow create, update: if isAuth() && request.auth.uid == sessionId;
+        allow delete: if isAdmin();
+      }
+    }
+
+    // =================== TEST SESSIONS ======================
+    // Manager-created test sessions for demo mode users
+    match /testSessions/{sessionId} {
+      allow read: if isAuth() && (isEngineer() || isAdmin());
+      allow create, update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
     // =================== DEFAULT: DENY ALL ===================
     // Any collection not explicitly matched is denied
     match /{document=**} {

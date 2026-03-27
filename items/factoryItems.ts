@@ -1,0 +1,60 @@
+/**
+ * بنود خاصة بالمصانع والمستودعات
+ * Factory / Warehouse Specific Construction Items
+ */
+
+import { BaseItem } from '../types';
+import {
+    SUPPLIERS_CONCRETE, SUPPLIERS_STEEL, SUPPLIERS_HVAC,
+    SUPPLIERS_FACADES, SUPPLIERS_ELECTRICAL, SUPPLIERS_FIRE_SAFETY,
+    SUPPLIERS_PLUMBING, SUPPLIERS_INSULATION, SUPPLIERS_PAINT,
+    SUPPLIERS_DOORS, SUPPLIERS_HEAVY_EQUIPMENT, SUPPLIERS_SMART_SECURITY,
+    SUPPLIERS_TILES, SUPPLIERS_SANITARY
+} from './suppliers';
+
+export const FACTORY_ITEMS: BaseItem[] = [
+    // ================= F01. الهيكل المعدني والإنشائي =================
+    { id: "F01.01", category: "structure", type: "factory", name: { ar: "هيكل حديدي (Steel Structure) — هناجر", en: "Steel Structure — Hangar/Warehouse", fr: "Structure Acier — Hangar", zh: "钢结构厂房" }, unit: "طن", qty: 150, baseMaterial: 5500, baseLabor: 1200, waste: 0.05, suppliers: SUPPLIERS_STEEL, sbc: "SBC 304-SS", soilFactor: false, dependency: 'build_area' },
+    { id: "F01.02", category: "structure", type: "factory", name: { ar: "قواعد خرسانية للهيكل المعدني", en: "Concrete Foundations for Steel Structure", fr: "Fondations Béton pour Structure Acier", zh: "钢结构混凝土基础" }, unit: "م3", qty: 80, baseMaterial: 280, baseLabor: 130, waste: 0.05, suppliers: SUPPLIERS_CONCRETE, sbc: "SBC 304-SSF", soilFactor: true, dependency: 'build_area' },
+    { id: "F01.03", category: "structure", type: "factory", name: { ar: "أنكر بولت (Anchor Bolts)", en: "Anchor Bolts", fr: "Boulons d'Ancrage", zh: "地脚螺栓" }, unit: "عدد", qty: 200, baseMaterial: 50, baseLabor: 15, waste: 0.03, suppliers: SUPPLIERS_STEEL, sbc: "SBC 304-AB", soilFactor: false, dependency: 'build_area' },
+    { id: "F01.04", category: "structure", type: "factory", name: { ar: "ألواح ساندوتش بانل (جدران وسقف)", en: "Sandwich Panels (Walls & Roof)", fr: "Panneaux Sandwich (Murs & Toit)", zh: "夹芯板(墙和屋顶)" }, unit: "م2", qty: 2000, baseMaterial: 75, baseLabor: 30, waste: 0.05, suppliers: SUPPLIERS_INSULATION, sbc: "SBC 304-SP", soilFactor: false, dependency: 'build_area' },
+    { id: "F01.05", category: "structure", type: "factory", name: { ar: "كريين سقفي (رافعة جسرية 10 طن)", en: "Overhead Crane (10 Ton Bridge Crane)", fr: "Pont Roulant (10 Tonnes)", zh: "桥式起重机(10吨)" }, unit: "عدد", qty: 1, baseMaterial: 180000, baseLabor: 30000, waste: 0, suppliers: SUPPLIERS_STEEL, sbc: "SBC-Crane", soilFactor: false, dependency: 'fixed' },
+
+    // ================= F02. الأرضيات الصناعية =================
+    { id: "F02.01", category: "architecture", type: "factory", name: { ar: "أرضيات خرسانية صناعية (Heavy Duty)", en: "Industrial Concrete Floor (Heavy Duty)", fr: "Sol Béton Industriel", zh: "重载工业混凝土地面" }, unit: "م2", qty: 1500, baseMaterial: 65, baseLabor: 35, waste: 0.05, suppliers: SUPPLIERS_CONCRETE, sbc: "SBC 304-IndFlr", soilFactor: false, dependency: 'build_area' },
+    { id: "F02.02", category: "architecture", type: "factory", name: { ar: "طلاء إيبوكسي صناعي (أرضيات)", en: "Industrial Epoxy Floor Coating", fr: "Revêtement Époxy Industriel", zh: "工业环氧地面涂层" }, unit: "م2", qty: 1500, baseMaterial: 50, baseLabor: 20, waste: 0.05, suppliers: SUPPLIERS_PAINT, sbc: "SBC 201-IndEpx", soilFactor: false, dependency: 'build_area' },
+    { id: "F02.03", category: "architecture", type: "factory", name: { ar: "أرصفة تحميل (Loading Docks)", en: "Loading Docks", fr: "Quais de Chargement", zh: "装卸平台" }, unit: "عدد", qty: 4, baseMaterial: 8000, baseLabor: 3000, waste: 0.05, suppliers: SUPPLIERS_CONCRETE, sbc: "SBC 304-Dock", soilFactor: false, dependency: 'fixed' },
+
+    // ================= F03. الأبواب الصناعية =================
+    { id: "F03.01", category: "architecture", type: "factory", name: { ar: "أبواب شتر صناعية (Roller Shutter 5×5م)", en: "Industrial Roller Shutter Door (5x5m)", fr: "Porte à Enroulement Industrielle", zh: "工业卷帘门(5x5米)" }, unit: "عدد", qty: 4, baseMaterial: 12000, baseLabor: 3000, waste: 0, suppliers: SUPPLIERS_DOORS, sbc: "SBC 201-RSD", soilFactor: false, dependency: 'fixed' },
+    { id: "F03.02", category: "architecture", type: "factory", name: { ar: "أبواب سحب جانبي (Sliding Door)", en: "Industrial Sliding Doors", fr: "Portes Coulissantes Industrielles", zh: "工业推拉门" }, unit: "عدد", qty: 2, baseMaterial: 8000, baseLabor: 2000, waste: 0, suppliers: SUPPLIERS_DOORS, sbc: "SBC 201-SLD", soilFactor: false, dependency: 'fixed' },
+    { id: "F03.03", category: "safety", type: "factory", name: { ar: "أبواب طوارئ مقاومة حريق", en: "Fire-Rated Emergency Doors", fr: "Portes Coupe-Feu d'Urgence", zh: "防火应急门" }, unit: "عدد", qty: 6, baseMaterial: 2500, baseLabor: 500, waste: 0, suppliers: SUPPLIERS_FIRE_SAFETY, sbc: "SBC 901-FRDr", soilFactor: false, dependency: 'fixed' },
+
+    // ================= F04. التهوية والتبريد الصناعي =================
+    { id: "F04.01", category: "mep_hvac", type: "factory", name: { ar: "مراوح شفط صناعية (Industrial Exhaust)", en: "Industrial Exhaust Fans", fr: "Ventilateurs Extraction Industriels", zh: "工业排风扇" }, unit: "عدد", qty: 8, baseMaterial: 3500, baseLabor: 800, waste: 0, suppliers: SUPPLIERS_HVAC, sbc: "SBC 501-IndExh", soilFactor: false, dependency: 'fixed' },
+    { id: "F04.02", category: "mep_hvac", type: "factory", name: { ar: "مبردات هواء تبخيرية (Desert Cooler)", en: "Evaporative Air Coolers (Desert Cooler)", fr: "Refroidisseurs Évaporatifs", zh: "蒸发式冷风机" }, unit: "عدد", qty: 10, baseMaterial: 2500, baseLabor: 500, waste: 0, suppliers: SUPPLIERS_HVAC, sbc: "SBC 501-EvCl", soilFactor: false, dependency: 'fixed' },
+    { id: "F04.03", category: "mep_hvac", type: "factory", name: { ar: "نظام تنقية هواء (فلترة صناعية)", en: "Air Purification System (Industrial)", fr: "Système Purification Air Industriel", zh: "空气净化系统(工业)" }, unit: "مجموعة", qty: 1, baseMaterial: 25000, baseLabor: 5000, waste: 0, suppliers: SUPPLIERS_HVAC, sbc: "SBC 501-AirPr", soilFactor: false, dependency: 'fixed' },
+
+    // ================= F05. الكهرباء الصناعية =================
+    { id: "F05.01", category: "mep_elec", type: "factory", name: { ar: "محول كهرباء صناعي (2000 KVA)", en: "Industrial Transformer (2000 KVA)", fr: "Transformateur Industriel (2000 KVA)", zh: "工业变压器(2000KVA)" }, unit: "عدد", qty: 1, baseMaterial: 180000, baseLabor: 20000, waste: 0, suppliers: SUPPLIERS_ELECTRICAL, sbc: "SBC 401-IndTrf", soilFactor: false, dependency: 'fixed' },
+    { id: "F05.02", category: "mep_elec", type: "factory", name: { ar: "توصيلات قدرة ماكينات (Power Outlets)", en: "Machine Power Connections (3-Phase)", fr: "Connexions Machines (Triphasé)", zh: "设备电力接口(三相)" }, unit: "نقطة", qty: 20, baseMaterial: 1200, baseLabor: 400, waste: 0.05, suppliers: SUPPLIERS_ELECTRICAL, sbc: "SBC 401-MchPwr", soilFactor: false, dependency: 'fixed' },
+    { id: "F05.03", category: "mep_elec", type: "factory", name: { ar: "إنارة صناعية (High Bay LED)", en: "Industrial High Bay LED Lighting", fr: "Éclairage Industriel High Bay", zh: "工业LED高棚灯" }, unit: "عدد", qty: 50, baseMaterial: 400, baseLabor: 100, waste: 0, suppliers: SUPPLIERS_ELECTRICAL, sbc: "SBC 401-HBay", soilFactor: false, dependency: 'build_area' },
+    { id: "F05.04", category: "mep_elec", type: "factory", name: { ar: "مولد ديزل احتياطي (300 كيلو)", en: "Emergency Diesel Generator (300kW)", fr: "Groupe Électrogène (300kW)", zh: "应急柴油发电机(300千瓦)" }, unit: "عدد", qty: 1, baseMaterial: 150000, baseLabor: 15000, waste: 0, suppliers: SUPPLIERS_ELECTRICAL, sbc: "SBC 401-DGen", soilFactor: false, dependency: 'fixed' },
+
+    // ================= F06. السلامة الصناعية =================
+    { id: "F06.01", category: "safety", type: "factory", name: { ar: "نظام رش مائي صناعي (Sprinklers)", en: "Industrial Sprinkler System", fr: "Système Sprinkler Industriel", zh: "工业喷淋系统" }, unit: "رأس", qty: 100, baseMaterial: 400, baseLabor: 130, waste: 0.05, suppliers: SUPPLIERS_FIRE_SAFETY, sbc: "SBC 901-IndSpk", soilFactor: false, dependency: 'build_area' },
+    { id: "F06.02", category: "safety", type: "factory", name: { ar: "خراطيم ومحابس حريق (Hydrants)", en: "Fire Hydrants & Hose Reels", fr: "Poteaux et Dévidoirs Incendie", zh: "消防栓和卷盘" }, unit: "عدد", qty: 8, baseMaterial: 2000, baseLabor: 500, waste: 0, suppliers: SUPPLIERS_FIRE_SAFETY, sbc: "SBC 901-IndHyd", soilFactor: false, dependency: 'fixed' },
+    { id: "F06.03", category: "safety", type: "factory", name: { ar: "حواجز أمان صناعية (Safety Barriers)", en: "Industrial Safety Barriers", fr: "Barrières de Sécurité Industrielles", zh: "工业安全护栏" }, unit: "م.ط", qty: 100, baseMaterial: 150, baseLabor: 50, waste: 0.05, suppliers: SUPPLIERS_STEEL, sbc: "SBC 901-Barr", soilFactor: false, dependency: 'build_area' },
+    { id: "F06.04", category: "safety", type: "factory", name: { ar: "نظام إنذار غاز وتسرب", en: "Gas & Leak Detection System", fr: "Système Détection Gaz", zh: "气体和泄漏检测系统" }, unit: "مجموعة", qty: 1, baseMaterial: 12000, baseLabor: 3000, waste: 0, suppliers: SUPPLIERS_FIRE_SAFETY, sbc: "SBC 901-GasD", soilFactor: false, dependency: 'fixed' },
+
+    // ================= F07. المرافق الإدارية =================
+    { id: "F07.01", category: "structure", type: "factory", name: { ar: "مبنى إداري (مكاتب ملحقة بالمصنع)", en: "Admin Building (Attached Offices)", fr: "Bâtiment Administratif", zh: "附属办公楼" }, unit: "م2", qty: 200, baseMaterial: 400, baseLabor: 200, waste: 0.05, suppliers: SUPPLIERS_CONCRETE, sbc: "SBC 304-Admin", soilFactor: false, dependency: 'fixed' },
+    { id: "F07.02", category: "architecture", type: "factory", name: { ar: "مطبخ/كافتيريا عمال", en: "Workers' Kitchen/Cafeteria", fr: "Cantine Ouvriers", zh: "工人食堂" }, unit: "م2", qty: 40, baseMaterial: 300, baseLabor: 150, waste: 0.05, suppliers: SUPPLIERS_TILES, sbc: "SBC 201-Cafe", soilFactor: false, dependency: 'fixed' },
+    { id: "F07.03", category: "mep_plumb", type: "factory", name: { ar: "غرف تغيير ملابس + دوش (Lockers)", en: "Locker Rooms + Showers", fr: "Vestiaires + Douches", zh: "更衣室+淋浴间" }, unit: "مجموعة", qty: 2, baseMaterial: 6000, baseLabor: 2000, waste: 0, suppliers: SUPPLIERS_SANITARY, sbc: "SBC 701-Lock", soilFactor: false, dependency: 'fixed' },
+
+    // ================= F08. أنظمة الإنتاج =================
+    { id: "F08.01", category: "mep_plumb", type: "factory", name: { ar: "نظام هواء مضغوط (Compressed Air)", en: "Compressed Air System", fr: "Système Air Comprimé", zh: "压缩空气系统" }, unit: "مجموعة", qty: 1, baseMaterial: 35000, baseLabor: 8000, waste: 0, suppliers: SUPPLIERS_PLUMBING, sbc: "SBC 701-CmpAir", soilFactor: false, dependency: 'fixed' },
+    { id: "F08.02", category: "mep_plumb", type: "factory", name: { ar: "شبكة تصريف صناعي (مواد كيميائية)", en: "Industrial Drainage (Chemical-Resistant)", fr: "Drainage Industriel (Anti-Chimique)", zh: "工业排水(耐化学)" }, unit: "م.ط", qty: 100, baseMaterial: 200, baseLabor: 80, waste: 0.05, suppliers: SUPPLIERS_PLUMBING, sbc: "SBC 701-IndDrn", soilFactor: false, dependency: 'build_area' },
+    { id: "F08.03", category: "architecture", type: "factory", name: { ar: "أرفف تخزين صناعية (Racking System)", en: "Industrial Racking System", fr: "Système de Rayonnage Industriel", zh: "工业货架系统" }, unit: "مجموعة", qty: 1, baseMaterial: 40000, baseLabor: 8000, waste: 0, suppliers: SUPPLIERS_STEEL, sbc: "SBC-Rack", soilFactor: false, dependency: 'fixed' },
+    { id: "F08.04", category: "architecture", type: "factory", name: { ar: "ميزان بسكول (30 طن)", en: "Weighbridge (30 Ton)", fr: "Pont-Bascule (30 Tonnes)", zh: "地磅(30吨)" }, unit: "عدد", qty: 1, baseMaterial: 50000, baseLabor: 10000, waste: 0, suppliers: SUPPLIERS_HEAVY_EQUIPMENT, sbc: "SBC-Scale", soilFactor: false, dependency: 'fixed' },
+];

@@ -21,72 +21,91 @@ const StatsGrid: React.FC<StatsGridProps> = ({
     language
 }) => {
     const t = (key: string) => TRANSLATIONS[key]?.[language] || key;
+    const isRtl = language === 'ar';
 
     return (
         <>
             {/* Row 1: Key Financials */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-4">
+            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 ${isRtl ? '' : 'flex-row-reverse'}`} dir={isRtl ? 'rtl' : 'ltr'}>
                 {/* Direct Cost */}
-                <div className="bg-white rounded-xl shadow-sm p-6 border-r-4 border-blue-500 transition-transform hover:-translate-y-1 duration-300">
+                <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 border border-slate-100 relative overflow-hidden transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 duration-300 group">
+                    <div className={`absolute top-0 ${isRtl ? 'right-0' : 'left-0'} w-1.5 h-full bg-gradient-to-b from-blue-400 to-blue-600`}></div>
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-gray-500 text-sm font-medium">{t('total_direct_cost')}</h3>
-                        <Calculator className="w-5 h-5 text-blue-500 bg-blue-50 p-1 rounded" />
+                        <h3 className="text-slate-500 text-sm font-semibold">{t('total_direct_cost')}</h3>
+                        <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Calculator className="w-5 h-5 text-blue-500" />
+                        </div>
                     </div>
-                    <div className="text-2xl font-bold text-slate-800">{formatCurrency(totalDirect, language)}</div>
+                    <div className="text-3xl font-extrabold text-slate-800 tracking-tight">{formatCurrency(totalDirect, language)}</div>
                 </div>
 
                 {/* Overhead */}
-                <div className="bg-white rounded-xl shadow-sm p-6 border-r-4 border-orange-500 transition-transform hover:-translate-y-1 duration-300">
+                <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 border border-slate-100 relative overflow-hidden transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 duration-300 group">
+                    <div className={`absolute top-0 ${isRtl ? 'right-0' : 'left-0'} w-1.5 h-full bg-gradient-to-b from-orange-400 to-orange-600`}></div>
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-gray-500 text-sm font-medium">{t('overhead_distributed')}</h3>
-                        <Wallet className="w-5 h-5 text-orange-500 bg-orange-50 p-1 rounded" />
+                        <h3 className="text-slate-500 text-sm font-semibold">{t('overhead_distributed')}</h3>
+                        <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Wallet className="w-5 h-5 text-orange-500" />
+                        </div>
                     </div>
-                    <div className="text-2xl font-bold text-slate-800">{formatCurrency(totalOverhead, language)}</div>
+                    <div className="text-3xl font-extrabold text-slate-800 tracking-tight">{formatCurrency(totalOverhead, language)}</div>
                 </div>
 
                 {/* Profit */}
-                <div className="bg-white rounded-xl shadow-sm p-6 border-r-4 border-emerald-500 transition-transform hover:-translate-y-1 duration-300">
+                <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 border border-slate-100 relative overflow-hidden transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 duration-300 group">
+                    <div className={`absolute top-0 ${isRtl ? 'right-0' : 'left-0'} w-1.5 h-full bg-gradient-to-b from-emerald-400 to-emerald-600`}></div>
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-gray-500 text-sm font-medium">{t('net_profit')}</h3>
-                        <TrendingUp className="w-5 h-5 text-emerald-500 bg-emerald-50 p-1 rounded" />
+                        <h3 className="text-slate-500 text-sm font-semibold">{t('net_profit')}</h3>
+                        <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <TrendingUp className="w-5 h-5 text-emerald-500" />
+                        </div>
                     </div>
-                    <div className="text-2xl font-bold text-slate-800">{formatCurrency(totalProfit, language)}</div>
+                    <div className="text-3xl font-extrabold text-slate-800 tracking-tight">{formatCurrency(totalProfit, language)}</div>
                 </div>
 
                 {/* Final Price */}
-                <div className="bg-slate-800 rounded-xl shadow-lg p-6 border border-slate-700 transition-transform hover:-translate-y-1 duration-300">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-slate-400 text-sm font-medium">{t('final_offer_price')}</h3>
-                        <CircleDollarSign className="w-5 h-5 text-emerald-400" />
+                <div className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] p-6 border border-slate-700 overflow-hidden transition-all hover:shadow-[0_12px_40px_rgba(16,185,129,0.15)] hover:-translate-y-1 duration-300 group">
+                    <div className="absolute -right-6 -top-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-colors"></div>
+                    <div className="flex items-center justify-between mb-4 relative z-10">
+                        <h3 className="text-slate-300 text-sm font-semibold">{t('final_offer_price')}</h3>
+                        <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 group-hover:scale-110 transition-transform">
+                            <CircleDollarSign className="w-5 h-5 text-emerald-400" />
+                        </div>
                     </div>
-                    <div className="text-3xl font-bold text-white">{formatCurrency(finalPrice, language)}</div>
+                    <div className="text-3xl font-black text-white tracking-tight relative z-10">{formatCurrency(finalPrice, language)}</div>
                 </div>
             </div>
 
             {/* Row 2: Technical Breakdown */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div className="bg-indigo-50 rounded-xl p-5 border border-indigo-100 flex items-center justify-between">
+            <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 ${isRtl ? '' : 'flex-row-reverse'}`} dir={isRtl ? 'rtl' : 'ltr'}>
+                <div className="bg-gradient-to-br from-indigo-50/80 to-indigo-100/50 rounded-2xl p-6 border border-indigo-100/80 flex items-center justify-between transition-all hover:shadow-md hover:border-indigo-200">
                     <div>
-                        <h4 className="text-indigo-800 text-xs font-bold uppercase mb-1">{t('total_concrete')}</h4>
-                        <span className="text-2xl font-black text-indigo-900">{formatNumber(totalConcreteVolume, 0, language)} <span className="text-sm font-medium">m³</span></span>
+                        <h4 className="text-indigo-600/80 text-xs font-bold uppercase tracking-wider mb-2">{t('total_concrete')}</h4>
+                        <span className="text-2xl font-black text-indigo-950">{formatNumber(totalConcreteVolume, 0, language)} <span className="text-base font-medium text-indigo-700">m³</span></span>
                     </div>
-                    <Box className="w-8 h-8 text-indigo-300" />
+                    <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mb-1">
+                        <Box className="w-6 h-6 text-indigo-400" />
+                    </div>
                 </div>
 
-                <div className="bg-rose-50 rounded-xl p-5 border border-rose-100 flex items-center justify-between">
+                <div className="bg-gradient-to-br from-rose-50/80 to-rose-100/50 rounded-2xl p-6 border border-rose-100/80 flex items-center justify-between transition-all hover:shadow-md hover:border-rose-200">
                     <div>
-                        <h4 className="text-rose-800 text-xs font-bold uppercase mb-1">{t('total_labor')}</h4>
-                        <span className="text-xl font-bold text-rose-900">{formatCurrency(totalLaborCost, language)}</span>
+                        <h4 className="text-rose-600/80 text-xs font-bold uppercase tracking-wider mb-2">{t('total_labor')}</h4>
+                        <span className="text-2xl font-black text-rose-950">{formatCurrency(totalLaborCost, language)}</span>
                     </div>
-                    <Users className="w-8 h-8 text-rose-300" />
+                    <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mb-1">
+                        <Users className="w-6 h-6 text-rose-400" />
+                    </div>
                 </div>
 
-                <div className="bg-cyan-50 rounded-xl p-5 border border-cyan-100 flex items-center justify-between">
+                <div className="bg-gradient-to-br from-cyan-50/80 to-cyan-100/50 rounded-2xl p-6 border border-cyan-100/80 flex items-center justify-between transition-all hover:shadow-md hover:border-cyan-200">
                     <div>
-                        <h4 className="text-cyan-800 text-xs font-bold uppercase mb-1">{t('total_material')}</h4>
-                        <span className="text-xl font-bold text-cyan-900">{formatCurrency(totalMaterialCost, language)}</span>
+                        <h4 className="text-cyan-600/80 text-xs font-bold uppercase tracking-wider mb-2">{t('total_material')}</h4>
+                        <span className="text-2xl font-black text-cyan-950">{formatCurrency(totalMaterialCost, language)}</span>
                     </div>
-                    <Box className="w-8 h-8 text-cyan-300" />
+                    <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mb-1">
+                        <Box className="w-6 h-6 text-cyan-400" />
+                    </div>
                 </div>
             </div>
         </>
@@ -94,3 +113,4 @@ const StatsGrid: React.FC<StatsGridProps> = ({
 };
 
 export default StatsGrid;
+

@@ -5,7 +5,7 @@
 
 import { registrationService, RegistrationRequest } from './registrationService';
 import { chartOfAccountsService, ACCOUNT_CODES, JournalEntry, VAT_RATE } from './chartOfAccountsService';
-import { ITEMS_DATABASE } from '../constants';
+import { FULL_ITEMS_DATABASE } from '../constants';
 
 // ====================== أنواع البيانات ======================
 
@@ -1560,9 +1560,9 @@ class SupplierService {
             };
 
             // تحويل بنود ITEMS_DATABASE إلى منتجات
-            console.log('بدء تحميل ITEMS_DATABASE، عدد البنود:', ITEMS_DATABASE.length);
+            console.log('بدء تحميل ITEMS_DATABASE، عدد البنود:', FULL_ITEMS_DATABASE.length);
             let addedCount = 0;
-            for (const item of ITEMS_DATABASE) {
+            for (const item of FULL_ITEMS_DATABASE) {
                 try {
                     const mapping = categoryMapping[item.category] || { supplierCategory: 'other', supplierId: 'sample-2' };
 

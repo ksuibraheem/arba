@@ -54,44 +54,47 @@ const QuickStats: React.FC<QuickStatsProps> = ({ stats, language, loading }) => 
     ];
 
     return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
             {cards.map((card, i) => (
                 <div
                     key={i}
-                    className="relative overflow-hidden rounded-2xl border border-white/10 p-5 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl"
-                    style={{
-                        background: `linear-gradient(135deg, ${card.bgGlow} 0%, rgba(15,23,42,0.95) 100%)`,
-                        backdropFilter: 'blur(12px)',
-                    }}
+                    className="group relative rounded-2xl bg-white/[0.03] backdrop-blur-md border border-white/[0.05] p-5 transition-all duration-300 hover:bg-white/[0.05] hover:border-white/[0.1] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex items-center justify-between overflow-hidden"
                 >
-                    {/* Loading shimmer */}
-                    {loading && (
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-pulse" />
-                    )}
+                    {/* Decorative Background Glow based on card.bgGlow */}
+                    <div 
+                        className="absolute right-0 top-1/2 -translate-y-1/2 w-32 h-32 rounded-full opacity-[0.15] blur-2xl transition-opacity group-hover:opacity-[0.25]"
+                        style={{ backgroundColor: card.bgGlow }}
+                    />
 
-                    {/* Icon */}
-                    <div className="flex items-center justify-between mb-3">
-                        <span className="text-2xl">{card.icon}</span>
-                        <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${card.gradient} animate-pulse`} />
+                    {/* Left Side: Info */}
+                    <div className="relative z-10">
+                        <div className="text-slate-400 text-sm font-semibold mb-2 tracking-wide group-hover:text-slate-300 transition-colors">
+                            {card.title}
+                        </div>
+                        <div className="flex items-baseline gap-1.5">
+                            <div className={`text-3xl font-black text-white tracking-tight ${isAr ? 'font-sans' : ''}`}>
+                                {loading ? '—' : card.value}
+                            </div>
+                            {card.suffix && (
+                                <div className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                    {card.suffix}
+                                </div>
+                            )}
+                        </div>
                     </div>
 
-                    {/* Value */}
-                    <div className={`text-3xl font-bold text-white mb-1 ${isAr ? 'font-sans' : ''}`}>
-                        {loading ? '—' : card.value}
+                    {/* Right Side: Icon Container */}
+                    <div className="relative z-10 flex-shrink-0">
+                        <div className="w-14 h-14 rounded-full flex items-center justify-center shadow-inner relative overflow-hidden bg-slate-800/80 border border-white/10 group-hover:scale-110 transition-transform duration-500">
+                             <div 
+                                className="absolute inset-0 opacity-40 group-hover:opacity-60 transition-opacity"
+                                style={{ background: `linear-gradient(135deg, ${card.bgGlow} 0%, transparent 100%)` }}
+                             />
+                             <span className="text-2xl relative z-10 drop-shadow-md">
+                                 {card.icon}
+                             </span>
+                        </div>
                     </div>
-
-                    {/* Suffix */}
-                    <div className="text-xs text-slate-400">
-                        {card.suffix}
-                    </div>
-
-                    {/* Title */}
-                    <div className="text-sm text-slate-300 mt-2 font-medium">
-                        {card.title}
-                    </div>
-
-                    {/* Decorative gradient bar */}
-                    <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${card.gradient} opacity-60`} />
                 </div>
             ))}
         </div>

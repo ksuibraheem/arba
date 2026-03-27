@@ -1,4 +1,5 @@
 import { BaseItem, SupplierOption, ProjectType, SoilType, RoomConfig, FacadeConfig, TeamMember, BlueprintConfig, Language, MaterialDef } from './types';
+import { ALL_PROJECT_SPECIFIC_ITEMS } from './items';
 
 // --- TRANSLATIONS ---
 export const TRANSLATIONS: Record<string, Record<Language, string>> = {
@@ -790,4 +791,14 @@ export const ITEMS_DATABASE: BaseItem[] = [
     { id: "17.01", category: "architecture", type: "villa", name: { ar: "خزائن مطبخ (ألمنيوم)", en: "Kitchen Cabinets", fr: "Meubles de Cuisine", zh: "厨房橱柜" }, unit: "م.ط", qty: 8, baseMaterial: 800, baseLabor: 200, waste: 0, suppliers: suppliersFinish, sbc: "SBC-Kit", soilFactor: false, dependency: 'fixed' },
     { id: "17.02", category: "architecture", type: "villa", name: { ar: "خزائن ملابس مدمجة", en: "Built-in Wardrobes", fr: "Placards Intégrés", zh: "内置衣柜" }, unit: "م.ط", qty: 10, baseMaterial: 600, baseLabor: 150, waste: 0, suppliers: suppliersFinish, sbc: "SBC-Ward", soilFactor: false, dependency: 'fixed' },
     { id: "17.03", category: "mep_elec", type: "all", name: { ar: "مصعد كهربائي", en: "Elevator", fr: "Ascenseur", zh: "电梯" }, unit: "عدد", qty: 0, baseMaterial: 80000, baseLabor: 15000, waste: 0, suppliers: [{ id: 'elev_1', name: { ar: 'أوتيس', en: 'Otis', fr: 'Otis', zh: '奥的斯' }, tier: 'premium', priceMultiplier: 1.2 }], sbc: "SBC-Elev", soilFactor: false, dependency: 'fixed' },
+];
+
+/**
+ * قاعدة بيانات شاملة — البنود العامة + البنود الخاصة بكل نوع مشروع
+ * Full Items Database — Base items (type:'all') + Project-specific items
+ * Total: ~420 items
+ */
+export const FULL_ITEMS_DATABASE: BaseItem[] = [
+    ...ITEMS_DATABASE,
+    ...ALL_PROJECT_SPECIFIC_ITEMS,
 ];

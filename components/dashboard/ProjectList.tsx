@@ -50,42 +50,52 @@ const ProjectList: React.FC<ProjectListProps> = ({
     };
 
     return (
-        <div className="space-y-4">
-            {/* Header */}
-            <div className="flex items-center justify-between flex-wrap gap-3">
-                <h2 className="text-xl font-bold text-white">
-                    {isAr ? '📁 المشاريع' : '📁 Projects'}
+        <div className="space-y-6">
+            {/* Header Area */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                    <span className="text-emerald-500">📁</span>
+                    {isAr ? 'المشاريع' : 'Projects'}
                 </h2>
                 <button
                     onClick={onCreateProject}
-                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-medium text-sm hover:shadow-lg hover:shadow-emerald-500/20 transition-all"
+                    className="group relative px-5 py-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold text-sm overflow-hidden transition-all hover:bg-emerald-500 hover:text-white hover:border-emerald-500 shadow-sm"
                 >
-                    {isAr ? '+ مشروع جديد' : '+ New Project'}
+                    <span className="relative z-10 flex items-center gap-2">
+                        <span className="text-lg">+</span>
+                        {isAr ? 'مشروع جديد' : 'New Project'}
+                    </span>
                 </button>
             </div>
 
-            {/* Filters */}
-            <div className="flex items-center gap-3 flex-wrap">
+            {/* Unified Control Bar */}
+            <div className="flex items-center gap-4 flex-wrap bg-slate-900/40 p-1.5 rounded-xl border border-white/[0.05] backdrop-blur-md shadow-sm">
                 {/* Search */}
-                <input
-                    type="text"
-                    placeholder={isAr ? 'بحث...' : 'Search...'}
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                    className="px-3 py-2 rounded-xl bg-slate-800/60 border border-slate-700 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-emerald-500 w-48"
-                    dir={isAr ? 'rtl' : 'ltr'}
-                />
+                <div className="relative flex-1 min-w-[200px] max-w-sm">
+                    <input
+                        type="text"
+                        placeholder={isAr ? 'ابحث في المشاريع...' : 'Search projects...'}
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                        className="w-full px-4 py-1.5 bg-transparent text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-0 transition-all border-none"
+                        dir={isAr ? 'rtl' : 'ltr'}
+                    />
+                </div>
+
+                {/* Vertical Divider */}
+                <div className="hidden sm:block w-px h-6 bg-white/[0.05]" />
 
                 {/* Status filters */}
-                <div className="flex gap-1.5">
+                <div className="flex gap-1 overflow-x-auto scrollbar-hide py-1">
                     {(['all', 'draft', 'active', 'submitted', 'approved', 'archived'] as const).map(s => (
                         <button
                             key={s}
                             onClick={() => setFilter(s)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filter === s
-                                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                                    : 'bg-slate-800/40 text-slate-400 border border-slate-700 hover:border-slate-500'
-                                }`}
+                            className={`px-4 py-1.5 rounded-md text-xs font-semibold tracking-wide whitespace-nowrap transition-all ${
+                                filter === s
+                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-sm'
+                                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50 hover:border-white/5 border border-transparent'
+                            }`}
                         >
                             {s === 'all'
                                 ? (isAr ? 'الكل' : 'All')
@@ -104,11 +114,16 @@ const ProjectList: React.FC<ProjectListProps> = ({
                     ))}
                 </div>
             ) : filtered.length === 0 ? (
-                <div className="text-center py-16 text-slate-500">
-                    <div className="text-5xl mb-4">📁</div>
-                    <p className="text-lg">{isAr ? 'لا توجد مشاريع' : 'No projects found'}</p>
-                    <button onClick={onCreateProject} className="mt-4 text-emerald-400 hover:underline text-sm">
-                        {isAr ? 'أنشئ مشروعك الأول' : 'Create your first project'}
+                <div className="flex flex-col items-center justify-center py-16 px-4 bg-slate-900/20 border border-dashed border-white/5 rounded-2xl mx-auto w-full transition-all">
+                    <div className="w-16 h-16 mb-4 rounded-full bg-slate-800/50 border border-white/5 flex items-center justify-center shadow-inner">
+                        <span className="text-2xl opacity-80">📄</span>
+                    </div>
+                    <h3 className="text-base font-bold text-white mb-1">{isAr ? 'لا توجد مشاريع' : 'No projects found'}</h3>
+                    <p className="text-slate-400 text-xs mb-6 max-w-sm text-center">
+                        {isAr ? 'ابدأ رحلتك بإنشاء مشروع جديد لتسعيره وتنظيم مستنداته' : 'Start your journey by creating a new project to price and organize documents.'}
+                    </p>
+                    <button onClick={onCreateProject} className="px-5 py-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-sm font-semibold transition-all">
+                        {isAr ? '+ المشروع الأول' : '+ First project'}
                     </button>
                 </div>
             ) : (
@@ -119,44 +134,57 @@ const ProjectList: React.FC<ProjectListProps> = ({
                             <div
                                 key={project.id}
                                 onClick={() => onOpenProject(project)}
-                                className="relative rounded-2xl bg-slate-800/50 border border-slate-700/60 p-5 cursor-pointer hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/5 transition-all group"
+                                className="group relative rounded-2xl bg-slate-800/40 border border-white/5 p-6 cursor-pointer hover:-translate-y-1 hover:border-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all backdrop-blur-sm overflow-hidden"
                             >
+                                {/* Decorative Gradient Overlay */}
+                                <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
+
                                 {/* Status badge */}
-                                <div className={`absolute top-4 ${isAr ? 'left-4' : 'right-4'}`}>
-                                    <span className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase border ${statusConf.bg} ${statusConf.color}`}>
+                                <div className={`absolute top-5 ${isAr ? 'left-5' : 'right-5'}`}>
+                                    <span className={`px-2.5 py-1 rounded-md text-[10px] font-extrabold tracking-wider uppercase border ${statusConf.bg} ${statusConf.color}`}>
                                         {statusConf.label[language]}
                                     </span>
                                 </div>
 
                                 {/* Project name */}
-                                <h3 className="text-white font-bold text-base mb-2 pr-20 truncate">
+                                <h3 className="text-white font-bold text-lg mb-1 pr-24 truncate">
                                     {project.name}
                                 </h3>
 
                                 {/* Type */}
-                                <p className="text-slate-400 text-xs mb-4">
-                                    {project.projectType} • {project.location || (isAr ? 'بدون موقع' : 'No location')}
+                                <p className="text-slate-400 text-xs mb-6 font-medium">
+                                    <span>{project.projectType}</span>
+                                    <span className="mx-2 text-slate-600">•</span>
+                                    <span>{project.location || (isAr ? 'بدون موقع' : 'No location')}</span>
                                 </p>
 
                                 {/* Info row */}
-                                <div className="flex items-center justify-between text-sm">
+                                <div className="flex items-end justify-between text-sm bg-slate-900/40 p-3 rounded-xl border border-white/5">
                                     <div>
-                                        <span className="text-slate-500 text-xs">{isAr ? 'القيمة' : 'Value'}</span>
-                                        <p className="text-emerald-400 font-bold">
-                                            {formatValue(project.estimatedValue)} <span className="text-[10px] text-slate-500">{isAr ? 'ر.س' : 'SAR'}</span>
+                                        <span className="text-slate-500 text-[10px] uppercase font-bold tracking-wider mb-1 block">
+                                            {isAr ? 'القيمة التقديرية' : 'Estimated Value'}
+                                        </span>
+                                        <p className="text-emerald-400 font-extrabold text-lg leading-none">
+                                            {formatValue(project.estimatedValue)} <span className="text-[10px] text-emerald-400/60">{isAr ? 'ر.س' : 'SAR'}</span>
                                         </p>
                                     </div>
                                     <div className="text-right">
-                                        <span className="text-slate-500 text-xs">{isAr ? 'التحديث' : 'Updated'}</span>
-                                        <p className="text-slate-300 text-xs">{formatDate(project.updatedAt)}</p>
+                                        <span className="text-slate-500 text-[10px] uppercase font-bold tracking-wider mb-1 block">
+                                            {isAr ? 'آخر تحديث' : 'Last Updated'}
+                                        </span>
+                                        <p className="text-slate-300 text-xs font-medium leading-none">
+                                            {formatDate(project.updatedAt)}
+                                        </p>
                                     </div>
                                 </div>
 
                                 {/* Quotes count */}
                                 {project.quoteCount > 0 && (
-                                    <div className="mt-3 pt-3 border-t border-slate-700/50 flex items-center gap-2 text-xs text-slate-500">
-                                        <span>📄</span>
-                                        <span>{project.quoteCount} {isAr ? 'عرض سعر' : 'quotes'}</span>
+                                    <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between text-xs text-slate-400 font-medium">
+                                        <div className="flex items-center gap-1.5">
+                                            <span className="text-emerald-500">📄</span>
+                                            <span>{project.quoteCount} {isAr ? 'عروض أسعار مرتبطة' : 'Linked Quotes'}</span>
+                                        </div>
                                     </div>
                                 )}
 
