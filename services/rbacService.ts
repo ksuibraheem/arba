@@ -98,6 +98,9 @@ export async function unassignProjectFromUser(projectId: string, engineerUid: st
 
 // =================== INITIALIZATION ===================
 
+/** Super Admin email — gets 'superadmin' role automatically */
+const SUPER_ADMIN_EMAIL = 'info@arba-sys.com';
+
 /**
  * Ensure a user has a role record. If not, create a default one.
  * Called on first login.
@@ -109,8 +112,9 @@ export async function ensureUserRole(
 ): Promise<ArbaUserRole> {
     let role = await getUserRole(uid);
     if (!role) {
-        // First user gets admin, subsequent users get qs_engineer
-        const defaultRole: UserRole = 'qs_engineer';
+        // Super Admin auto-assignment
+        const isSuperAdmin = email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase();
+        const defaultRole: UserRole = isSuperAdmin ? 'superadmin' : 'qs_engineer';
         await setUserRole(uid, defaultRole, displayName, email);
         role = await getUserRole(uid);
     }

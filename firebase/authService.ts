@@ -215,16 +215,20 @@ export const loginWithFirebase = async (
 
         if (userDocSnap.exists()) {
             const userData = userDocSnap.data() as Omit<UserData, 'uid'>;
+            // Super Admin: override plan to enterprise
+            const isSuperAdmin = (userData.email || email).toLowerCase() === 'info@arba-sys.com';
             return {
                 success: true,
                 user: {
                     ...userData,
                     uid: firebaseUser.uid,
+                    plan: isSuperAdmin ? 'enterprise' : userData.plan,
                     createdAt: (userData.createdAt as Timestamp)?.toDate?.() || new Date()
                 }
             };
         } else {
             // المستخدم موجود في Auth لكن ليس في Firestore
+            const isSuperAdmin = (firebaseUser.email || email).toLowerCase() === 'info@arba-sys.com';
             return {
                 success: true,
                 user: {
@@ -232,7 +236,7 @@ export const loginWithFirebase = async (
                     userType: 'individual',
                     name: firebaseUser.displayName || 'مستخدم',
                     email: firebaseUser.email || email,
-                    plan: 'free',
+                    plan: isSuperAdmin ? 'enterprise' : 'free',
                     usedProjects: 0,
                     usedStorageMB: 0,
                     createdAt: new Date()
