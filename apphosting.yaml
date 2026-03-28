@@ -4,6 +4,9 @@
 runConfig:
   # Runtime environment
   runtime: nodejs20
+
+  # Build command — runs before start
+  buildCommand: npm run build
   
   # Start command
   commandLine: npm run start
