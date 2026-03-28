@@ -210,7 +210,7 @@ export const ROLE_COLORS: Record<EmployeeRole, string> = {
 const DEFAULT_MANAGER_CREDENTIALS = {
     name: 'المدير العام',
     employeeNumber: '2201187',
-    password: '2201187',
+    password: 'Aa0591529339',
 };
 
 export const MANAGER_CREDENTIALS = (() => {
