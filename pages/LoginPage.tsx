@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ArbaLogo from '../components/ArbaLogo';
 import {
     Calculator,
     Mail,
@@ -42,7 +43,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, lo
 
     const userTypes: { id: UserType; label: { ar: string; en: string }; icon: React.ElementType; color: string }[] = [
         { id: 'individual', label: { ar: 'أفراد', en: 'Individual' }, icon: User, color: 'from-blue-500 to-blue-600' },
-        { id: 'company', label: { ar: 'شركات', en: 'Company' }, icon: Building2, color: 'from-emerald-500 to-teal-500' },
+        { id: 'company', label: { ar: 'شركات', en: 'Company' }, icon: Building2, color: 'from-green-500 to-lime-500' },
         { id: 'supplier', label: { ar: 'موردين', en: 'Supplier' }, icon: Truck, color: 'from-amber-500 to-orange-500' },
         { id: 'employee', label: { ar: 'موظفين آربا', en: 'ARBA Staff' }, icon: Shield, color: 'from-purple-500 to-indigo-500' }
     ];
@@ -125,25 +126,31 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, lo
     const selectedType = userTypes.find(u => u.id === userType)!;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-6" dir={isRtl ? 'rtl' : 'ltr'}>
+        <div className="min-h-screen bg-gradient-to-br from-[#070914] via-[#0E132B] to-[#050711] flex items-center justify-center p-6" dir={isRtl ? 'rtl' : 'ltr'}>
             {/* Background Pattern */}
             <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute -top-1/2 -right-1/2 w-full h-full bg-gradient-to-br from-emerald-500/10 to-transparent rounded-full blur-3xl"></div>
-                <div className="absolute -bottom-1/2 -left-1/2 w-full h-full bg-gradient-to-tr from-teal-500/10 to-transparent rounded-full blur-3xl"></div>
+                <div className="absolute -top-1/2 -right-1/2 w-full h-full bg-gradient-to-br from-green-500/10 to-transparent rounded-full blur-3xl"></div>
+                <div className="absolute -bottom-1/2 -left-1/2 w-full h-full bg-gradient-to-tr from-indigo-500/10 to-transparent rounded-full blur-3xl"></div>
             </div>
 
             <div className="relative w-full max-w-lg">
                 {/* Back Button */}
                 <button
                     onClick={() => onNavigate('landing')}
-                    className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-8"
+                    className="flex items-center gap-2 text-sm font-medium text-slate-400 hover:text-white transition-colors bg-[#080B1A]/40 px-6 py-2 rounded-lg border border-[#2B2D6E]/30 mb-8"
                 >
                     <Arrow className="w-5 h-5" />
                     <span>{language === 'ar' ? 'العودة للرئيسية' : 'Back to Home'}</span>
                 </button>
 
                 {/* Login Card */}
-                <div className="bg-slate-800/50 backdrop-blur-xl rounded-3xl border border-slate-700/50 p-8 shadow-2xl">
+                <div className="bg-[#0B0F24]/80 backdrop-blur-xl rounded-3xl border border-[#2B2D6E]/40 p-8 shadow-2xl shadow-[#000000]/40">
+                    <div className="flex justify-center mb-8">
+                        <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-[#131A3B]/60 border border-[#2B2D6E]/50 shadow-lg shadow-green-500/10">
+                            <ArbaLogo size={60} animated />
+                        </div>
+                    </div>
+
                     {/* User Type Tabs */}
                     <div className="grid grid-cols-4 gap-2 mb-8">
                         {userTypes.map((type) => (
@@ -154,8 +161,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, lo
                                     setError('');
                                 }}
                                 className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all ${userType === type.id
-                                    ? `bg-gradient-to-br ${type.color} text-white shadow-lg`
-                                    : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700 hover:text-white'
+                                    ? `bg-gradient-to-br ${type.color} text-white shadow-lg shadow-[#2B2D6E]/20`
+                                    : 'bg-[#19224D]/40 text-slate-400 hover:bg-[#19224D]/70 hover:text-white border border-transparent hover:border-[#2B2D6E]/40'
                                     }`}
                             >
                                 <type.icon className="w-5 h-5" />
@@ -207,7 +214,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, lo
                                         value={phone}
                                         onChange={(e) => setPhone(e.target.value)}
                                         placeholder={config.idPlaceholder[language]}
-                                        className="w-full bg-slate-700/50 border border-slate-600 rounded-xl py-3 ps-12 pe-4 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all"
+                                        className="w-full bg-[#080B1A]/60 border border-[#2B2D6E]/50 rounded-xl py-3 ps-12 pe-4 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all shadow-inner"
                                         autoComplete="tel"
                                         required
                                         id="login-phone"
@@ -220,7 +227,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, lo
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         placeholder={config.idPlaceholder[language]}
-                                        className={`w-full bg-slate-700/50 border border-slate-600 rounded-xl py-3 ps-12 pe-4 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all`}
+                                        className={`w-full bg-[#080B1A]/60 border border-[#2B2D6E]/50 rounded-xl py-3 ps-12 pe-4 text-white placeholder-slate-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all shadow-inner`}
                                         autoComplete="email"
                                         required
                                         id="login-email"
@@ -242,7 +249,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, lo
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder={language === 'ar' ? 'أدخل كلمة المرور' : 'Enter your password'}
-                                    className="w-full bg-slate-700/50 border border-slate-600 rounded-xl py-3 ps-12 pe-12 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
+                                    className="w-full bg-[#080B1A]/60 border border-[#2B2D6E]/50 rounded-xl py-3 ps-12 pe-12 text-white placeholder-slate-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all shadow-inner"
                                     autoComplete="current-password"
                                     required
                                     id="login-password"
@@ -265,14 +272,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, lo
                                     type="checkbox"
                                     checked={rememberMe}
                                     onChange={(e) => setRememberMe(e.target.checked)}
-                                    className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0"
+                                    className="w-4 h-4 rounded border-[#2B2D6E]/50 bg-[#080B1A] text-green-500 focus:ring-green-500 focus:ring-offset-0"
                                 />
                                 <span>{t('login_remember')}</span>
                             </label>
                             <button
                                 type="button"
                                 onClick={() => onNavigate('password-reset')}
-                                className="text-emerald-400 hover:text-emerald-300 transition-colors"
+                                className="text-green-400 hover:text-green-300 transition-colors"
                             >
                                 {t('login_forgot')}
                             </button>
@@ -304,7 +311,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, lo
                             <span>{t('login_no_account')} </span>
                             <button
                                 onClick={() => onNavigate('register')}
-                                className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
+                                className="text-green-400 hover:text-green-300 font-medium transition-colors"
                             >
                                 {t('login_create_account')}
                             </button>

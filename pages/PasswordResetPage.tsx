@@ -65,7 +65,7 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ language, onNavig
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 flex items-center justify-center p-6" dir={isRtl ? 'rtl' : 'ltr'}>
+        <div className="min-h-screen bg-gradient-to-br from-[#070914] via-[#0E132B] to-[#0A1020] flex items-center justify-center p-6" dir={isRtl ? 'rtl' : 'ltr'}>
             <div className="w-full max-w-md">
                 {/* Logo */}
                 <div className="text-center mb-8">
@@ -82,8 +82,8 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ language, onNavig
                     {step === 'sent' ? (
                         /* ✅ Link Sent State */
                         <div className="text-center">
-                            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <Check className="w-10 h-10 text-emerald-500" />
+                            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <Check className="w-10 h-10 text-green-500" />
                             </div>
                             <h2 className="text-2xl font-bold text-slate-800 mb-2">
                                 {language === 'ar' ? 'تم الإرسال!' : 'Link Sent!'}
@@ -103,7 +103,7 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ language, onNavig
                             <button
                                 onClick={handleResend}
                                 disabled={isLoading}
-                                className="w-full py-3 border-2 border-slate-200 text-slate-700 rounded-xl font-medium hover:border-emerald-500 hover:text-emerald-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2 mb-3"
+                                className="w-full py-3 border-2 border-slate-200 text-slate-700 rounded-xl font-medium hover:border-green-500 hover:text-green-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2 mb-3"
                             >
                                 {isLoading ? (
                                     <>
@@ -121,7 +121,7 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ language, onNavig
                             {/* Go to Login */}
                             <button
                                 onClick={() => onNavigate('login')}
-                                className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:from-emerald-400 hover:to-teal-400 transition-all flex items-center justify-center gap-2"
+                                className="w-full py-3 bg-gradient-to-r from-green-500 to-lime-500 text-white rounded-xl font-bold hover:from-green-400 hover:to-lime-400 transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-500/20"
                             >
                                 {language === 'ar' ? 'العودة لتسجيل الدخول' : 'Back to Login'}
                                 <Arrow className="w-5 h-5" />
@@ -151,7 +151,7 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ language, onNavig
                                     value={email}
                                     onChange={(e) => { setEmail(e.target.value); setError(''); }}
                                     placeholder={language === 'ar' ? 'البريد الإلكتروني' : 'Email address'}
-                                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl text-lg focus:border-emerald-500 focus:outline-none transition-all"
+                                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl text-lg focus:border-green-500 focus:outline-none transition-all"
                                     dir="ltr"
                                 />
                             </div>
@@ -163,7 +163,7 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ language, onNavig
                             <button
                                 onClick={handleSendResetLink}
                                 disabled={isLoading}
-                                className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:from-emerald-400 hover:to-teal-400 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="w-full py-3 bg-gradient-to-r from-green-500 to-lime-500 text-white rounded-xl font-bold hover:from-green-400 hover:to-lime-400 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-green-500/20"
                             >
                                 {isLoading ? (
                                     <>

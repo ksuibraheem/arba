@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Settings, MapPin, TrendingUp, Calculator, Briefcase, Ruler, Plus, Trash2, Home, Zap, FileText, User, LayoutGrid, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RefreshCw, Users, HardHat, DollarSign, LayoutTemplate, Palette, Languages, Check } from 'lucide-react';
-import { AppState, ProjectType, LocationType, RoomConfig, FacadeConfig, TeamMember, ExecutionMethod, ViewMode, Language } from '../types';
+import { AppState, ProjectType, LocationType, SoilType, RoomConfig, FacadeConfig, TeamMember, ExecutionMethod, ViewMode, Language } from '../types';
 import { PROJECT_DEFAULTS, TRANSLATIONS } from '../constants';
 
 interface SidebarProps {
@@ -286,6 +286,7 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                                 <option value="hotel" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🏨 {t('proj_hotel')} {isDemoMode ? '🔒' : ''}</option>
                                 <option value="residential_building" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🏬 {t('proj_residential')} {isDemoMode ? '🔒' : ''}</option>
                                 <option value="sports_complex" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🏟️ {t('proj_sports')} {isDemoMode ? '🔒' : ''}</option>
+                                <option value="farm" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🌾 {t('proj_farm')} {isDemoMode ? '🔒' : ''}</option>
                             </select>
                             {isDemoMode && (
                                 <p className="text-xs text-blue-400 mt-1">
@@ -479,6 +480,13 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                                 >
                                     <option value="riyadh">{t('loc_riyadh')}</option>
                                     <option value="jeddah">{t('loc_jeddah')}</option>
+                                    <option value="dammam">{t('loc_dammam')}</option>
+                                    <option value="makkah">{t('loc_makkah')}</option>
+                                    <option value="madinah">{t('loc_madinah')}</option>
+                                    <option value="abha">{t('loc_abha')}</option>
+                                    <option value="tabuk">{t('loc_tabuk')}</option>
+                                    <option value="qassim">{t('loc_qassim')}</option>
+                                    <option value="hail">{t('loc_hail')}</option>
                                 </select>
                             </div>
 
@@ -490,6 +498,81 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                                     type="number"
                                     value={state.landArea}
                                     onChange={(e) => onChange({ landArea: Number(e.target.value) })}
+                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
+                                />
+                            </div>
+
+                            {/* مسطح البناء */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                                    <Home className="w-4 h-4" /> {t('build_area_label')}
+                                </label>
+                                <input
+                                    type="number"
+                                    value={state.buildArea}
+                                    onChange={(e) => onChange({ buildArea: Number(e.target.value) })}
+                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
+                                />
+                                <p className="text-xs text-slate-500">{state.language === 'ar' ? 'يحسب تلقائياً = مساحة الأرض × 60% × الأدوار' : 'Auto = Land × 60% × Floors'}</p>
+                            </div>
+
+                            {/* عدد الأدوار */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                                    <ArrowUp className="w-4 h-4" /> {t('floors_count')}
+                                </label>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    max={50}
+                                    value={state.floors}
+                                    onChange={(e) => onChange({ floors: Math.max(1, Number(e.target.value)) })}
+                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
+                                />
+                            </div>
+
+                            {/* نوع التربة */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                                    <LayoutGrid className="w-4 h-4" /> {t('soil_type')}
+                                </label>
+                                <select
+                                    value={state.soilType}
+                                    onChange={(e) => onChange({ soilType: e.target.value as SoilType })}
+                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
+                                >
+                                    <option value="normal">{t('soil_normal')}</option>
+                                    <option value="sandy">{t('soil_sandy')}</option>
+                                    <option value="clay">{t('soil_clay')}</option>
+                                    <option value="rocky_soft">{t('soil_rocky_soft')}</option>
+                                    <option value="rocky_hard">{t('soil_rocky_hard')}</option>
+                                    <option value="marshy">{t('soil_marshy')}</option>
+                                </select>
+                            </div>
+
+                            {/* المصاريف الثابتة */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                                    <DollarSign className="w-4 h-4" /> {t('fixed_overhead')}
+                                </label>
+                                <input
+                                    type="number"
+                                    value={state.fixedOverhead}
+                                    onChange={(e) => onChange({ fixedOverhead: Number(e.target.value) })}
+                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
+                                />
+                            </div>
+
+                            {/* مدة المشروع */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-300 flex items-center gap-2">
+                                    <Briefcase className="w-4 h-4" /> {t('project_duration')}
+                                </label>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    value={state.projectDurationMonths}
+                                    onChange={(e) => onChange({ projectDurationMonths: Math.max(1, Number(e.target.value)) })}
                                     className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
                                 />
                             </div>

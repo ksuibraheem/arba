@@ -44,7 +44,7 @@ import { auth, db } from './config';
  * يُعاد توجيه المستخدم لهذا الرابط بعد الضغط على رابط التحقق في الإيميل
  */
 const ARBA_ACTION_CODE_SETTINGS: ActionCodeSettings = {
-    url: 'https://arba-sys.com/login',
+    url: typeof window !== 'undefined' ? `${window.location.origin}/login` : 'https://arba-sys.com/login',
     handleCodeInApp: false,
 };
 

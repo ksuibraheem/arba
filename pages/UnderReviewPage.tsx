@@ -159,18 +159,18 @@ const UnderReviewPage: React.FC<UnderReviewPageProps> = ({
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 flex items-center justify-center">
+            <div className="min-h-screen bg-gradient-to-br from-[#070914] via-[#0E132B] to-[#0A1020] flex items-center justify-center">
                 <RefreshCw className="w-8 h-8 text-white animate-spin" />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 flex items-center justify-center p-6" dir={isRtl ? 'rtl' : 'ltr'}>
+        <div className="min-h-screen bg-gradient-to-br from-[#070914] via-[#0E132B] to-[#0A1020] flex items-center justify-center p-6" dir={isRtl ? 'rtl' : 'ltr'}>
             <div className="w-full max-w-lg">
                 {/* Logo */}
                 <div className="text-center mb-8">
-                    <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
+                    <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-lime-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-green-500/20">
                         <Building2 className="w-8 h-8 text-white" />
                     </div>
                     <h1 className="text-2xl font-bold text-white">
@@ -255,7 +255,7 @@ const UnderReviewPage: React.FC<UnderReviewPageProps> = ({
                         <div className="space-y-3 mb-6">
                             <p className="text-sm text-slate-600 text-center mb-4">
                                 {language === 'ar' ? 'المبلغ المطلوب:' : 'Amount Due:'}{' '}
-                                <span className="font-bold text-emerald-600">{request.amount} {language === 'ar' ? 'ر.س' : 'SAR'}</span>
+                                <span className="font-bold text-green-600">{request.amount} {language === 'ar' ? 'ر.س' : 'SAR'}</span>
                             </p>
                             <button
                                 onClick={() => onNavigate('payment-upload')}
@@ -271,7 +271,7 @@ const UnderReviewPage: React.FC<UnderReviewPageProps> = ({
                     {(statusInfo as any).showLoginButton && (
                         <button
                             onClick={() => onNavigate('login')}
-                            className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:from-emerald-400 hover:to-teal-400 transition-all flex items-center justify-center gap-2"
+                            className="w-full py-3 bg-gradient-to-r from-green-500 to-lime-500 text-white rounded-xl font-bold hover:from-green-400 hover:to-lime-400 transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-500/20"
                         >
                             {language === 'ar' ? 'تسجيل الدخول' : 'Login'}
                             <Arrow className="w-5 h-5" />

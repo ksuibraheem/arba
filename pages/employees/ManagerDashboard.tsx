@@ -14,7 +14,8 @@ import {
 } from 'lucide-react';
 import {
     Employee, EmployeeRole, employeeService,
-    ROLE_TRANSLATIONS, ROLE_COLORS, MANAGER_CREDENTIALS, getManagerCredentials, updateManagerCredentials
+    ROLE_TRANSLATIONS, ROLE_COLORS, MANAGER_CREDENTIALS, getManagerCredentials, updateManagerCredentials,
+    loadEmployeesFromFirestore, loadManagerCredentialsFromFirestore
 } from '../../services/employeeService';
 import { invoiceEditRequestService, InvoiceEditRequest, EDIT_REQUEST_STATUS_TRANSLATIONS } from '../../services/invoiceEditRequestService';
 import { registrationService, RegistrationRequest, USER_TYPE_TRANSLATIONS, REGISTRATION_STATUS_TRANSLATIONS } from '../../services/registrationService';
@@ -318,13 +319,9 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
         try {
             // هنا نفترض وجود دالة updateEmployee في الخدمة، إن لم توجد سنستخدم addEmployee كبديل مؤقت أو نحدث القائمة مباشرة
             // لكن بما أننا نستخدم localStorage، يمكننا تحديث القائمة مباشرة
-            const updatedEmployees = employees.map(emp =>
-                emp.id === editEmployee.id ? { ...emp, ...editEmployee } : emp
-            );
-
-            // حفظ في LocalStorage (محاكاة لخدمة التحديث)
-            localStorage.setItem('arba_employees', JSON.stringify(updatedEmployees));
-            setEmployees(updatedEmployees);
+            // Use employeeService.updateEmployee to persist properly (localStorage + Firestore)
+            employeeService.updateEmployee(editEmployee.id, editEmployee);
+            setEmployees(employeeService.getEmployees());
 
             setShowEditModal(false);
             setFormSuccess(language === 'ar' ? 'تم تحديث البيانات بنجاح' : 'Employee updated successfully');
@@ -337,11 +334,15 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
     const [formSuccess, setFormSuccess] = useState('');
 
 
-    const loadData = () => {
-        setEmployees(employeeService.getEmployees());
+    const loadData = async () => {
+        // Load employees from Firestore first, then fallback to localStorage
+        const firestoreEmployees = await loadEmployeesFromFirestore();
+        setEmployees(firestoreEmployees.length > 0 ? firestoreEmployees : employeeService.getEmployees());
         setEditRequests(invoiceEditRequestService.getRequests());
         setAccounts(registrationService.getRequests());
         setSupportTickets(supportTicketService.getTicketsByRoute('admin'));
+        // Also load manager credentials from Firestore
+        await loadManagerCredentialsFromFirestore();
     };
 
     // تحميل الموظفين وطلبات التعديل والحسابات

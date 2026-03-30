@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
     LayoutDashboard,
     Users,
@@ -120,10 +120,10 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'active': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+            case 'active': return 'bg-green-500/10 text-green-400 border-green-500/30';
             case 'inactive': return 'bg-slate-500/10 text-slate-400 border-slate-500/30';
             case 'pending': return 'bg-amber-500/10 text-amber-400 border-amber-500/30';
-            case 'accepted': return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30';
+            case 'accepted': return 'bg-green-500/10 text-green-400 border-green-500/30';
             case 'rejected': return 'bg-red-500/10 text-red-400 border-red-500/30';
             case 'sent': return 'bg-blue-500/10 text-blue-400 border-blue-500/30';
             default: return 'bg-slate-500/10 text-slate-400 border-slate-500/30';
@@ -133,13 +133,13 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
     const maxVisits = Math.max(...visitData.map(d => d.visits));
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" dir={isRtl ? 'rtl' : 'ltr'}>
+        <div className="min-h-screen bg-gradient-to-br from-[#070914] via-[#0E132B] to-[#0A1020]" dir={isRtl ? 'rtl' : 'ltr'}>
             {/* Header */}
-            <header className="bg-slate-800/50 backdrop-blur-xl border-b border-slate-700/50 sticky top-0 z-50">
+            <header className="bg-[#0B0F24]/80 backdrop-blur-xl border-b border-[#2B2D6E]/40 sticky top-0 z-50">
                 <div className="max-w-7xl mx-auto px-6 py-4">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center">
+                            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-lime-500 rounded-xl flex items-center justify-center">
                                 <LayoutDashboard className="w-5 h-5 text-white" />
                             </div>
                             <div>
@@ -155,7 +155,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                         key={range}
                                         onClick={() => setDateRange(range)}
                                         className={`px-3 py-1 text-xs rounded-md transition-all ${dateRange === range
-                                            ? 'bg-emerald-500 text-white'
+                                            ? 'bg-green-500 text-white'
                                             : 'text-slate-400 hover:text-white'
                                             }`}
                                     >
@@ -183,8 +183,8 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={`px-4 py-2 rounded-xl font-medium transition-all whitespace-nowrap flex items-center gap-2 ${activeTab === tab
-                                ? 'bg-emerald-500 text-white'
-                                : 'bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50'
+                                ? 'bg-green-500 text-white'
+                                : 'bg-[#0E132B]/50 text-slate-400 hover:text-white hover:bg-[#131A3B]/70'
                                 }`}
                         >
                             {tab === 'overview' && <LayoutDashboard className="w-4 h-4" />}
@@ -208,7 +208,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                     <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
                                         <Eye className="w-6 h-6 text-blue-400" />
                                     </div>
-                                    <div className={`flex items-center gap-1 text-sm ${stats.visitsChange >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                    <div className={`flex items-center gap-1 text-sm ${stats.visitsChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                                         {stats.visitsChange >= 0 ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
                                         {Math.abs(stats.visitsChange)}%
                                     </div>
@@ -219,10 +219,10 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
 
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50">
                                 <div className="flex items-center justify-between mb-4">
-                                    <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center">
-                                        <Users className="w-6 h-6 text-emerald-400" />
+                                    <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
+                                        <Users className="w-6 h-6 text-green-400" />
                                     </div>
-                                    <div className={`flex items-center gap-1 text-sm ${stats.customersChange >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                    <div className={`flex items-center gap-1 text-sm ${stats.customersChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                                         {stats.customersChange >= 0 ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
                                         {Math.abs(stats.customersChange)}%
                                     </div>
@@ -236,7 +236,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                     <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
                                         <FileText className="w-6 h-6 text-purple-400" />
                                     </div>
-                                    <div className={`flex items-center gap-1 text-sm ${stats.quotesChange >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                    <div className={`flex items-center gap-1 text-sm ${stats.quotesChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                                         {stats.quotesChange >= 0 ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
                                         {Math.abs(stats.quotesChange)}%
                                     </div>
@@ -250,7 +250,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                     <div className="w-12 h-12 bg-amber-500/20 rounded-xl flex items-center justify-center">
                                         <DollarSign className="w-6 h-6 text-amber-400" />
                                     </div>
-                                    <div className={`flex items-center gap-1 text-sm ${stats.revenueChange >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                    <div className={`flex items-center gap-1 text-sm ${stats.revenueChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                                         {stats.revenueChange >= 0 ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
                                         {Math.abs(stats.revenueChange)}%
                                     </div>
@@ -265,14 +265,14 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                             {/* Visits Chart */}
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50">
                                 <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                                    <Activity className="w-5 h-5 text-emerald-400" />
+                                    <Activity className="w-5 h-5 text-green-400" />
                                     {language === 'ar' ? 'الزيارات اليومية' : 'Daily Visits'}
                                 </h3>
                                 <div className="flex items-end justify-between gap-2 h-48">
                                     {visitData.map((data, index) => (
                                         <div key={index} className="flex flex-col items-center gap-2 flex-1">
                                             <div
-                                                className="w-full bg-gradient-to-t from-emerald-500 to-teal-400 rounded-t-lg transition-all hover:opacity-80"
+                                                className="w-full bg-gradient-to-t from-green-500 to-lime-400 rounded-t-lg transition-all hover:opacity-80"
                                                 style={{ height: `${(data.visits / maxVisits) * 100}%` }}
                                             ></div>
                                             <span className="text-xs text-slate-400">{data.day}</span>
@@ -284,13 +284,13 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                             {/* Quick Stats */}
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50">
                                 <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                                    <PieChart className="w-5 h-5 text-emerald-400" />
+                                    <PieChart className="w-5 h-5 text-green-400" />
                                     {language === 'ar' ? 'إحصائيات سريعة' : 'Quick Stats'}
                                 </h3>
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-xl">
                                         <div className="flex items-center gap-3">
-                                            <UserCheck className="w-5 h-5 text-emerald-400" />
+                                            <UserCheck className="w-5 h-5 text-green-400" />
                                             <span className="text-slate-300">{language === 'ar' ? 'المستخدمين النشطين' : 'Active Users'}</span>
                                         </div>
                                         <span className="text-white font-bold">{stats.activeUsers}</span>
@@ -326,7 +326,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                 <h3 className="text-lg font-bold text-white">{language === 'ar' ? 'آخر عروض الأسعار' : 'Recent Quotes'}</h3>
                                 <button
                                     onClick={() => setActiveTab('quotes')}
-                                    className="text-emerald-400 hover:text-emerald-300 text-sm"
+                                    className="text-green-400 hover:text-green-300 text-sm"
                                 >
                                     {language === 'ar' ? 'عرض الكل' : 'View All'}
                                 </button>
@@ -376,10 +376,10 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                     <input
                                         type="text"
                                         placeholder={language === 'ar' ? 'بحث...' : 'Search...'}
-                                        className="bg-slate-800/50 border border-slate-700 rounded-xl py-2 ps-10 pe-4 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 w-64"
+                                        className="bg-slate-800/50 border border-slate-700 rounded-xl py-2 ps-10 pe-4 text-white placeholder-slate-500 focus:outline-none focus:border-green-500 w-64"
                                     />
                                 </div>
-                                <button className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl transition-colors">
+                                <button className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-400 text-white rounded-xl transition-colors">
                                     <Plus className="w-5 h-5" />
                                     {language === 'ar' ? 'إضافة عميل' : 'Add Customer'}
                                 </button>
@@ -415,7 +415,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                                         {t(`owner_${customer.status}`)}
                                                     </span>
                                                 </td>
-                                                <td className="px-4 py-3 text-end text-emerald-400 font-medium">{customer.totalSpent.toLocaleString()} {t('sar')}</td>
+                                                <td className="px-4 py-3 text-end text-green-400 font-medium">{customer.totalSpent.toLocaleString()} {t('sar')}</td>
                                                 <td className="px-4 py-3 text-center">
                                                     <div className="flex items-center justify-center gap-2">
                                                         <button className="p-1 text-slate-400 hover:text-blue-400 transition-colors">
@@ -458,8 +458,8 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                 <div className="text-2xl font-bold text-amber-400">{quotes.filter(q => q.status === 'pending').length}</div>
                                 <div className="text-sm text-slate-400">{language === 'ar' ? 'معلقة' : 'Pending'}</div>
                             </div>
-                            <div className="bg-emerald-500/10 rounded-xl p-4 border border-emerald-500/30">
-                                <div className="text-2xl font-bold text-emerald-400">{quotes.filter(q => q.status === 'accepted').length}</div>
+                            <div className="bg-green-500/10 rounded-xl p-4 border border-green-500/30">
+                                <div className="text-2xl font-bold text-green-400">{quotes.filter(q => q.status === 'accepted').length}</div>
                                 <div className="text-sm text-slate-400">{language === 'ar' ? 'مقبولة' : 'Accepted'}</div>
                             </div>
                             <div className="bg-red-500/10 rounded-xl p-4 border border-red-500/30">
@@ -496,7 +496,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                                 </td>
                                                 <td className="px-4 py-3 text-end text-white font-medium">{quote.total.toLocaleString()} {t('sar')}</td>
                                                 <td className="px-4 py-3 text-center">
-                                                    <button className="px-3 py-1 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded-lg text-sm transition-colors">
+                                                    <button className="px-3 py-1 bg-green-500/10 text-green-400 hover:bg-green-500/20 rounded-lg text-sm transition-colors">
                                                         {language === 'ar' ? 'عرض' : 'View'}
                                                     </button>
                                                 </td>
@@ -518,7 +518,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                             {/* General Settings */}
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
                                 <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                    <Globe className="w-5 h-5 text-emerald-400" />
+                                    <Globe className="w-5 h-5 text-green-400" />
                                     {language === 'ar' ? 'الإعدادات العامة' : 'General Settings'}
                                 </h3>
                                 <div className="space-y-4">
@@ -530,7 +530,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                             type="text"
                                             value={websiteSettings.siteName}
                                             onChange={(e) => setWebsiteSettings({ ...websiteSettings, siteName: e.target.value })}
-                                            className="w-full bg-slate-700/50 border border-slate-600 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-emerald-500"
+                                            className="w-full bg-slate-700/50 border border-slate-600 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-green-500"
                                         />
                                     </div>
                                     <div>
@@ -541,7 +541,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                             type="text"
                                             value={websiteSettings.tagline}
                                             onChange={(e) => setWebsiteSettings({ ...websiteSettings, tagline: e.target.value })}
-                                            className="w-full bg-slate-700/50 border border-slate-600 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-emerald-500"
+                                            className="w-full bg-slate-700/50 border border-slate-600 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-green-500"
                                         />
                                     </div>
                                 </div>
@@ -550,7 +550,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                             {/* Contact Info */}
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
                                 <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                    <Phone className="w-5 h-5 text-emerald-400" />
+                                    <Phone className="w-5 h-5 text-green-400" />
                                     {language === 'ar' ? 'معلومات التواصل' : 'Contact Info'}
                                 </h3>
                                 <div className="space-y-4">
@@ -562,7 +562,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                             type="email"
                                             value={websiteSettings.email}
                                             onChange={(e) => setWebsiteSettings({ ...websiteSettings, email: e.target.value })}
-                                            className="w-full bg-slate-700/50 border border-slate-600 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-emerald-500"
+                                            className="w-full bg-slate-700/50 border border-slate-600 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-green-500"
                                         />
                                     </div>
                                     <div>
@@ -573,7 +573,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                             type="tel"
                                             value={websiteSettings.phone}
                                             onChange={(e) => setWebsiteSettings({ ...websiteSettings, phone: e.target.value })}
-                                            className="w-full bg-slate-700/50 border border-slate-600 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-emerald-500"
+                                            className="w-full bg-slate-700/50 border border-slate-600 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-green-500"
                                             dir="ltr"
                                         />
                                     </div>
@@ -583,7 +583,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                             {/* Colors */}
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
                                 <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                    <Palette className="w-5 h-5 text-emerald-400" />
+                                    <Palette className="w-5 h-5 text-green-400" />
                                     {language === 'ar' ? 'الألوان' : 'Colors'}
                                 </h3>
                                 <div className="space-y-4">
@@ -602,7 +602,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                                 type="text"
                                                 value={websiteSettings.primaryColor}
                                                 onChange={(e) => setWebsiteSettings({ ...websiteSettings, primaryColor: e.target.value })}
-                                                className="flex-1 bg-slate-700/50 border border-slate-600 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-emerald-500 font-mono"
+                                                className="flex-1 bg-slate-700/50 border border-slate-600 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-green-500 font-mono"
                                             />
                                         </div>
                                     </div>
@@ -621,7 +621,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                                 type="text"
                                                 value={websiteSettings.secondaryColor}
                                                 onChange={(e) => setWebsiteSettings({ ...websiteSettings, secondaryColor: e.target.value })}
-                                                className="flex-1 bg-slate-700/50 border border-slate-600 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-emerald-500 font-mono"
+                                                className="flex-1 bg-slate-700/50 border border-slate-600 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-green-500 font-mono"
                                             />
                                         </div>
                                     </div>
@@ -631,7 +631,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                             {/* Address */}
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
                                 <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                                    <MapPin className="w-5 h-5 text-emerald-400" />
+                                    <MapPin className="w-5 h-5 text-green-400" />
                                     {language === 'ar' ? 'العنوان' : 'Address'}
                                 </h3>
                                 <div>
@@ -652,7 +652,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                             <button className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl transition-colors">
                                 {t('owner_cancel')}
                             </button>
-                            <button className="flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl transition-colors">
+                            <button className="flex items-center gap-2 px-6 py-3 bg-green-500 hover:bg-green-400 text-white rounded-xl transition-colors">
                                 <Save className="w-5 h-5" />
                                 {t('owner_save')}
                             </button>
@@ -681,7 +681,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                         <span className="text-white font-bold">30%</span>
                                     </div>
                                     <div className="w-full bg-slate-700 rounded-full h-2">
-                                        <div className="bg-emerald-500 h-2 rounded-full" style={{ width: '30%' }}></div>
+                                        <div className="bg-green-500 h-2 rounded-full" style={{ width: '30%' }}></div>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-slate-300">{language === 'ar' ? 'السوشيال ميديا' : 'Social Media'}</span>
@@ -708,7 +708,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                         <span className="text-white font-bold">62%</span>
                                     </div>
                                     <div className="w-full bg-slate-700 rounded-full h-2">
-                                        <div className="bg-teal-500 h-2 rounded-full" style={{ width: '62%' }}></div>
+                                        <div className="bg-green-500 h-2 rounded-full" style={{ width: '62%' }}></div>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <span className="text-slate-300">{language === 'ar' ? 'الكمبيوتر' : 'Desktop'}</span>
@@ -796,7 +796,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                     className="w-full bg-slate-700/50 border border-slate-600 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-emerald-500"
                                 />
                             </div>
-                            <button className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
+                            <button className="w-full py-3 bg-green-500 hover:bg-green-400 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
                                 <Save className="w-5 h-5" />
                                 {language === 'ar' ? 'حفظ التغييرات' : 'Save Changes'}
                             </button>

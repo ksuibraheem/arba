@@ -34,7 +34,25 @@ export const TRANSLATIONS: Record<string, Record<Language, string>> = {
     'location': { ar: 'الموقع', en: 'Location', fr: 'Emplacement', zh: '位置' },
     'loc_riyadh': { ar: 'الرياض', en: 'Riyadh', fr: 'Riyad', zh: '利雅得' },
     'loc_jeddah': { ar: 'جدة', en: 'Jeddah', fr: 'Djeddah', zh: '吉达' },
+    'loc_dammam': { ar: 'الدمام / الشرقية', en: 'Dammam / Eastern', fr: 'Dammam / Est', zh: '达曼 / 东部' },
+    'loc_makkah': { ar: 'مكة المكرمة', en: 'Makkah', fr: 'La Mecque', zh: '麦加' },
+    'loc_madinah': { ar: 'المدينة المنورة', en: 'Madinah', fr: 'Médine', zh: '麦地那' },
+    'loc_abha': { ar: 'أبها / عسير', en: 'Abha / Asir', fr: 'Abha / Assir', zh: '艾卜哈 / 阿西尔' },
+    'loc_tabuk': { ar: 'تبوك', en: 'Tabuk', fr: 'Tabuk', zh: '塔布克' },
+    'loc_qassim': { ar: 'القصيم (بريدة)', en: 'Qassim (Buraidah)', fr: 'Qassim (Buraydah)', zh: '盖西姆 (布赖代)' },
+    'loc_hail': { ar: 'حائل', en: 'Hail', fr: 'Haïl', zh: '哈伊勒' },
     'land_area': { ar: 'مساحة الأرض (م2)', en: 'Land Area (m²)', fr: 'Surface Terrain (m²)', zh: '土地面积 (m²)' },
+    'build_area_label': { ar: 'مسطح البناء (م2)', en: 'Build Area (m²)', fr: 'Surface Construite (m²)', zh: '建筑面积 (m²)' },
+    'floors_count': { ar: 'عدد الأدوار', en: 'Number of Floors', fr: "Nombre d'Étages", zh: '楼层数' },
+    'soil_type': { ar: 'نوع التربة', en: 'Soil Type', fr: 'Type de Sol', zh: '土壤类型' },
+    'soil_normal': { ar: 'عادية / متماسكة', en: 'Normal / Cohesive', fr: 'Normale / Cohésive', zh: '正常/粘性' },
+    'soil_sandy': { ar: 'رملية', en: 'Sandy', fr: 'Sablonneuse', zh: '沙质' },
+    'soil_clay': { ar: 'طينية', en: 'Clay', fr: 'Argileuse', zh: '粘土' },
+    'soil_rocky_soft': { ar: 'صخرية ناعمة', en: 'Soft Rock', fr: 'Roche Tendre', zh: '软岩' },
+    'soil_rocky_hard': { ar: 'صخرية صلبة', en: 'Hard Rock', fr: 'Roche Dure', zh: '硬岩' },
+    'soil_marshy': { ar: 'مستنقعية / رطبة', en: 'Marshy / Wet', fr: 'Marécageuse', zh: '沼泽' },
+    'fixed_overhead': { ar: 'المصاريف الثابتة (ر.س)', en: 'Fixed Overhead (SAR)', fr: 'Frais Fixes (SAR)', zh: '固定管理费 (SAR)' },
+    'project_duration': { ar: 'مدة المشروع (شهر)', en: 'Project Duration (Mo)', fr: 'Durée du Projet (Mois)', zh: '项目工期 (月)' },
     'reset_defaults': { ar: 'إعادة تعيين الافتراضيات', en: 'Reset Defaults', fr: 'Rétablir Défauts', zh: '重置默认值' },
     'confirm_reset': { ar: 'هل أنت متأكد؟', en: 'Are you sure?', fr: 'Êtes-vous sûr?', zh: '你确定吗？' },
     'tab_team': { ar: 'فريق العمل', en: 'Team', fr: 'Équipe', zh: '团队' },
@@ -89,6 +107,7 @@ export const TRANSLATIONS: Record<string, Record<Language, string>> = {
     'proj_hotel': { ar: 'فندق / نُزُل', en: 'Hotel / Inn', fr: 'Hôtel / Auberge', zh: '酒店 / 旅馆' },
     'proj_residential': { ar: 'عمارة سكنية', en: 'Residential Building', fr: 'Immeuble Résidentiel', zh: '住宅楼' },
     'proj_sports': { ar: 'مجمع رياضي / ملعب', en: 'Sports Complex', fr: 'Complexe Sportif', zh: '体育场馆' },
+    'proj_farm': { ar: 'مزرعة / منشأة زراعية', en: 'Farm / Agricultural', fr: 'Ferme / Agricole', zh: '农场' },
 
     // App Header
     'official_offer': { ar: 'عرض سعر رسمي', en: 'Official Quotation', fr: 'Devis Officiel', zh: '正式报价' },
@@ -213,6 +232,7 @@ export const REF_LAND_AREA = 300;
 export const REF_BUILD_AREA = 450;
 
 export const SOIL_MULTIPLIERS: Record<SoilType, number> = {
+    'normal': 0.9,
     'sandy': 1.0,
     'clay': 1.2,
     'rocky_soft': 1.5,
@@ -231,6 +251,7 @@ export const EST_COST_PER_SQM: Record<ProjectType, number> = {
     'hotel': 3800,
     'residential_building': 2000,
     'sports_complex': 2500,
+    'farm': 800,
 };
 
 export const PROJECT_TITLES: Record<ProjectType, string> = {
@@ -244,6 +265,7 @@ export const PROJECT_TITLES: Record<ProjectType, string> = {
     'hotel': 'نظام تسعير الفنادق والنُزُل',
     'residential_building': 'نظام تسعير العمارات السكنية',
     'sports_complex': 'نظام تسعير المجمعات الرياضية',
+    'farm': 'نظام تسعير المزارع والمنشآت الزراعية',
 };
 
 // ... Project Defaults remain same ...
@@ -582,6 +604,28 @@ export const PROJECT_DEFAULTS: Record<ProjectType, { rooms: RoomConfig[], facade
             floors: [
                 { id: 'fl_g', name: 'الأرضي', area: 10000, height: 5.0, slabType: 'waffle', columnsCount: 80, zones: [] },
                 { id: 'fl_m', name: 'الميزانين', area: 2000, height: 4.0, slabType: 'flat', columnsCount: 30, zones: [] },
+            ]
+        }
+    },
+    farm: {
+        rooms: [
+            { id: 'frm1', type: 'office', name: 'مكتب إدارة المزرعة', count: 1, area: 30, sockets: 6, switches: 3, acPoints: 1 },
+            { id: 'frm2', type: 'service', name: 'مخزن أعلاف ومعدات', count: 1, area: 100, sockets: 4, switches: 2, acPoints: 0 },
+            { id: 'frm3', type: 'service', name: 'صوبة زراعية', count: 2, area: 300, sockets: 10, switches: 4, acPoints: 0 },
+            { id: 'frm4', type: 'service', name: 'حظائر حيوانات', count: 1, area: 200, sockets: 6, switches: 3, acPoints: 0 },
+            { id: 'frm5', type: 'bathroom', name: 'دورات مياه', count: 2, area: 4, sockets: 1, switches: 1, acPoints: 0 },
+        ],
+        facades: [
+            { id: 'f1', direction: 'north', material: 'paint', area: 200 },
+        ],
+        team: [
+            { id: 'tm1', role: 'مشرف مزرعة', count: 1, monthlyCost: 5000, durationMonths: 12 },
+            { id: 'tm2', role: 'عمال زراعة', count: 3, monthlyCost: 2000, durationMonths: 12 },
+        ],
+        blueprint: {
+            plotLength: 200, plotWidth: 100, setbackFront: 5, setbackSide: 5,
+            floors: [
+                { id: 'fl_g', name: 'الأرضي', area: 500, height: 4.0, slabType: 'solid', columnsCount: 12, zones: [] },
             ]
         }
     }

@@ -9,7 +9,7 @@
  */
 
 /* ═══════════════════════════════════════════════
-   BASE: Better touch targets & font scaling
+   BASE: Touch & viewport fixes
    ═══════════════════════════════════════════════ */
 
 html {
@@ -17,295 +17,229 @@ html {
     -webkit-tap-highlight-color: transparent;
 }
 
-/* Prevent horizontal overflow on all pages */
-body {
+body, #root {
     overflow-x: hidden;
     max-width: 100vw;
 }
 
-#root {
-    overflow-x: hidden;
-    max-width: 100vw;
+/* Use dvh (dynamic viewport height) for mobile browsers */
+@supports (height: 100dvh) {
+    .h-screen {
+        height: 100dvh !important;
+    }
 }
 
-/* Better touch targets */
-@media (max-width: 768px) {
+/* Better touch targets on touch devices */
+@media (pointer: coarse) {
     button, a, input, select, textarea {
         min-height: 44px;
     }
-}
-
-/* ═══════════════════════════════════════════════
-   LANDING PAGE — Navigation
-   ═══════════════════════════════════════════════ */
-
-@media (max-width: 640px) {
-    /* Fix navbar overflow */
-    nav .max-w-7xl {
-        padding-left: 12px !important;
-        padding-right: 12px !important;
-    }
-
-    /* Hide desktop nav links, show only logo + buttons */
-    nav .hidden.md\:flex {
-        display: none !important;
-    }
-
-    /* Smaller logo text */
-    nav span.text-xl {
-        font-size: 0.95rem;
-    }
-
-    /* Stack nav buttons */
-    nav .flex.items-center.gap-3 {
-        gap: 6px;
-    }
-
-    nav .flex.items-center.gap-3 button {
-        padding: 6px 10px;
-        font-size: 0.8rem;
-    }
-
-    /* Hero section */
-    section.pt-32 {
-        padding-top: 5.5rem !important;
-        padding-bottom: 3rem !important;
-    }
-
-    section .text-4xl.md\:text-6xl,
-    section h1.text-4xl {
-        font-size: 1.75rem !important;
-        line-height: 1.3 !important;
-    }
-
-    section .text-xl.text-slate-400 {
-        font-size: 0.95rem !important;
-    }
-
-    /* Hero buttons - stack vertically */
-    .flex.flex-col.sm\:flex-row {
-        gap: 10px !important;
-    }
-    .flex.flex-col.sm\:flex-row button {
-        width: 100%;
-        padding: 12px 16px !important;
-        font-size: 0.95rem !important;
-    }
-
-    /* Stats row */
-    .grid.grid-cols-2.md\:grid-cols-4 {
-        gap: 10px !important;
-    }
-    .grid.grid-cols-2.md\:grid-cols-4 > div {
-        padding: 14px 10px !important;
-    }
-    .grid.grid-cols-2.md\:grid-cols-4 .text-3xl {
-        font-size: 1.5rem !important;
-    }
-
-    /* Section titles */
-    .text-3xl.md\:text-4xl {
-        font-size: 1.5rem !important;
-    }
-
-    /* Pricing cards */
-    #pricing .grid {
-        gap: 16px !important;
-    }
-    #pricing .scale-105 {
-        transform: none !important;
-    }
-
-    /* Footer */
-    footer .flex.flex-col.md\:flex-row {
-        text-align: center;
-    }
-}
-
-/* Tablet */
-@media (min-width: 641px) and (max-width: 1024px) {
-    nav .max-w-7xl {
-        padding-left: 16px !important;
-        padding-right: 16px !important;
-    }
-
-    section.pt-32 {
-        padding-top: 7rem !important;
-    }
-
-    section h1.text-4xl {
-        font-size: 2.25rem !important;
-    }
-}
-
-/* ═══════════════════════════════════════════════
-   LOGIN PAGE
-   ═══════════════════════════════════════════════ */
-
-@media (max-width: 640px) {
-    /* Login card tabs */
-    .grid.grid-cols-4 {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 8px !important;
-    }
-
-    /* Login form container */
-    .max-w-md, .max-w-lg {
-        max-width: 100% !important;
-        margin: 0 12px !important;
-    }
-
-    /* Form inputs */
+    /* Prevent iOS zoom on input focus */
     input[type="text"],
     input[type="email"],
     input[type="password"],
     input[type="tel"],
     input[type="number"],
-    select {
-        font-size: 16px !important; /* Prevents iOS zoom */
+    input[type="search"],
+    select, textarea {
+        font-size: 16px !important;
     }
 }
 
+/* Smooth scroll */
+* { scroll-behavior: smooth; }
+
 /* ═══════════════════════════════════════════════
-   PRICING CALCULATOR — Main Dashboard
+   MOBILE — max 640px
    ═══════════════════════════════════════════════ */
 
-/* Mobile: make the flex layout stack vertically */
-@media (max-width: 768px) {
-    /* Main pricing layout */
+@media (max-width: 640px) {
+
+    /* ——— LANDING PAGE ——— */
+
+    /* Fix navbar overflow */
+    nav .max-w-7xl {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+    nav span.text-xl {
+        font-size: 0.9rem;
+    }
+    nav .flex.items-center.gap-3 {
+        gap: 4px;
+    }
+    nav .flex.items-center.gap-3 button {
+        padding: 6px 8px;
+        font-size: 0.75rem;
+    }
+
+    /* Hero — less top padding */
+    section.pt-32 {
+        padding-top: 5rem !important;
+        padding-bottom: 2.5rem !important;
+    }
+    section h1.text-4xl,
+    section .text-4xl.md\:text-6xl {
+        font-size: 1.6rem !important;
+        line-height: 1.3 !important;
+    }
+    section .text-xl.text-slate-400 {
+        font-size: 0.9rem !important;
+    }
+
+    /* Hero buttons full width */
+    .flex.flex-col.sm\:flex-row button {
+        width: 100%;
+        padding: 12px 16px !important;
+        font-size: 0.9rem !important;
+    }
+
+    /* Stats row compact */
+    .grid.grid-cols-2.md\:grid-cols-4 {
+        gap: 8px !important;
+    }
+    .grid.grid-cols-2.md\:grid-cols-4 > div {
+        padding: 12px 8px !important;
+    }
+    .grid.grid-cols-2.md\:grid-cols-4 .text-3xl {
+        font-size: 1.4rem !important;
+    }
+
+    /* Section titles */
+    .text-3xl.md\:text-4xl {
+        font-size: 1.4rem !important;
+    }
+
+    /* Pricing cards — no scale */
+    #pricing .scale-105 {
+        transform: none !important;
+    }
+
+    /* ——— LOGIN PAGE ——— */
+
+    /* Login card tabs 2x2 */
+    .grid.grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 6px !important;
+    }
+    .max-w-md, .max-w-lg {
+        max-width: 100% !important;
+        margin: 0 10px !important;
+    }
+
+    /* ——— PRICING CALCULATOR (main app) ——— */
+
+    /* Stack layout vertically */
     .flex.h-screen.bg-slate-100 {
         flex-direction: column !important;
         height: auto !important;
-        min-height: 100vh;
+        min-height: 100dvh;
+        min-height: 100vh; /* fallback */
     }
 
-    /* Main content area */
+    /* Fix main content scrolling */
     .flex.h-screen.bg-slate-100 > main {
-        overflow: visible !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        flex: 1 1 auto;
         min-height: 0;
     }
 
-    /* Header bar */
+    /* Demo/Test banner — add padding-top to content when banner is shown */
+    .flex.h-screen.bg-slate-100 > main {
+        padding-top: 0;
+    }
+
+    /* Header — wrap items */
     .flex.h-screen.bg-slate-100 header {
+        padding: 8px 10px !important;
+    }
+
+    /* First row of header: back + logo + title */
+    .flex.h-screen.bg-slate-100 header .flex.justify-between.items-start {
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 8px !important;
+        padding-bottom: 8px !important;
+    }
+
+    /* Project title smaller */
+    .flex.h-screen.bg-slate-100 header h2.text-xl {
+        font-size: 0.95rem !important;
+    }
+
+    /* Hide subscription badge, usage stats, catalog button on mobile */
+    .flex.h-screen.bg-slate-100 header .flex.items-center.gap-4:last-child > div:nth-child(1),
+    .flex.h-screen.bg-slate-100 header .flex.items-center.gap-4:last-child > div:nth-child(2),
+    .flex.h-screen.bg-slate-100 header .flex.items-center.gap-4:last-child > div.flex.items-center.gap-2 {
+        display: none !important;
+    }
+
+    /* View toggle row compact */
+    .flex.h-screen.bg-slate-100 header .flex.items-center.gap-2 button,
+    .flex.h-screen.bg-slate-100 header .flex.items-center.gap-2 a {
+        padding: 6px 10px !important;
+        font-size: 0.75rem !important;
+    }
+
+    /* Free plan banner — stack */
+    .bg-gradient-to-r.from-amber-50 {
+        flex-direction: column !important;
+        gap: 6px;
+        padding: 8px 10px !important;
+        font-size: 0.8rem;
+    }
+
+    /* Stats cards 2x2 */
+    .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+        margin-bottom: 12px !important;
+    }
+    .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 > div {
+        padding: 10px !important;
+    }
+    .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 .text-3xl {
+        font-size: 1rem !important;
+    }
+    .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 h3 {
+        font-size: 0.7rem !important;
+    }
+
+    /* Technical stats single column */
+    .grid.grid-cols-1.md\:grid-cols-3 {
+        grid-template-columns: 1fr !important;
+        gap: 6px !important;
+    }
+    .grid.grid-cols-1.md\:grid-cols-3 > div {
         padding: 10px 12px !important;
     }
 
-    /* Dashboard title in header */
-    .flex.h-screen.bg-slate-100 header h1 {
-        font-size: 1rem !important;
-    }
-
-    /* Stats grid - single column on mobile */
-    .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 10px !important;
-        margin-bottom: 16px !important;
-    }
-
-    .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 > div {
-        padding: 12px !important;
-    }
-
-    .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 .text-3xl {
-        font-size: 1.1rem !important;
-    }
-
-    /* Technical stats row */
-    .grid.grid-cols-1.md\:grid-cols-3 {
-        grid-template-columns: 1fr !important;
-        gap: 8px !important;
-    }
-
-    /* Make the table scrollable horizontally */
-    .overflow-x-auto,
+    /* Table — horizontal scroll + compact */
     table {
-        font-size: 0.8rem !important;
+        font-size: 0.75rem !important;
     }
-
-    /* Table cells tighter padding */
     table td, table th {
-        padding: 6px 8px !important;
+        padding: 5px 6px !important;
         white-space: nowrap;
     }
 
-    /* Free plan banner */
-    .bg-gradient-to-r.from-amber-50 {
-        flex-direction: column !important;
-        gap: 8px;
-        padding: 10px !important;
-    }
-}
-
-/* Tablet: 2 column stats */
-@media (min-width: 641px) and (max-width: 1024px) {
-    .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 {
-        grid-template-columns: repeat(2, 1fr) !important;
+    /* Main content padding */
+    .flex.h-screen.bg-slate-100 main .p-3,
+    .flex.h-screen.bg-slate-100 main .p-4,
+    .flex.h-screen.bg-slate-100 main .p-5,
+    .flex.h-screen.bg-slate-100 main .p-6,
+    .flex.h-screen.bg-slate-100 main .p-8 {
+        padding: 8px !important;
     }
 
-    .flex.h-screen.bg-slate-100 header {
-        padding: 12px 16px !important;
-    }
-}
-
-/* ═══════════════════════════════════════════════
-   SIDEBAR — Mobile overlay
-   ═══════════════════════════════════════════════ */
-
-@media (max-width: 1024px) {
-    /* Ensure sidebar overlay works properly */
-    .fixed.inset-0.bg-black\/40 {
-        z-index: 35 !important;
-    }
-}
-
-/* ═══════════════════════════════════════════════
-   ITEM TABLE — Responsive table
-   ═══════════════════════════════════════════════ */
-
-@media (max-width: 640px) {
-    /* Wrap table in scrollable container */
-    .overflow-auto {
-        -webkit-overflow-scrolling: touch;
+    /* ——— BANNERS — More compact ——— */
+    .fixed.top-0.left-0.right-0.z-50 {
+        padding: 6px 8px !important;
+        font-size: 0.8rem;
     }
 
-    /* Sticky first column */
-    table th:first-child,
-    table td:first-child {
-        position: sticky;
-        right: 0;
-        z-index: 5;
-        background: inherit;
-    }
-
-    /* Hide less important columns on mobile */
-    table th:nth-child(n+5),
-    table td:nth-child(n+5) {
-        display: none;
-    }
-
-    /* Show expand button for hidden columns */
-    table .text-3xl {
-        font-size: 1rem !important;
-    }
-}
-
-/* ═══════════════════════════════════════════════
-   DEMO/TEST BANNERS — Mobile friendly
-   ═══════════════════════════════════════════════ */
-
-@media (max-width: 640px) {
-    .fixed.top-0.left-0.right-0.z-50.bg-gradient-to-r {
-        padding: 8px 10px !important;
-        font-size: 0.85rem;
-    }
-}
-
-/* ═══════════════════════════════════════════════
-   MODALS — Full screen on mobile
-   ═══════════════════════════════════════════════ */
-
-@media (max-width: 640px) {
-    /* Modal containers */
+    /* ——— MODALS — Full width ——— */
     .fixed.inset-0 .bg-white.rounded-2xl,
     .fixed.inset-0 .bg-white.rounded-3xl,
     .fixed.inset-0 .bg-slate-800.rounded-2xl,
@@ -313,115 +247,52 @@ body {
         max-width: 95vw !important;
         max-height: 90vh !important;
         margin: auto !important;
-        border-radius: 16px !important;
+        border-radius: 12px !important;
     }
-
-    /* Price quote modal */
     .fixed.inset-0 .max-w-4xl,
-    .fixed.inset-0 .max-w-6xl {
+    .fixed.inset-0 .max-w-6xl,
+    .fixed.inset-0 .max-w-md {
         max-width: 95vw !important;
     }
-}
 
-/* ═══════════════════════════════════════════════
-   EMPLOYEE DASHBOARD — Cards grid
-   ═══════════════════════════════════════════════ */
-
-@media (max-width: 640px) {
-    /* Make dashboard cards stack */
+    /* ——— EMPLOYEE/MANAGER DASHBOARDS ——— */
     .grid.grid-cols-2.lg\:grid-cols-4,
     .grid.grid-cols-2.md\:grid-cols-3,
     .grid.grid-cols-2.md\:grid-cols-4 {
         grid-template-columns: repeat(2, 1fr) !important;
-        gap: 8px !important;
+        gap: 6px !important;
     }
-
-    /* Card text size */
     .grid > div .text-2xl {
-        font-size: 1.25rem !important;
+        font-size: 1.1rem !important;
     }
-}
 
-/* Tablet: 2-3 columns for cards */
-@media (min-width: 641px) and (max-width: 1024px) {
-    .grid.grid-cols-2.lg\:grid-cols-4 {
-        grid-template-columns: repeat(3, 1fr) !important;
+    /* Manager header compact */
+    header .max-w-7xl {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
     }
-}
+    header h1.text-xl {
+        font-size: 0.95rem !important;
+    }
+    header p.text-sm {
+        font-size: 0.7rem !important;
+    }
 
-/* ═══════════════════════════════════════════════
-   REGISTER / PAYMENT PAGES
-   ═══════════════════════════════════════════════ */
-
-@media (max-width: 640px) {
+    /* ——— REGISTER / PAYMENT ——— */
     .max-w-2xl, .max-w-3xl {
         max-width: 95vw !important;
-        padding-left: 12px !important;
-        padding-right: 12px !important;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
     }
 
-    /* Step indicators */
-    .flex.items-center.gap-4 .w-10.h-10 {
-        width: 32px !important;
-        height: 32px !important;
-    }
-}
-
-/* ═══════════════════════════════════════════════
-   SUPPORT CENTER
-   ═══════════════════════════════════════════════ */
-
-@media (max-width: 640px) {
-    /* Chat/ticket list */
-    .divide-y > div {
-        padding: 10px 8px !important;
-    }
-}
-
-/* ═══════════════════════════════════════════════
-   MANAGER DASHBOARD
-   ═══════════════════════════════════════════════ */
-
-@media (max-width: 640px) {
-    /* Manager quick actions grid */
-    .grid.grid-cols-2.sm\:grid-cols-3 {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 8px !important;
-    }
-
-    /* Manager header */
-    header .max-w-7xl {
-        padding-left: 12px !important;
-        padding-right: 12px !important;
-    }
-
-    header h1.text-xl {
-        font-size: 1rem !important;
-    }
-
-    header p.text-sm {
-        font-size: 0.75rem !important;
-    }
-}
-
-/* ═══════════════════════════════════════════════
-   SCROLL IMPROVEMENTS
-   ═══════════════════════════════════════════════ */
-
-/* Smooth scrolling everywhere */
-* {
-    scroll-behavior: smooth;
-}
-
-/* Better scrollbars on mobile */
-@media (max-width: 768px) {
+    /* Scrollbars thin */
     ::-webkit-scrollbar {
-        width: 4px;
-        height: 4px;
+        width: 3px;
+        height: 3px;
     }
     ::-webkit-scrollbar-thumb {
-        background: rgba(0, 0, 0, 0.2);
-        border-radius: 4px;
+        background: rgba(0, 0, 0, 0.15);
+        border-radius: 3px;
     }
     ::-webkit-scrollbar-track {
         background: transparent;
@@ -429,7 +300,59 @@ body {
 }
 
 /* ═══════════════════════════════════════════════
-   SAFE AREA (notch / bottom bar)
+   TABLET — 641px to 1024px
+   ═══════════════════════════════════════════════ */
+
+@media (min-width: 641px) and (max-width: 1024px) {
+
+    /* Landing nav */
+    nav .max-w-7xl {
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+    }
+    section.pt-32 {
+        padding-top: 6.5rem !important;
+    }
+    section h1.text-4xl {
+        font-size: 2rem !important;
+    }
+
+    /* Pricing calculator — keep flex but allow scroll */
+    .flex.h-screen.bg-slate-100 {
+        height: auto !important;
+        min-height: 100vh;
+    }
+    .flex.h-screen.bg-slate-100 > main {
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+
+    /* Header */
+    .flex.h-screen.bg-slate-100 header {
+        padding: 10px 14px !important;
+    }
+    .flex.h-screen.bg-slate-100 header h2.text-xl {
+        font-size: 1rem !important;
+    }
+
+    /* Stats — 2 columns */
+    .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+
+    /* Dashboard cards — 3 columns */
+    .grid.grid-cols-2.lg\:grid-cols-4 {
+        grid-template-columns: repeat(3, 1fr) !important;
+    }
+
+    /* Main content padding */
+    .flex.h-screen.bg-slate-100 main .p-8 {
+        padding: 14px !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════
+   SAFE AREA — notched phones
    ═══════════════════════════════════════════════ */
 
 @supports (padding: env(safe-area-inset-top)) {

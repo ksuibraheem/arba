@@ -134,11 +134,11 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
     }, [language, resendCooldown]);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 flex items-center justify-center p-6" dir={isRtl ? 'rtl' : 'ltr'}>
+        <div className="min-h-screen bg-gradient-to-br from-[#070914] via-[#0E132B] to-[#0A1020] flex items-center justify-center p-6" dir={isRtl ? 'rtl' : 'ltr'}>
             <div className="w-full max-w-md">
                 {/* Logo */}
                 <div className="text-center mb-8">
-                    <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
+                    <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-lime-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-green-500/20">
                         <Shield className="w-8 h-8 text-white" />
                     </div>
                     <h1 className="text-2xl font-bold text-white">{t('verification_title')}</h1>
@@ -149,8 +149,8 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
                     {isVerified ? (
                         /* ✅ Verified State */
                         <div className="text-center">
-                            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <Check className="w-10 h-10 text-emerald-500" />
+                            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <Check className="w-10 h-10 text-green-500" />
                             </div>
                             <h2 className="text-2xl font-bold text-slate-800 mb-2">
                                 {language === 'ar' ? 'تم التحقق بنجاح!' : 'Email Verified!'}
@@ -197,9 +197,9 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
                             )}
 
                             {/* Auto-polling indicator */}
-                            <div className="flex items-center justify-center gap-2 mb-6 px-4 py-3 bg-emerald-50 rounded-xl">
-                                <RefreshCw className="w-4 h-4 text-emerald-600 animate-spin" />
-                                <span className="text-sm text-emerald-700">
+                            <div className="flex items-center justify-center gap-2 mb-6 px-4 py-3 bg-green-50 rounded-xl">
+                                <RefreshCw className="w-4 h-4 text-green-600 animate-spin" />
+                                <span className="text-sm text-green-700">
                                     {language === 'ar'
                                         ? 'نتحقق تلقائياً... اضغط على الرابط في بريدك'
                                         : 'Auto-checking... Click the link in your email'}
@@ -208,7 +208,7 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
 
                             {/* Success Message */}
                             {successMessage && (
-                                <p className="text-emerald-600 text-center text-sm mb-4 px-4 py-2 bg-emerald-50 rounded-lg">
+                                <p className="text-green-600 text-center text-sm mb-4 px-4 py-2 bg-green-50 rounded-lg">
                                     {successMessage}
                                 </p>
                             )}
@@ -224,7 +224,7 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
                             <button
                                 onClick={handleCheckStatus}
                                 disabled={isChecking}
-                                className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:from-emerald-400 hover:to-teal-400 transition-all disabled:opacity-50 flex items-center justify-center gap-2 mb-3"
+                                className="w-full py-3 bg-gradient-to-r from-green-500 to-lime-500 text-white rounded-xl font-bold hover:from-green-400 hover:to-lime-400 transition-all disabled:opacity-50 flex items-center justify-center gap-2 mb-3 shadow-lg shadow-green-500/20"
                             >
                                 {isChecking ? (
                                     <>
@@ -243,7 +243,7 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
                             <button
                                 onClick={handleResend}
                                 disabled={isResending || resendCooldown > 0}
-                                className="w-full py-3 border-2 border-slate-200 text-slate-700 rounded-xl font-medium hover:border-emerald-500 hover:text-emerald-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                className="w-full py-3 border-2 border-slate-200 text-slate-700 rounded-xl font-medium hover:border-green-500 hover:text-green-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                                 {isResending ? (
                                     <>

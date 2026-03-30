@@ -393,7 +393,21 @@ export const calculateProjectCosts = (state: AppState): CalculationResult => {
             matCost = matCost * selectedSupplier.priceMultiplier;
         }
 
-        if (state.location === 'jeddah' && (item.category === 'structure' || item.category === 'site')) matCost *= 1.02;
+        // --- LOCATION-BASED PRICE ADJUSTMENTS ---
+        // Each city has different material/transport costs
+        const locationMultipliers: Record<string, number> = {
+            'riyadh': 1.00,   // Base — reference city
+            'jeddah': 1.02,   // Slightly higher (port city, humidity)
+            'dammam': 1.01,   // Eastern Province — industrial hub
+            'makkah': 1.05,   // High demand, restricted access
+            'madinah': 1.04,  // High demand, logistics costs
+            'abha': 1.06,     // Mountain region, transport costs
+            'tabuk': 1.08,    // Remote north, higher transport
+            'qassim': 0.98,   // Agricultural hub, slightly cheaper
+            'hail': 1.03,     // Northern region
+        };
+        const locMult = locationMultipliers[state.location] || 1.0;
+        if (locMult !== 1.0 && (item.category === 'structure' || item.category === 'site')) matCost *= locMult;
         if (item.soilFactor) labCost *= SOIL_MULTIPLIERS[state.soilType];
         if (item.id === "00.02") matCost = estimatedProjectValue * 0.015;
 

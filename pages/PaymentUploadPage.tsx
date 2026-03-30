@@ -129,7 +129,7 @@ const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
 
     if (success) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 flex items-center justify-center p-6" dir={isRtl ? 'rtl' : 'ltr'}>
+            <div className="min-h-screen bg-gradient-to-br from-[#070914] via-[#0E132B] to-[#0A1020] flex items-center justify-center p-6" dir={isRtl ? 'rtl' : 'ltr'}>
                 <div className="bg-white rounded-3xl p-8 shadow-2xl max-w-md w-full text-center">
                     <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
                         <Check className="w-10 h-10 text-green-500" />
@@ -153,11 +153,11 @@ const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 flex items-center justify-center p-6" dir={isRtl ? 'rtl' : 'ltr'}>
+        <div className="min-h-screen bg-gradient-to-br from-[#070914] via-[#0E132B] to-[#0A1020] flex items-center justify-center p-6" dir={isRtl ? 'rtl' : 'ltr'}>
             <div className="w-full max-w-2xl">
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
+                    <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-lime-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-green-500/20">
                         <CreditCard className="w-8 h-8 text-white" />
                     </div>
                     <h1 className="text-2xl font-bold text-white mb-2">
@@ -171,14 +171,14 @@ const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
                 {/* Payment Card */}
                 <div className="bg-white rounded-3xl p-8 shadow-2xl">
                     {/* Amount */}
-                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6 text-center">
-                        <p className="text-emerald-600 text-sm mb-1">
+                    <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6 text-center">
+                        <p className="text-green-600 text-sm mb-1">
                             {language === 'ar' ? 'المبلغ المطلوب' : 'Amount Due'}
                         </p>
-                        <p className="text-3xl font-bold text-emerald-700">
+                        <p className="text-3xl font-bold text-green-700">
                             {amount.toLocaleString()} <span className="text-lg">{language === 'ar' ? 'ر.س' : 'SAR'}</span>
                         </p>
-                        <p className="text-emerald-500 text-sm mt-1">
+                        <p className="text-green-500 text-sm mt-1">
                             {language === 'ar' ? 'اشتراك سنوي - الباقة الاحترافية' : 'Annual Subscription - Professional Plan'}
                         </p>
                     </div>
@@ -197,7 +197,7 @@ const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
                                     className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 relative ${method.comingSoon
                                         ? 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed opacity-60'
                                         : selectedMethod === method.id
-                                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                            ? 'border-green-500 bg-green-50 text-green-700'
                                             : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                                         }`}
                                 >
@@ -209,7 +209,7 @@ const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
                                     {method.icon}
                                     <span className="text-sm font-medium">{method.name[language]}</span>
                                     {selectedMethod === method.id && !method.comingSoon && (
-                                        <Check className="w-4 h-4 text-emerald-500 absolute top-2 left-2" />
+                                        <Check className="w-4 h-4 text-green-500 absolute top-2 left-2" />
                                     )}
                                 </button>
                             ))}
@@ -251,8 +251,8 @@ const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
                                     {language === 'ar' ? 'رفع إيصال الدفع' : 'Upload Payment Receipt'}
                                 </h4>
                                 <label className={`block border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${receiptFile
-                                    ? 'border-emerald-500 bg-emerald-50'
-                                    : 'border-slate-300 hover:border-emerald-400 bg-slate-50'
+                                    ? 'border-green-500 bg-green-50'
+                                    : 'border-slate-300 hover:border-green-400 bg-slate-50'
                                     }`}>
                                     <input
                                         type="file"
@@ -261,10 +261,10 @@ const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
                                         className="hidden"
                                     />
                                     {receiptFile ? (
-                                        <div className="text-emerald-600">
+                                        <div className="text-green-600">
                                             <FileText className="w-10 h-10 mx-auto mb-2" />
                                             <p className="font-medium">{receiptFileName}</p>
-                                            <p className="text-sm text-emerald-500">
+                                            <p className="text-sm text-green-500">
                                                 {language === 'ar' ? 'اضغط لتغيير الملف' : 'Click to change file'}
                                             </p>
                                         </div>
@@ -316,7 +316,7 @@ const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
                     <button
                         onClick={handleSubmit}
                         disabled={!selectedMethod || isLoading}
-                        className="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:from-emerald-400 hover:to-teal-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="w-full py-4 bg-gradient-to-r from-green-500 to-lime-500 text-white rounded-xl font-bold hover:from-green-400 hover:to-lime-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-green-500/20"
                     >
                         {isLoading ? (
                             <>

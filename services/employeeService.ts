@@ -4,7 +4,7 @@
  */
 
 import { db } from '../firebase/config';
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import {
     ArbaClient, CompanyEmployee, EmployeePermission,
     SubscriptionPlan, PLAN_EMPLOYEE_LIMITS, EXTRA_SEAT_PRICE_SAR,
@@ -206,12 +206,15 @@ export const ROLE_COLORS: Record<EmployeeRole, string> = {
     quantity_surveyor: 'from-sky-500 to-blue-600',
 };
 
-// Manager credentials — stored in localStorage for persistence
+// Manager credentials — stored in localStorage + Firestore for persistence
 const DEFAULT_MANAGER_CREDENTIALS = {
     name: 'المدير العام',
     employeeNumber: '2201187',
     password: 'Aa0591529339',
 };
+
+const FIRESTORE_EMPLOYEES_DOC = 'arba_config/employees_data';
+const FIRESTORE_MANAGER_DOC = 'arba_config/manager_credentials';
 
 export const MANAGER_CREDENTIALS = (() => {
     try {
@@ -235,10 +238,88 @@ export function updateManagerCredentials(updates: Partial<typeof DEFAULT_MANAGER
     localStorage.setItem('arba_manager_credentials', JSON.stringify(updated));
     // Update the live object
     Object.assign(MANAGER_CREDENTIALS, updated);
+    // Sync to Firestore (fire-and-forget)
+    syncManagerCredentialsToFirestore(updated).catch(console.error);
     return updated;
 }
 
-// localStorage-based employee CRUD
+// =================== FIRESTORE SYNC ===================
+
+/**
+ * مزامنة بيانات المدير مع Firestore (ما بعد التحديث)
+ */
+async function syncManagerCredentialsToFirestore(creds: typeof DEFAULT_MANAGER_CREDENTIALS) {
+    try {
+        await setDoc(doc(db, FIRESTORE_MANAGER_DOC.split('/')[0], FIRESTORE_MANAGER_DOC.split('/')[1]), {
+            ...creds,
+            updatedAt: serverTimestamp(),
+        }, { merge: true });
+        console.log('✅ Manager credentials synced to Firestore');
+    } catch (error) {
+        console.warn('⚠️ Failed to sync manager credentials to Firestore:', error);
+    }
+}
+
+/**
+ * جلب بيانات المدير من Firestore (عند أول تحميل)
+ */
+export async function loadManagerCredentialsFromFirestore(): Promise<typeof DEFAULT_MANAGER_CREDENTIALS> {
+    try {
+        const docSnap = await getDoc(doc(db, FIRESTORE_MANAGER_DOC.split('/')[0], FIRESTORE_MANAGER_DOC.split('/')[1]));
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            const merged = { ...DEFAULT_MANAGER_CREDENTIALS, ...data };
+            localStorage.setItem('arba_manager_credentials', JSON.stringify(merged));
+            Object.assign(MANAGER_CREDENTIALS, merged);
+            console.log('✅ Manager credentials loaded from Firestore');
+            return merged as typeof DEFAULT_MANAGER_CREDENTIALS;
+        }
+    } catch (error) {
+        console.warn('⚠️ Failed to load manager credentials from Firestore, using local:', error);
+    }
+    return getManagerCredentials();
+}
+
+/**
+ * حفظ الموظفين في Firestore (fire-and-forget)
+ */
+async function syncEmployeesToFirestore(employees: Employee[]) {
+    try {
+        await setDoc(doc(db, FIRESTORE_EMPLOYEES_DOC.split('/')[0], FIRESTORE_EMPLOYEES_DOC.split('/')[1]), {
+            employees: employees,
+            count: employees.length,
+            updatedAt: serverTimestamp(),
+        });
+        console.log(`✅ ${employees.length} employees synced to Firestore`);
+    } catch (error) {
+        console.warn('⚠️ Failed to sync employees to Firestore:', error);
+    }
+}
+
+/**
+ * جلب الموظفين من Firestore (عند أول تحميل فقط)
+ * يحدّث localStorage ويرجع القائمة
+ */
+export async function loadEmployeesFromFirestore(): Promise<Employee[]> {
+    try {
+        const docSnap = await getDoc(doc(db, FIRESTORE_EMPLOYEES_DOC.split('/')[0], FIRESTORE_EMPLOYEES_DOC.split('/')[1]));
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            const employees: Employee[] = data.employees || [];
+            if (employees.length > 0) {
+                localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(employees));
+                console.log(`✅ ${employees.length} employees loaded from Firestore`);
+                return employees;
+            }
+        }
+    } catch (error) {
+        console.warn('⚠️ Failed to load employees from Firestore, using local:', error);
+    }
+    // Fallback to localStorage
+    return getStoredEmployees();
+}
+
+// localStorage-based employee CRUD (with Firestore sync)
 const EMPLOYEES_KEY = 'arba_employees';
 
 function getStoredEmployees(): Employee[] {
@@ -250,6 +331,8 @@ function getStoredEmployees(): Employee[] {
 
 function saveEmployees(employees: Employee[]) {
     localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(employees));
+    // Sync to Firestore (fire-and-forget — won't block UI)
+    syncEmployeesToFirestore(employees).catch(console.error);
 }
 
 export const employeeService = {

@@ -1,11 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#10b981"/>
-      <stop offset="100%" style="stop-color:#14b8a6"/>
-    </linearGradient>
-  </defs>
-  <rect width="32" height="32" rx="6" fill="url(#grad)"/>
-  <path d="M9 22h4l3-12 3 12h4" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="16" cy="11" r="2" fill="white"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Green shadow offset -->
+  <g transform="translate(8, 8)">
+    <path d="M30,170 L30,165 Q30,160 33,155 L80,30 Q85,18 95,15 L105,15 Q115,18 120,30 L167,155 Q170,160 170,165 L170,170 L170,175 Q170,180 165,182 L155,182 Q148,182 145,175 L135,148 Q132,140 125,140 L75,140 Q68,140 65,148 L55,175 Q52,182 45,182 L35,182 Q30,180 30,175 Z" fill="#4ADE4A"/>
+    <rect x="18" y="170" width="48" height="14" rx="4" fill="#4ADE4A"/>
+    <rect x="135" y="170" width="48" height="14" rx="4" fill="#4ADE4A"/>
+    <rect x="78" y="10" width="44" height="10" rx="3" fill="#4ADE4A"/>
+  </g>
+  <!-- Main A letter navy -->
+  <path d="M30,170 L30,165 Q30,160 33,155 L80,30 Q85,18 95,15 L105,15 Q115,18 120,30 L167,155 Q170,160 170,165 L170,170 L170,175 Q170,180 165,182 L155,182 Q148,182 145,175 L135,148 Q132,140 125,140 L75,140 Q68,140 65,148 L55,175 Q52,182 45,182 L35,182 Q30,180 30,175 Z" fill="#2B2D6E"/>
+  <path d="M85,120 L100,60 L115,120 Z" fill="#1E1F52"/>
+  <rect x="18" y="170" width="48" height="14" rx="4" fill="#2B2D6E"/>
+  <rect x="135" y="170" width="48" height="14" rx="4" fill="#2B2D6E"/>
+  <rect x="78" y="10" width="44" height="10" rx="3" fill="#2B2D6E"/>
 </svg>

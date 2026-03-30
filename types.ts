@@ -1,8 +1,8 @@
 import { Supplier, SupplierProduct } from './services/supplierService';
 
-export type ProjectType = 'villa' | 'tower' | 'rest_house' | 'factory' | 'school' | 'hospital' | 'mosque' | 'hotel' | 'residential_building' | 'sports_complex';
-export type LocationType = 'riyadh' | 'jeddah';
-export type SoilType = 'sandy' | 'clay' | 'rocky_soft' | 'rocky_hard' | 'marshy';
+export type ProjectType = 'villa' | 'tower' | 'rest_house' | 'factory' | 'school' | 'hospital' | 'mosque' | 'hotel' | 'residential_building' | 'sports_complex' | 'farm';
+export type LocationType = 'riyadh' | 'jeddah' | 'dammam' | 'makkah' | 'madinah' | 'abha' | 'tabuk' | 'qassim' | 'hail';
+export type SoilType = 'normal' | 'sandy' | 'clay' | 'rocky_soft' | 'rocky_hard' | 'marshy';
 export type PricingStrategy = 'fixed_margin' | 'target_roi';
 
 // Updated: View Mode to include 'materials'

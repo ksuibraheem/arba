@@ -30,7 +30,7 @@ import { supplierService } from './services/supplierService';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ManagerDashboard from './pages/employees/ManagerDashboard';
 import EmployeeDashboard from './pages/employees/EmployeeDashboard';
-import { employeeService, Employee, MANAGER_CREDENTIALS } from './services/employeeService';
+import { employeeService, Employee, MANAGER_CREDENTIALS, loadEmployeesFromFirestore, loadManagerCredentialsFromFirestore } from './services/employeeService';
 import HRPage from './pages/employees/roles/HRPage';
 import AccountantPage from './pages/employees/roles/AccountantPage';
 import PasswordResetPage from './pages/PasswordResetPage';
@@ -51,6 +51,7 @@ import { registerUser, loginUser, logoutUser, getCurrentUser, StoredUser } from 
 // Firebase auth service
 import { registerWithFirebase, loginWithFirebase, logoutFromFirebase, onAuthChange, getUserData, UserData } from './firebase/authService';
 import { isInTestMode, getCurrentTestSession, endTestMode } from './services/testModeService';
+import SplashScreen from './components/SplashScreen';
 
 // Toggle Firebase mode - set to true to use Firebase
 const USE_FIREBASE = true;
@@ -104,6 +105,8 @@ const App: React.FC = () => {
     const [adminAccessGranted, setAdminAccessGranted] = useState(false);
     const [adminKeyInput, setAdminKeyInput] = useState('');
     const [isLoading, setIsLoading] = useState(true);
+    // Splash screen state - shows only on first login for full data restoration
+    const [showSplash, setShowSplash] = useState(false);
     // Employee state
     const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
     const [isManager, setIsManager] = useState(false);
@@ -260,6 +263,14 @@ const App: React.FC = () => {
                             // Default Login Routing based on userType (use ref to avoid re-subscription)
                             const page = currentPageRef.current;
                             if (page === 'login') {
+                                // ── شاشة السبلاش: تظهر أول مرة فقط لكل مستخدم ──
+                                const splashKey = `arba_splash_shown_${firebaseUser.uid}`;
+                                const splashAlreadyShown = localStorage.getItem(splashKey);
+                                if (!splashAlreadyShown) {
+                                    setShowSplash(true);
+                                    localStorage.setItem(splashKey, 'true');
+                                }
+
                                 if (userData.userType === 'supplier') {
                                     setCurrentPage('supplier');
                                 } else if (userData.userType === 'individual') {
@@ -429,6 +440,9 @@ const App: React.FC = () => {
 
         // موظفين - تحقق خاص
         if (userType === 'employee') {
+            // تحميل الموظفين وبيانات المدير من Firestore أولاً (لضمان العمل من أي جهاز)
+            await loadEmployeesFromFirestore();
+            await loadManagerCredentialsFromFirestore();
             // استخدام نظام الموظفين الجديد
             const result = employeeService.login(email, password);
 
@@ -830,7 +844,16 @@ const App: React.FC = () => {
 
     // Dashboard State Handlers
     const handleStateChange = (updates: Partial<AppState>) => {
-        setState((prev) => ({ ...prev, ...updates }));
+        setState((prev) => {
+            const merged = { ...prev, ...updates };
+            // Auto-recalculate buildArea when landArea or floors change
+            if (updates.landArea !== undefined || updates.floors !== undefined) {
+                const landArea = updates.landArea ?? prev.landArea;
+                const floors = updates.floors ?? prev.floors;
+                merged.buildArea = Math.round(landArea * 0.60 * floors);
+            }
+            return merged;
+        });
     };
 
     const handleBlueprintChange = (blueprint: BlueprintConfig) => {
@@ -940,6 +963,11 @@ const App: React.FC = () => {
     };
 
     const isRtl = state.language === 'ar';
+
+    // Splash Screen - يظهر عند أول تسجيل دخول أثناء استرجاع البيانات
+    if (showSplash) {
+        return <SplashScreen language={language} onComplete={() => setShowSplash(false)} />;
+    }
 
     // Render Pages Based on Route
     if (currentPage === 'landing') {
@@ -1633,7 +1661,7 @@ const App: React.FC = () => {
 
     // Pricing Calculator (Protected)
     return (
-        <div className={`flex h-screen bg-slate-100 font-sans overflow-hidden ${isRtl ? '' : 'flex-row-reverse'}`} dir={isRtl ? 'rtl' : 'ltr'}>
+        <div className={`flex min-h-screen lg:h-screen bg-slate-100 font-sans lg:overflow-hidden ${isRtl ? '' : 'flex-row-reverse'}`} dir={isRtl ? 'rtl' : 'ltr'}>
 
             {/* Test Mode Banner - شريط وضع الاختبار */}
             {(isInTestMode() && showTestBanner) && (
@@ -1804,12 +1832,12 @@ const App: React.FC = () => {
                 </button>
             </div>
 
-            <main className="flex-1 flex flex-col overflow-hidden bg-slate-50 relative z-10 transition-all duration-300">
+            <main className="flex-1 flex flex-col overflow-y-auto lg:overflow-hidden bg-slate-50 relative z-10 transition-all duration-300">
 
                 {/* Header */}
-                <header className="bg-white border-b border-slate-200 px-3 sm:px-5 md:px-8 py-3 sm:py-4 shadow-sm z-10">
-                    <div className="flex justify-between items-start mb-3 sm:mb-4 border-b border-slate-100 pb-3 sm:pb-4">
-                        <div className="flex items-center gap-4">
+                <header className="bg-white border-b border-slate-200 px-2 sm:px-4 md:px-8 py-2 sm:py-3 md:py-4 shadow-sm z-10 shrink-0">
+                    <div className="flex flex-wrap justify-between items-center gap-2 mb-2 sm:mb-3 md:mb-4 border-b border-slate-100 pb-2 sm:pb-3 md:pb-4">
+                        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
                             {/* Back to Dashboard Button / Exit Demo */}
                             <button
                                 onClick={() => {
@@ -1863,18 +1891,18 @@ const App: React.FC = () => {
                                 )}
                             </div>
 
-                            <div className="flex flex-col gap-1">
-                                <h2 className="text-xl font-extrabold text-slate-800">{state.metadata.projectName || 'مشروع جديد'}</h2>
-                                <div className="flex items-center gap-4 text-sm text-slate-500">
+                            <div className="flex flex-col gap-0.5 sm:gap-1 min-w-0">
+                                <h2 className="text-sm sm:text-lg md:text-xl font-extrabold text-slate-800 truncate">{state.metadata.projectName || 'مشروع جديد'}</h2>
+                                <div className="hidden sm:flex items-center gap-4 text-sm text-slate-500">
                                     <span className="flex items-center gap-1"><User className="w-3 h-3" /> {state.metadata.clientName || '---'}</span>
                                     <span className="flex items-center gap-1"><Hash className="w-3 h-3" /> {state.metadata.tenderNumber || '---'}</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-1 sm:gap-2 md:gap-4">
                             {/* Subscription Badge */}
-                            <div className={`px-3 py-1 rounded-full text-xs font-medium ${isFreePlan
+                            <div className={`hidden sm:block px-3 py-1 rounded-full text-xs font-medium ${isFreePlan
                                 ? 'bg-slate-100 text-slate-600'
                                 : user?.plan === 'professional'
                                     ? 'bg-emerald-100 text-emerald-700'
@@ -1884,7 +1912,7 @@ const App: React.FC = () => {
                             </div>
 
                             {/* Usage Stats */}
-                            <div className="flex items-center gap-3 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100 text-xs">
+                            <div className="hidden md:flex items-center gap-3 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100 text-xs">
                                 <div className="flex items-center gap-1" title={language === 'ar' ? 'المشاريع المتبقية' : 'Remaining Projects'}>
                                     <FolderOpen className="w-4 h-4 text-slate-400" />
                                     <span className={remainingProjects <= 0 && remainingProjects !== -1 ? 'text-red-500 font-bold' : 'text-slate-600'}>
@@ -1901,7 +1929,7 @@ const App: React.FC = () => {
                             </div>
 
                             {/* Quick Navigation */}
-                            <div className="flex items-center gap-2">
+                            <div className="hidden lg:flex items-center gap-2">
                                 <button
                                     onClick={() => handleNavigate('supplier-catalog')}
                                     className="px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
@@ -1917,11 +1945,11 @@ const App: React.FC = () => {
                             </div>
 
                             {/* User Info */}
-                            <div className="flex items-center gap-3 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100">
-                                <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center">
-                                    <User className="w-4 h-4 text-white" />
+                            <div className="flex items-center gap-2 sm:gap-3 bg-slate-50 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg border border-slate-100">
+                                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center shrink-0">
+                                    <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
                                 </div>
-                                <div className="text-sm">
+                                <div className="hidden sm:block text-sm">
                                     <div className="font-medium text-slate-700">{user?.name}</div>
                                     <div className="text-xs text-slate-400">{user?.email}</div>
                                 </div>
@@ -1962,13 +1990,13 @@ const App: React.FC = () => {
                         </div>
                     )}
 
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white">
+                            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white shrink-0">
                                 <Calculator className="w-6 h-6" />
                             </div>
                             <div className="flex flex-col gap-1">
-                                <h1 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-3">
+                                <h1 className="text-base sm:text-xl md:text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2 sm:gap-3">
                                     {state.viewMode === 'pricing' ? t('boq_title') : state.viewMode === 'blueprint' ? t('blueprint_title') : t('materials')}
                                     <span className="bg-gradient-to-r from-emerald-400 to-emerald-600 text-white p-1 px-3 rounded-lg text-[10px] font-bold shadow-sm shadow-emerald-500/20 uppercase tracking-widest">PRO</span>
                                 </h1>
@@ -1977,7 +2005,7 @@ const App: React.FC = () => {
                                 </p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-wrap">
                             <div className="text-sm font-medium text-slate-600 bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-2">
                                 <Calendar className="w-4 h-4 text-emerald-500" />
                                 <span>{state.metadata.pricingDate}</span>
@@ -2016,7 +2044,7 @@ const App: React.FC = () => {
 
                 {/* Content Area */}
                 {state.viewMode === 'pricing' ? (
-                    <div className="flex-1 overflow-y-auto p-8">
+                    <div className="flex-1 overflow-y-auto p-3 sm:p-5 md:p-8">
                         <div className="max-w-7xl mx-auto">
                             <StatsGrid
                                 totalDirect={calculationResult.totalDirect}

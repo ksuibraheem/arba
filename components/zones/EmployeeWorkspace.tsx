@@ -22,12 +22,14 @@ import {
 } from '../../services/projectTypes';
 import * as projectService from '../../services/projectService';
 import * as clientService from '../../services/clientService';
+import ConnectHub from '../connect/ConnectHub';
+import { projectSupplierService } from '../../services/projectSupplierService';
 
 // =================== TYPES ===================
 
 type WorkspaceSection =
     | 'overview' | 'projects' | 'clients' | 'security' | 'rates'
-    | 'upload' | 'purge' | 'calc-grid';
+    | 'upload' | 'purge' | 'calc-grid' | 'connect';
 
 interface EmployeeWorkspaceProps {
     language: 'ar' | 'en';
@@ -51,6 +53,7 @@ const NAV_ITEMS: { id: WorkspaceSection; icon: string; label: { ar: string; en: 
     { id: 'calc-grid', icon: '🧮', label: { ar: 'شبكة الحسابات', en: 'Calc Grid' }, divider: true },
     // ──
     { id: 'rates', icon: '📖', label: { ar: 'مكتبة الأسعار', en: 'Rate Library' } },
+    { id: 'connect', icon: '🔗', label: { ar: 'التواصل', en: 'Connect' }, divider: true },
 ];
 
 // =================== COMPONENT ===================
@@ -173,6 +176,10 @@ const EmployeeWorkspace: React.FC<EmployeeWorkspaceProps> = ({
                     }
                     await loadData();
                 }
+
+                // Auto-create chat channel for this project
+                const pId = pendingProject?.id || data.projectName;
+                projectSupplierService.ensureProjectFullKit(pId, data.projectName);
             } catch (err) {
                 console.error('Save project error:', err);
             }
@@ -417,6 +424,13 @@ const EmployeeWorkspace: React.FC<EmployeeWorkspaceProps> = ({
                 return renderCalcGrid();
             case 'rates':
                 return <RateLibrary language={language} />;
+            case 'connect':
+                return <ConnectHub
+                    language={language}
+                    userId={uid}
+                    userName={displayName}
+                    companyName={isAr ? 'شركتك' : 'Your Company'}
+                />;
             default:
                 return null;
         }
