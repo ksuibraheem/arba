@@ -242,6 +242,15 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // =================== ARBA CONFIG (Employees & Manager) ===================
+    // بيانات الموظفين وبيانات المدير — مطلوبة لتسجيل دخول الموظفين من أي جهاز
+    // الموظفون والمدير يسجلون الدخول بنظام محلي (ليس Firebase Auth)
+    // لذلك يجب السماح بالقراءة والكتابة بدون مصادقة Firebase
+    // ⚠️ في الإنتاج: يجب نقل هذا لـ Cloud Function مع مصادقة خاصة
+    match /arba_config/{docId} {
+      allow read, write: if true;
+    }
+
     // =================== DEFAULT: DENY ALL ===================
     // Any collection not explicitly matched is denied
     match /{document=**} {

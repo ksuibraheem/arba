@@ -306,11 +306,19 @@ export async function loadEmployeesFromFirestore(): Promise<Employee[]> {
         if (docSnap.exists()) {
             const data = docSnap.data();
             const employees: Employee[] = data.employees || [];
-            if (employees.length > 0) {
-                localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(employees));
-                console.log(`✅ ${employees.length} employees loaded from Firestore`);
-                return employees;
+            // Always sync Firestore → localStorage (even if empty)
+            localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(employees));
+            console.log(`✅ ${employees.length} employees loaded from Firestore`);
+            return employees;
+        } else {
+            console.log('ℹ️ No employees document in Firestore yet');
+            // If no doc in Firestore but we have local data, push local → Firestore
+            const localEmployees = getStoredEmployees();
+            if (localEmployees.length > 0) {
+                console.log(`⬆️ Pushing ${localEmployees.length} local employees to Firestore`);
+                await syncEmployeesToFirestore(localEmployees);
             }
+            return localEmployees;
         }
     } catch (error) {
         console.warn('⚠️ Failed to load employees from Firestore, using local:', error);
@@ -393,6 +401,22 @@ export const employeeService = {
         );
         if (emp) return { success: true, employee: emp };
         return { success: false, error: 'رقم الموظف أو كلمة المرور غير صحيحة' };
+    },
+
+    /**
+     * تسجيل دخول الموظف مع تحميل البيانات من Firestore أولاً
+     * يضمن العمل من أي جهاز
+     */
+    async loginAsync(employeeNumberOrEmail: string, password: string): Promise<{ success: boolean; employee?: Employee | { role: 'manager'; name: string; employeeNumber: string }; error?: string }> {
+        // 1) تحميل بيانات المدير والموظفين من Firestore
+        try {
+            await loadManagerCredentialsFromFirestore();
+            await loadEmployeesFromFirestore();
+        } catch (err) {
+            console.warn('⚠️ Firestore load failed during loginAsync, using local data:', err);
+        }
+        // 2) استخدام دالة تسجيل الدخول العادية (localStorage مُحدَّث الآن)
+        return this.login(employeeNumberOrEmail, password);
     },
 
     initializeSampleData() {

@@ -337,7 +337,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
     const loadData = async () => {
         // Load employees from Firestore first, then fallback to localStorage
         const firestoreEmployees = await loadEmployeesFromFirestore();
-        setEmployees(firestoreEmployees.length > 0 ? firestoreEmployees : employeeService.getEmployees());
+        setEmployees(firestoreEmployees);
         setEditRequests(invoiceEditRequestService.getRequests());
         setAccounts(registrationService.getRequests());
         setSupportTickets(supportTicketService.getTicketsByRoute('admin'));

@@ -30,7 +30,7 @@ import { supplierService } from './services/supplierService';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import ManagerDashboard from './pages/employees/ManagerDashboard';
 import EmployeeDashboard from './pages/employees/EmployeeDashboard';
-import { employeeService, Employee, MANAGER_CREDENTIALS, loadEmployeesFromFirestore, loadManagerCredentialsFromFirestore } from './services/employeeService';
+import { employeeService, Employee, MANAGER_CREDENTIALS, getManagerCredentials, loadEmployeesFromFirestore, loadManagerCredentialsFromFirestore } from './services/employeeService';
 import HRPage from './pages/employees/roles/HRPage';
 import AccountantPage from './pages/employees/roles/AccountantPage';
 import PasswordResetPage from './pages/PasswordResetPage';
@@ -440,39 +440,38 @@ const App: React.FC = () => {
 
         // موظفين - تحقق خاص
         if (userType === 'employee') {
-            // تحميل الموظفين وبيانات المدير من Firestore أولاً (لضمان العمل من أي جهاز)
-            await loadEmployeesFromFirestore();
-            await loadManagerCredentialsFromFirestore();
-            // استخدام نظام الموظفين الجديد
-            const result = employeeService.login(email, password);
+            // استخدام loginAsync — يحمّل البيانات من Firestore أولاً ثم يتحقق
+            const result = await employeeService.loginAsync(email, password);
 
             if (result.success && result.employee) {
+                // جلب بيانات المدير المحدّثة بعد التحميل من Firestore
+                const mgr = getManagerCredentials();
                 // التحقق إذا كان المدير
                 if ('role' in result.employee && result.employee.role === 'manager') {
                     // المدير
                     setIsManager(true);
                     setCurrentEmployee(null);
                     setUser({
-                        name: MANAGER_CREDENTIALS.name,
+                        name: mgr.name,
                         email: 'manager@arba-sys.com',
                         plan: 'enterprise',
                         usedProjects: 0,
                         usedStorageMB: 0
                     });
-                    setRoleData('manager', MANAGER_CREDENTIALS.name, 'manager@arba-sys.com').catch(console.error);
+                    setRoleData('manager', mgr.name, 'manager@arba-sys.com').catch(console.error);
                     setCurrentPage('manager');
-                } else if ('employeeNumber' in result.employee && result.employee.employeeNumber === MANAGER_CREDENTIALS.employeeNumber) {
+                } else if ('employeeNumber' in result.employee && result.employee.employeeNumber === mgr.employeeNumber) {
                     // المدير (من بيانات الدخول الثابتة)
                     setIsManager(true);
                     setCurrentEmployee(null);
                     setUser({
-                        name: MANAGER_CREDENTIALS.name,
+                        name: mgr.name,
                         email: 'manager@arba-sys.com',
                         plan: 'enterprise',
                         usedProjects: 0,
                         usedStorageMB: 0
                     });
-                    setRoleData('manager', MANAGER_CREDENTIALS.name, 'manager@arba-sys.com').catch(console.error);
+                    setRoleData('manager', mgr.name, 'manager@arba-sys.com').catch(console.error);
                     setCurrentPage('manager');
                 } else {
                     // موظف عادي
