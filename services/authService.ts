@@ -1,7 +1,10 @@
 /**
  * خدمة المصادقة - Auth Service
  * تدير تسجيل المستخدمين وتسجيل الدخول
+ * 🔥 Synced with Firestore
  */
+
+import { firestoreDataService } from './firestoreDataService';
 
 export interface StoredUser {
     id: string;
@@ -30,17 +33,51 @@ export interface AuthResult {
 const USERS_STORAGE_KEY = 'arba_users';
 const CURRENT_USER_KEY = 'arba_current_user';
 
+let _usersLoadedFromFirestore = false;
+
+/**
+ * تحميل المستخدمين من Firestore (مرة واحدة)
+ */
+async function loadUsersFromFirestore(): Promise<void> {
+    if (_usersLoadedFromFirestore) return;
+    try {
+        const items = await firestoreDataService.getCollection(
+            'auth_users', undefined, { localCacheKey: USERS_STORAGE_KEY }
+        );
+        if (items.length > 0) {
+            // Merge: keep local users that aren't in Firestore
+            const localUsers = getAllUsersLocal();
+            const firestoreIds = new Set(items.map((i: any) => i.id));
+            const merged = [...items as StoredUser[]];
+            for (const lu of localUsers) {
+                if (!firestoreIds.has(lu.id)) merged.push(lu);
+            }
+            localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(merged));
+            console.log(`✅ ${items.length} users loaded from Firestore`);
+        }
+        _usersLoadedFromFirestore = true;
+    } catch {
+        _usersLoadedFromFirestore = true;
+    }
+}
+
+// Auto-load on import
+loadUsersFromFirestore().catch(() => {});
+
+/**
+ * الحصول على المستخدمين من localStorage (بدون تحميل Firestore)
+ */
+const getAllUsersLocal = (): StoredUser[] => {
+    const usersJson = localStorage.getItem(USERS_STORAGE_KEY);
+    if (!usersJson) return [];
+    try { return JSON.parse(usersJson); } catch { return []; }
+};
+
 /**
  * الحصول على جميع المستخدمين المسجلين
  */
 export const getAllUsers = (): StoredUser[] => {
-    const usersJson = localStorage.getItem(USERS_STORAGE_KEY);
-    if (!usersJson) return [];
-    try {
-        return JSON.parse(usersJson);
-    } catch {
-        return [];
-    }
+    return getAllUsersLocal();
 };
 
 /**
@@ -48,6 +85,9 @@ export const getAllUsers = (): StoredUser[] => {
  */
 const saveUsers = (users: StoredUser[]): void => {
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+    // 🔥 Fire-and-forget sync to Firestore
+    const items = users.map(u => ({ id: u.id, data: { ...u } }));
+    firestoreDataService.batchWrite('auth_users', items).catch(() => {});
 };
 
 /**
@@ -235,13 +275,55 @@ export const updateUser = (userId: string, updates: Partial<StoredUser>): AuthRe
     return { success: true, user: users[userIndex] };
 };
 
+/**
+ * تسجيل دخول مع تحميل من Firestore أولاً
+ */
+export const loginUserAsync = async (
+    identifier: string,
+    password: string,
+    userType: 'individual' | 'company' | 'supplier' | 'employee' = 'individual'
+): Promise<AuthResult> => {
+    // Load users from Firestore first
+    await loadUsersFromFirestore().catch(() => {});
+    return loginUser(identifier, password, userType);
+};
+
+/**
+ * استعادة كلمة المرور (تغيير مباشر)
+ */
+export const resetPassword = async (
+    email: string,
+    newPassword: string
+): Promise<AuthResult> => {
+    // Load latest from Firestore
+    await loadUsersFromFirestore().catch(() => {});
+    
+    const users = getAllUsers();
+    const userIndex = users.findIndex(u => u.email.toLowerCase() === email.toLowerCase());
+    
+    if (userIndex === -1) {
+        return {
+            success: false,
+            error: 'البريد الإلكتروني غير مسجل',
+            errorType: 'user_not_found'
+        };
+    }
+    
+    users[userIndex].password = newPassword;
+    saveUsers(users);
+    
+    return { success: true, user: users[userIndex] };
+};
+
 export default {
     registerUser,
     loginUser,
+    loginUserAsync,
     logoutUser,
     getCurrentUser,
     getAllUsers,
     findUserByEmail,
     findUserByPhone,
-    updateUser
+    updateUser,
+    resetPassword
 };

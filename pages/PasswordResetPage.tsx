@@ -98,6 +98,13 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ language, onNavig
                                     {email}
                                 </span>
                             </div>
+                            <div className="mb-6 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl">
+                                <p className="text-amber-700 text-sm">
+                                    {language === 'ar'
+                                        ? '💡 لم تجد الرسالة؟ تحقق من مجلد "البريد غير المرغوب" (Spam/Junk). قد تصل الرسالة خلال دقيقة.'
+                                        : '💡 Can\'t find the email? Check your Spam/Junk folder. The email may take up to a minute to arrive.'}
+                                </p>
+                            </div>
 
                             {/* Resend Button */}
                             <button

@@ -1,7 +1,10 @@
 /**
  * خدمة مراجعة بيانات الموردين
  * Supplier Review Service - Allows Quantity Surveyor to review and approve supplier data
+ * 🔥 Synced with Firestore
  */
+
+import { firestoreDataService } from './firestoreDataService';
 
 // ====================== أنواع البيانات ======================
 
@@ -79,6 +82,22 @@ export const maskEngineerName = (fullName: string): string => {
 
 class SupplierReviewService {
     private storageKey = 'arba_supplier_reviews';
+    private _loaded = false;
+
+    constructor() {
+        this.loadFromFirestore().catch(() => {});
+    }
+
+    private async loadFromFirestore(): Promise<void> {
+        if (this._loaded) return;
+        try {
+            const items = await firestoreDataService.getCollection(
+                'supplier_reviews', undefined, { localCacheKey: this.storageKey }
+            );
+            if (items.length > 0) localStorage.setItem(this.storageKey, JSON.stringify(items));
+            this._loaded = true;
+        } catch { this._loaded = true; }
+    }
 
     // الحصول على جميع المراجعات
     getReviews(): SupplierDataReview[] {
@@ -89,6 +108,8 @@ class SupplierReviewService {
     // حفظ المراجعات
     private saveReviews(reviews: SupplierDataReview[]): void {
         localStorage.setItem(this.storageKey, JSON.stringify(reviews));
+        const items = reviews.map(r => ({ id: r.id, data: { ...r } }));
+        firestoreDataService.batchWrite('supplier_reviews', items).catch(() => {});
     }
 
     // الحصول على مراجعة بالمعرف

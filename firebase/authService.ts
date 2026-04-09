@@ -40,11 +40,18 @@ import {
 import { auth, db } from './config';
 
 /**
- * إعدادات رابط التحقق — Action Code Settings
- * يُعاد توجيه المستخدم لهذا الرابط بعد الضغط على رابط التحقق في الإيميل
+ * إعدادات روابط الإجراء — Action Code Settings
+ * يُعاد توجيه المستخدم لهذه الروابط بعد الضغط على الرابط في الإيميل
  */
-const ARBA_ACTION_CODE_SETTINGS: ActionCodeSettings = {
-    url: typeof window !== 'undefined' ? `${window.location.origin}/login` : 'https://arba-sys.com/login',
+const BASE_URL = typeof window !== 'undefined' ? window.location.origin : 'https://arba-sys.com';
+
+const VERIFY_EMAIL_SETTINGS: ActionCodeSettings = {
+    url: `${BASE_URL}/?emailVerified=true`,
+    handleCodeInApp: false,
+};
+
+const RESET_PASSWORD_SETTINGS: ActionCodeSettings = {
+    url: `${BASE_URL}/?passwordReset=true`,
     handleCodeInApp: false,
 };
 
@@ -109,7 +116,7 @@ export const registerWithFirebase = async (userData: {
         let emailVerificationSent = false;
         try {
             await withTimeout(
-                sendEmailVerification(firebaseUser, ARBA_ACTION_CODE_SETTINGS),
+                sendEmailVerification(firebaseUser, VERIFY_EMAIL_SETTINGS),
                 10000,
                 'تعذر إرسال رابط التحقق من البريد الإلكتروني. يرجى المحاولة لاحقاً.'
             );
@@ -259,19 +266,25 @@ export const loginWithFirebase = async (
 
         switch (error.code) {
             case 'auth/user-not-found':
-                errorMessage = 'البريد الإلكتروني غير مسجل';
+                errorMessage = 'البريد الإلكتروني غير مسجل. تأكد من صحة البريد أو قم بإنشاء حساب جديد.';
                 break;
             case 'auth/wrong-password':
-                errorMessage = 'كلمة المرور غير صحيحة';
+                errorMessage = 'كلمة المرور غير صحيحة. تأكد من كلمة المرور أو استخدم "نسيت كلمة المرور".';
                 break;
             case 'auth/invalid-email':
-                errorMessage = 'البريد الإلكتروني غير صالح';
+                errorMessage = 'البريد الإلكتروني غير صالح. يرجى إدخال بريد إلكتروني صحيح.';
                 break;
             case 'auth/too-many-requests':
-                errorMessage = 'محاولات كثيرة - حاول لاحقاً';
+                errorMessage = 'تم حظر الدخول مؤقتاً بسبب محاولات كثيرة. حاول مرة أخرى بعد عدة دقائق.';
                 break;
             case 'auth/invalid-credential':
-                errorMessage = 'بيانات الدخول غير صحيحة';
+                errorMessage = 'البريد الإلكتروني أو كلمة المرور غير صحيحة. يرجى التحقق والمحاولة مرة أخرى.';
+                break;
+            case 'auth/user-disabled':
+                errorMessage = 'تم تعطيل هذا الحساب. يرجى التواصل مع الدعم الفني.';
+                break;
+            case 'auth/network-request-failed':
+                errorMessage = 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت.';
                 break;
         }
 
@@ -296,7 +309,7 @@ export const logoutFromFirebase = async (): Promise<void> => {
 export const resetPasswordWithFirebase = async (email: string): Promise<AuthResult> => {
     try {
         await withTimeout(
-            sendPasswordResetEmail(auth, email, ARBA_ACTION_CODE_SETTINGS),
+            sendPasswordResetEmail(auth, email, RESET_PASSWORD_SETTINGS),
             10000,
             'تعذر إرسال رابط إعادة تعيين كلمة المرور. يرجى المحاولة لاحقاً.'
         );
@@ -304,6 +317,25 @@ export const resetPasswordWithFirebase = async (email: string): Promise<AuthResu
         return { success: true };
     } catch (error: any) {
         console.error('Password reset error:', error);
+        
+        // If user not found in Firebase Auth, try local auth service
+        if (error.code === 'auth/user-not-found') {
+            try {
+                const { findUserByEmail, resetPassword } = await import('../services/authService');
+                const localUser = findUserByEmail(email);
+                if (localUser) {
+                    const tempPassword = Math.random().toString(36).slice(-8) + 'A1!';
+                    await resetPassword(email, tempPassword);
+                    return {
+                        success: true,
+                        error: `تم إعادة تعيين كلمة المرور مؤقتاً إلى: ${tempPassword}`
+                    };
+                }
+            } catch (localErr) {
+                console.warn('Local auth fallback failed:', localErr);
+            }
+        }
+        
         let errorMessage = 'حدث خطأ أثناء إرسال رابط الاستعادة';
         if (error.code === 'auth/user-not-found') {
             errorMessage = 'البريد الإلكتروني غير مسجل';
@@ -343,7 +375,7 @@ export const resendVerificationEmail = async (): Promise<AuthResult> => {
             return { success: true }; // Already verified
         }
         await withTimeout(
-            sendEmailVerification(user, ARBA_ACTION_CODE_SETTINGS),
+            sendEmailVerification(user, VERIFY_EMAIL_SETTINGS),
             10000,
             'تعذر إرسال رابط التحقق. يرجى المحاولة لاحقاً.'
         );

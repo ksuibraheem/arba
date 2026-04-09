@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { formatStorageSize } from './storagePackages';
+import { firestoreDataService } from './firestoreDataService';
 
 // ═══════════════════════════════════════════════
 // TYPES
@@ -332,6 +333,21 @@ function getLocalData<T>(key: string): T[] {
 
 function saveLocalData<T>(key: string, data: T[]) {
     localStorage.setItem(key, JSON.stringify(data));
+    // 🔥 Sync to Firestore
+    const collectionMap: Record<string, string> = {
+        [CONNECT_KEYS.messages]: 'connect_messages',
+        [CONNECT_KEYS.mail]: 'connect_mail',
+        [CONNECT_KEYS.forms]: 'connect_forms',
+        [CONNECT_KEYS.notes]: 'connect_notes',
+    };
+    const fsCollection = collectionMap[key];
+    if (fsCollection && Array.isArray(data)) {
+        const items = (data as any[]).map((item: any) => ({
+            id: item.id || crypto.randomUUID(),
+            data: { ...item },
+        }));
+        firestoreDataService.batchWrite(fsCollection, items).catch(console.error);
+    }
 }
 
 function generateId(): string {

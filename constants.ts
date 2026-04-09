@@ -252,6 +252,13 @@ export const EST_COST_PER_SQM: Record<ProjectType, number> = {
     'residential_building': 2000,
     'sports_complex': 2500,
     'farm': 800,
+    'gas_station': 2500,
+    'mall': 4000,
+    'restaurant': 3000,
+    'car_wash': 1500,
+    'warehouse': 900,
+    'government': 2800,
+    'clinic': 3500,
 };
 
 export const PROJECT_TITLES: Record<ProjectType, string> = {
@@ -266,6 +273,13 @@ export const PROJECT_TITLES: Record<ProjectType, string> = {
     'residential_building': 'نظام تسعير العمارات السكنية',
     'sports_complex': 'نظام تسعير المجمعات الرياضية',
     'farm': 'نظام تسعير المزارع والمنشآت الزراعية',
+    'gas_station': 'نظام تسعير محطات الوقود',
+    'mall': 'نظام تسعير مراكز التسوق والمولات',
+    'restaurant': 'نظام تسعير المطاعم والكافيهات',
+    'car_wash': 'نظام تسعير مغاسل السيارات',
+    'warehouse': 'نظام تسعير المستودعات',
+    'government': 'نظام تسعير المباني الحكومية',
+    'clinic': 'نظام تسعير العيادات والمراكز الطبية',
 };
 
 // ... Project Defaults remain same ...
@@ -626,6 +640,117 @@ export const PROJECT_DEFAULTS: Record<ProjectType, { rooms: RoomConfig[], facade
             plotLength: 200, plotWidth: 100, setbackFront: 5, setbackSide: 5,
             floors: [
                 { id: 'fl_g', name: 'الأرضي', area: 500, height: 4.0, slabType: 'solid', columnsCount: 12, zones: [] },
+            ]
+        }
+    },
+    gas_station: {
+        rooms: [
+            { id: 'gs1', type: 'shop', name: 'متجر (Mini Market)', count: 1, area: 80, sockets: 15, switches: 6, acPoints: 2 },
+            { id: 'gs2', type: 'office', name: 'مكتب إداري', count: 1, area: 15, sockets: 4, switches: 2, acPoints: 1 },
+            { id: 'gs3', type: 'bathroom', name: 'دورات مياه', count: 4, area: 6, sockets: 2, switches: 2, acPoints: 0 },
+            { id: 'gs4', type: 'prayer', name: 'مصلى', count: 2, area: 15, sockets: 2, switches: 2, acPoints: 1 },
+        ],
+        facades: [{ id: 'f1', direction: 'north', material: 'cladding', area: 120 }],
+        team: [
+            { id: 'tm1', role: 'مشرف موقع', count: 1, monthlyCost: 5000, durationMonths: 8 },
+        ],
+        blueprint: {
+            plotLength: 60, plotWidth: 40, setbackFront: 10, setbackSide: 5,
+            floors: [{ id: 'fl_g', name: 'الأرضي', area: 200, height: 4.0, slabType: 'solid', columnsCount: 8, zones: [] }]
+        }
+    },
+    mall: {
+        rooms: [
+            { id: 'ml1', type: 'shop', name: 'محلات تجارية', count: 50, area: 50, sockets: 8, switches: 4, acPoints: 2 },
+            { id: 'ml2', type: 'restaurant', name: 'صالة طعام (Food Court)', count: 1, area: 500, sockets: 40, switches: 20, acPoints: 10 },
+            { id: 'ml3', type: 'corridor', name: 'ممرات', count: 1, area: 2000, sockets: 30, switches: 40, acPoints: 0 },
+            { id: 'ml4', type: 'bathroom', name: 'دورات مياه', count: 20, area: 8, sockets: 2, switches: 2, acPoints: 0 },
+        ],
+        facades: [{ id: 'f1', direction: 'north', material: 'glass', area: 1500 }],
+        team: [
+            { id: 'tm1', role: 'مدير مشروع', count: 1, monthlyCost: 25000, durationMonths: 30 },
+            { id: 'tm2', role: 'مهندس مدني', count: 2, monthlyCost: 10000, durationMonths: 30 },
+        ],
+        blueprint: {
+            plotLength: 150, plotWidth: 100, setbackFront: 15, setbackSide: 10,
+            floors: [
+                { id: 'fl_b', name: 'القبو (مواقف)', area: 10000, height: 4.0, slabType: 'flat', columnsCount: 100, zones: [] },
+                { id: 'fl_g', name: 'الأرضي', area: 10000, height: 5.0, slabType: 'waffle', columnsCount: 100, zones: [] },
+                { id: 'fl_1', name: 'الأول', area: 10000, height: 4.5, slabType: 'flat', columnsCount: 100, zones: [] },
+            ]
+        }
+    },
+    restaurant: {
+        rooms: [
+            { id: 'rs1', type: 'restaurant', name: 'صالة طعام', count: 1, area: 120, sockets: 20, switches: 8, acPoints: 4 },
+            { id: 'rs2', type: 'kitchen', name: 'مطبخ تجاري', count: 1, area: 60, sockets: 20, switches: 6, acPoints: 2 },
+            { id: 'rs3', type: 'bathroom', name: 'دورات مياه', count: 2, area: 6, sockets: 2, switches: 2, acPoints: 0 },
+        ],
+        facades: [{ id: 'f1', direction: 'north', material: 'glass', area: 40 }],
+        team: [{ id: 'tm1', role: 'مشرف موقع', count: 1, monthlyCost: 5000, durationMonths: 6 }],
+        blueprint: {
+            plotLength: 20, plotWidth: 15, setbackFront: 3, setbackSide: 2,
+            floors: [{ id: 'fl_g', name: 'الأرضي', area: 200, height: 4.0, slabType: 'solid', columnsCount: 6, zones: [] }]
+        }
+    },
+    car_wash: {
+        rooms: [
+            { id: 'cw1', type: 'service', name: 'منطقة غسيل', count: 4, area: 30, sockets: 6, switches: 3, acPoints: 0 },
+            { id: 'cw2', type: 'reception', name: 'استقبال/كاشير', count: 1, area: 15, sockets: 4, switches: 2, acPoints: 1 },
+        ],
+        facades: [{ id: 'f1', direction: 'north', material: 'cladding', area: 80 }],
+        team: [{ id: 'tm1', role: 'مشرف', count: 1, monthlyCost: 4000, durationMonths: 4 }],
+        blueprint: {
+            plotLength: 40, plotWidth: 25, setbackFront: 5, setbackSide: 3,
+            floors: [{ id: 'fl_g', name: 'الأرضي', area: 300, height: 5.0, slabType: 'solid', columnsCount: 8, zones: [] }]
+        }
+    },
+    warehouse: {
+        rooms: [
+            { id: 'wh1', type: 'storage', name: 'منطقة تخزين', count: 1, area: 2000, sockets: 20, switches: 10, acPoints: 0 },
+            { id: 'wh2', type: 'office', name: 'مكاتب إدارية', count: 1, area: 100, sockets: 15, switches: 6, acPoints: 2 },
+        ],
+        facades: [{ id: 'f1', direction: 'north', material: 'cladding', area: 300 }],
+        team: [{ id: 'tm1', role: 'مشرف موقع', count: 1, monthlyCost: 5000, durationMonths: 6 }],
+        blueprint: {
+            plotLength: 60, plotWidth: 40, setbackFront: 8, setbackSide: 5,
+            floors: [{ id: 'fl_g', name: 'الأرضي', area: 2000, height: 8.0, slabType: 'solid', columnsCount: 20, zones: [] }]
+        }
+    },
+    government: {
+        rooms: [
+            { id: 'gv1', type: 'reception', name: 'صالة استقبال', count: 1, area: 200, sockets: 20, switches: 10, acPoints: 4 },
+            { id: 'gv2', type: 'office', name: 'مكاتب', count: 20, area: 25, sockets: 6, switches: 3, acPoints: 1 },
+            { id: 'gv3', type: 'bathroom', name: 'دورات مياه', count: 10, area: 6, sockets: 2, switches: 2, acPoints: 0 },
+            { id: 'gv4', type: 'prayer', name: 'مصلى', count: 2, area: 25, sockets: 2, switches: 2, acPoints: 1 },
+        ],
+        facades: [{ id: 'f1', direction: 'north', material: 'stone', area: 500 }],
+        team: [
+            { id: 'tm1', role: 'مدير مشروع', count: 1, monthlyCost: 15000, durationMonths: 18 },
+            { id: 'tm2', role: 'مهندس موقع', count: 1, monthlyCost: 8000, durationMonths: 18 },
+        ],
+        blueprint: {
+            plotLength: 50, plotWidth: 40, setbackFront: 6, setbackSide: 4,
+            floors: [
+                { id: 'fl_g', name: 'الأرضي', area: 1200, height: 4.5, slabType: 'flat', columnsCount: 25, zones: [] },
+                { id: 'fl_1', name: 'الأول', area: 1200, height: 3.5, slabType: 'flat', columnsCount: 25, zones: [] },
+            ]
+        }
+    },
+    clinic: {
+        rooms: [
+            { id: 'cl1', type: 'clinic', name: 'عيادات كشف', count: 8, area: 15, sockets: 6, switches: 3, acPoints: 1 },
+            { id: 'cl2', type: 'reception', name: 'استقبال وانتظار', count: 1, area: 60, sockets: 10, switches: 5, acPoints: 2 },
+            { id: 'cl3', type: 'lab', name: 'مختبر', count: 1, area: 25, sockets: 10, switches: 4, acPoints: 1 },
+            { id: 'cl4', type: 'bathroom', name: 'دورات مياه', count: 4, area: 5, sockets: 2, switches: 2, acPoints: 0 },
+        ],
+        facades: [{ id: 'f1', direction: 'north', material: 'glass', area: 100 }],
+        team: [{ id: 'tm1', role: 'مشرف موقع', count: 1, monthlyCost: 6000, durationMonths: 10 }],
+        blueprint: {
+            plotLength: 25, plotWidth: 20, setbackFront: 4, setbackSide: 2,
+            floors: [
+                { id: 'fl_g', name: 'الأرضي', area: 300, height: 3.5, slabType: 'flat', columnsCount: 10, zones: [] },
+                { id: 'fl_1', name: 'الأول', area: 300, height: 3.5, slabType: 'flat', columnsCount: 10, zones: [] },
             ]
         }
     }

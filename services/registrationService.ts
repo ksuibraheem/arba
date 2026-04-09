@@ -1,7 +1,10 @@
 /**
  * خدمة تسجيل الأفراد الشاملة
  * Individual Registration Service with Verification & Approval
+ * 🔥 Synced with Firestore via firestoreDataService
  */
+
+import { firestoreDataService, invalidateCache } from './firestoreDataService';
 
 // ====================== أنواع البيانات ======================
 
@@ -164,6 +167,8 @@ class RegistrationService {
     private storageKey = 'arba_registration_requests';
     private notificationsKey = 'arba_notifications';
     private CODE_EXPIRY_MINUTES = 5; // 5 دقائق
+    private firestoreCollection = 'registration_requests';
+    private firestoreLoaded = false;
 
     // =================== تهيئة بيانات تجريبية ===================
 
@@ -430,6 +435,40 @@ class RegistrationService {
 
     private saveRequests(requests: RegistrationRequest[]): void {
         localStorage.setItem(this.storageKey, JSON.stringify(requests));
+        // 🔥 Sync to Firestore (fire-and-forget)
+        this.syncAllToFirestore(requests).catch(console.error);
+    }
+
+    /**
+     * 🔥 مزامنة كل الطلبات مع Firestore
+     */
+    private async syncAllToFirestore(requests: RegistrationRequest[]): Promise<void> {
+        const items = requests.map(r => ({ id: r.id, data: { ...r } }));
+        await firestoreDataService.batchWrite(this.firestoreCollection, items);
+    }
+
+    /**
+     * 🔥 تحميل الطلبات من Firestore (يُستدعى مرة واحدة عند أول تحميل)
+     */
+    async loadFromFirestore(): Promise<RegistrationRequest[]> {
+        if (this.firestoreLoaded) return this.getRequests();
+        try {
+            const items = await firestoreDataService.getCollection<RegistrationRequest>(
+                this.firestoreCollection,
+                undefined,
+                { localCacheKey: this.storageKey }
+            );
+            if (items.length > 0) {
+                localStorage.setItem(this.storageKey, JSON.stringify(items));
+                console.log(`✅ Loaded ${items.length} registration requests from Firestore`);
+            }
+            this.firestoreLoaded = true;
+            return items.length > 0 ? items : this.getRequests();
+        } catch (error) {
+            console.warn('⚠️ Failed to load from Firestore, using localStorage:', error);
+            this.firestoreLoaded = true;
+            return this.getRequests();
+        }
     }
 
     getRequestById(id: string): RegistrationRequest | null {

@@ -443,6 +443,28 @@ export const employeeService = {
         }
     },
 
+    changePassword(employeeNumber: string, oldPassword: string, newPassword: string): { success: boolean; error?: string } {
+        // Check manager credentials
+        const mgr = getManagerCredentials();
+        if (employeeNumber === mgr.employeeNumber) {
+            if (oldPassword !== mgr.password) {
+                return { success: false, error: 'كلمة المرور الحالية غير صحيحة' };
+            }
+            updateManagerCredentials({ password: newPassword });
+            return { success: true };
+        }
+        // Check regular employees
+        const employees = getStoredEmployees();
+        const emp = employees.find(e => e.employeeNumber === employeeNumber);
+        if (!emp) return { success: false, error: 'الموظف غير موجود' };
+        if (emp.password !== oldPassword) {
+            return { success: false, error: 'كلمة المرور الحالية غير صحيحة' };
+        }
+        emp.password = newPassword;
+        saveEmployees(employees);
+        return { success: true };
+    },
+
     getEmployeeById(id: string): Employee | undefined {
         return getStoredEmployees().find(e => e.id === id);
     },
@@ -539,16 +561,6 @@ export const employeeService = {
             attendanceRate: 88,
             punctualityRate: 91,
         };
-    },
-
-    changePassword(employeeNumber: string, oldPassword: string, newPassword: string): { success: boolean; error?: string } {
-        const employees = getStoredEmployees();
-        const emp = employees.find(e => e.employeeNumber === employeeNumber);
-        if (!emp) return { success: false, error: 'الموظف غير موجود' };
-        if (emp.password !== oldPassword) return { success: false, error: 'كلمة المرور الحالية غير صحيحة' };
-        emp.password = newPassword;
-        saveEmployees(employees);
-        return { success: true };
     },
 };
 

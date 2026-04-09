@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Settings, MapPin, TrendingUp, Calculator, Briefcase, Ruler, Plus, Trash2, Home, Zap, FileText, User, LayoutGrid, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RefreshCw, Users, HardHat, DollarSign, LayoutTemplate, Palette, Languages, Check } from 'lucide-react';
-import { AppState, ProjectType, LocationType, SoilType, RoomConfig, FacadeConfig, TeamMember, ExecutionMethod, ViewMode, Language } from '../types';
+import { AppState, ProjectType, LocationType, SoilType, RoomConfig, FacadeConfig, TeamMember, ExecutionMethod, ViewMode, Language, FoundationType, StructuralSystem, SBCOccupancyGroup, ConstructionType, SeismicZone, ConcreteGrade, ExposureCategory, ParkingType, InsulationType, ScopeOfWork, ContractorClassification } from '../types';
 import { PROJECT_DEFAULTS, TRANSLATIONS } from '../constants';
 
 interface SidebarProps {
@@ -232,27 +232,197 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
 
                 {activeTab === 'info' && (
                     <div className="p-6 space-y-6 animate-in fade-in slide-in-from-right-4">
+                        {/* بيانات العميل */}
                         <div className="space-y-4">
                             <h3 className="text-emerald-400 font-semibold text-sm flex items-center gap-2 border-b border-slate-600 pb-2">
-                                <User className="w-4 h-4" /> {t('client_info')}
+                                <User className="w-4 h-4" /> {state.language === 'ar' ? 'بيانات العميل' : 'Client Info'}
                             </h3>
                             <div className="space-y-2">
-                                <label className="text-xs text-slate-400">{t('client_name')}</label>
+                                <label className="text-xs text-slate-400">{state.language === 'ar' ? 'اسم العميل' : 'Client Name'}</label>
                                 <input type="text" className="sidebar-input" value={state.metadata.clientName} onChange={(e) => updateMetadata('clientName', e.target.value)} />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-xs text-slate-400">{t('tender_number')}</label>
-                                <input type="text" className="sidebar-input" value={state.metadata.tenderNumber} onChange={(e) => updateMetadata('tenderNumber', e.target.value)} />
+                                <label className="text-xs text-slate-400">{state.language === 'ar' ? 'رقم الجوال' : 'Phone'}</label>
+                                <input type="tel" className="sidebar-input" value={state.metadata.clientPhone} onChange={(e) => updateMetadata('clientPhone', e.target.value)} placeholder="05XXXXXXXX" />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs text-slate-400">{state.language === 'ar' ? 'البريد الإلكتروني' : 'Email'}</label>
+                                <input type="email" className="sidebar-input" value={state.metadata.clientEmail} onChange={(e) => updateMetadata('clientEmail', e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs text-slate-400">{state.language === 'ar' ? 'رقم الهوية / السجل التجاري' : 'ID / CR Number'}</label>
+                                <input type="text" className="sidebar-input" value={state.metadata.clientIdNumber} onChange={(e) => updateMetadata('clientIdNumber', e.target.value)} />
                             </div>
                         </div>
 
+                        {/* بيانات الموقع والأرض */}
                         <div className="space-y-4 pt-4">
                             <h3 className="text-emerald-400 font-semibold text-sm flex items-center gap-2 border-b border-slate-600 pb-2">
-                                <Briefcase className="w-4 h-4" /> {t('bidder_info')}
+                                <MapPin className="w-4 h-4" /> {state.language === 'ar' ? 'بيانات الموقع والأرض' : 'Site & Land Data'}
                             </h3>
                             <div className="space-y-2">
-                                <label className="text-xs text-slate-400">{t('company_name')}</label>
+                                <label className="text-xs text-slate-400">{state.language === 'ar' ? 'اسم المشروع' : 'Project Name'}</label>
+                                <input type="text" className="sidebar-input" value={state.metadata.projectName} onChange={(e) => updateMetadata('projectName', e.target.value)} />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs text-slate-400">{state.language === 'ar' ? 'عنوان المشروع' : 'Project Address'}</label>
+                                <input type="text" className="sidebar-input" value={state.metadata.projectAddress} onChange={(e) => updateMetadata('projectAddress', e.target.value)} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400">{state.language === 'ar' ? 'رقم الصك' : 'Deed #'}</label>
+                                    <input type="text" className="sidebar-input" value={state.metadata.deedNumber} onChange={(e) => updateMetadata('deedNumber', e.target.value)} />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400">{state.language === 'ar' ? 'رقم القطعة' : 'Plot #'}</label>
+                                    <input type="text" className="sidebar-input" value={state.metadata.plotNumber} onChange={(e) => updateMetadata('plotNumber', e.target.value)} />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400">{state.language === 'ar' ? 'رقم المخطط' : 'Plan #'}</label>
+                                    <input type="text" className="sidebar-input" value={state.metadata.planNumber} onChange={(e) => updateMetadata('planNumber', e.target.value)} />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400">{state.language === 'ar' ? 'رقم رخصة البناء' : 'Permit #'}</label>
+                                    <input type="text" className="sidebar-input" value={state.metadata.buildingPermitNumber} onChange={(e) => updateMetadata('buildingPermitNumber', e.target.value)} />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* بيانات العرض والمناقصة */}
+                        <div className="space-y-4 pt-4">
+                            <h3 className="text-emerald-400 font-semibold text-sm flex items-center gap-2 border-b border-slate-600 pb-2">
+                                <FileText className="w-4 h-4" /> {state.language === 'ar' ? 'بيانات العرض' : 'Quotation Data'}
+                            </h3>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400">{state.language === 'ar' ? 'رقم العرض' : 'Quote #'}</label>
+                                    <input type="text" className="sidebar-input" value={state.metadata.quotationNumber} onChange={(e) => updateMetadata('quotationNumber', e.target.value)} />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400">{state.language === 'ar' ? 'رقم المناقصة' : 'Tender #'}</label>
+                                    <input type="text" className="sidebar-input" value={state.metadata.tenderNumber} onChange={(e) => updateMetadata('tenderNumber', e.target.value)} />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400">{state.language === 'ar' ? 'تاريخ العرض' : 'Quote Date'}</label>
+                                    <input type="date" className="sidebar-input" value={state.metadata.quotationDate} onChange={(e) => updateMetadata('quotationDate', e.target.value)} />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400">{state.language === 'ar' ? 'صلاحية (يوم)' : 'Valid (days)'}</label>
+                                    <input type="number" className="sidebar-input" value={state.metadata.quotationValidityDays} onChange={(e) => updateMetadata('quotationValidityDays', Number(e.target.value))} />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs text-slate-400">{state.language === 'ar' ? 'نطاق العمل' : 'Scope of Work'}</label>
+                                <select className="sidebar-input" value={state.metadata.scopeOfWork} onChange={(e) => updateMetadata('scopeOfWork', e.target.value)}>
+                                    <option value="shell_core">{state.language === 'ar' ? 'عظم فقط (Shell & Core)' : 'Shell & Core'}</option>
+                                    <option value="finishing">{state.language === 'ar' ? 'تشطيبات' : 'Finishing'}</option>
+                                    <option value="turnkey">{state.language === 'ar' ? 'تسليم مفتاح' : 'Turnkey'}</option>
+                                    <option value="renovation">{state.language === 'ar' ? 'ترميم وتجديد' : 'Renovation'}</option>
+                                    <option value="maintenance">{state.language === 'ar' ? 'صيانة' : 'Maintenance'}</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* بيانات الشركة / المقاول */}
+                        <div className="space-y-4 pt-4">
+                            <h3 className="text-emerald-400 font-semibold text-sm flex items-center gap-2 border-b border-slate-600 pb-2">
+                                <Briefcase className="w-4 h-4" /> {state.language === 'ar' ? 'بيانات الشركة / المقاول' : 'Company / Contractor'}
+                            </h3>
+                            <div className="space-y-2">
+                                <label className="text-xs text-slate-400">{state.language === 'ar' ? 'اسم الشركة' : 'Company Name'}</label>
                                 <input type="text" className="sidebar-input" value={state.metadata.companyName} onChange={(e) => updateMetadata('companyName', e.target.value)} />
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400">{state.language === 'ar' ? 'السجل التجاري' : 'CR #'}</label>
+                                    <input type="text" className="sidebar-input" value={state.metadata.companyLicense} onChange={(e) => updateMetadata('companyLicense', e.target.value)} />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400">{state.language === 'ar' ? 'درجة التصنيف' : 'Class'}</label>
+                                    <select className="sidebar-input" value={state.metadata.companyClassification} onChange={(e) => updateMetadata('companyClassification', e.target.value)}>
+                                        <option value="1">{state.language === 'ar' ? 'الأولى' : '1st'}</option>
+                                        <option value="2">{state.language === 'ar' ? 'الثانية' : '2nd'}</option>
+                                        <option value="3">{state.language === 'ar' ? 'الثالثة' : '3rd'}</option>
+                                        <option value="4">{state.language === 'ar' ? 'الرابعة' : '4th'}</option>
+                                        <option value="5">{state.language === 'ar' ? 'الخامسة' : '5th'}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400">{state.language === 'ar' ? 'هاتف الشركة' : 'Phone'}</label>
+                                    <input type="tel" className="sidebar-input" value={state.metadata.companyPhone} onChange={(e) => updateMetadata('companyPhone', e.target.value)} />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400">{state.language === 'ar' ? 'إيميل الشركة' : 'Email'}</label>
+                                    <input type="email" className="sidebar-input" value={state.metadata.companyEmail} onChange={(e) => updateMetadata('companyEmail', e.target.value)} />
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs text-slate-400">{state.language === 'ar' ? 'الرقم الضريبي (VAT)' : 'VAT Number'}</label>
+                                <input type="text" className="sidebar-input" value={state.metadata.vatNumber} onChange={(e) => updateMetadata('vatNumber', e.target.value)} placeholder="3XXXXXXXXXX0003" />
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400">{state.language === 'ar' ? 'مُعِد العرض' : 'Prepared By'}</label>
+                                    <input type="text" className="sidebar-input" value={state.metadata.preparedBy} onChange={(e) => updateMetadata('preparedBy', e.target.value)} />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400">{state.language === 'ar' ? 'كود التأكيد' : 'Confirm Code'}</label>
+                                    <input type="text" className="sidebar-input" value={state.metadata.confirmationCode} onChange={(e) => updateMetadata('confirmationCode', e.target.value)} />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* بيانات مالية */}
+                        <div className="space-y-4 pt-4">
+                            <h3 className="text-emerald-400 font-semibold text-sm flex items-center gap-2 border-b border-slate-600 pb-2">
+                                <DollarSign className="w-4 h-4" /> {state.language === 'ar' ? 'بيانات مالية' : 'Financial'}
+                            </h3>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400">{state.language === 'ar' ? 'نسبة VAT %' : 'VAT %'}</label>
+                                    <input type="number" className="sidebar-input" value={state.metadata.vatPercentage} onChange={(e) => updateMetadata('vatPercentage', Number(e.target.value))} />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400">{state.language === 'ar' ? 'شروط الدفع' : 'Payment Terms'}</label>
+                                    <input type="text" className="sidebar-input" value={state.metadata.paymentTerms} onChange={(e) => updateMetadata('paymentTerms', e.target.value)} placeholder={state.language === 'ar' ? 'دفعات حسب الإنجاز' : 'Progress payments'} />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* الجدول الزمني */}
+                        <div className="space-y-4 pt-4">
+                            <h3 className="text-emerald-400 font-semibold text-sm flex items-center gap-2 border-b border-slate-600 pb-2">
+                                <Calculator className="w-4 h-4" /> {state.language === 'ar' ? 'الجدول الزمني والضمان' : 'Timeline & Warranty'}
+                            </h3>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400">{state.language === 'ar' ? 'تاريخ التسعير' : 'Pricing Date'}</label>
+                                    <input type="date" className="sidebar-input" value={state.metadata.pricingDate} onChange={(e) => updateMetadata('pricingDate', e.target.value)} />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400">{state.language === 'ar' ? 'بدء التنفيذ' : 'Start Date'}</label>
+                                    <input type="date" className="sidebar-input" value={state.metadata.executionStartDate} onChange={(e) => updateMetadata('executionStartDate', e.target.value)} />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2">
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400">{state.language === 'ar' ? 'ضمان هيكل' : 'Struct. Warranty'}</label>
+                                    <input type="number" className="sidebar-input" value={state.metadata.warrantyYearsStructure} onChange={(e) => updateMetadata('warrantyYearsStructure', Number(e.target.value))} />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400">{state.language === 'ar' ? 'ضمان تشطيب' : 'Finish Warranty'}</label>
+                                    <input type="number" className="sidebar-input" value={state.metadata.warrantyYearsFinish} onChange={(e) => updateMetadata('warrantyYearsFinish', Number(e.target.value))} />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-[10px] text-slate-400">{state.language === 'ar' ? 'ضمان MEP' : 'MEP Warranty'}</label>
+                                    <input type="number" className="sidebar-input" value={state.metadata.warrantyYearsMEP} onChange={(e) => updateMetadata('warrantyYearsMEP', Number(e.target.value))} />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -287,6 +457,13 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                                 <option value="residential_building" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🏬 {t('proj_residential')} {isDemoMode ? '🔒' : ''}</option>
                                 <option value="sports_complex" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🏟️ {t('proj_sports')} {isDemoMode ? '🔒' : ''}</option>
                                 <option value="farm" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🌾 {t('proj_farm')} {isDemoMode ? '🔒' : ''}</option>
+                                <option value="gas_station" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>⛽ {state.language === 'ar' ? 'محطة وقود' : 'Gas Station'} {isDemoMode ? '🔒' : ''}</option>
+                                <option value="mall" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🛒 {state.language === 'ar' ? 'مركز تسوق' : 'Shopping Mall'} {isDemoMode ? '🔒' : ''}</option>
+                                <option value="restaurant" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🍽️ {state.language === 'ar' ? 'مطعم / كافيه' : 'Restaurant'} {isDemoMode ? '🔒' : ''}</option>
+                                <option value="car_wash" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🚗 {state.language === 'ar' ? 'مغسلة سيارات' : 'Car Wash'} {isDemoMode ? '🔒' : ''}</option>
+                                <option value="warehouse" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>📦 {state.language === 'ar' ? 'مستودع' : 'Warehouse'} {isDemoMode ? '🔒' : ''}</option>
+                                <option value="government" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🏛️ {state.language === 'ar' ? 'مبنى حكومي' : 'Government'} {isDemoMode ? '🔒' : ''}</option>
+                                <option value="clinic" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🩺 {state.language === 'ar' ? 'عيادة / مركز طبي' : 'Clinic'} {isDemoMode ? '🔒' : ''}</option>
                             </select>
                             {isDemoMode && (
                                 <p className="text-xs text-blue-400 mt-1">
@@ -487,6 +664,17 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                                     <option value="tabuk">{t('loc_tabuk')}</option>
                                     <option value="qassim">{t('loc_qassim')}</option>
                                     <option value="hail">{t('loc_hail')}</option>
+                                    <option value="jazan">{state.language === 'ar' ? 'جازان' : 'Jazan'}</option>
+                                    <option value="najran">{state.language === 'ar' ? 'نجران' : 'Najran'}</option>
+                                    <option value="baha">{state.language === 'ar' ? 'الباحة' : 'Al-Baha'}</option>
+                                    <option value="jouf">{state.language === 'ar' ? 'الجوف' : 'Al-Jouf'}</option>
+                                    <option value="northern_borders">{state.language === 'ar' ? 'الحدود الشمالية' : 'Northern Borders'}</option>
+                                    <option value="khobar">{state.language === 'ar' ? 'الخبر' : 'Al-Khobar'}</option>
+                                    <option value="yanbu">{state.language === 'ar' ? 'ينبع' : 'Yanbu'}</option>
+                                    <option value="taif">{state.language === 'ar' ? 'الطائف' : 'Al-Taif'}</option>
+                                    <option value="khamis_mushait">{state.language === 'ar' ? 'خميس مشيط' : 'Khamis Mushait'}</option>
+                                    <option value="ahsa">{state.language === 'ar' ? 'الأحساء' : 'Al-Ahsa'}</option>
+                                    <option value="hafr_albatin">{state.language === 'ar' ? 'حفر الباطن' : 'Hafr Al-Batin'}</option>
                                 </select>
                             </div>
 

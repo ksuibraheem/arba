@@ -14,6 +14,7 @@ import {
     sendResponseAlertToStaff
 } from './emailNotificationService';
 import { notificationService } from './notificationService';
+import { firestoreDataService } from './firestoreDataService';
 // ====================== Types ======================
 
 export type TicketCategory = 'technical_bug' | 'finance_boq' | 'hr_general' | 'feature_request' | 'other';
@@ -140,6 +141,8 @@ const generateId = (): string => {
     return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
 };
 
+let _ticketsLoadedFromFirestore = false;
+
 const getTickets = (): SupportTicket[] => {
     const data = localStorage.getItem(STORAGE_KEY);
     return data ? JSON.parse(data) : [];
@@ -147,7 +150,29 @@ const getTickets = (): SupportTicket[] => {
 
 const saveTickets = (tickets: SupportTicket[]): void => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets));
+    // 🔥 Fire-and-forget sync to Firestore
+    const items = tickets.map(t => ({ id: t.id, data: { ...t } }));
+    firestoreDataService.batchWrite('support_tickets', items).catch(() => {});
 };
+
+const loadTicketsFromFirestore = async (): Promise<void> => {
+    if (_ticketsLoadedFromFirestore) return;
+    try {
+        const items = await firestoreDataService.getCollection(
+            'support_tickets', undefined, { localCacheKey: STORAGE_KEY }
+        );
+        if (items.length > 0) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+            console.log(`✅ ${items.length} tickets loaded from Firestore`);
+        }
+        _ticketsLoadedFromFirestore = true;
+    } catch {
+        _ticketsLoadedFromFirestore = true;
+    }
+};
+
+// Auto-load on import
+loadTicketsFromFirestore().catch(() => {});
 
 // Determine route based on category
 const determineRoute = (category: TicketCategory): TicketRoute => {

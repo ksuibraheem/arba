@@ -243,11 +243,87 @@ service cloud.firestore {
     }
 
     // =================== ARBA CONFIG (Employees & Manager) ===================
-    // بيانات الموظفين وبيانات المدير — مطلوبة لتسجيل دخول الموظفين من أي جهاز
-    // الموظفون والمدير يسجلون الدخول بنظام محلي (ليس Firebase Auth)
-    // لذلك يجب السماح بالقراءة والكتابة بدون مصادقة Firebase
-    // ⚠️ في الإنتاج: يجب نقل هذا لـ Cloud Function مع مصادقة خاصة
+    // بيانات الموظفين وبيانات المدير
     match /arba_config/{docId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // =================== REGISTRATION REQUESTS ===================
+    match /registration_requests/{requestId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // =================== ACCOUNTING ===================
+    match /invoices/{invoiceId} {
+      allow read, write: if true;
+    }
+
+    match /ledger_entries/{entryId} {
+      allow read, write: if true;
+    }
+
+    match /accounting_clients/{clientId} {
+      allow read, write: if true;
+    }
+
+    // =================== SUPPLIER DATA (NEW) ===================
+    match /supplier_products/{productId} {
+      allow read, write: if true;
+    }
+
+    match /purchase_invoices/{invoiceId} {
+      allow read, write: if true;
+    }
+
+    match /supplier_payments/{paymentId} {
+      allow read, write: if true;
+    }
+
+    // =================== CONNECT (Communication) ===================
+    match /connect_messages/{messageId} {
+      allow read, write: if true;
+    }
+
+    match /connect_mail/{mailId} {
+      allow read, write: if true;
+    }
+
+    match /connect_forms/{formId} {
+      allow read, write: if true;
+    }
+
+    match /connect_notes/{noteId} {
+      allow read, write: if true;
+    }
+
+    match /connect_gallery/{photoId} {
+      allow read, write: if true;
+    }
+
+    // =================== EMPLOYEES ===================
+    match /employees/{empId} {
+      allow read, write: if true;
+    }
+
+    // =================== NOTIFICATIONS ===================
+    match /notifications/{notifId} {
+      allow read, write: if true;
+    }
+
+    // =================== ATTENDANCE ===================
+    match /attendance/{recordId} {
+      allow read, write: if true;
+    }
+
+    // =================== DISCOUNT REQUESTS ===================
+    match /discount_requests/{requestId} {
+      allow read, write: if true;
+    }
+
+    // =================== SUPPORT TICKETS ===================
+    match /support_tickets/{ticketId} {
       allow read, write: if true;
     }
 

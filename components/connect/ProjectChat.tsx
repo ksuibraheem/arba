@@ -124,27 +124,28 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ language, userId, userName, c
         setIsUploading(true);
 
         const newFiles: typeof pendingFiles = [];
-        for (const file of Array.from(files)) {
+        const fileArray: File[] = Array.from(files);
+        for (const file of fileArray) {
             const type = getFileType(file.name);
             let dataUrl: string;
 
             if (type === 'image') {
                 // Compress images
                 try {
-                    const { blob } = await compressImage(file);
+                    const { blob } = await compressImage(file as File);
                     const reader = new FileReader();
                     dataUrl = await new Promise<string>((resolve) => {
                         reader.onload = () => resolve(reader.result as string);
                         reader.readAsDataURL(blob);
                     });
                 } catch {
-                    dataUrl = await fileToDataUrl(file);
+                    dataUrl = await fileToDataUrl(file as File);
                 }
             } else {
-                dataUrl = await fileToDataUrl(file);
+                dataUrl = await fileToDataUrl(file as File);
             }
 
-            newFiles.push({ file, dataUrl, type, name: file.name });
+            newFiles.push({ file: file as File, dataUrl, type, name: file.name });
         }
 
         setPendingFiles(prev => [...prev, ...newFiles]);
@@ -247,9 +248,9 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ language, userId, userName, c
                                 <p className="text-sm font-semibold text-white truncate">{viewerName}</p>
                                 <p className="text-[10px] text-slate-400">
                                     {viewerType === 'image' ? t('صورة', 'Image') :
-                                     viewerType === 'pdf' ? 'PDF' :
-                                     viewerType === 'excel' ? 'Excel / CSV' :
-                                     viewerType === 'cad' ? 'AutoCAD' : t('ملف', 'File')}
+                                        viewerType === 'pdf' ? 'PDF' :
+                                            viewerType === 'excel' ? 'Excel / CSV' :
+                                                viewerType === 'cad' ? 'AutoCAD' : t('ملف', 'File')}
                                 </p>
                             </div>
                         </div>
@@ -409,15 +410,14 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ language, userId, userName, c
                     {channels.map(ch => {
                         const isActive = ch.id === activeChannel;
                         const typeColor = ch.type === 'internal' ? 'from-blue-500 to-indigo-600' :
-                                          ch.type === 'supplier' ? 'from-orange-500 to-red-500' :
-                                          'from-emerald-500 to-teal-500';
+                            ch.type === 'supplier' ? 'from-orange-500 to-red-500' :
+                                'from-emerald-500 to-teal-500';
                         return (
                             <button key={ch.id} onClick={() => setActiveChannel(ch.id)}
-                                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-medium whitespace-nowrap transition-all shrink-0 border ${
-                                    isActive
-                                        ? `bg-gradient-to-r ${typeColor} text-white border-transparent shadow-lg`
-                                        : 'bg-slate-800/60 text-slate-400 hover:bg-slate-700/50 border-slate-700/30'
-                                }`}>
+                                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-medium whitespace-nowrap transition-all shrink-0 border ${isActive
+                                    ? `bg-gradient-to-r ${typeColor} text-white border-transparent shadow-lg`
+                                    : 'bg-slate-800/60 text-slate-400 hover:bg-slate-700/50 border-slate-700/30'
+                                    }`}>
                                 <span className="text-sm">{ch.icon}</span>
                                 {ch.name[language]}
                                 {ch.unreadCount > 0 && !isActive && (
@@ -470,9 +470,8 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ language, userId, userName, c
                                     <div className={`max-w-[80%] sm:max-w-[70%] ${isMine ? 'items-end' : 'items-start'}`}>
                                         {!isMine && <p className="text-[10px] text-slate-500 mb-0.5 px-1">{msg.senderName}</p>}
 
-                                        <div className={`rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 ${
-                                            isMine ? 'bg-blue-600/90 text-white' : 'bg-slate-700/60 text-slate-100'
-                                        } ${msg.category === 'urgent' ? 'border border-red-500/30' : ''}`}>
+                                        <div className={`rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 ${isMine ? 'bg-blue-600/90 text-white' : 'bg-slate-700/60 text-slate-100'
+                                            } ${msg.category === 'urgent' ? 'border border-red-500/30' : ''}`}>
 
                                             {/* Reply preview */}
                                             {msg.replyToPreview && (
@@ -522,9 +521,8 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ language, userId, userName, c
                                                             <div
                                                                 key={ai}
                                                                 onClick={() => openViewer(att.url, att.name)}
-                                                                className={`flex items-center gap-3 p-2.5 rounded-xl border cursor-pointer transition-all hover:scale-[1.01] ${
-                                                                    isMine ? 'bg-blue-700/30 border-blue-400/20 hover:bg-blue-700/50' : 'bg-slate-600/30 border-slate-500/20 hover:bg-slate-600/50'
-                                                                }`}
+                                                                className={`flex items-center gap-3 p-2.5 rounded-xl border cursor-pointer transition-all hover:scale-[1.01] ${isMine ? 'bg-blue-700/30 border-blue-400/20 hover:bg-blue-700/50' : 'bg-slate-600/30 border-slate-500/20 hover:bg-slate-600/50'
+                                                                    }`}
                                                             >
                                                                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${color}`}>
                                                                     {icon}
@@ -533,8 +531,8 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ language, userId, userName, c
                                                                     <p className="text-xs font-medium truncate">{att.name}</p>
                                                                     <p className={`text-[10px] ${isMine ? 'text-blue-200' : 'text-slate-400'}`}>
                                                                         {fileType === 'pdf' ? 'PDF' :
-                                                                         fileType === 'excel' ? 'Excel / CSV' :
-                                                                         fileType === 'cad' ? 'AutoCAD' : t('ملف', 'File')}
+                                                                            fileType === 'excel' ? 'Excel / CSV' :
+                                                                                fileType === 'cad' ? 'AutoCAD' : t('ملف', 'File')}
                                                                         {att.size > 0 && ` · ${(att.size / 1024).toFixed(0)} KB`}
                                                                     </p>
                                                                 </div>
@@ -630,16 +628,14 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ language, userId, userName, c
                     <div className="flex items-center gap-2 mb-2 overflow-x-auto">
                         {(Object.keys(CATEGORY_CONFIG) as MessageCategory[]).map(cat => (
                             <button key={cat} onClick={() => setSelectedCategory(cat)}
-                                className={`px-2 sm:px-3 py-1 rounded-lg text-[10px] sm:text-xs font-medium transition-colors whitespace-nowrap border ${
-                                    selectedCategory === cat ? CATEGORY_CONFIG[cat].bg + ' ' + CATEGORY_CONFIG[cat].color : 'bg-slate-800 text-slate-500 hover:bg-slate-700 border-transparent'
-                                }`}>
+                                className={`px-2 sm:px-3 py-1 rounded-lg text-[10px] sm:text-xs font-medium transition-colors whitespace-nowrap border ${selectedCategory === cat ? CATEGORY_CONFIG[cat].bg + ' ' + CATEGORY_CONFIG[cat].color : 'bg-slate-800 text-slate-500 hover:bg-slate-700 border-transparent'
+                                    }`}>
                                 {CATEGORY_CONFIG[cat].label[language]}
                             </button>
                         ))}
                         <button onClick={() => setShowItemInput(!showItemInput)}
-                            className={`px-2 py-1 rounded-lg text-[10px] sm:text-xs transition-colors flex items-center gap-1 ${
-                                showItemInput || linkedItem ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'text-slate-500 hover:text-slate-300'
-                            }`}>
+                            className={`px-2 py-1 rounded-lg text-[10px] sm:text-xs transition-colors flex items-center gap-1 ${showItemInput || linkedItem ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'text-slate-500 hover:text-slate-300'
+                                }`}>
                             <Tag className="w-3 h-3" />
                             {linkedItem || t('ربط بند', 'Link Item')}
                         </button>
@@ -690,11 +686,10 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ language, userId, userName, c
                         <button
                             onClick={handleSend}
                             disabled={!newMessage.trim() && pendingFiles.length === 0}
-                            className={`p-2.5 sm:p-3 rounded-xl transition-all shrink-0 ${
-                                (newMessage.trim() || pendingFiles.length > 0)
-                                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 active:scale-95'
-                                    : 'bg-slate-700 text-slate-500'
-                            }`}
+                            className={`p-2.5 sm:p-3 rounded-xl transition-all shrink-0 ${(newMessage.trim() || pendingFiles.length > 0)
+                                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 active:scale-95'
+                                : 'bg-slate-700 text-slate-500'
+                                }`}
                         >
                             <Send className={`w-5 h-5 ${isRtl ? 'rotate-180' : ''}`} />
                         </button>

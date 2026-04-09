@@ -3,6 +3,8 @@
  * Discount Request Service - Allows Quantity Surveyor to request discounts for companies
  */
 
+import { firestoreDataService } from './firestoreDataService';
+
 // ====================== أنواع البيانات ======================
 
 // حالة طلب التخفيض
@@ -61,6 +63,22 @@ export const DISCOUNT_TYPE_TRANSLATIONS: Record<DiscountType, { ar: string; en: 
 
 class DiscountRequestService {
     private storageKey = 'arba_discount_requests';
+    private _loaded = false;
+
+    constructor() {
+        this.loadFromFirestore().catch(() => {});
+    }
+
+    private async loadFromFirestore(): Promise<void> {
+        if (this._loaded) return;
+        try {
+            const items = await firestoreDataService.getCollection(
+                'discount_requests', undefined, { localCacheKey: this.storageKey }
+            );
+            if (items.length > 0) localStorage.setItem(this.storageKey, JSON.stringify(items));
+            this._loaded = true;
+        } catch { this._loaded = true; }
+    }
 
     // الحصول على جميع الطلبات
     getRequests(): DiscountRequest[] {
@@ -71,6 +89,8 @@ class DiscountRequestService {
     // حفظ الطلبات
     private saveRequests(requests: DiscountRequest[]): void {
         localStorage.setItem(this.storageKey, JSON.stringify(requests));
+        const items = requests.map(r => ({ id: r.id, data: { ...r } }));
+        firestoreDataService.batchWrite('discount_requests', items).catch(() => {});
     }
 
     // الحصول على طلب بالمعرف

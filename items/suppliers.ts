@@ -223,6 +223,9 @@ export const SUPPLIERS_LANDSCAPING: SupplierOption[] = [
     { id: 'sup_land_nadec_green', name: { ar: 'نادك للتشجير', en: 'NADEC Green', fr: 'NADEC Vert', zh: 'NADEC绿化' }, tier: 'standard', priceMultiplier: 1.0, origin: 'Saudi' },
     { id: 'sup_land_riyadh_green', name: { ar: 'خضراء الرياض', en: 'Riyadh Green', fr: 'Riyadh Vert', zh: '利雅得绿化' }, tier: 'standard', priceMultiplier: 1.05, origin: 'Saudi' },
     { id: 'sup_land_interlock_riyadh', name: { ar: 'إنترلوك الرياض', en: 'Riyadh Interlock', fr: 'Interlock Riyadh', zh: '利雅得连锁砖' }, tier: 'standard', priceMultiplier: 1.0, origin: 'Saudi' },
+    { id: 'sup_land_shithry', name: { ar: 'مشاتل الشثري', en: 'Al-Shithry Nurseries', fr: 'Pépinières Al-Shithry', zh: 'Al-Shithry苗圃' }, tier: 'premium', priceMultiplier: 1.15, origin: 'Saudi' },
+    { id: 'sup_land_green_arabia', name: { ar: 'خضراء الجزيرة', en: 'Green Arabia', fr: 'Green Arabie', zh: '绿色阿拉伯' }, tier: 'premium', priceMultiplier: 1.1, origin: 'Saudi' },
+    { id: 'sup_land_saudi_turf', name: { ar: 'العشب السعودي', en: 'Saudi Turf', fr: 'Gazon Saoudien', zh: '沙特草坪' }, tier: 'standard', priceMultiplier: 1.0, origin: 'Saudi' },
 ];
 
 // ====================== الأيدي العاملة ======================
@@ -232,3 +235,74 @@ export const SUPPLIERS_MANPOWER: SupplierOption[] = [
     { id: 'sup_mp_recruitment', name: { ar: 'مكتب استقدام', en: 'Recruitment Agency', fr: 'Agence de Recrutement', zh: '招聘代理' }, tier: 'standard', priceMultiplier: 1.1, origin: 'External' },
     { id: 'sup_mp_seasonal', name: { ar: 'عمالة موسمية', en: 'Seasonal Labor', fr: 'Travail Saisonnier', zh: '季节性劳工' }, tier: 'budget', priceMultiplier: 0.9, origin: 'Mixed' },
 ];
+
+// ====================== المسابح ومعداتها ======================
+export const SUPPLIERS_SWIMMING_POOLS: SupplierOption[] = [
+    { id: 'sup_pool_pentair', name: { ar: 'بنتير للمسابح', en: 'Pentair Pool', fr: 'Pentair Piscines', zh: 'Pentair泳池' }, tier: 'premium', priceMultiplier: 1.3, origin: 'USA' },
+    { id: 'sup_pool_hayward', name: { ar: 'هيوارد', en: 'Hayward', fr: 'Hayward', zh: 'Hayward' }, tier: 'premium', priceMultiplier: 1.2, origin: 'USA' },
+    { id: 'sup_pool_fluidra', name: { ar: 'فلويدرا', en: 'Fluidra', fr: 'Fluidra', zh: 'Fluidra' }, tier: 'standard', priceMultiplier: 1.1, origin: 'Spain' },
+    { id: 'sup_pool_astral', name: { ar: 'أسترال بول', en: 'AstralPool', fr: 'AstralPool', zh: 'AstralPool' }, tier: 'standard', priceMultiplier: 1.0, origin: 'Spain' },
+    { id: 'sup_pool_local', name: { ar: 'مسابح محلية', en: 'Local Pool Mfg', fr: 'Fabricant Local', zh: '本地泳池厂' }, tier: 'budget', priceMultiplier: 0.8, origin: 'Saudi' },
+];
+
+// ====================== الأثاث الثابت والمتحرك ======================
+export const SUPPLIERS_FURNITURE: SupplierOption[] = [
+    { id: 'sup_furn_ikea', name: { ar: 'إيكيا', en: 'IKEA', fr: 'IKEA', zh: '宜家' }, tier: 'standard', priceMultiplier: 1.0, origin: 'Sweden' },
+    { id: 'sup_furn_home', name: { ar: 'هوم سنتر', en: 'Home Centre', fr: 'Home Centre', zh: '家居中心' }, tier: 'standard', priceMultiplier: 1.1, origin: 'UAE' },
+    { id: 'sup_furn_boconcept', name: { ar: 'بو كونسبت', en: 'BoConcept', fr: 'BoConcept', zh: 'BoConcept' }, tier: 'premium', priceMultiplier: 1.5, origin: 'Denmark' },
+    { id: 'sup_furn_rh', name: { ar: 'ريستوريشن هاردوير', en: 'Restoration Hardware', fr: 'Restoration Hardware', zh: 'RH' }, tier: 'premium', priceMultiplier: 1.8, origin: 'USA' },
+    { id: 'sup_furn_local', name: { ar: 'مصنع أثاث محلي', en: 'Local Furniture Factory', fr: 'Usine Locale', zh: '本地家具厂' }, tier: 'budget', priceMultiplier: 0.75, origin: 'Saudi' },
+];
+
+// ====================== الأجهزة والمعدات الطبية ======================
+export const SUPPLIERS_MEDICAL_EQUIPMENT: SupplierOption[] = [
+    { id: 'sup_med_siemens', name: { ar: 'سيمنز هيلثينيرز', en: 'Siemens Healthineers', fr: 'Siemens Healthineers', zh: '西门子医疗' }, tier: 'premium', priceMultiplier: 1.4, origin: 'Germany' },
+    { id: 'sup_med_ge', name: { ar: 'جي إي هيلثكير', en: 'GE Healthcare', fr: 'GE Healthcare', zh: 'GE医疗' }, tier: 'premium', priceMultiplier: 1.35, origin: 'USA' },
+    { id: 'sup_med_philips', name: { ar: 'فيليبس ميديكال', en: 'Philips Medical', fr: 'Philips Medical', zh: '飞利浦医疗' }, tier: 'premium', priceMultiplier: 1.3, origin: 'Netherlands' },
+    { id: 'sup_med_mindray', name: { ar: 'ميندراي', en: 'Mindray', fr: 'Mindray', zh: '迈瑞' }, tier: 'standard', priceMultiplier: 0.9, origin: 'China' },
+    { id: 'sup_med_local', name: { ar: 'موردين طبيين محليين', en: 'Local Medical Supplier', fr: 'Fournisseur Local', zh: '本地医疗供应商' }, tier: 'budget', priceMultiplier: 0.8, origin: 'Saudi' },
+];
+
+// ====================== المطابخ التجارية ======================
+export const SUPPLIERS_COMMERCIAL_KITCHEN: SupplierOption[] = [
+    { id: 'sup_ckitchen_rational', name: { ar: 'راشنال', en: 'Rational', fr: 'Rational', zh: 'Rational' }, tier: 'premium', priceMultiplier: 1.4, origin: 'Germany' },
+    { id: 'sup_ckitchen_electrolux', name: { ar: 'إلكترولوكس بروفيشنال', en: 'Electrolux Professional', fr: 'Electrolux Pro', zh: '伊莱克斯专业' }, tier: 'premium', priceMultiplier: 1.3, origin: 'Sweden' },
+    { id: 'sup_ckitchen_henny', name: { ar: 'هيني بيني', en: 'Henny Penny', fr: 'Henny Penny', zh: 'Henny Penny' }, tier: 'standard', priceMultiplier: 1.1, origin: 'USA' },
+    { id: 'sup_ckitchen_true', name: { ar: 'ترو ريفريجيريشن', en: 'True Refrigeration', fr: 'True Réfrigération', zh: 'True制冷' }, tier: 'standard', priceMultiplier: 1.0, origin: 'USA' },
+    { id: 'sup_ckitchen_local', name: { ar: 'مصنع ستانلس محلي', en: 'Local SS Manufacturer', fr: 'Fabricant Local Inox', zh: '本地不锈钢厂' }, tier: 'budget', priceMultiplier: 0.7, origin: 'Saudi' },
+];
+
+// ====================== أرضيات رياضية ======================
+export const SUPPLIERS_SPORTS_SURFACES: SupplierOption[] = [
+    { id: 'sup_sport_mondo', name: { ar: 'موندو', en: 'Mondo', fr: 'Mondo', zh: 'Mondo' }, tier: 'premium', priceMultiplier: 1.5, origin: 'Italy' },
+    { id: 'sup_sport_polytan', name: { ar: 'بولي تان', en: 'Polytan', fr: 'Polytan', zh: 'Polytan' }, tier: 'premium', priceMultiplier: 1.4, origin: 'Germany' },
+    { id: 'sup_sport_tarkett', name: { ar: 'تاركيت سبورتس', en: 'Tarkett Sports', fr: 'Tarkett Sports', zh: 'Tarkett体育' }, tier: 'standard', priceMultiplier: 1.1, origin: 'France' },
+    { id: 'sup_sport_greenfields', name: { ar: 'جرين فيلدز', en: 'GreenFields', fr: 'GreenFields', zh: 'GreenFields' }, tier: 'standard', priceMultiplier: 1.0, origin: 'Netherlands' },
+    { id: 'sup_sport_local', name: { ar: 'أرضيات رياضية محلية', en: 'Local Sports Flooring', fr: 'Sol Sport Local', zh: '本地运动地板' }, tier: 'budget', priceMultiplier: 0.7, origin: 'China' },
+];
+
+// ====================== مولدات كهربائية ======================
+export const SUPPLIERS_GENERATORS: SupplierOption[] = [
+    { id: 'sup_gen_cat', name: { ar: 'كاتربيلر', en: 'Caterpillar', fr: 'Caterpillar', zh: '卡特彼勒' }, tier: 'premium', priceMultiplier: 1.3, origin: 'USA' },
+    { id: 'sup_gen_cummins', name: { ar: 'كومنز', en: 'Cummins', fr: 'Cummins', zh: '康明斯' }, tier: 'premium', priceMultiplier: 1.25, origin: 'USA' },
+    { id: 'sup_gen_perkins', name: { ar: 'بيركنز', en: 'Perkins', fr: 'Perkins', zh: '珀金斯' }, tier: 'standard', priceMultiplier: 1.0, origin: 'UK' },
+    { id: 'sup_gen_fgwilson', name: { ar: 'إف جي ويلسون', en: 'FG Wilson', fr: 'FG Wilson', zh: 'FG Wilson' }, tier: 'standard', priceMultiplier: 1.05, origin: 'UK' },
+    { id: 'sup_gen_sdmo', name: { ar: 'إس دي إم أو', en: 'SDMO/Kohler', fr: 'SDMO/Kohler', zh: 'SDMO/Kohler' }, tier: 'standard', priceMultiplier: 1.1, origin: 'France' },
+    { id: 'sup_gen_local', name: { ar: 'مولدات صينية', en: 'Chinese Generator', fr: 'Générateur Chinois', zh: '中国发电机' }, tier: 'budget', priceMultiplier: 0.65, origin: 'China' },
+];
+
+// ====================== شحن سيارات كهربائية ======================
+export const SUPPLIERS_EV_CHARGING: SupplierOption[] = [
+    { id: 'sup_ev_abb', name: { ar: 'ABB شحن كهربائي', en: 'ABB E-Mobility', fr: 'ABB E-Mobilité', zh: 'ABB电动出行' }, tier: 'premium', priceMultiplier: 1.3, origin: 'Sweden' },
+    { id: 'sup_ev_schneider', name: { ar: 'شنايدر EVlink', en: 'Schneider EVlink', fr: 'Schneider EVlink', zh: '施耐德EVlink' }, tier: 'premium', priceMultiplier: 1.25, origin: 'France' },
+    { id: 'sup_ev_electromin', name: { ar: 'إلكترومين', en: 'Electromin', fr: 'Electromin', zh: 'Electromin' }, tier: 'standard', priceMultiplier: 1.0, origin: 'Saudi' },
+    { id: 'sup_ev_chargepoint', name: { ar: 'تشارج بوينت', en: 'ChargePoint', fr: 'ChargePoint', zh: 'ChargePoint' }, tier: 'standard', priceMultiplier: 1.1, origin: 'USA' },
+];
+
+// ====================== لوحات سلامة وإرشاد ======================
+export const SUPPLIERS_SAFETY_SIGNS: SupplierOption[] = [
+    { id: 'sup_sign_brady', name: { ar: 'برادي', en: 'Brady', fr: 'Brady', zh: 'Brady' }, tier: 'premium', priceMultiplier: 1.3, origin: 'USA' },
+    { id: 'sup_sign_3m', name: { ar: '3M سيفتي', en: '3M Safety', fr: '3M Sécurité', zh: '3M安全' }, tier: 'premium', priceMultiplier: 1.25, origin: 'USA' },
+    { id: 'sup_sign_local', name: { ar: 'مصنع لوحات محلي', en: 'Local Sign Factory', fr: 'Usine Panneaux Locale', zh: '本地标识厂' }, tier: 'budget', priceMultiplier: 0.6, origin: 'Saudi' },
+];
+

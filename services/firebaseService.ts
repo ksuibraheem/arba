@@ -34,12 +34,26 @@ export interface ConnectionStatus {
 
 // Data mapping configuration
 const DATA_MAPPINGS = [
+    // الموظفين والتسجيل
     { localKey: 'arba_employees', collection: 'employees', label: 'الموظفين' },
     { localKey: 'arba_registration_requests', collection: 'registration_requests', label: 'طلبات التسجيل' },
     { localKey: 'arba_attendance', collection: 'attendance', label: 'سجلات الحضور' },
+    { localKey: 'arba_notifications', collection: 'notifications', label: 'الإشعارات' },
+    // المحاسبة
     { localKey: 'arba_invoices', collection: 'invoices', label: 'الفواتير' },
     { localKey: 'arba_payments', collection: 'payments', label: 'المدفوعات' },
-    { localKey: 'arba_notifications', collection: 'notifications', label: 'الإشعارات' }
+    { localKey: 'arba_ledger', collection: 'ledger_entries', label: 'القيود المحاسبية' },
+    { localKey: 'arba_subscriptions', collection: 'subscriptions', label: 'الاشتراكات' },
+    { localKey: 'arba_clients', collection: 'accounting_clients', label: 'العملاء' },
+    // الموردين
+    { localKey: 'arba_supplier_products', collection: 'supplier_products', label: 'منتجات الموردين' },
+    { localKey: 'arba_purchase_invoices', collection: 'purchase_invoices', label: 'فواتير المشتريات' },
+    { localKey: 'arba_supplier_payments', collection: 'supplier_payments', label: 'مدفوعات الموردين' },
+    // التواصل
+    { localKey: 'arba_connect_messages', collection: 'connect_messages', label: 'رسائل التواصل' },
+    { localKey: 'arba_connect_mail', collection: 'connect_mail', label: 'البريد الداخلي' },
+    { localKey: 'arba_connect_forms', collection: 'connect_forms', label: 'النماذج' },
+    { localKey: 'arba_connect_notes', collection: 'connect_notes', label: 'الملاحظات' },
 ];
 
 // ====================== Firebase Service ======================
@@ -152,42 +166,20 @@ class FirebaseService {
                 };
             }
 
-            // Use batch writes for efficiency (max 500 per batch)
-            const batch = writeBatch(db);
-            let syncedCount = 0;
-            const errors: string[] = [];
-
-            for (const item of items) {
-                try {
-                    // Use existing ID or generate one
-                    const docId = item.id || crypto.randomUUID();
-                    const docRef = doc(db, collectionName, docId);
-
-                    // Add sync metadata
-                    const dataToSync = {
-                        ...item,
-                        _syncedAt: serverTimestamp(),
-                        _syncedFrom: 'local'
-                    };
-
-                    batch.set(docRef, dataToSync, { merge: true });
-                    syncedCount++;
-                } catch (error: any) {
-                    errors.push(`Item ${item.id || 'unknown'}: ${error.message}`);
-                }
+            // 🔥 Use firestoreDataService for routing through arba_config
+            const { firestoreDataService } = await import('./firestoreDataService');
+            const batchItems = items.map((item: any) => ({
+                id: item.id || crypto.randomUUID(),
+                data: { ...item, _syncedFrom: 'local' }
+            }));
+            const result = await firestoreDataService.batchWrite(collectionName, batchItems);
+            if (result.success) {
+                console.log(`✅ Synced ${result.data} items to ${collectionName}`);
             }
-
-            // Commit the batch
-            await batch.commit();
-
-            console.log(`✅ Synced ${syncedCount} items to ${collectionName}`);
-
             return {
-                success: errors.length === 0,
-                message: `Synced ${syncedCount} items`,
-                syncedCount,
-                failedCount: errors.length,
-                errors: errors.length > 0 ? errors : undefined
+                success: result.success,
+                message: `Synced ${result.data || 0} items`,
+                syncedCount: result.data || 0
             };
         } catch (error: any) {
             console.error(`Error syncing ${collectionName}:`, error);

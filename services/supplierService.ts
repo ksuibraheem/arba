@@ -1,11 +1,13 @@
 /**
  * خدمة الموردين
  * Supplier Service - Connects Suppliers with Accounting System
+ * 🔥 Synced with Firestore via firestoreDataService
  */
 
 import { registrationService, RegistrationRequest } from './registrationService';
 import { chartOfAccountsService, ACCOUNT_CODES, JournalEntry, VAT_RATE } from './chartOfAccountsService';
 import { FULL_ITEMS_DATABASE } from '../constants';
+import { firestoreDataService } from './firestoreDataService';
 
 // ====================== أنواع البيانات ======================
 
@@ -256,6 +258,11 @@ class SupplierService {
     private productsKey = 'arba_supplier_products';
     private invoicesKey = 'arba_purchase_invoices';
     private paymentsKey = 'arba_supplier_payments';
+    // 🔥 Firestore collections
+    private fsProducts = 'supplier_products';
+    private fsInvoices = 'purchase_invoices';
+    private fsPayments = 'supplier_payments';
+    private firestoreLoaded = false;
 
     // =================== الموردين ===================
 
@@ -296,6 +303,9 @@ class SupplierService {
 
     private saveProducts(products: SupplierProduct[]): void {
         localStorage.setItem(this.productsKey, JSON.stringify(products));
+        // 🔥 Sync to Firestore
+        const items = products.map(p => ({ id: p.id, data: { ...p } }));
+        firestoreDataService.batchWrite(this.fsProducts, items).catch(console.error);
     }
 
     getProductsBySupplierId(supplierId: string): SupplierProduct[] {
@@ -339,6 +349,9 @@ class SupplierService {
 
     private saveInvoices(invoices: PurchaseInvoice[]): void {
         localStorage.setItem(this.invoicesKey, JSON.stringify(invoices));
+        // 🔥 Sync to Firestore
+        const items = invoices.map(i => ({ id: i.id, data: { ...i } }));
+        firestoreDataService.batchWrite(this.fsInvoices, items).catch(console.error);
     }
 
     generateInvoiceNumber(): string {
@@ -456,6 +469,9 @@ class SupplierService {
 
     private savePayments(payments: SupplierPayment[]): void {
         localStorage.setItem(this.paymentsKey, JSON.stringify(payments));
+        // 🔥 Sync to Firestore
+        const items = payments.map(p => ({ id: p.id, data: { ...p } }));
+        firestoreDataService.batchWrite(this.fsPayments, items).catch(console.error);
     }
 
     getPaymentsBySupplierId(supplierId: string): SupplierPayment[] {

@@ -2,9 +2,11 @@
  * In-App Notification Service
  * خدمة الإشعارات الداخلية
  * 
- * localStorage-based notification system for real-time in-app alerts.
+ * localStorage + Firestore sync for real-time in-app alerts.
  * Each notification targets a specific role (manager, accountant, etc.)
  */
+
+import { firestoreDataService } from './firestoreDataService';
 
 // ====================== Types ======================
 
@@ -39,6 +41,26 @@ export interface AppNotification {
 
 const NOTIFICATIONS_KEY = 'arba_notifications';
 const MAX_NOTIFICATIONS = 100; // أقصى عدد إشعارات مخزنة
+
+let _notificationsLoadedFromFirestore = false;
+
+async function loadNotificationsFromFirestore(): Promise<void> {
+    if (_notificationsLoadedFromFirestore) return;
+    try {
+        const items = await firestoreDataService.getCollection(
+            'notifications', undefined, { localCacheKey: NOTIFICATIONS_KEY }
+        );
+        if (items.length > 0) {
+            localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(items));
+        }
+        _notificationsLoadedFromFirestore = true;
+    } catch {
+        _notificationsLoadedFromFirestore = true;
+    }
+}
+
+// Auto-load on import
+loadNotificationsFromFirestore().catch(() => {});
 
 // ====================== Translations ======================
 
@@ -77,6 +99,9 @@ class NotificationService {
         // Trim to max
         const trimmed = notifications.slice(0, MAX_NOTIFICATIONS);
         localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(trimmed));
+        // 🔥 Fire-and-forget sync to Firestore
+        const items = trimmed.map(n => ({ id: n.id, data: { ...n } }));
+        firestoreDataService.batchWrite('notifications', items).catch(() => {});
     }
 
     // =================== Public API ===================

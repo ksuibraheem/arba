@@ -218,7 +218,7 @@ export async function getCompanyByUserId(userId: string): Promise<CompanyData | 
  */
 export async function createSubscription(data: Omit<SubscriptionData, 'startsAt'>): Promise<string | null> {
     try {
-        const subRef = doc(collection(db, 'subscriptions'));
+        const subRef = doc(db, 'arba_config', `subscriptions__${crypto.randomUUID()}`);
 
         await setDoc(subRef, {
             ...data,
@@ -240,7 +240,7 @@ export async function createSubscription(data: Omit<SubscriptionData, 'startsAt'
 export async function getActiveSubscription(userId: string): Promise<SubscriptionData | null> {
     try {
         const q = query(
-            collection(db, 'subscriptions'),
+            collection(db, 'arba_config'),
             where('userId', '==', userId),
             where('status', '==', 'active')
         );
@@ -264,7 +264,7 @@ export async function getActiveSubscription(userId: string): Promise<Subscriptio
  */
 export async function createPaymentRecord(data: Omit<PaymentData, 'createdAt'>): Promise<string | null> {
     try {
-        const paymentRef = doc(collection(db, 'payments'));
+        const paymentRef = doc(db, 'arba_config', `payments__${crypto.randomUUID()}`);
 
         await setDoc(paymentRef, {
             ...data,
@@ -288,7 +288,7 @@ export async function updatePaymentStatus(
     gatewayTransactionId?: string
 ): Promise<boolean> {
     try {
-        const docRef = doc(db, 'payments', paymentId);
+        const docRef = doc(db, 'arba_config', `payments__${paymentId}`);
 
         await updateDoc(docRef, {
             status,

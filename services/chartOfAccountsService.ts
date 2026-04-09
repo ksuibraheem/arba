@@ -1,7 +1,10 @@
 /**
  * خدمة شجرة الحسابات والقيود المحاسبية
  * Chart of Accounts & Journal Entries Service
+ * 🔥 Synced with Firestore
  */
+
+import { firestoreDataService } from './firestoreDataService';
 
 // ====================== أنواع البيانات ======================
 
@@ -171,6 +174,26 @@ export const VAT_RATE = 0.15;
 class ChartOfAccountsService {
     private accountsKey = 'arba_chart_of_accounts';
     private journalKey = 'arba_journal_entries';
+    private _loaded = false;
+
+    constructor() {
+        this.loadFromFirestore().catch(() => {});
+    }
+
+    private async loadFromFirestore(): Promise<void> {
+        if (this._loaded) return;
+        try {
+            const accounts = await firestoreDataService.getCollection(
+                'chart_of_accounts', undefined, { localCacheKey: this.accountsKey }
+            );
+            if (accounts.length > 0) localStorage.setItem(this.accountsKey, JSON.stringify(accounts));
+            const entries = await firestoreDataService.getCollection(
+                'journal_entries', undefined, { localCacheKey: this.journalKey }
+            );
+            if (entries.length > 0) localStorage.setItem(this.journalKey, JSON.stringify(entries));
+            this._loaded = true;
+        } catch { this._loaded = true; }
+    }
 
     // =================== الحسابات ===================
 
@@ -181,6 +204,8 @@ class ChartOfAccountsService {
 
     private saveAccounts(accounts: Account[]): void {
         localStorage.setItem(this.accountsKey, JSON.stringify(accounts));
+        const items = accounts.map(a => ({ id: a.code, data: { ...a } }));
+        firestoreDataService.batchWrite('chart_of_accounts', items).catch(() => {});
     }
 
     getAccountByCode(code: string): Account | null {
@@ -245,6 +270,8 @@ class ChartOfAccountsService {
 
     private saveJournalEntries(entries: JournalEntry[]): void {
         localStorage.setItem(this.journalKey, JSON.stringify(entries));
+        const items = entries.map(e => ({ id: e.id, data: { ...e } }));
+        firestoreDataService.batchWrite('journal_entries', items).catch(() => {});
     }
 
     generateEntryNumber(): string {

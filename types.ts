@@ -1,9 +1,42 @@
 import { Supplier, SupplierProduct } from './services/supplierService';
 
-export type ProjectType = 'villa' | 'tower' | 'rest_house' | 'factory' | 'school' | 'hospital' | 'mosque' | 'hotel' | 'residential_building' | 'sports_complex' | 'farm';
-export type LocationType = 'riyadh' | 'jeddah' | 'dammam' | 'makkah' | 'madinah' | 'abha' | 'tabuk' | 'qassim' | 'hail';
+export type ProjectType = 'villa' | 'tower' | 'rest_house' | 'factory' | 'school' | 'hospital' | 'mosque' | 'hotel' | 'residential_building' | 'sports_complex' | 'farm' | 'gas_station' | 'mall' | 'restaurant' | 'car_wash' | 'warehouse' | 'government' | 'clinic';
+export type LocationType = 'riyadh' | 'jeddah' | 'dammam' | 'makkah' | 'madinah' | 'abha' | 'tabuk' | 'qassim' | 'hail' | 'jazan' | 'najran' | 'baha' | 'jouf' | 'northern_borders' | 'khobar' | 'yanbu' | 'taif' | 'khamis_mushait' | 'ahsa' | 'hafr_albatin';
 export type SoilType = 'normal' | 'sandy' | 'clay' | 'rocky_soft' | 'rocky_hard' | 'marshy';
 export type PricingStrategy = 'fixed_margin' | 'target_roi';
+
+// SBC 201 Occupancy Classification Groups
+export type SBCOccupancyGroup = 'A-1' | 'A-2' | 'A-3' | 'A-4' | 'A-5' | 'B' | 'E' | 'F-1' | 'F-2' | 'H-1' | 'H-2' | 'H-3' | 'I-1' | 'I-2' | 'I-3' | 'M' | 'R-1' | 'R-2' | 'R-3' | 'R-4' | 'S-1' | 'S-2' | 'U';
+
+// SBC Construction Types
+export type ConstructionType = 'IA' | 'IB' | 'IIA' | 'IIB' | 'IIIA' | 'IIIB' | 'IV' | 'VA' | 'VB';
+
+// Foundation Types
+export type FoundationType = 'isolated_footings' | 'strip_footings' | 'raft' | 'piles' | 'mat' | 'combined';
+
+// Structural System Types
+export type StructuralSystem = 'frame' | 'bearing_wall' | 'steel_frame' | 'precast' | 'mixed';
+
+// Seismic Zone Classification
+export type SeismicZone = '0' | '1' | '2A' | '2B' | '3' | '4';
+
+// Concrete Grade
+export type ConcreteGrade = 'C20' | 'C25' | 'C30' | 'C35' | 'C40' | 'C45' | 'C50';
+
+// Exposure Category (Environmental)
+export type ExposureCategory = 'normal' | 'salt' | 'humidity' | 'coastal' | 'industrial';
+
+// Parking Type
+export type ParkingType = 'surface' | 'basement' | 'multi_story' | 'none';
+
+// Insulation Type
+export type InsulationType = 'eps' | 'xps' | 'polyurethane' | 'rockwool' | 'none';
+
+// Scope of Work
+export type ScopeOfWork = 'shell_core' | 'finishing' | 'turnkey' | 'renovation' | 'maintenance';
+
+// Contractor Classification (Saudi MOMRA)
+export type ContractorClassification = '1' | '2' | '3' | '4' | '5';
 
 // Updated: View Mode to include 'materials'
 export type ViewMode = 'pricing' | 'blueprint' | 'materials';
@@ -25,7 +58,7 @@ export interface SupplierOption {
   dynamicPrice?: number; // Exact price override from dynamic supplier product
 }
 
-export type RoomType = 'living' | 'bedroom' | 'kitchen' | 'bathroom' | 'majlis' | 'office' | 'shop' | 'corridor' | 'service';
+export type RoomType = 'living' | 'bedroom' | 'kitchen' | 'bathroom' | 'majlis' | 'office' | 'shop' | 'corridor' | 'service' | 'lab' | 'clinic' | 'prayer' | 'storage' | 'gym' | 'pool' | 'restaurant' | 'reception' | 'parking' | 'guard';
 
 export interface RoomConfig {
   id: string;
@@ -138,17 +171,50 @@ export interface TeamMember {
 }
 
 export interface ProjectMetadata {
+  // بيانات العميل
   clientName: string;
-  tenderNumber: string;
-  projectName: string;
+  clientPhone: string;
+  clientEmail: string;
+  clientIdNumber: string;     // رقم الهوية / السجل التجاري
 
+  // بيانات الموقع والأرض
+  projectName: string;
+  projectAddress: string;     // عنوان المشروع التفصيلي
+  deedNumber: string;         // رقم صك الملكية
+  plotNumber: string;         // رقم قطعة الأرض
+  planNumber: string;         // رقم المخطط
+  buildingPermitNumber: string; // رقم رخصة البناء
+
+  // بيانات المناقصة/العرض
+  tenderNumber: string;
+  quotationNumber: string;    // رقم عرض السعر
+  quotationDate: string;      // تاريخ عرض السعر
+  quotationValidityDays: number; // مدة صلاحية العرض (يوم)
+  scopeOfWork: ScopeOfWork;   // نطاق العمل
+
+  // بيانات الشركة / المقاول
   companyName: string;
+  companyLicense: string;     // رقم السجل التجاري
+  companyClassification: ContractorClassification; // درجة التصنيف
+  companyPhone: string;
+  companyEmail: string;
+  vatNumber: string;          // الرقم الضريبي
   preparedBy: string;
   confirmationCode: string;
 
+  // بيانات مالية
+  vatPercentage: number;      // نسبة ضريبة القيمة المضافة (15%)
+  paymentTerms: string;       // شروط الدفع
+
+  // بيانات الجدول الزمني
   pricingDate: string;
   executionStartDate: string;
   projectDurationMonths: number;
+
+  // بيانات الضمان
+  warrantyYearsStructure: number;  // ضمان الهيكل (10 سنوات)
+  warrantyYearsFinish: number;     // ضمان التشطيبات
+  warrantyYearsMEP: number;        // ضمان الأعمال الكهروميكانيكية
 }
 
 export interface CustomParams {
@@ -173,7 +239,7 @@ export interface CustomParams {
 
 export interface BaseItem {
   id: string;
-  category: 'site' | 'structure' | 'architecture' | 'mep_elec' | 'mep_plumb' | 'mep_hvac' | 'insulation' | 'safety' | 'gov_fees' | 'production' | 'manpower' | 'custom';
+  category: 'site' | 'structure' | 'architecture' | 'mep_elec' | 'mep_plumb' | 'mep_hvac' | 'insulation' | 'safety' | 'gov_fees' | 'production' | 'manpower' | 'custom' | 'landscaping' | 'furniture' | 'elevator' | 'fire_protection' | 'smart_systems' | 'renewable_energy' | 'demolition' | 'temporary_works' | 'testing' | 'external_works';
   type: 'all' | ProjectType;
   name: Record<Language, string>; // Changed to support multiple languages
   unit: string;
@@ -216,13 +282,13 @@ export interface CalculatedItem extends BaseItem {
 }
 
 export interface AppState {
-  language: Language; // New State
+  language: Language;
   viewMode: ViewMode;
   projectType: ProjectType;
   location: LocationType;
   soilType: SoilType;
 
-  // New Execution Settings
+  // Execution Settings
   executionMethod: ExecutionMethod;
   globalPriceAdjustment: number; // Percentage +/-
 
@@ -238,20 +304,38 @@ export interface AppState {
   buildArea: number;
   floors: number;
 
-  // New Blueprint Data
+  // SBC Technical Data — بيانات تقنية حسب كود البناء السعودي
+  sbcOccupancyGroup: SBCOccupancyGroup;       // تصنيف الإشغال SBC 201
+  constructionType: ConstructionType;          // نوع الإنشاء
+  foundationType: FoundationType;              // نظام الأساسات
+  structuralSystem: StructuralSystem;           // النظام الإنشائي
+  seismicZone: SeismicZone;                    // المنطقة الزلزالية
+  windSpeed: number;                           // سرعة الرياح التصميمية (km/h)
+  buildingRatio: number;                       // نسبة البناء المسموحة (%)
+  fireRating: number;                          // تصنيف مقاومة الحريق (ساعات)
+  concreteGrade: ConcreteGrade;                // رتبة الخرسانة
+  steelGrade: string;                          // درجة الحديد
+  exposureCategory: ExposureCategory;          // فئة التعرض البيئي
+  hasBasement: boolean;                        // وجود قبو
+  parkingType: ParkingType;                    // نوع المواقف
+  hasElevator: boolean;                        // وجود مصعد
+  elevatorCount: number;                       // عدد المصاعد
+  insulationType: InsulationType;              // نوع العزل الحراري
+
+  // Blueprint Data
   blueprint: BlueprintConfig;
 
   rooms: RoomConfig[];
 
-  // New: Interior Finishes Data
+  // Interior Finishes Data
   interiorFinishes: RoomFinishes[];
 
   facades: FacadeConfig[];
 
-  // New Team State
+  // Team State
   team: TeamMember[];
 
-  // New: User Added Items
+  // User Added Items
   customItems: BaseItem[];
 
   itemOverrides: Record<string, CustomParams>;

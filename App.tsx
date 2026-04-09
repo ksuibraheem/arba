@@ -51,6 +51,7 @@ import { registerUser, loginUser, logoutUser, getCurrentUser, StoredUser } from 
 // Firebase auth service
 import { registerWithFirebase, loginWithFirebase, logoutFromFirebase, onAuthChange, getUserData, UserData } from './firebase/authService';
 import { isInTestMode, getCurrentTestSession, endTestMode } from './services/testModeService';
+import { initializeFirestoreData } from './services/firestoreInitializer';
 import SplashScreen from './components/SplashScreen';
 
 // Toggle Firebase mode - set to true to use Firebase
@@ -80,8 +81,14 @@ const App: React.FC = () => {
     // Role Context Hook Setup
     const { setRoleData, clearRole } = useRole();
 
-    // Auth & Routing State
-    const [currentPage, setCurrentPage] = useState<PageRoute>('landing');
+    // Auth & Routing State — detect verification/reset returns from URL synchronously
+    const [currentPage, setCurrentPage] = useState<PageRoute>(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('emailVerified') === 'true' || params.get('passwordReset') === 'true') {
+            return 'login';
+        }
+        return 'landing';
+    });
 
     // Role Caching: Initialize user from localStorage if available
     const [user, setUser] = useState<AuthUser | null>(() => {
@@ -102,6 +109,16 @@ const App: React.FC = () => {
     const [showPriceQuote, setShowPriceQuote] = useState(false);
     const [showUniversalImporter, setShowUniversalImporter] = useState(false);
     const [loginError, setLoginError] = useState<string>('');
+    const [loginSuccess, setLoginSuccess] = useState<string>(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('emailVerified') === 'true') {
+            return '✅ تم تأكيد بريدك الإلكتروني بنجاح! يمكنك الآن تسجيل الدخول.';
+        }
+        if (params.get('passwordReset') === 'true') {
+            return '✅ تم تغيير كلمة المرور بنجاح! يمكنك الآن تسجيل الدخول بكلمة المرور الجديدة.';
+        }
+        return '';
+    });
     const [adminAccessGranted, setAdminAccessGranted] = useState(false);
     const [adminKeyInput, setAdminKeyInput] = useState('');
     const [isLoading, setIsLoading] = useState(true);
@@ -155,7 +172,8 @@ const App: React.FC = () => {
                         const result = await handleVerificationReturn(oobCode);
                         if (result.success) {
                             console.log('✅ تم تفعيل البريد من الرابط');
-                            // Clean URL and redirect to dashboard
+                            setLoginSuccess('✅ تم تأكيد بريدك الإلكتروني بنجاح! يمكنك الآن تسجيل الدخول.');
+                            // Clean URL and redirect to login
                             window.history.replaceState({}, document.title, window.location.pathname);
                             setCurrentPage('login');
                         }
@@ -165,6 +183,15 @@ const App: React.FC = () => {
                     console.error('Error processing email action:', error);
                 }
             })();
+        }
+
+        // ── Handle return from Firebase verification/reset pages ──
+        const emailVerified = params.get('emailVerified');
+        const passwordReset = params.get('passwordReset');
+        if (emailVerified === 'true' || passwordReset === 'true') {
+            // State already set synchronously in useState initializers above
+            // Just clean the URL
+            window.history.replaceState({}, document.title, window.location.pathname);
         }
 
         // ── Handle Tap Payments callback (after redirect from payment page) ──
@@ -319,7 +346,7 @@ const App: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // ← Empty deps: subscribe ONCE on mount, use refs for latest values
 
-    // Load Dynamic Supplier Data
+    // Load Dynamic Supplier Data & Initialize Firestore
     useEffect(() => {
         const loadSupplierData = () => {
             const suppliers = supplierService.getSuppliers();
@@ -332,6 +359,15 @@ const App: React.FC = () => {
         };
 
         loadSupplierData();
+
+        // 🔥 Initialize Firestore data layer (one-time migration + load)
+        initializeFirestoreData().then(result => {
+            if (result.migratedCount > 0) {
+                console.log(`🔥 Firestore: Migrated ${result.migratedCount} documents`);
+            }
+            // Reload supplier data after Firestore sync
+            loadSupplierData();
+        }).catch(console.error);
 
         // Refresh when page changes or returns to dashboard
         if (currentPage === 'dashboard') {
@@ -352,14 +388,36 @@ const App: React.FC = () => {
 
         metadata: {
             clientName: '',
-            tenderNumber: '',
+            clientPhone: '',
+            clientEmail: '',
+            clientIdNumber: '',
             projectName: 'مشروع جديد',
+            projectAddress: '',
+            deedNumber: '',
+            plotNumber: '',
+            planNumber: '',
+            buildingPermitNumber: '',
+            tenderNumber: '',
+            quotationNumber: '',
+            quotationDate: new Date().toISOString().split('T')[0],
+            quotationValidityDays: 30,
+            scopeOfWork: 'turnkey',
             companyName: '',
+            companyLicense: '',
+            companyClassification: '3',
+            companyPhone: '',
+            companyEmail: '',
+            vatNumber: '',
             preparedBy: '',
             confirmationCode: '',
+            vatPercentage: 15,
+            paymentTerms: 'دفعات حسب الإنجاز',
             pricingDate: new Date().toISOString().split('T')[0],
             executionStartDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            projectDurationMonths: 12
+            projectDurationMonths: 12,
+            warrantyYearsStructure: 10,
+            warrantyYearsFinish: 2,
+            warrantyYearsMEP: 5,
         },
 
         pricingStrategy: 'fixed_margin',
@@ -371,6 +429,24 @@ const App: React.FC = () => {
         landArea: 300,
         buildArea: 450,
         floors: 2,
+
+        // SBC Technical Defaults
+        sbcOccupancyGroup: 'R-3',
+        constructionType: 'VB',
+        foundationType: 'isolated_footings',
+        structuralSystem: 'frame',
+        seismicZone: '1',
+        windSpeed: 130,
+        buildingRatio: 60,
+        fireRating: 1,
+        concreteGrade: 'C30',
+        steelGrade: 'Grade 60',
+        exposureCategory: 'normal',
+        hasBasement: false,
+        parkingType: 'surface',
+        hasElevator: false,
+        elevatorCount: 0,
+        insulationType: 'eps',
 
         rooms: PROJECT_DEFAULTS['villa'].rooms,
         facades: PROJECT_DEFAULTS['villa'].facades,
@@ -974,7 +1050,7 @@ const App: React.FC = () => {
     }
 
     if (currentPage === 'login') {
-        return <LoginPage language={language} onNavigate={handleNavigate} onLogin={handleLogin} loginError={loginError} />;
+        return <LoginPage language={language} onNavigate={(page) => { setLoginSuccess(''); handleNavigate(page); }} onLogin={handleLogin} loginError={loginError} loginSuccess={loginSuccess} />;
     }
 
     if (currentPage === 'register') {

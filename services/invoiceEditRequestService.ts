@@ -6,6 +6,7 @@
 import { Invoice } from './accountingService';
 import { sendEditRequestAlertToManager, sendEditRequestDecisionToEmployee } from './emailNotificationService';
 import { notificationService } from './notificationService';
+import { firestoreDataService } from './firestoreDataService';
 
 // ====================== أنواع البيانات ======================
 
@@ -55,6 +56,26 @@ export const EDIT_REQUEST_STATUS_TRANSLATIONS: Record<EditRequestStatus, { ar: s
 class InvoiceEditRequestService {
     private requestsKey = 'arba_invoice_edit_requests';
     private versionsKey = 'arba_invoice_versions';
+    private _loaded = false;
+
+    constructor() {
+        this.loadFromFirestore().catch(() => {});
+    }
+
+    private async loadFromFirestore(): Promise<void> {
+        if (this._loaded) return;
+        try {
+            const requests = await firestoreDataService.getCollection(
+                'invoice_edit_requests', undefined, { localCacheKey: this.requestsKey }
+            );
+            if (requests.length > 0) localStorage.setItem(this.requestsKey, JSON.stringify(requests));
+            const versions = await firestoreDataService.getCollection(
+                'invoice_versions', undefined, { localCacheKey: this.versionsKey }
+            );
+            if (versions.length > 0) localStorage.setItem(this.versionsKey, JSON.stringify(versions));
+            this._loaded = true;
+        } catch { this._loaded = true; }
+    }
 
     // =================== طلبات التعديل ===================
 
@@ -65,6 +86,8 @@ class InvoiceEditRequestService {
 
     private saveRequests(requests: InvoiceEditRequest[]): void {
         localStorage.setItem(this.requestsKey, JSON.stringify(requests));
+        const items = requests.map(r => ({ id: r.id, data: { ...r } }));
+        firestoreDataService.batchWrite('invoice_edit_requests', items).catch(() => {});
     }
 
     getRequestById(id: string): InvoiceEditRequest | null {
@@ -306,6 +329,8 @@ class InvoiceEditRequestService {
 
     private saveVersions(versions: InvoiceVersion[]): void {
         localStorage.setItem(this.versionsKey, JSON.stringify(versions));
+        const items = versions.map(v => ({ id: v.id, data: { ...v } }));
+        firestoreDataService.batchWrite('invoice_versions', items).catch(() => {});
     }
 
     /**

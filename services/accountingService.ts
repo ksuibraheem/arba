@@ -1,7 +1,10 @@
 /**
  * خدمة المحاسبة الشاملة
  * Comprehensive Accounting Service
+ * 🔥 Synced with Firestore via firestoreDataService
  */
+
+import { firestoreDataService } from './firestoreDataService';
 
 // ====================== أنواع البيانات ======================
 
@@ -227,6 +230,11 @@ class AccountingService {
     private ledgerKey = 'arba_ledger';
     private subscriptionsKey = 'arba_subscriptions';
     private paymentsKey = 'arba_payments';
+    // 🔥 Firestore collections
+    private fsInvoices = 'invoices';
+    private fsLedger = 'ledger_entries';
+    private fsSubscriptions = 'subscriptions';
+    private fsPayments = 'payments';
 
     // =================== الفواتير ===================
 
@@ -237,6 +245,9 @@ class AccountingService {
 
     private saveInvoices(invoices: Invoice[]): void {
         localStorage.setItem(this.invoicesKey, JSON.stringify(invoices));
+        // 🔥 Sync to Firestore
+        const items = invoices.map(i => ({ id: i.id, data: { ...i } }));
+        firestoreDataService.batchWrite(this.fsInvoices, items).catch(console.error);
     }
 
     getInvoiceById(id: string): Invoice | null {
@@ -312,6 +323,9 @@ class AccountingService {
 
     private saveLedgerEntries(entries: LedgerEntry[]): void {
         localStorage.setItem(this.ledgerKey, JSON.stringify(entries));
+        // 🔥 Sync to Firestore
+        const items = entries.map(e => ({ id: e.id, data: { ...e } }));
+        firestoreDataService.batchWrite(this.fsLedger, items).catch(console.error);
     }
 
     getCurrentBalance(): number {
@@ -356,6 +370,9 @@ class AccountingService {
 
     private saveSubscriptions(subs: Subscription[]): void {
         localStorage.setItem(this.subscriptionsKey, JSON.stringify(subs));
+        // 🔥 Sync to Firestore
+        const items = subs.map(s => ({ id: s.id, data: { ...s } }));
+        firestoreDataService.batchWrite(this.fsSubscriptions, items).catch(console.error);
     }
 
     createSubscription(sub: Omit<Subscription, 'id' | 'createdAt' | 'paymentHistory'>): Subscription {
@@ -438,6 +455,9 @@ class AccountingService {
 
     private savePayments(payments: Payment[]): void {
         localStorage.setItem(this.paymentsKey, JSON.stringify(payments));
+        // 🔥 Sync to Firestore
+        const items = payments.map(p => ({ id: p.id, data: { ...p } }));
+        firestoreDataService.batchWrite(this.fsPayments, items).catch(console.error);
     }
 
     recordPayment(payment: Omit<Payment, 'id' | 'createdAt'>): Payment {
