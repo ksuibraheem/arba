@@ -3,7 +3,7 @@ import { Supplier, SupplierProduct } from './services/supplierService';
 export type ProjectType = 'villa' | 'tower' | 'rest_house' | 'factory' | 'school' | 'hospital' | 'mosque' | 'hotel' | 'residential_building' | 'sports_complex' | 'farm' | 'gas_station' | 'mall' | 'restaurant' | 'car_wash' | 'warehouse' | 'government' | 'clinic';
 export type LocationType = 'riyadh' | 'jeddah' | 'dammam' | 'makkah' | 'madinah' | 'abha' | 'tabuk' | 'qassim' | 'hail' | 'jazan' | 'najran' | 'baha' | 'jouf' | 'northern_borders' | 'khobar' | 'yanbu' | 'taif' | 'khamis_mushait' | 'ahsa' | 'hafr_albatin';
 export type SoilType = 'normal' | 'sandy' | 'clay' | 'rocky_soft' | 'rocky_hard' | 'marshy';
-export type PricingStrategy = 'fixed_margin' | 'target_roi';
+export type PricingStrategy = 'fixed_margin' | 'target_roi' | 'arba_standard';
 
 // SBC 201 Occupancy Classification Groups
 export type SBCOccupancyGroup = 'A-1' | 'A-2' | 'A-3' | 'A-4' | 'A-5' | 'B' | 'E' | 'F-1' | 'F-2' | 'H-1' | 'H-2' | 'H-3' | 'I-1' | 'I-2' | 'I-3' | 'M' | 'R-1' | 'R-2' | 'R-3' | 'R-4' | 'S-1' | 'S-2' | 'U';

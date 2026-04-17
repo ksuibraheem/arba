@@ -1,8 +1,9 @@
+import { Language } from '../types';
 import React, { useState, useEffect } from 'react';
 
 interface SplashScreenProps {
     onComplete: () => void;
-    language: 'ar' | 'en';
+    language: Language;
 }
 
 /**

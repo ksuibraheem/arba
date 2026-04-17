@@ -1,3 +1,4 @@
+import { Language } from '../../types';
 /**
  * InternalMail — البريد الداخلي
  * مراسلات رسمية + قوالب جاهزة + تتبع الحالة + ربط بالبريد الإلكتروني الحقيقي
@@ -8,7 +9,7 @@ import { ChevronLeft, Send, Star, Paperclip, Reply, Plus, FileText, Mail, CheckC
 import { connectService, InternalMailMessage, MAIL_TEMPLATES, formatChatTime } from '../../services/connectService';
 
 interface InternalMailProps {
-    language: 'ar' | 'en';
+    language: Language;
     userId: string;
     userName: string;
     userEmail?: string;
@@ -33,7 +34,7 @@ const InternalMail: React.FC<InternalMailProps> = ({ language, userId, userName,
     const [replyBody, setReplyBody] = useState('');
 
     const isRtl = language === 'ar';
-    const t = (ar: string, en: string) => language === 'ar' ? ar : en;
+    const t = (ar: string, en: string) => { const m: Record<string, string> = { ar, en, fr: en, zh: en }; return m[language] || en; };
 
     useEffect(() => { loadMails(); }, []);
 

@@ -1,3 +1,4 @@
+import { Language } from '../../types';
 /**
  * Client Portal — بوابة العميل (Zone B)
  * 
@@ -25,7 +26,7 @@ import * as projectService from '../../services/projectService';
 type PortalSection = 'gallery' | 'summary' | 'documents';
 
 interface ClientPortalProps {
-    language: 'ar' | 'en';
+    language: Language;
     onLogout: () => void;
 }
 

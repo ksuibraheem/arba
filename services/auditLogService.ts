@@ -85,7 +85,6 @@ export async function logPriceChange(entry: Omit<PriceHistoryEntry, 'id' | 'time
             );
             
             await setDoc(historyRef, fullEntry);
-            console.log(`[AuditLog] Logged ${entry.action} for item ${entry.itemId} in project ${entry.projectId}`);
         } catch (err) {
             console.error('[AuditLog] Failed to log to Firestore:', err);
             // Fallback: store in localStorage for later sync

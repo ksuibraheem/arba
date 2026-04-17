@@ -1,3 +1,4 @@
+import { Language } from '../types';
 /**
  * WatermarkOverlay — علامة مائية ديناميكية شفافة
  * Dynamic Watermark with employee ID — Zero-Leak Security
@@ -7,7 +8,7 @@ import React from 'react';
 interface WatermarkProps {
     employeeName: string;
     employeeId: string;
-    language: 'ar' | 'en';
+    language: Language;
 }
 
 const WatermarkOverlay: React.FC<WatermarkProps> = ({ employeeName, employeeId }) => {

@@ -1,9 +1,10 @@
 import React from 'react';
+import { Language } from '../types';
 import { Clock, Mail, CreditCard, FileText, ArrowLeft, ArrowRight, CheckCircle, Upload, RefreshCw, AlertCircle, Building2, Shield } from 'lucide-react';
 import { registrationService, RegistrationRequest, REGISTRATION_STATUS_TRANSLATIONS, PAYMENT_STATUS_TRANSLATIONS, USER_TYPE_TRANSLATIONS } from '../services/registrationService';
 
 interface UnderReviewPageProps {
-    language: 'ar' | 'en';
+    language: Language;
     onNavigate: (page: string) => void;
     registrationRequestId?: string;
     onUploadReceipt?: () => void;
@@ -15,6 +16,7 @@ const UnderReviewPage: React.FC<UnderReviewPageProps> = ({
     registrationRequestId,
     onUploadReceipt
 }) => {
+    const t = (ar: string, en: string) => { const map: Record<string, string> = { ar, en, fr: en, zh: en }; return map[language] || en; };
     const isRtl = language === 'ar';
     const Arrow = isRtl ? ArrowLeft : ArrowRight;
 
@@ -34,10 +36,8 @@ const UnderReviewPage: React.FC<UnderReviewPageProps> = ({
         if (!request) {
             return {
                 icon: <Clock className="w-12 h-12 text-yellow-500" />,
-                title: language === 'ar' ? 'طلبك تحت الدراسة' : 'Your Request is Under Review',
-                message: language === 'ar'
-                    ? 'يتم مراجعة طلب التسجيل الخاص بك من قبل فريق الدعم. سيتم إبلاغكم بتفعيل الحساب في أقرب وقت ممكن.'
-                    : 'Your registration request is being reviewed by our support team. You will be notified once your account is activated.',
+                title: t('طلبك تحت الدراسة', 'Your Request is Under Review'),
+                message: t('يتم مراجعة طلب التسجيل الخاص بك من قبل فريق الدعم. سيتم إبلاغكم بتفعيل الحساب في أقرب وقت ممكن.', 'Your registration request is being reviewed by our support team. You will be notified once your account is activated.'),
                 color: 'yellow'
             };
         }
@@ -48,71 +48,59 @@ const UnderReviewPage: React.FC<UnderReviewPageProps> = ({
                 if (request.userType === 'supplier') {
                     return {
                         icon: <Clock className="w-12 h-12 text-yellow-500" />,
-                        title: language === 'ar' ? 'طلبك تحت المراجعة' : 'Under Review',
-                        message: language === 'ar'
-                            ? 'طلبك تحت الدراسة من قبل فريق الدعم. سيتم إبلاغكم بتفعيل الحساب في أقرب وقت ممكن.'
-                            : 'Your request is being reviewed by our support team. You will be notified once approved.',
+                        title: t('طلبك تحت المراجعة', 'Under Review'),
+                        message: t('طلبك تحت الدراسة من قبل فريق الدعم. سيتم إبلاغكم بتفعيل الحساب في أقرب وقت ممكن.', 'Your request is being reviewed by our support team. You will be notified once approved.'),
                         color: 'yellow'
                     };
                 }
                 return {
                     icon: <CreditCard className="w-12 h-12 text-blue-500" />,
-                    title: language === 'ar' ? 'بانتظار الدفع' : 'Awaiting Payment',
-                    message: language === 'ar'
-                        ? 'يرجى إتمام عملية الدفع لإكمال تسجيلك.'
-                        : 'Please complete the payment to finalize your registration.',
+                    title: t('بانتظار الدفع', 'Awaiting Payment'),
+                    message: t('يرجى إتمام عملية الدفع لإكمال تسجيلك.', 'Please complete the payment to finalize your registration.'),
                     color: 'blue',
                     showPaymentOptions: true
                 };
             case 'payment_under_review':
                 return {
                     icon: <FileText className="w-12 h-12 text-orange-500" />,
-                    title: language === 'ar' ? 'الدفع تحت المراجعة' : 'Payment Under Review',
-                    message: language === 'ar'
-                        ? 'تم استلام إيصال الدفع وهو الآن تحت المراجعة. سيتم إبلاغكم بالنتيجة قريباً.'
-                        : 'Your payment receipt has been received and is under review. You will be notified soon.',
+                    title: t('الدفع تحت المراجعة', 'Payment Under Review'),
+                    message: t('تم استلام إيصال الدفع وهو الآن تحت المراجعة. سيتم إبلاغكم بالنتيجة قريباً.', 'Your payment receipt has been received and is under review. You will be notified soon.'),
                     color: 'orange'
                 };
             case 'pending_approval':
                 return {
                     icon: <Clock className="w-12 h-12 text-yellow-500" />,
-                    title: language === 'ar' ? 'بانتظار الموافقة' : 'Pending Approval',
-                    message: language === 'ar'
-                        ? 'طلبك تحت الدراسة من قبل فريق الدعم. سيتم إبلاغكم بتفعيل الحساب في أقرب وقت ممكن.'
-                        : 'Your request is being reviewed by our support team. You will be notified once approved.',
+                    title: t('بانتظار الموافقة', 'Pending Approval'),
+                    message: t('طلبك تحت الدراسة من قبل فريق الدعم. سيتم إبلاغكم بتفعيل الحساب في أقرب وقت ممكن.', 'Your request is being reviewed by our support team. You will be notified once approved.'),
                     color: 'yellow'
                 };
             case 'pending_cr_verification':
                 return {
                     icon: <Shield className="w-12 h-12 text-orange-500" />,
-                    title: language === 'ar' ? 'بانتظار تأكيد السجل التجاري' : 'Commercial Register Verification',
-                    message: language === 'ar'
-                        ? 'يتم التحقق من صحة السجل التجاري الخاص بك من قبل فريق الدعم. سيتم إبلاغكم بالنتيجة قريباً.'
-                        : 'Your commercial register is being verified by our support team. You will be notified soon.',
+                    title: t('بانتظار تأكيد السجل التجاري', 'Commercial Register Verification'),
+                    message: t('يتم التحقق من صحة السجل التجاري الخاص بك من قبل فريق الدعم. سيتم إبلاغكم بالنتيجة قريباً.', 'Your commercial register is being verified by our support team. You will be notified soon.'),
                     color: 'orange'
                 };
             case 'approved':
                 return {
                     icon: <CheckCircle className="w-12 h-12 text-green-500" />,
-                    title: language === 'ar' ? 'تم تفعيل حسابك!' : 'Account Activated!',
-                    message: language === 'ar'
-                        ? 'تهانينا! تم الموافقة على طلبك وتفعيل حسابك. يمكنك الآن تسجيل الدخول.'
-                        : 'Congratulations! Your account has been approved and activated. You can now log in.',
+                    title: t('تم تفعيل حسابك!', 'Account Activated!'),
+                    message: t('تهانينا! تم الموافقة على طلبك وتفعيل حسابك. يمكنك الآن تسجيل الدخول.', 'Congratulations! Your account has been approved and activated. You can now log in.'),
                     color: 'green',
                     showLoginButton: true
                 };
             case 'rejected':
                 return {
                     icon: <AlertCircle className="w-12 h-12 text-red-500" />,
-                    title: language === 'ar' ? 'تم رفض الطلب' : 'Request Rejected',
-                    message: request.rejectionReason || (language === 'ar' ? 'تم رفض طلب التسجيل.' : 'Your registration request has been rejected.'),
+                    title: t('تم رفض الطلب', 'Request Rejected'),
+                    message: request.rejectionReason || (t('تم رفض طلب التسجيل.', 'Your registration request has been rejected.')),
                     color: 'red'
                 };
             default:
                 return {
                     icon: <Clock className="w-12 h-12 text-yellow-500" />,
-                    title: language === 'ar' ? 'جاري المعالجة' : 'Processing',
-                    message: language === 'ar' ? 'يرجى الانتظار...' : 'Please wait...',
+                    title: t('جاري المعالجة', 'Processing'),
+                    message: t('يرجى الانتظار...', 'Please wait...'),
                     color: 'yellow'
                 };
         }
@@ -174,7 +162,7 @@ const UnderReviewPage: React.FC<UnderReviewPageProps> = ({
                         <Building2 className="w-8 h-8 text-white" />
                     </div>
                     <h1 className="text-2xl font-bold text-white">
-                        {language === 'ar' ? 'نظام أربا للتسعير' : 'ARBA Pricing System'}
+                        {t('نظام أربا للتسعير', 'ARBA Pricing System')}
                     </h1>
                 </div>
 
@@ -199,7 +187,7 @@ const UnderReviewPage: React.FC<UnderReviewPageProps> = ({
                     {request && (
                         <div className="bg-white/50 rounded-xl p-4 mb-6 space-y-2">
                             <div className="flex justify-between text-sm">
-                                <span className="text-slate-500">{language === 'ar' ? 'نوع الحساب:' : 'Account Type:'}</span>
+                                <span className="text-slate-500">{t('نوع الحساب:', 'Account Type:')}</span>
                                 <span className="font-medium text-slate-700">
                                     {USER_TYPE_TRANSLATIONS[request.userType][language]}
                                 </span>
@@ -207,44 +195,44 @@ const UnderReviewPage: React.FC<UnderReviewPageProps> = ({
                             {(request.userType === 'company' || request.userType === 'supplier') && (
                                 <>
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-slate-500">{language === 'ar' ? 'اسم الشركة:' : 'Company:'}</span>
+                                        <span className="text-slate-500">{t('اسم الشركة:', 'Company:')}</span>
                                         <span className="font-medium text-slate-700">{request.companyName}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-slate-500">{language === 'ar' ? 'السجل التجاري:' : 'CR:'}</span>
+                                        <span className="text-slate-500">{t('السجل التجاري:', 'CR:')}</span>
                                         <span className="font-medium text-slate-700 font-mono" dir="ltr">{request.commercialRegister}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-slate-500">{language === 'ar' ? 'حالة السجل:' : 'CR Status:'}</span>
+                                        <span className="text-slate-500">{t('حالة السجل:', 'CR Status:')}</span>
                                         <span className={`font-medium ${request.crVerified ? 'text-green-600' : 'text-orange-600'}`}>
                                             {request.crVerified
-                                                ? (language === 'ar' ? 'مؤكد' : 'Verified')
-                                                : (language === 'ar' ? 'بانتظار التحقق' : 'Pending')}
+                                                ? (t('مؤكد', 'Verified'))
+                                                : (t('بانتظار التحقق', 'Pending'))}
                                         </span>
                                     </div>
                                 </>
                             )}
                             <div className="flex justify-between text-sm">
-                                <span className="text-slate-500">{language === 'ar' ? 'الباقة:' : 'Plan:'}</span>
+                                <span className="text-slate-500">{t('الباقة:', 'Plan:')}</span>
                                 <span className="font-medium text-slate-700">
                                     {request.plan === 'free'
-                                        ? (language === 'ar' ? 'مجانية' : 'Free')
-                                        : (language === 'ar' ? 'احترافية' : 'Professional')
+                                        ? (t('مجانية', 'Free'))
+                                        : (t('احترافية', 'Professional'))
                                     }
                                 </span>
                             </div>
                             {request.plan !== 'free' && (
                                 <div className="flex justify-between text-sm">
-                                    <span className="text-slate-500">{language === 'ar' ? 'حالة الدفع:' : 'Payment Status:'}</span>
+                                    <span className="text-slate-500">{t('حالة الدفع:', 'Payment Status:')}</span>
                                     <span className="font-medium text-slate-700">
                                         {PAYMENT_STATUS_TRANSLATIONS[request.paymentStatus][language]}
                                     </span>
                                 </div>
                             )}
                             <div className="flex justify-between text-sm">
-                                <span className="text-slate-500">{language === 'ar' ? 'تاريخ الطلب:' : 'Request Date:'}</span>
+                                <span className="text-slate-500">{t('تاريخ الطلب:', 'Request Date:')}</span>
                                 <span className="font-medium text-slate-700" dir="ltr">
-                                    {new Date(request.createdAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
+                                    {new Date(request.createdAt).toLocaleDateString(t('ar-SA', 'en-US'))}
                                 </span>
                             </div>
                         </div>
@@ -254,15 +242,15 @@ const UnderReviewPage: React.FC<UnderReviewPageProps> = ({
                     {(statusInfo as any).showPaymentOptions && request && (
                         <div className="space-y-3 mb-6">
                             <p className="text-sm text-slate-600 text-center mb-4">
-                                {language === 'ar' ? 'المبلغ المطلوب:' : 'Amount Due:'}{' '}
-                                <span className="font-bold text-green-600">{request.amount} {language === 'ar' ? 'ر.س' : 'SAR'}</span>
+                                {t('المبلغ المطلوب:', 'Amount Due:')}{' '}
+                                <span className="font-bold text-green-600">{request.amount} {t('ر.س', 'SAR')}</span>
                             </p>
                             <button
                                 onClick={() => onNavigate('payment-upload')}
                                 className="w-full py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-bold hover:from-blue-400 hover:to-cyan-400 transition-all flex items-center justify-center gap-2"
                             >
                                 <Upload className="w-5 h-5" />
-                                {language === 'ar' ? 'رفع إيصال الدفع (تحويل بنكي)' : 'Upload Payment Receipt (Bank Transfer)'}
+                                {t('رفع إيصال الدفع (تحويل بنكي)', 'Upload Payment Receipt (Bank Transfer)')}
                             </button>
                         </div>
                     )}
@@ -273,7 +261,7 @@ const UnderReviewPage: React.FC<UnderReviewPageProps> = ({
                             onClick={() => onNavigate('login')}
                             className="w-full py-3 bg-gradient-to-r from-green-500 to-lime-500 text-white rounded-xl font-bold hover:from-green-400 hover:to-lime-400 transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-500/20"
                         >
-                            {language === 'ar' ? 'تسجيل الدخول' : 'Login'}
+                            {t('تسجيل الدخول', 'Login')}
                             <Arrow className="w-5 h-5" />
                         </button>
                     )}
@@ -282,10 +270,7 @@ const UnderReviewPage: React.FC<UnderReviewPageProps> = ({
                     <div className="flex items-center justify-center gap-2 text-slate-500 text-sm mt-6">
                         <Mail className="w-4 h-4" />
                         <span>
-                            {language === 'ar'
-                                ? 'سيتم إرسال إشعار لبريدك الإلكتروني عند تحديث حالة الطلب'
-                                : 'You will receive an email notification when your request status is updated'
-                            }
+                            {t('سيتم إرسال إشعار لبريدك الإلكتروني عند تحديث حالة الطلب', 'You will receive an email notification when your request status is updated')}
                         </span>
                     </div>
                 </div>
@@ -296,7 +281,7 @@ const UnderReviewPage: React.FC<UnderReviewPageProps> = ({
                     className="w-full mt-6 text-slate-400 hover:text-white transition-colors flex items-center justify-center gap-2"
                 >
                     <Arrow className="w-4 h-4 rotate-180" />
-                    {language === 'ar' ? 'العودة للرئيسية' : 'Back to Home'}
+                    {t('العودة للرئيسية', 'Back to Home')}
                 </button>
             </div>
         </div>

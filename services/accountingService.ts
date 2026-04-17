@@ -230,24 +230,89 @@ class AccountingService {
     private ledgerKey = 'arba_ledger';
     private subscriptionsKey = 'arba_subscriptions';
     private paymentsKey = 'arba_payments';
+    private clientsKey = 'arba_clients';
     // 🔥 Firestore collections
     private fsInvoices = 'invoices';
     private fsLedger = 'ledger_entries';
     private fsSubscriptions = 'subscriptions';
     private fsPayments = 'payments';
+    private fsClients = 'accounting_clients';
+
+    // ====================== Firestore-First Cache Layer ======================
+    private _invoicesCache: Invoice[] | null = null;
+    private _ledgerCache: LedgerEntry[] | null = null;
+    private _subscriptionsCache: Subscription[] | null = null;
+    private _paymentsCache: Payment[] | null = null;
+    private _listenersInit = false;
+
+    constructor() {
+        this.initFirestoreListeners();
+    }
+
+    /**
+     * Initialize real-time Firestore listeners for all accounting data
+     */
+    private initFirestoreListeners(): void {
+        if (this._listenersInit) return;
+        this._listenersInit = true;
+
+        // Invoices listener
+        firestoreDataService.subscribeToCollection<Invoice>(
+            this.fsInvoices,
+            (items) => {
+                this._invoicesCache = items;
+                localStorage.setItem(this.invoicesKey, JSON.stringify(items));
+            },
+            undefined, this.invoicesKey
+        );
+
+        // Ledger listener
+        firestoreDataService.subscribeToCollection<LedgerEntry>(
+            this.fsLedger,
+            (items) => {
+                this._ledgerCache = items;
+                localStorage.setItem(this.ledgerKey, JSON.stringify(items));
+            },
+            undefined, this.ledgerKey
+        );
+
+        // Subscriptions listener
+        firestoreDataService.subscribeToCollection<Subscription>(
+            this.fsSubscriptions,
+            (items) => {
+                this._subscriptionsCache = items;
+                localStorage.setItem(this.subscriptionsKey, JSON.stringify(items));
+            },
+            undefined, this.subscriptionsKey
+        );
+
+        // Payments listener
+        firestoreDataService.subscribeToCollection<Payment>(
+            this.fsPayments,
+            (items) => {
+                this._paymentsCache = items;
+                localStorage.setItem(this.paymentsKey, JSON.stringify(items));
+            },
+            undefined, this.paymentsKey
+        );
+    }
 
     // =================== الفواتير ===================
 
     getInvoices(): Invoice[] {
+        if (this._invoicesCache !== null) return this._invoicesCache;
         const data = localStorage.getItem(this.invoicesKey);
         return data ? JSON.parse(data) : [];
     }
 
     private saveInvoices(invoices: Invoice[]): void {
+        this._invoicesCache = invoices;
         localStorage.setItem(this.invoicesKey, JSON.stringify(invoices));
-        // 🔥 Sync to Firestore
+        // Firestore-first batch write
         const items = invoices.map(i => ({ id: i.id, data: { ...i } }));
-        firestoreDataService.batchWrite(this.fsInvoices, items).catch(console.error);
+        firestoreDataService.batchWrite(this.fsInvoices, items).catch((err) => {
+            console.error('❌ [Accounting] Invoice batch write failed:', err);
+        });
     }
 
     getInvoiceById(id: string): Invoice | null {
@@ -317,15 +382,19 @@ class AccountingService {
     // =================== سجل القيود ===================
 
     getLedgerEntries(): LedgerEntry[] {
+        if (this._ledgerCache !== null) return this._ledgerCache;
         const data = localStorage.getItem(this.ledgerKey);
         return data ? JSON.parse(data) : [];
     }
 
     private saveLedgerEntries(entries: LedgerEntry[]): void {
+        this._ledgerCache = entries;
         localStorage.setItem(this.ledgerKey, JSON.stringify(entries));
-        // 🔥 Sync to Firestore
+        // Firestore-first batch write
         const items = entries.map(e => ({ id: e.id, data: { ...e } }));
-        firestoreDataService.batchWrite(this.fsLedger, items).catch(console.error);
+        firestoreDataService.batchWrite(this.fsLedger, items).catch((err) => {
+            console.error('❌ [Accounting] Ledger batch write failed:', err);
+        });
     }
 
     getCurrentBalance(): number {
@@ -364,15 +433,19 @@ class AccountingService {
     // =================== الاشتراكات ===================
 
     getSubscriptions(): Subscription[] {
+        if (this._subscriptionsCache !== null) return this._subscriptionsCache;
         const data = localStorage.getItem(this.subscriptionsKey);
         return data ? JSON.parse(data) : [];
     }
 
     private saveSubscriptions(subs: Subscription[]): void {
+        this._subscriptionsCache = subs;
         localStorage.setItem(this.subscriptionsKey, JSON.stringify(subs));
-        // 🔥 Sync to Firestore
+        // Firestore-first batch write
         const items = subs.map(s => ({ id: s.id, data: { ...s } }));
-        firestoreDataService.batchWrite(this.fsSubscriptions, items).catch(console.error);
+        firestoreDataService.batchWrite(this.fsSubscriptions, items).catch((err) => {
+            console.error('❌ [Accounting] Subscription batch write failed:', err);
+        });
     }
 
     createSubscription(sub: Omit<Subscription, 'id' | 'createdAt' | 'paymentHistory'>): Subscription {
@@ -449,15 +522,19 @@ class AccountingService {
     // =================== المدفوعات ===================
 
     getPayments(): Payment[] {
+        if (this._paymentsCache !== null) return this._paymentsCache;
         const data = localStorage.getItem(this.paymentsKey);
         return data ? JSON.parse(data) : [];
     }
 
     private savePayments(payments: Payment[]): void {
+        this._paymentsCache = payments;
         localStorage.setItem(this.paymentsKey, JSON.stringify(payments));
-        // 🔥 Sync to Firestore
+        // Firestore-first batch write
         const items = payments.map(p => ({ id: p.id, data: { ...p } }));
-        firestoreDataService.batchWrite(this.fsPayments, items).catch(console.error);
+        firestoreDataService.batchWrite(this.fsPayments, items).catch((err) => {
+            console.error('❌ [Accounting] Payment batch write failed:', err);
+        });
     }
 
     recordPayment(payment: Omit<Payment, 'id' | 'createdAt'>): Payment {
@@ -580,7 +657,6 @@ class AccountingService {
             localStorage.removeItem(this.clientsKey);
             // تعيين الإصدار الجديد
             localStorage.setItem('arba_data_version', '2');
-            console.log('Data reset to English version');
         }
     }
 
@@ -720,15 +796,22 @@ class AccountingService {
 
     // =================== إدارة العملاء ===================
 
-    private clientsKey = 'arba_clients';
+    private _clientsCache: Client[] | null = null;
 
     getClients(): Client[] {
+        if (this._clientsCache !== null) return this._clientsCache;
         const data = localStorage.getItem(this.clientsKey);
         return data ? JSON.parse(data) : [];
     }
 
     private saveClients(clients: Client[]): void {
+        this._clientsCache = clients;
         localStorage.setItem(this.clientsKey, JSON.stringify(clients));
+        // Firestore-first batch write (clients were NEVER synced before!)
+        const items = clients.map(c => ({ id: c.id, data: { ...c } }));
+        firestoreDataService.batchWrite(this.fsClients, items).catch((err) => {
+            console.error('❌ [Accounting] Client batch write failed:', err);
+        });
     }
 
     getClientById(id: string): Client | null {

@@ -140,7 +140,6 @@ export const RoleProvider: React.FC<RoleProviderProps> = ({ children }) => {
         if (!bypassCache) {
             const cached = getCachedRole(uid);
             if (cached) {
-                console.log('[RoleContext] Using cached role:', cached.role);
                 applyRole(uid, cached.role, cached.displayName || displayName, cached.email || email);
                 return;
             }

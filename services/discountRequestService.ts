@@ -63,34 +63,42 @@ export const DISCOUNT_TYPE_TRANSLATIONS: Record<DiscountType, { ar: string; en: 
 
 class DiscountRequestService {
     private storageKey = 'arba_discount_requests';
-    private _loaded = false;
+    private fsCollection = 'discount_requests';
+    private _cache: DiscountRequest[] | null = null;
+    private _listenerInit = false;
 
     constructor() {
-        this.loadFromFirestore().catch(() => {});
+        this.initListener();
     }
 
-    private async loadFromFirestore(): Promise<void> {
-        if (this._loaded) return;
-        try {
-            const items = await firestoreDataService.getCollection(
-                'discount_requests', undefined, { localCacheKey: this.storageKey }
-            );
-            if (items.length > 0) localStorage.setItem(this.storageKey, JSON.stringify(items));
-            this._loaded = true;
-        } catch { this._loaded = true; }
+    private initListener(): void {
+        if (this._listenerInit) return;
+        this._listenerInit = true;
+        firestoreDataService.subscribeToCollection<DiscountRequest>(
+            this.fsCollection,
+            (items) => {
+                this._cache = items;
+                localStorage.setItem(this.storageKey, JSON.stringify(items));
+            },
+            undefined, this.storageKey
+        );
     }
 
     // الحصول على جميع الطلبات
     getRequests(): DiscountRequest[] {
+        if (this._cache !== null) return this._cache;
         const data = localStorage.getItem(this.storageKey);
         return data ? JSON.parse(data) : [];
     }
 
-    // حفظ الطلبات
+    // حفظ الطلبات (Firestore-first)
     private saveRequests(requests: DiscountRequest[]): void {
+        this._cache = requests;
         localStorage.setItem(this.storageKey, JSON.stringify(requests));
         const items = requests.map(r => ({ id: r.id, data: { ...r } }));
-        firestoreDataService.batchWrite('discount_requests', items).catch(() => {});
+        firestoreDataService.batchWrite(this.fsCollection, items).catch((err) => {
+            console.error('❌ [Discounts] Batch write failed:', err);
+        });
     }
 
     // الحصول على طلب بالمعرف

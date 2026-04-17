@@ -1,3 +1,4 @@
+import { Language } from '../../types';
 /**
  * SupplierManager — إدارة الموردين وربطهم بالمشاريع
  * بطاقات منظمة + ملخص سريع + تواصل مباشر + بحث
@@ -12,7 +13,7 @@ import {
 import { projectSupplierService, ProjectSupplier, RenewalMode } from '../../services/projectSupplierService';
 
 interface SupplierManagerProps {
-    language: 'ar' | 'en';
+    language: Language;
     userId: string;
     onBack: () => void;
     onOpenChat?: (channelId: string) => void;
@@ -41,7 +42,7 @@ const SupplierManager: React.FC<SupplierManagerProps> = ({ language, userId, onB
     const [permForms, setPermForms] = useState(true);
 
     const isRtl = language === 'ar';
-    const t = (ar: string, en: string) => language === 'ar' ? ar : en;
+    const t = (ar: string, en: string) => { const m: Record<string, string> = { ar, en, fr: en, zh: en }; return m[language] || en; };
 
     useEffect(() => {
         projectSupplierService.initSampleData();

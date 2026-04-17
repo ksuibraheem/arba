@@ -28,6 +28,7 @@ import {
     Mail,
     BadgeCheck
 } from 'lucide-react';
+import { Language } from '../types';
 import {
     supplierService,
     Supplier,
@@ -40,7 +41,7 @@ import {
 } from '../services/supplierService';
 
 interface SupplierCatalogProps {
-    language: 'ar' | 'en';
+    language: Language;
     onNavigate: (page: string) => void;
 }
 
@@ -133,7 +134,7 @@ const SupplierCatalog: React.FC<SupplierCatalogProps> = ({ language, onNavigate 
     };
 
     // Translations
-    const t = (ar: string, en: string) => language === 'ar' ? ar : en;
+    const t = (ar: string, en: string) => { const map: Record<string, string> = { ar, en, fr: en, zh: en }; return map[language] || en; };
 
     return (
         <div className={`min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 ${isRtl ? 'rtl' : 'ltr'}`} dir={isRtl ? 'rtl' : 'ltr'}>

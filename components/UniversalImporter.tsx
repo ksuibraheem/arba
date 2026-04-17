@@ -1,3 +1,4 @@
+import { Language } from '../types';
 /**
  * Arba Universal Intelligence Parser — UI Component
  * مكون المحلل الذكي الموحد
@@ -36,7 +37,7 @@ import {
 // =================== Props ===================
 
 interface UniversalImporterProps {
-    language: 'ar' | 'en';
+    language: Language;
     onImport: (items: any[]) => void;
     onClose: () => void;
     onActionLog?: (action: string, target: string, metadata?: any) => void;
@@ -63,7 +64,7 @@ const STEPS = [
 const UniversalImporter: React.FC<UniversalImporterProps> = ({
     language, onImport, onClose, onActionLog, overheadConfig
 }) => {
-    const t = (ar: string, en: string) => language === 'ar' ? ar : en;
+    const t = (ar: string, en: string) => { const m: Record<string, string> = { ar, en, fr: en, zh: en }; return m[language] || en; };
     const isRtl = language === 'ar';
 
     // ===== State =====

@@ -9,6 +9,7 @@ import {
     MessageSquare, Clock, CheckCircle, AlertCircle, X, Upload,
     FileText, Image, ArrowLeft, Eye, Plus, HelpCircle, Download, Trash2
 } from 'lucide-react';
+import { Language } from '../types';
 import {
     supportTicketService, SupportTicket, TicketCategory, TicketPriority, UserType, Attachment,
     CATEGORY_TRANSLATIONS, PRIORITY_TRANSLATIONS, STATUS_TRANSLATIONS,
@@ -16,7 +17,7 @@ import {
 } from '../services/supportTicketService';
 
 interface SupportCenterPageProps {
-    language: 'ar' | 'en';
+    language: Language;
     onNavigate: (page: string) => void;
     // Optional user info (if logged in)
     userId?: string;
@@ -36,7 +37,7 @@ const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
     userType = 'guest' as UserType
 }) => {
     const isRtl = language === 'ar';
-    const t = (ar: string, en: string) => language === 'ar' ? ar : en;
+    const t = (ar: string, en: string) => { const map: Record<string, string> = { ar, en, fr: en, zh: en }; return map[language] || en; };
 
     // State
     const [viewMode, setViewMode] = useState<ViewMode>('home');
@@ -704,7 +705,7 @@ const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
                                 </div>
                                 <p className="text-white font-medium">{ticket.subject}</p>
                                 <p className="text-slate-500 text-sm mt-1">
-                                    {new Date(ticket.createdAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
+                                    {new Date(ticket.createdAt).toLocaleDateString(t('ar-SA', 'en-US'))}
                                 </p>
                             </div>
                             <span className={`px-3 py-1 rounded-full text-xs ${STATUS_COLORS[ticket.status]}`}>
@@ -739,7 +740,7 @@ const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
                             <h2 className="text-xl font-bold text-white">{selectedTicket.subject}</h2>
                         </div>
                         <span className="text-slate-500 text-sm">
-                            {new Date(selectedTicket.createdAt).toLocaleString(language === 'ar' ? 'ar-SA' : 'en-US')}
+                            {new Date(selectedTicket.createdAt).toLocaleString(t('ar-SA', 'en-US'))}
                         </span>
                     </div>
                     <p className="text-slate-300 whitespace-pre-wrap">{selectedTicket.description}</p>
@@ -783,7 +784,7 @@ const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
                                             )}
                                         </span>
                                         <span className="text-slate-500 text-xs">
-                                            {new Date(response.createdAt).toLocaleString(language === 'ar' ? 'ar-SA' : 'en-US')}
+                                            {new Date(response.createdAt).toLocaleString(t('ar-SA', 'en-US'))}
                                         </span>
                                     </div>
                                     <p className="text-slate-300 whitespace-pre-wrap">{response.message}</p>

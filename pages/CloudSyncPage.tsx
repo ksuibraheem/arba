@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { Language } from '../types';
 import { Cloud, CloudOff, RefreshCw, Upload, Download, CheckCircle, XCircle, AlertCircle, ArrowLeft, Database, Server } from 'lucide-react';
 import { firebaseService, ConnectionStatus, SyncResult } from '../services/firebaseService';
 
 interface CloudSyncPageProps {
-    language: 'ar' | 'en';
+    language: Language;
     onNavigate: (page: string) => void;
 }
 
 const CloudSyncPage: React.FC<CloudSyncPageProps> = ({ language, onNavigate }) => {
+    const t = (ar: string, en: string) => { const map: Record<string, string> = { ar, en, fr: en, zh: en }; return map[language] || en; };
     const isRtl = language === 'ar';
 
     const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus | null>(null);
@@ -28,15 +30,15 @@ const CloudSyncPage: React.FC<CloudSyncPageProps> = ({ language, onNavigate }) =
     // Test connection
     const handleTestConnection = async () => {
         setIsTestingConnection(true);
-        addLog(language === 'ar' ? 'جاري اختبار الاتصال...' : 'Testing connection...');
+        addLog(t('جاري اختبار الاتصال...', 'Testing connection...'));
 
         const result = await firebaseService.testConnection();
         setConnectionStatus(result);
 
         if (result.connected) {
-            addLog(language === 'ar' ? `✅ متصل بـ Firebase (${result.projectId})` : `✅ Connected to Firebase (${result.projectId})`);
+            addLog(t(`✅ متصل بـ Firebase (${result.projectId})`, `✅ Connected to Firebase (${result.projectId})`));
         } else {
-            addLog(language === 'ar' ? `❌ فشل الاتصال: ${result.error}` : `❌ Connection failed: ${result.error}`);
+            addLog(t(`❌ فشل الاتصال: ${result.error}`, `❌ Connection failed: ${result.error}`));
         }
 
         setIsTestingConnection(false);
@@ -46,11 +48,11 @@ const CloudSyncPage: React.FC<CloudSyncPageProps> = ({ language, onNavigate }) =
     const handleSyncData = async () => {
         setIsSyncing(true);
         setSyncResult(null);
-        addLog(language === 'ar' ? 'بدء مزامنة البيانات...' : 'Starting data sync...');
+        addLog(t('بدء مزامنة البيانات...', 'Starting data sync...'));
 
         const result = await firebaseService.syncAllData((current, total, label) => {
             setSyncProgress({ current, total, label });
-            addLog(language === 'ar' ? `📤 مزامنة: ${label}` : `📤 Syncing: ${label}`);
+            addLog(t(`📤 مزامنة: ${label}`, `📤 Syncing: ${label}`));
         });
 
         setSyncResult(result);
@@ -73,10 +75,10 @@ const CloudSyncPage: React.FC<CloudSyncPageProps> = ({ language, onNavigate }) =
                         </div>
                         <div>
                             <h1 className="text-xl font-bold text-white">
-                                {language === 'ar' ? 'مزامنة السحابة' : 'Cloud Sync'}
+                                {t('مزامنة السحابة', 'Cloud Sync')}
                             </h1>
                             <p className="text-slate-400 text-sm">
-                                {language === 'ar' ? 'تصدير واستيراد البيانات من Firebase' : 'Export and import data from Firebase'}
+                                {t('تصدير واستيراد البيانات من Firebase', 'Export and import data from Firebase')}
                             </p>
                         </div>
                     </div>
@@ -85,7 +87,7 @@ const CloudSyncPage: React.FC<CloudSyncPageProps> = ({ language, onNavigate }) =
                         className="flex items-center gap-2 px-4 py-2 bg-slate-700/50 text-slate-300 hover:bg-slate-700 rounded-lg transition-all"
                     >
                         <ArrowLeft className="w-4 h-4" />
-                        <span>{language === 'ar' ? 'رجوع' : 'Back'}</span>
+                        <span>{t('رجوع', 'Back')}</span>
                     </button>
                 </div>
             </header>
@@ -96,7 +98,7 @@ const CloudSyncPage: React.FC<CloudSyncPageProps> = ({ language, onNavigate }) =
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-lg font-bold text-white flex items-center gap-3">
                             <Server className="w-5 h-5 text-blue-400" />
-                            {language === 'ar' ? 'حالة الاتصال' : 'Connection Status'}
+                            {t('حالة الاتصال', 'Connection Status')}
                         </h2>
                         <button
                             onClick={handleTestConnection}
@@ -104,7 +106,7 @@ const CloudSyncPage: React.FC<CloudSyncPageProps> = ({ language, onNavigate }) =
                             className="flex items-center gap-2 px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 transition-all disabled:opacity-50"
                         >
                             <RefreshCw className={`w-4 h-4 ${isTestingConnection ? 'animate-spin' : ''}`} />
-                            {language === 'ar' ? 'اختبار الاتصال' : 'Test Connection'}
+                            {t('اختبار الاتصال', 'Test Connection')}
                         </button>
                     </div>
 
@@ -112,13 +114,13 @@ const CloudSyncPage: React.FC<CloudSyncPageProps> = ({ language, onNavigate }) =
                         {connectionStatus === null ? (
                             <div className="flex items-center gap-3 text-slate-400">
                                 <AlertCircle className="w-6 h-6" />
-                                <span>{language === 'ar' ? 'لم يتم اختبار الاتصال بعد' : 'Connection not tested yet'}</span>
+                                <span>{t('لم يتم اختبار الاتصال بعد', 'Connection not tested yet')}</span>
                             </div>
                         ) : connectionStatus.connected ? (
                             <div className="flex items-center gap-3 text-emerald-400">
                                 <CheckCircle className="w-6 h-6" />
                                 <div>
-                                    <span className="font-medium">{language === 'ar' ? 'متصل' : 'Connected'}</span>
+                                    <span className="font-medium">{t('متصل', 'Connected')}</span>
                                     <span className="text-slate-400 mx-2">|</span>
                                     <span className="text-slate-300">{connectionStatus.projectId}</span>
                                 </div>
@@ -127,7 +129,7 @@ const CloudSyncPage: React.FC<CloudSyncPageProps> = ({ language, onNavigate }) =
                             <div className="flex items-center gap-3 text-red-400">
                                 <XCircle className="w-6 h-6" />
                                 <div>
-                                    <span className="font-medium">{language === 'ar' ? 'غير متصل' : 'Disconnected'}</span>
+                                    <span className="font-medium">{t('غير متصل', 'Disconnected')}</span>
                                     <span className="text-slate-400 mx-2">|</span>
                                     <span className="text-red-300">{connectionStatus.error}</span>
                                 </div>
@@ -140,7 +142,7 @@ const CloudSyncPage: React.FC<CloudSyncPageProps> = ({ language, onNavigate }) =
                 <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
                     <h2 className="text-lg font-bold text-white flex items-center gap-3 mb-6">
                         <Database className="w-5 h-5 text-purple-400" />
-                        {language === 'ar' ? 'البيانات المتاحة للمزامنة' : 'Data Available for Sync'}
+                        {t('البيانات المتاحة للمزامنة', 'Data Available for Sync')}
                     </h2>
 
                     <div className="grid gap-3 mb-6">
@@ -194,12 +196,12 @@ const CloudSyncPage: React.FC<CloudSyncPageProps> = ({ language, onNavigate }) =
                         {isSyncing ? (
                             <>
                                 <RefreshCw className="w-5 h-5 animate-spin" />
-                                {language === 'ar' ? 'جاري المزامنة...' : 'Syncing...'}
+                                {t('جاري المزامنة...', 'Syncing...')}
                             </>
                         ) : (
                             <>
                                 <Upload className="w-5 h-5" />
-                                {language === 'ar' ? 'تصدير البيانات للسحابة' : 'Export Data to Cloud'}
+                                {t('تصدير البيانات للسحابة', 'Export Data to Cloud')}
                             </>
                         )}
                     </button>
@@ -208,11 +210,11 @@ const CloudSyncPage: React.FC<CloudSyncPageProps> = ({ language, onNavigate }) =
                 {/* Logs Card */}
                 <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
                     <h2 className="text-lg font-bold text-white mb-4">
-                        {language === 'ar' ? 'سجل العمليات' : 'Activity Log'}
+                        {t('سجل العمليات', 'Activity Log')}
                     </h2>
                     <div className="bg-slate-900/50 rounded-lg p-4 h-48 overflow-y-auto font-mono text-sm">
                         {logs.length === 0 ? (
-                            <p className="text-slate-500">{language === 'ar' ? 'لا توجد عمليات بعد...' : 'No activity yet...'}</p>
+                            <p className="text-slate-500">{t('لا توجد عمليات بعد...', 'No activity yet...')}</p>
                         ) : (
                             logs.map((log, index) => (
                                 <div key={index} className="text-slate-400 py-1 border-b border-slate-800 last:border-0">

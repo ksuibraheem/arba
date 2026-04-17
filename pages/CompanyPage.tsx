@@ -1,9 +1,10 @@
 import React from 'react';
+import { Language } from '../types';
 import { Building2, Phone, Mail, MapPin, Globe, Award, Users, Briefcase, ArrowRight, ArrowLeft } from 'lucide-react';
 import { PAGE_TRANSLATIONS } from '../companyData';
 
 interface CompanyPageProps {
-    language: 'ar' | 'en';
+    language: Language;
     onNavigate: (page: string) => void;
     companyData?: {
         name: string;
@@ -27,11 +28,11 @@ const CompanyPage: React.FC<CompanyPageProps> = ({ language, onNavigate, company
 
     // Default company data if none provided
     const company = companyData || {
-        name: language === 'ar' ? 'آربا المطور' : 'ARBA Developer',
-        systemName: language === 'ar' ? 'آربا للتسعير' : 'ARBA Pricing',
+        name: t('آربا المطور', 'ARBA Developer'),
+        systemName: t('آربا للتسعير', 'ARBA Pricing'),
         phone: '+966 91 529 3394',
         email: 'info@arba-sys.com',
-        address: language === 'ar' ? 'الرياض، المملكة العربية السعودية' : 'Riyadh, Saudi Arabia',
+        address: t('الرياض، المملكة العربية السعودية', 'Riyadh, Saudi Arabia'),
         website: 'www.arba-sys.com',
         description: language === 'ar'
             ? 'آربا المطور هي شركة وطنية رائدة في مجال التقنية والحلول البرمجية. نظام آربا للتسعير هو أحد أهم خدماتنا المتخصصة في تسعير المشاريع الإنشائية، حيث نجمع بين الخبرة العميقة والتقنيات الحديثة لتقديم خدمات تسعير دقيقة وموثوقة.'

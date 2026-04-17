@@ -163,7 +163,7 @@ export const PLAN_EMPLOYEE_LIMITS: Record<SubscriptionPlan, PlanLimits> = {
 };
 
 // Extra seats beyond plan limit (6+ users)
-export const EXTRA_SEAT_PRICE_SAR = 79; // per additional user/month
+export const EXTRA_SEAT_PRICE_SAR = 59; // per additional user/month (standardized)
 
 // Extra storage: cloud cost + 60% markup
 // Firebase Storage ≈ 0.10 SAR/GB/month → with 60% markup = 0.16 SAR/GB

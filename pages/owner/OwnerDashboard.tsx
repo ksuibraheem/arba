@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Language } from '../../types';
 import {
     LayoutDashboard,
     Users,
@@ -44,7 +45,7 @@ import {
 import { COMPANY_INFO, PAGE_TRANSLATIONS } from '../../companyData';
 
 interface OwnerDashboardProps {
-    language: 'ar' | 'en';
+    language: Language;
     onNavigate: (page: string) => void;
     onLogout: () => void;
 }
@@ -266,7 +267,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50">
                                 <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                                     <Activity className="w-5 h-5 text-green-400" />
-                                    {language === 'ar' ? 'الزيارات اليومية' : 'Daily Visits'}
+                                    {t('الزيارات اليومية', 'Daily Visits')}
                                 </h3>
                                 <div className="flex items-end justify-between gap-2 h-48">
                                     {visitData.map((data, index) => (
@@ -285,34 +286,34 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50">
                                 <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                                     <PieChart className="w-5 h-5 text-green-400" />
-                                    {language === 'ar' ? 'إحصائيات سريعة' : 'Quick Stats'}
+                                    {t('إحصائيات سريعة', 'Quick Stats')}
                                 </h3>
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-xl">
                                         <div className="flex items-center gap-3">
                                             <UserCheck className="w-5 h-5 text-green-400" />
-                                            <span className="text-slate-300">{language === 'ar' ? 'المستخدمين النشطين' : 'Active Users'}</span>
+                                            <span className="text-slate-300">{t('المستخدمين النشطين', 'Active Users')}</span>
                                         </div>
                                         <span className="text-white font-bold">{stats.activeUsers}</span>
                                     </div>
                                     <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-xl">
                                         <div className="flex items-center gap-3">
                                             <TrendingUp className="w-5 h-5 text-blue-400" />
-                                            <span className="text-slate-300">{language === 'ar' ? 'معدل التحويل' : 'Conversion Rate'}</span>
+                                            <span className="text-slate-300">{t('معدل التحويل', 'Conversion Rate')}</span>
                                         </div>
                                         <span className="text-white font-bold">{stats.conversionRate}%</span>
                                     </div>
                                     <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-xl">
                                         <div className="flex items-center gap-3">
                                             <DollarSign className="w-5 h-5 text-amber-400" />
-                                            <span className="text-slate-300">{language === 'ar' ? 'متوسط قيمة العرض' : 'Avg. Quote Value'}</span>
+                                            <span className="text-slate-300">{t('متوسط قيمة العرض', 'Avg. Quote Value')}</span>
                                         </div>
                                         <span className="text-white font-bold">{stats.avgQuoteValue.toLocaleString()} {t('sar')}</span>
                                     </div>
                                     <div className="flex items-center justify-between p-3 bg-slate-700/30 rounded-xl">
                                         <div className="flex items-center gap-3">
                                             <Clock className="w-5 h-5 text-purple-400" />
-                                            <span className="text-slate-300">{language === 'ar' ? 'عروض معلقة' : 'Pending Quotes'}</span>
+                                            <span className="text-slate-300">{t('عروض معلقة', 'Pending Quotes')}</span>
                                         </div>
                                         <span className="text-white font-bold">{stats.pendingQuotes}</span>
                                     </div>
@@ -323,12 +324,12 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                         {/* Recent Quotes */}
                         <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 overflow-hidden">
                             <div className="p-4 border-b border-slate-700/50 flex items-center justify-between">
-                                <h3 className="text-lg font-bold text-white">{language === 'ar' ? 'آخر عروض الأسعار' : 'Recent Quotes'}</h3>
+                                <h3 className="text-lg font-bold text-white">{t('آخر عروض الأسعار', 'Recent Quotes')}</h3>
                                 <button
                                     onClick={() => setActiveTab('quotes')}
                                     className="text-green-400 hover:text-green-300 text-sm"
                                 >
-                                    {language === 'ar' ? 'عرض الكل' : 'View All'}
+                                    {t('عرض الكل', 'View All')}
                                 </button>
                             </div>
                             <div className="overflow-x-auto">
@@ -336,11 +337,11 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                     <thead>
                                         <tr className="bg-slate-700/30">
                                             <th className="px-4 py-3 text-start text-sm text-slate-400">#</th>
-                                            <th className="px-4 py-3 text-start text-sm text-slate-400">{language === 'ar' ? 'العميل' : 'Customer'}</th>
-                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{language === 'ar' ? 'التاريخ' : 'Date'}</th>
-                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{language === 'ar' ? 'البنود' : 'Items'}</th>
-                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{language === 'ar' ? 'الحالة' : 'Status'}</th>
-                                            <th className="px-4 py-3 text-end text-sm text-slate-400">{language === 'ar' ? 'الإجمالي' : 'Total'}</th>
+                                            <th className="px-4 py-3 text-start text-sm text-slate-400">{t('العميل', 'Customer')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{t('التاريخ', 'Date')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{t('البنود', 'Items')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{t('الحالة', 'Status')}</th>
+                                            <th className="px-4 py-3 text-end text-sm text-slate-400">{t('الإجمالي', 'Total')}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -369,19 +370,19 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                 {activeTab === 'customers' && (
                     <div className="space-y-6">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-xl font-bold text-white">{language === 'ar' ? 'إدارة العملاء' : 'Customer Management'}</h2>
+                            <h2 className="text-xl font-bold text-white">{t('إدارة العملاء', 'Customer Management')}</h2>
                             <div className="flex items-center gap-3">
                                 <div className="relative">
                                     <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                                     <input
                                         type="text"
-                                        placeholder={language === 'ar' ? 'بحث...' : 'Search...'}
+                                        placeholder={t('بحث...', 'Search...')}
                                         className="bg-slate-800/50 border border-slate-700 rounded-xl py-2 ps-10 pe-4 text-white placeholder-slate-500 focus:outline-none focus:border-green-500 w-64"
                                     />
                                 </div>
                                 <button className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-400 text-white rounded-xl transition-colors">
                                     <Plus className="w-5 h-5" />
-                                    {language === 'ar' ? 'إضافة عميل' : 'Add Customer'}
+                                    {t('إضافة عميل', 'Add Customer')}
                                 </button>
                             </div>
                         </div>
@@ -391,13 +392,13 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                 <table className="w-full">
                                     <thead>
                                         <tr className="bg-slate-700/30">
-                                            <th className="px-4 py-3 text-start text-sm text-slate-400">{language === 'ar' ? 'العميل' : 'Customer'}</th>
-                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{language === 'ar' ? 'البريد' : 'Email'}</th>
-                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{language === 'ar' ? 'الجوال' : 'Phone'}</th>
-                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{language === 'ar' ? 'العروض' : 'Quotes'}</th>
-                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{language === 'ar' ? 'الحالة' : 'Status'}</th>
-                                            <th className="px-4 py-3 text-end text-sm text-slate-400">{language === 'ar' ? 'إجمالي الإنفاق' : 'Total Spent'}</th>
-                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{language === 'ar' ? 'إجراءات' : 'Actions'}</th>
+                                            <th className="px-4 py-3 text-start text-sm text-slate-400">{t('العميل', 'Customer')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{t('البريد', 'Email')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{t('الجوال', 'Phone')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{t('العروض', 'Quotes')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{t('الحالة', 'Status')}</th>
+                                            <th className="px-4 py-3 text-end text-sm text-slate-400">{t('إجمالي الإنفاق', 'Total Spent')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{t('إجراءات', 'Actions')}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -405,7 +406,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                             <tr key={customer.id} className="border-t border-slate-700/50 hover:bg-slate-700/20">
                                                 <td className="px-4 py-3">
                                                     <div className="font-medium text-white">{customer.name}</div>
-                                                    <div className="text-xs text-slate-400">{language === 'ar' ? 'آخر زيارة:' : 'Last visit:'} {customer.lastVisit}</div>
+                                                    <div className="text-xs text-slate-400">{t('آخر زيارة:', 'Last visit:')} {customer.lastVisit}</div>
                                                 </td>
                                                 <td className="px-4 py-3 text-center text-slate-400">{customer.email}</td>
                                                 <td className="px-4 py-3 text-center text-slate-400" dir="ltr">{customer.phone}</td>
@@ -439,11 +440,11 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                 {activeTab === 'quotes' && (
                     <div className="space-y-6">
                         <div className="flex items-center justify-between">
-                            <h2 className="text-xl font-bold text-white">{language === 'ar' ? 'عروض الأسعار' : 'Price Quotes'}</h2>
+                            <h2 className="text-xl font-bold text-white">{t('عروض الأسعار', 'Price Quotes')}</h2>
                             <div className="flex items-center gap-3">
                                 <button className="flex items-center gap-2 px-4 py-2 bg-slate-700/50 hover:bg-slate-700 text-white rounded-xl transition-colors">
                                     <Download className="w-5 h-5" />
-                                    {language === 'ar' ? 'تصدير' : 'Export'}
+                                    {t('تصدير', 'Export')}
                                 </button>
                             </div>
                         </div>
@@ -452,19 +453,19 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                         <div className="grid grid-cols-4 gap-4">
                             <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
                                 <div className="text-2xl font-bold text-white">{quotes.length}</div>
-                                <div className="text-sm text-slate-400">{language === 'ar' ? 'إجمالي العروض' : 'Total Quotes'}</div>
+                                <div className="text-sm text-slate-400">{t('إجمالي العروض', 'Total Quotes')}</div>
                             </div>
                             <div className="bg-amber-500/10 rounded-xl p-4 border border-amber-500/30">
                                 <div className="text-2xl font-bold text-amber-400">{quotes.filter(q => q.status === 'pending').length}</div>
-                                <div className="text-sm text-slate-400">{language === 'ar' ? 'معلقة' : 'Pending'}</div>
+                                <div className="text-sm text-slate-400">{t('معلقة', 'Pending')}</div>
                             </div>
                             <div className="bg-green-500/10 rounded-xl p-4 border border-green-500/30">
                                 <div className="text-2xl font-bold text-green-400">{quotes.filter(q => q.status === 'accepted').length}</div>
-                                <div className="text-sm text-slate-400">{language === 'ar' ? 'مقبولة' : 'Accepted'}</div>
+                                <div className="text-sm text-slate-400">{t('مقبولة', 'Accepted')}</div>
                             </div>
                             <div className="bg-red-500/10 rounded-xl p-4 border border-red-500/30">
                                 <div className="text-2xl font-bold text-red-400">{quotes.filter(q => q.status === 'rejected').length}</div>
-                                <div className="text-sm text-slate-400">{language === 'ar' ? 'مرفوضة' : 'Rejected'}</div>
+                                <div className="text-sm text-slate-400">{t('مرفوضة', 'Rejected')}</div>
                             </div>
                         </div>
 
@@ -474,12 +475,12 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                     <thead>
                                         <tr className="bg-slate-700/30">
                                             <th className="px-4 py-3 text-start text-sm text-slate-400">#</th>
-                                            <th className="px-4 py-3 text-start text-sm text-slate-400">{language === 'ar' ? 'العميل' : 'Customer'}</th>
-                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{language === 'ar' ? 'التاريخ' : 'Date'}</th>
-                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{language === 'ar' ? 'البنود' : 'Items'}</th>
-                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{language === 'ar' ? 'الحالة' : 'Status'}</th>
-                                            <th className="px-4 py-3 text-end text-sm text-slate-400">{language === 'ar' ? 'الإجمالي' : 'Total'}</th>
-                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{language === 'ar' ? 'إجراءات' : 'Actions'}</th>
+                                            <th className="px-4 py-3 text-start text-sm text-slate-400">{t('العميل', 'Customer')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{t('التاريخ', 'Date')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{t('البنود', 'Items')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{t('الحالة', 'Status')}</th>
+                                            <th className="px-4 py-3 text-end text-sm text-slate-400">{t('الإجمالي', 'Total')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{t('إجراءات', 'Actions')}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -497,7 +498,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                                 <td className="px-4 py-3 text-end text-white font-medium">{quote.total.toLocaleString()} {t('sar')}</td>
                                                 <td className="px-4 py-3 text-center">
                                                     <button className="px-3 py-1 bg-green-500/10 text-green-400 hover:bg-green-500/20 rounded-lg text-sm transition-colors">
-                                                        {language === 'ar' ? 'عرض' : 'View'}
+                                                        {t('عرض', 'View')}
                                                     </button>
                                                 </td>
                                             </tr>
@@ -512,19 +513,19 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                 {/* Website Tab */}
                 {activeTab === 'website' && (
                     <div className="space-y-6">
-                        <h2 className="text-xl font-bold text-white">{language === 'ar' ? 'إدارة الموقع' : 'Website Management'}</h2>
+                        <h2 className="text-xl font-bold text-white">{t('إدارة الموقع', 'Website Management')}</h2>
 
                         <div className="grid md:grid-cols-2 gap-6">
                             {/* General Settings */}
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
                                 <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                     <Globe className="w-5 h-5 text-green-400" />
-                                    {language === 'ar' ? 'الإعدادات العامة' : 'General Settings'}
+                                    {t('الإعدادات العامة', 'General Settings')}
                                 </h3>
                                 <div className="space-y-4">
                                     <div>
                                         <label className="block text-slate-300 text-sm font-medium mb-2">
-                                            {language === 'ar' ? 'اسم الموقع' : 'Site Name'}
+                                            {t('اسم الموقع', 'Site Name')}
                                         </label>
                                         <input
                                             type="text"
@@ -535,7 +536,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                     </div>
                                     <div>
                                         <label className="block text-slate-300 text-sm font-medium mb-2">
-                                            {language === 'ar' ? 'الشعار' : 'Tagline'}
+                                            {t('الشعار', 'Tagline')}
                                         </label>
                                         <input
                                             type="text"
@@ -551,12 +552,12 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
                                 <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                     <Phone className="w-5 h-5 text-green-400" />
-                                    {language === 'ar' ? 'معلومات التواصل' : 'Contact Info'}
+                                    {t('معلومات التواصل', 'Contact Info')}
                                 </h3>
                                 <div className="space-y-4">
                                     <div>
                                         <label className="block text-slate-300 text-sm font-medium mb-2">
-                                            {language === 'ar' ? 'البريد الإلكتروني' : 'Email'}
+                                            {t('البريد الإلكتروني', 'Email')}
                                         </label>
                                         <input
                                             type="email"
@@ -567,7 +568,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                     </div>
                                     <div>
                                         <label className="block text-slate-300 text-sm font-medium mb-2">
-                                            {language === 'ar' ? 'رقم الجوال' : 'Phone'}
+                                            {t('رقم الجوال', 'Phone')}
                                         </label>
                                         <input
                                             type="tel"
@@ -584,12 +585,12 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
                                 <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                     <Palette className="w-5 h-5 text-green-400" />
-                                    {language === 'ar' ? 'الألوان' : 'Colors'}
+                                    {t('الألوان', 'Colors')}
                                 </h3>
                                 <div className="space-y-4">
                                     <div>
                                         <label className="block text-slate-300 text-sm font-medium mb-2">
-                                            {language === 'ar' ? 'اللون الأساسي' : 'Primary Color'}
+                                            {t('اللون الأساسي', 'Primary Color')}
                                         </label>
                                         <div className="flex gap-3">
                                             <input
@@ -608,7 +609,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                                     </div>
                                     <div>
                                         <label className="block text-slate-300 text-sm font-medium mb-2">
-                                            {language === 'ar' ? 'اللون الثانوي' : 'Secondary Color'}
+                                            {t('اللون الثانوي', 'Secondary Color')}
                                         </label>
                                         <div className="flex gap-3">
                                             <input
@@ -632,11 +633,11 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
                                 <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                     <MapPin className="w-5 h-5 text-green-400" />
-                                    {language === 'ar' ? 'العنوان' : 'Address'}
+                                    {t('العنوان', 'Address')}
                                 </h3>
                                 <div>
                                     <label className="block text-slate-300 text-sm font-medium mb-2">
-                                        {language === 'ar' ? 'عنوان الشركة' : 'Company Address'}
+                                        {t('عنوان الشركة', 'Company Address')}
                                     </label>
                                     <textarea
                                         value={websiteSettings.address}
@@ -663,35 +664,35 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                 {/* Analytics Tab */}
                 {activeTab === 'analytics' && (
                     <div className="space-y-6">
-                        <h2 className="text-xl font-bold text-white">{language === 'ar' ? 'التحليلات والإحصائيات' : 'Analytics & Statistics'}</h2>
+                        <h2 className="text-xl font-bold text-white">{t('التحليلات والإحصائيات', 'Analytics & Statistics')}</h2>
 
                         <div className="grid md:grid-cols-3 gap-6">
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
-                                <h3 className="text-lg font-bold text-white mb-4">{language === 'ar' ? 'مصادر الزيارات' : 'Traffic Sources'}</h3>
+                                <h3 className="text-lg font-bold text-white mb-4">{t('مصادر الزيارات', 'Traffic Sources')}</h3>
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-slate-300">{language === 'ar' ? 'بحث جوجل' : 'Google Search'}</span>
+                                        <span className="text-slate-300">{t('بحث جوجل', 'Google Search')}</span>
                                         <span className="text-white font-bold">45%</span>
                                     </div>
                                     <div className="w-full bg-slate-700 rounded-full h-2">
                                         <div className="bg-blue-500 h-2 rounded-full" style={{ width: '45%' }}></div>
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-slate-300">{language === 'ar' ? 'مباشر' : 'Direct'}</span>
+                                        <span className="text-slate-300">{t('مباشر', 'Direct')}</span>
                                         <span className="text-white font-bold">30%</span>
                                     </div>
                                     <div className="w-full bg-slate-700 rounded-full h-2">
                                         <div className="bg-green-500 h-2 rounded-full" style={{ width: '30%' }}></div>
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-slate-300">{language === 'ar' ? 'السوشيال ميديا' : 'Social Media'}</span>
+                                        <span className="text-slate-300">{t('السوشيال ميديا', 'Social Media')}</span>
                                         <span className="text-white font-bold">15%</span>
                                     </div>
                                     <div className="w-full bg-slate-700 rounded-full h-2">
                                         <div className="bg-purple-500 h-2 rounded-full" style={{ width: '15%' }}></div>
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-slate-300">{language === 'ar' ? 'إحالات' : 'Referrals'}</span>
+                                        <span className="text-slate-300">{t('إحالات', 'Referrals')}</span>
                                         <span className="text-white font-bold">10%</span>
                                     </div>
                                     <div className="w-full bg-slate-700 rounded-full h-2">
@@ -701,24 +702,24 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                             </div>
 
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
-                                <h3 className="text-lg font-bold text-white mb-4">{language === 'ar' ? 'الأجهزة' : 'Devices'}</h3>
+                                <h3 className="text-lg font-bold text-white mb-4">{t('الأجهزة', 'Devices')}</h3>
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-slate-300">{language === 'ar' ? 'الجوال' : 'Mobile'}</span>
+                                        <span className="text-slate-300">{t('الجوال', 'Mobile')}</span>
                                         <span className="text-white font-bold">62%</span>
                                     </div>
                                     <div className="w-full bg-slate-700 rounded-full h-2">
                                         <div className="bg-green-500 h-2 rounded-full" style={{ width: '62%' }}></div>
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-slate-300">{language === 'ar' ? 'الكمبيوتر' : 'Desktop'}</span>
+                                        <span className="text-slate-300">{t('الكمبيوتر', 'Desktop')}</span>
                                         <span className="text-white font-bold">32%</span>
                                     </div>
                                     <div className="w-full bg-slate-700 rounded-full h-2">
                                         <div className="bg-blue-500 h-2 rounded-full" style={{ width: '32%' }}></div>
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-slate-300">{language === 'ar' ? 'التابلت' : 'Tablet'}</span>
+                                        <span className="text-slate-300">{t('التابلت', 'Tablet')}</span>
                                         <span className="text-white font-bold">6%</span>
                                     </div>
                                     <div className="w-full bg-slate-700 rounded-full h-2">
@@ -728,22 +729,22 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                             </div>
 
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
-                                <h3 className="text-lg font-bold text-white mb-4">{language === 'ar' ? 'أهم الصفحات' : 'Top Pages'}</h3>
+                                <h3 className="text-lg font-bold text-white mb-4">{t('أهم الصفحات', 'Top Pages')}</h3>
                                 <div className="space-y-3">
                                     <div className="flex items-center justify-between p-2 bg-slate-700/30 rounded-lg">
-                                        <span className="text-slate-300">{language === 'ar' ? 'الرئيسية' : 'Home'}</span>
+                                        <span className="text-slate-300">{t('الرئيسية', 'Home')}</span>
                                         <span className="text-white font-bold">4,521</span>
                                     </div>
                                     <div className="flex items-center justify-between p-2 bg-slate-700/30 rounded-lg">
-                                        <span className="text-slate-300">{language === 'ar' ? 'التسعير' : 'Pricing'}</span>
+                                        <span className="text-slate-300">{t('التسعير', 'Pricing')}</span>
                                         <span className="text-white font-bold">2,847</span>
                                     </div>
                                     <div className="flex items-center justify-between p-2 bg-slate-700/30 rounded-lg">
-                                        <span className="text-slate-300">{language === 'ar' ? 'التسجيل' : 'Register'}</span>
+                                        <span className="text-slate-300">{t('التسجيل', 'Register')}</span>
                                         <span className="text-white font-bold">1,923</span>
                                     </div>
                                     <div className="flex items-center justify-between p-2 bg-slate-700/30 rounded-lg">
-                                        <span className="text-slate-300">{language === 'ar' ? 'عن الشركة' : 'About'}</span>
+                                        <span className="text-slate-300">{t('عن الشركة', 'About')}</span>
                                         <span className="text-white font-bold">1,456</span>
                                     </div>
                                 </div>
@@ -755,12 +756,12 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                 {/* Settings Tab */}
                 {activeTab === 'settings' && (
                     <div className="max-w-2xl space-y-6">
-                        <h2 className="text-xl font-bold text-white">{language === 'ar' ? 'إعدادات الحساب' : 'Account Settings'}</h2>
+                        <h2 className="text-xl font-bold text-white">{t('إعدادات الحساب', 'Account Settings')}</h2>
 
                         <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6 space-y-4">
                             <div>
                                 <label className="block text-slate-300 text-sm font-medium mb-2">
-                                    {language === 'ar' ? 'اسم المستخدم' : 'Username'}
+                                    {t('اسم المستخدم', 'Username')}
                                 </label>
                                 <input
                                     type="text"
@@ -770,7 +771,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                             </div>
                             <div>
                                 <label className="block text-slate-300 text-sm font-medium mb-2">
-                                    {language === 'ar' ? 'البريد الإلكتروني' : 'Email'}
+                                    {t('البريد الإلكتروني', 'Email')}
                                 </label>
                                 <input
                                     type="email"
@@ -780,7 +781,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                             </div>
                             <div>
                                 <label className="block text-slate-300 text-sm font-medium mb-2">
-                                    {language === 'ar' ? 'كلمة المرور الحالية' : 'Current Password'}
+                                    {t('كلمة المرور الحالية', 'Current Password')}
                                 </label>
                                 <input
                                     type="password"
@@ -789,7 +790,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                             </div>
                             <div>
                                 <label className="block text-slate-300 text-sm font-medium mb-2">
-                                    {language === 'ar' ? 'كلمة المرور الجديدة' : 'New Password'}
+                                    {t('كلمة المرور الجديدة', 'New Password')}
                                 </label>
                                 <input
                                     type="password"
@@ -798,7 +799,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
                             </div>
                             <button className="w-full py-3 bg-green-500 hover:bg-green-400 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2">
                                 <Save className="w-5 h-5" />
-                                {language === 'ar' ? 'حفظ التغييرات' : 'Save Changes'}
+                                {t('حفظ التغييرات', 'Save Changes')}
                             </button>
                         </div>
                     </div>

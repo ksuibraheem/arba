@@ -82,34 +82,42 @@ export const maskEngineerName = (fullName: string): string => {
 
 class SupplierReviewService {
     private storageKey = 'arba_supplier_reviews';
-    private _loaded = false;
+    private fsCollection = 'supplier_reviews';
+    private _cache: SupplierDataReview[] | null = null;
+    private _listenerInit = false;
 
     constructor() {
-        this.loadFromFirestore().catch(() => {});
+        this.initListener();
     }
 
-    private async loadFromFirestore(): Promise<void> {
-        if (this._loaded) return;
-        try {
-            const items = await firestoreDataService.getCollection(
-                'supplier_reviews', undefined, { localCacheKey: this.storageKey }
-            );
-            if (items.length > 0) localStorage.setItem(this.storageKey, JSON.stringify(items));
-            this._loaded = true;
-        } catch { this._loaded = true; }
+    private initListener(): void {
+        if (this._listenerInit) return;
+        this._listenerInit = true;
+        firestoreDataService.subscribeToCollection<SupplierDataReview>(
+            this.fsCollection,
+            (items) => {
+                this._cache = items;
+                localStorage.setItem(this.storageKey, JSON.stringify(items));
+            },
+            undefined, this.storageKey
+        );
     }
 
     // الحصول على جميع المراجعات
     getReviews(): SupplierDataReview[] {
+        if (this._cache !== null) return this._cache;
         const data = localStorage.getItem(this.storageKey);
         return data ? JSON.parse(data) : [];
     }
 
-    // حفظ المراجعات
+    // حفظ المراجعات (Firestore-first)
     private saveReviews(reviews: SupplierDataReview[]): void {
+        this._cache = reviews;
         localStorage.setItem(this.storageKey, JSON.stringify(reviews));
         const items = reviews.map(r => ({ id: r.id, data: { ...r } }));
-        firestoreDataService.batchWrite('supplier_reviews', items).catch(() => {});
+        firestoreDataService.batchWrite(this.fsCollection, items).catch((err) => {
+            console.error('❌ [SupplierReview] Batch write failed:', err);
+        });
     }
 
     // الحصول على مراجعة بالمعرف

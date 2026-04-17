@@ -3,6 +3,9 @@
  * إدارة المشاريع × الموردين + صلاحية + قنوات شات + فريق العمل
  */
 
+import { db } from '../firebase/config';
+import { collection, doc, setDoc, getDocs, query, where, updateDoc, deleteDoc, serverTimestamp, getDoc } from 'firebase/firestore';
+
 // ═══════════════════════════════════════════════
 // TYPES
 // ═══════════════════════════════════════════════
@@ -30,14 +33,14 @@ export interface ProjectMemberPermissions {
 }
 
 export const PROJECT_ROLES: Record<ProjectRole, { ar: string; en: string; icon: string; defaultPerms: ProjectMemberPermissions }> = {
-    project_manager:   { ar: 'مدير المشروع', en: 'Project Manager', icon: '👔', defaultPerms: { chat: true, photos: true, invoices: true, forms: true, reports: true, team: true } },
-    site_engineer:     { ar: 'مهندس الموقع', en: 'Site Engineer', icon: '🏗️', defaultPerms: { chat: true, photos: true, invoices: false, forms: true, reports: true, team: false } },
-    accountant:        { ar: 'محاسب', en: 'Accountant', icon: '🧮', defaultPerms: { chat: true, photos: false, invoices: true, forms: false, reports: true, team: false } },
-    site_supervisor:   { ar: 'مشرف الموقع', en: 'Site Supervisor', icon: '👷', defaultPerms: { chat: true, photos: true, invoices: false, forms: true, reports: false, team: false } },
-    safety_officer:    { ar: 'مسؤول السلامة', en: 'Safety Officer', icon: '🛡️', defaultPerms: { chat: true, photos: true, invoices: false, forms: true, reports: true, team: false } },
+    project_manager: { ar: 'مدير المشروع', en: 'Project Manager', icon: '👔', defaultPerms: { chat: true, photos: true, invoices: true, forms: true, reports: true, team: true } },
+    site_engineer: { ar: 'مهندس الموقع', en: 'Site Engineer', icon: '🏗️', defaultPerms: { chat: true, photos: true, invoices: false, forms: true, reports: true, team: false } },
+    accountant: { ar: 'محاسب', en: 'Accountant', icon: '🧮', defaultPerms: { chat: true, photos: false, invoices: true, forms: false, reports: true, team: false } },
+    site_supervisor: { ar: 'مشرف الموقع', en: 'Site Supervisor', icon: '👷', defaultPerms: { chat: true, photos: true, invoices: false, forms: true, reports: false, team: false } },
+    safety_officer: { ar: 'مسؤول السلامة', en: 'Safety Officer', icon: '🛡️', defaultPerms: { chat: true, photos: true, invoices: false, forms: true, reports: true, team: false } },
     quantity_surveyor: { ar: 'مساح الكميات', en: 'Quantity Surveyor', icon: '📐', defaultPerms: { chat: true, photos: false, invoices: false, forms: true, reports: true, team: false } },
-    architect:         { ar: 'مهندس معماري', en: 'Architect', icon: '📝', defaultPerms: { chat: true, photos: true, invoices: false, forms: false, reports: true, team: false } },
-    custom:            { ar: 'مخصص', en: 'Custom', icon: '⚙️', defaultPerms: { chat: true, photos: false, invoices: false, forms: false, reports: false, team: false } },
+    architect: { ar: 'مهندس معماري', en: 'Architect', icon: '📝', defaultPerms: { chat: true, photos: true, invoices: false, forms: false, reports: true, team: false } },
+    custom: { ar: 'مخصص', en: 'Custom', icon: '⚙️', defaultPerms: { chat: true, photos: false, invoices: false, forms: false, reports: false, team: false } },
 };
 
 export interface ProjectMember {
@@ -47,6 +50,9 @@ export interface ProjectMember {
     employeeId: string;
     employeeName: string;
     employeePhone?: string;
+    password: string;              // رقم سري
+    lastLogin?: string;           // آخر تسجيل دخول
+    loginCount: number;           // عدد مرات الدخول
     role: ProjectRole;
     permissions: ProjectMemberPermissions;
     addedBy: string;
@@ -107,6 +113,20 @@ function saveLocal<T>(key: string, data: T[]) {
 function genId(): string {
     return `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
+
+/**
+ * توليد رقم سري فريد من 6 أرقام
+ */
+function generatePassword(): string {
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const existing = getLocal<ProjectMember>(KEYS.projectMembers);
+    if (existing.some(m => m.password === code)) {
+        return generatePassword();
+    }
+    return code;
+}
+
+const MEMBERS_COLLECTION = 'project_members';
 
 // ═══════════════════════════════════════════════
 // SERVICE
@@ -224,28 +244,94 @@ export const projectSupplierService = {
             existing.role = data.role; existing.isActive = true;
             if (data.permissions) existing.permissions = { ...existing.permissions, ...data.permissions };
             saveLocal(KEYS.projectMembers, list);
+            // Sync to Firestore
+            setDoc(doc(db, MEMBERS_COLLECTION, existing.id), existing, { merge: true }).catch(console.warn);
             return existing;
         }
         const defaultPerms = PROJECT_ROLES[data.role]?.defaultPerms || PROJECT_ROLES.custom.defaultPerms;
+        const code = generatePassword();
         const member: ProjectMember = {
             id: genId(), projectId: data.projectId, projectName: data.projectName,
             employeeId: data.employeeId, employeeName: data.employeeName, employeePhone: data.employeePhone,
+            password: code, lastLogin: undefined, loginCount: 0,
             role: data.role, permissions: { ...defaultPerms, ...data.permissions },
             addedBy: data.addedBy, addedAt: new Date().toISOString(), isActive: true,
         };
         list.push(member);
         saveLocal(KEYS.projectMembers, list);
+        // Sync to Firestore
+        setDoc(doc(db, MEMBERS_COLLECTION, member.id), member).catch(console.warn);
         return member;
     },
 
     updateProjectMember(id: string, updates: Partial<ProjectMember>) {
         const list = getLocal<ProjectMember>(KEYS.projectMembers);
         const idx = list.findIndex(m => m.id === id);
-        if (idx >= 0) { list[idx] = { ...list[idx], ...updates }; saveLocal(KEYS.projectMembers, list); }
+        if (idx >= 0) {
+            list[idx] = { ...list[idx], ...updates };
+            saveLocal(KEYS.projectMembers, list);
+            // Sync to Firestore
+            setDoc(doc(db, MEMBERS_COLLECTION, id), list[idx], { merge: true }).catch(console.warn);
+        }
     },
 
     removeProjectMember(id: string) {
         saveLocal(KEYS.projectMembers, getLocal<ProjectMember>(KEYS.projectMembers).filter(m => m.id !== id));
+        // Remove from Firestore
+        deleteDoc(doc(db, MEMBERS_COLLECTION, id)).catch(console.warn);
+    },
+
+    /**
+     * تجديد الرقم السري لعضو
+     */
+    regeneratePassword(memberId: string): string {
+        const code = generatePassword();
+        this.updateProjectMember(memberId, { password: code });
+        return code;
+    },
+
+    /**
+     * مصادقة عضو فريق المشروع بالجوال والرمز
+     */
+    async authenticateTeamMember(phone: string, password: string): Promise<{ success: boolean; member?: ProjectMember; error?: string }> {
+        // 1) Try Firestore first
+        try {
+            const q = query(
+                collection(db, MEMBERS_COLLECTION),
+                where('employeePhone', '==', phone),
+                where('password', '==', password),
+                where('isActive', '==', true)
+            );
+            const snapshot = await getDocs(q);
+            if (!snapshot.empty) {
+                const member = snapshot.docs[0].data() as ProjectMember;
+                // Update login stats
+                await updateDoc(doc(db, MEMBERS_COLLECTION, member.id), {
+                    lastLogin: new Date().toISOString(),
+                    loginCount: (member.loginCount || 0) + 1,
+                });
+                member.lastLogin = new Date().toISOString();
+                member.loginCount = (member.loginCount || 0) + 1;
+                // Sync to localStorage
+                const list = getLocal<ProjectMember>(KEYS.projectMembers);
+                const idx = list.findIndex(m => m.id === member.id);
+                if (idx >= 0) { list[idx] = member; } else { list.push(member); }
+                saveLocal(KEYS.projectMembers, list);
+                return { success: true, member };
+            }
+        } catch (err) {
+            console.warn('⚠️ Firestore auth failed, trying localStorage:', err);
+        }
+        // 2) Fallback to localStorage
+        const all = getLocal<ProjectMember>(KEYS.projectMembers);
+        const match = all.find(m => m.employeePhone === phone && m.password === password && m.isActive);
+        if (match) {
+            match.lastLogin = new Date().toISOString();
+            match.loginCount = (match.loginCount || 0) + 1;
+            saveLocal(KEYS.projectMembers, all);
+            return { success: true, member: match };
+        }
+        return { success: false, error: 'رقم الجوال أو الرقم السري غير صحيح' };
     },
 
     // ═══ Full Project Kit ═══
@@ -307,7 +393,8 @@ export const projectSupplierService = {
     // ═══ Sample Data ═══
 
     initSampleData() {
-        if (getLocal<ProjectSupplier>(KEYS.projectSuppliers).length > 0) return;
+        const existingSuppliers = getLocal<ProjectSupplier>(KEYS.projectSuppliers);
+        const existingMembers = getLocal<ProjectMember>(KEYS.projectMembers);
 
         const samples: ProjectSupplier[] = [
             {
@@ -338,17 +425,23 @@ export const projectSupplierService = {
                 permissions: { chat: true, uploadInvoices: true, uploadPhotos: false, deliveryForms: false },
             },
         ];
-        saveLocal(KEYS.projectSuppliers, samples);
 
-        // Sample project members
-        if (getLocal<ProjectMember>(KEYS.projectMembers).length === 0) {
+        // Seed suppliers only if empty
+        if (existingSuppliers.length === 0) {
+            saveLocal(KEYS.projectSuppliers, samples);
+        }
+
+        // ALWAYS seed project members if empty (independent of suppliers)
+        if (existingMembers.length === 0) {
             const sampleMembers: ProjectMember[] = [
-                { id: 'pm_1', projectId: 'proj_1', projectName: 'فيلا الرياض — حي النرجس', employeeId: 'emp_1', employeeName: 'م. خالد الشمري', employeePhone: '0501001001', role: 'project_manager', permissions: { chat: true, photos: true, invoices: true, forms: true, reports: true, team: true }, addedBy: 'admin', addedAt: new Date(Date.now() - 30 * 86400000).toISOString(), isActive: true },
-                { id: 'pm_2', projectId: 'proj_1', projectName: 'فيلا الرياض — حي النرجس', employeeId: 'emp_2', employeeName: 'م. سعد العتيبي', employeePhone: '0502002002', role: 'site_engineer', permissions: { chat: true, photos: true, invoices: false, forms: true, reports: true, team: false }, addedBy: 'admin', addedAt: new Date(Date.now() - 25 * 86400000).toISOString(), isActive: true },
-                { id: 'pm_3', projectId: 'proj_1', projectName: 'فيلا الرياض — حي النرجس', employeeId: 'emp_3', employeeName: 'أحمد المالكي', role: 'accountant', permissions: { chat: true, photos: false, invoices: true, forms: false, reports: true, team: false }, addedBy: 'admin', addedAt: new Date(Date.now() - 20 * 86400000).toISOString(), isActive: true },
-                { id: 'pm_4', projectId: 'proj_1', projectName: 'فيلا الرياض — حي النرجس', employeeId: 'emp_4', employeeName: 'عبدالله الحربي', employeePhone: '0504004004', role: 'safety_officer', permissions: { chat: true, photos: true, invoices: false, forms: true, reports: true, team: false }, addedBy: 'admin', addedAt: new Date(Date.now() - 15 * 86400000).toISOString(), isActive: true },
+                { id: 'pm_1', projectId: 'proj_1', projectName: 'فيلا الرياض — حي النرجس', employeeId: 'emp_1', employeeName: 'م. خالد الشمري', employeePhone: '0501001001', password: '123456', lastLogin: undefined, loginCount: 0, role: 'project_manager', permissions: { chat: true, photos: true, invoices: true, forms: true, reports: true, team: true }, addedBy: 'admin', addedAt: new Date(Date.now() - 30 * 86400000).toISOString(), isActive: true },
+                { id: 'pm_2', projectId: 'proj_1', projectName: 'فيلا الرياض — حي النرجس', employeeId: 'emp_2', employeeName: 'م. سعد العتيبي', employeePhone: '0502002002', password: '123456', lastLogin: undefined, loginCount: 0, role: 'site_engineer', permissions: { chat: true, photos: true, invoices: false, forms: true, reports: true, team: false }, addedBy: 'admin', addedAt: new Date(Date.now() - 25 * 86400000).toISOString(), isActive: true },
+                { id: 'pm_3', projectId: 'proj_1', projectName: 'فيلا الرياض — حي النرجس', employeeId: 'emp_3', employeeName: 'أحمد المالكي', employeePhone: '0503003003', password: '123456', lastLogin: undefined, loginCount: 0, role: 'accountant', permissions: { chat: true, photos: false, invoices: true, forms: false, reports: true, team: false }, addedBy: 'admin', addedAt: new Date(Date.now() - 20 * 86400000).toISOString(), isActive: true },
+                { id: 'pm_4', projectId: 'proj_1', projectName: 'فيلا الرياض — حي النرجس', employeeId: 'emp_4', employeeName: 'عبدالله الحربي', employeePhone: '0504004004', password: '123456', lastLogin: undefined, loginCount: 0, role: 'safety_officer', permissions: { chat: true, photos: true, invoices: false, forms: true, reports: true, team: false }, addedBy: 'admin', addedAt: new Date(Date.now() - 15 * 86400000).toISOString(), isActive: true },
             ];
             saveLocal(KEYS.projectMembers, sampleMembers);
+            // Sync samples to Firestore
+            sampleMembers.forEach(m => setDoc(doc(db, MEMBERS_COLLECTION, m.id), m).catch(console.warn));
         }
 
         this.ensureProjectChannel('proj_1', 'فيلا الرياض — حي النرجس');

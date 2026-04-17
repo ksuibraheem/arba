@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Language } from '../../types';
 import {
     Truck,
     Package,
@@ -57,7 +58,7 @@ import {
 } from '../../services/supplierStorageService';
 
 interface SupplierDashboardProps {
-    language: 'ar' | 'en';
+    language: Language;
     onNavigate: (page: string) => void;
     onLogout: () => void;
     isTestMode?: boolean;
@@ -137,8 +138,6 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
             // تحميل الخدمات
             const loadedServices = getSupplierServices(supplierId);
             setServicesCatalog(loadedServices);
-
-            console.log(`✅ تم تحميل بيانات المورد: ${supplierId}`);
         }
     }, [supplierId, isTestMode]);
 
@@ -314,13 +313,13 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                     <div className="pointer-events-auto bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 text-white px-6 py-2 rounded-full shadow-lg flex items-center gap-3 animate-pulse">
                         <span className="text-lg">🧪</span>
                         <span className="font-bold text-sm">
-                            {language === 'ar' ? 'وضع الاختبار - شبكة الموردين' : 'Test Mode - Supplier Network'}
+                            {t('وضع الاختبار - شبكة الموردين', 'Test Mode - Supplier Network')}
                         </span>
                         <button
                             onClick={() => onNavigate('manager')}
                             className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full text-xs font-medium transition-colors"
                         >
-                            {language === 'ar' ? 'إنهاء' : 'End'}
+                            {t('إنهاء', 'End')}
                         </button>
                     </div>
                 </div>
@@ -335,7 +334,7 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                                 className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
                             >
                                 <Arrow className="w-5 h-5" />
-                                <span className="hidden sm:inline">{isTestMode ? (language === 'ar' ? 'إنهاء الاختبار' : 'End Test') : getLabel('backHome')}</span>
+                                <span className="hidden sm:inline">{isTestMode ? (t('إنهاء الاختبار', 'End Test')) : getLabel('backHome')}</span>
                             </button>
                             <div className="h-6 w-px bg-slate-600"></div>
                             <div className="flex items-center gap-3">
@@ -448,7 +447,7 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                                     onClick={() => setActiveTab('quotes')}
                                     className="text-emerald-400 hover:text-emerald-300 text-sm"
                                 >
-                                    {language === 'ar' ? 'عرض الكل' : 'View All'}
+                                    {t('عرض الكل', 'View All')}
                                 </button>
                             </div>
                             <div className="overflow-x-auto">
@@ -489,7 +488,7 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                     <div className="space-y-6">
                         <div className="flex items-center justify-between">
                             <h2 className="text-xl font-bold text-white">
-                                {language === 'ar' ? 'أنواع المنتجات' : 'Product Categories'}
+                                {t('أنواع المنتجات', 'Product Categories')}
                             </h2>
                             <div className="text-slate-400">
                                 {language === 'ar'
@@ -513,7 +512,7 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                                     <div className="text-4xl mb-3">{category.icon}</div>
                                     <div className="font-bold text-white mb-1">{category.name[language]}</div>
                                     <div className="text-sm text-slate-400">
-                                        {category.count} {language === 'ar' ? 'منتج' : 'products'}
+                                        {category.count} {t('منتج', 'products')}
                                     </div>
                                     <div className={`absolute top-3 end-3 w-2 h-2 rounded-full bg-gradient-to-br ${category.color}`}></div>
                                 </button>
@@ -523,24 +522,24 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                         {/* Quick Stats */}
                         <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
                             <h3 className="text-lg font-bold text-white mb-4">
-                                {language === 'ar' ? 'ملخص التصنيفات' : 'Categories Summary'}
+                                {t('ملخص التصنيفات', 'Categories Summary')}
                             </h3>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <div className="bg-slate-700/30 rounded-xl p-4">
                                     <div className="text-2xl font-bold text-white">{productCategories.length}</div>
-                                    <div className="text-sm text-slate-400">{language === 'ar' ? 'تصنيف' : 'Categories'}</div>
+                                    <div className="text-sm text-slate-400">{t('تصنيف', 'Categories')}</div>
                                 </div>
                                 <div className="bg-slate-700/30 rounded-xl p-4">
                                     <div className="text-2xl font-bold text-emerald-400">{productCategories.reduce((sum, c) => sum + c.count, 0)}</div>
-                                    <div className="text-sm text-slate-400">{language === 'ar' ? 'إجمالي المنتجات' : 'Total Products'}</div>
+                                    <div className="text-sm text-slate-400">{t('إجمالي المنتجات', 'Total Products')}</div>
                                 </div>
                                 <div className="bg-slate-700/30 rounded-xl p-4">
                                     <div className="text-2xl font-bold text-blue-400">{Math.max(...productCategories.map(c => c.count))}</div>
-                                    <div className="text-sm text-slate-400">{language === 'ar' ? 'أكبر تصنيف' : 'Largest Category'}</div>
+                                    <div className="text-sm text-slate-400">{t('أكبر تصنيف', 'Largest Category')}</div>
                                 </div>
                                 <div className="bg-slate-700/30 rounded-xl p-4">
                                     <div className="text-2xl font-bold text-amber-400">{Math.round(productCategories.reduce((sum, c) => sum + c.count, 0) / productCategories.length)}</div>
-                                    <div className="text-sm text-slate-400">{language === 'ar' ? 'متوسط المنتجات' : 'Avg. Products'}</div>
+                                    <div className="text-sm text-slate-400">{t('متوسط المنتجات', 'Avg. Products')}</div>
                                 </div>
                             </div>
                         </div>
@@ -557,31 +556,31 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-bold text-white">{getLabel('sales')}</h2>
-                                    <p className="text-slate-400 text-sm">{language === 'ar' ? 'منتجات البيع المباشر' : 'Direct sale products'}</p>
+                                    <p className="text-slate-400 text-sm">{t('منتجات البيع المباشر', 'Direct sale products')}</p>
                                 </div>
                             </div>
                             <button className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-400 text-white rounded-xl transition-colors">
                                 <Plus className="w-5 h-5" />
-                                {language === 'ar' ? 'إضافة منتج للبيع' : 'Add Sale Product'}
+                                {t('إضافة منتج للبيع', 'Add Sale Product')}
                             </button>
                         </div>
 
                         {/* Stats */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-blue-500/30">
-                                <div className="text-blue-400 text-sm mb-1">{language === 'ar' ? 'منتجات البيع' : 'Sale Products'}</div>
+                                <div className="text-blue-400 text-sm mb-1">{t('منتجات البيع', 'Sale Products')}</div>
                                 <div className="text-2xl font-bold text-white">{products.filter(p => p.productType === 'sale').length}</div>
                             </div>
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-emerald-500/30">
-                                <div className="text-emerald-400 text-sm mb-1">{language === 'ar' ? 'نشط' : 'Active'}</div>
+                                <div className="text-emerald-400 text-sm mb-1">{t('نشط', 'Active')}</div>
                                 <div className="text-2xl font-bold text-white">{products.filter(p => p.productType === 'sale' && p.status === 'active').length}</div>
                             </div>
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-slate-500/30">
-                                <div className="text-slate-400 text-sm mb-1">{language === 'ar' ? 'إجمالي المشاهدات' : 'Total Views'}</div>
+                                <div className="text-slate-400 text-sm mb-1">{t('إجمالي المشاهدات', 'Total Views')}</div>
                                 <div className="text-2xl font-bold text-white">{products.filter(p => p.productType === 'sale').reduce((sum, p) => sum + p.views, 0).toLocaleString()}</div>
                             </div>
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-amber-500/30">
-                                <div className="text-amber-400 text-sm mb-1">{language === 'ar' ? 'نسبة التحويل' : 'Conversion'}</div>
+                                <div className="text-amber-400 text-sm mb-1">{t('نسبة التحويل', 'Conversion')}</div>
                                 <div className="text-2xl font-bold text-white">
                                     {(products.filter(p => p.productType === 'sale').reduce((sum, p) => sum + p.conversionRate, 0) / Math.max(1, products.filter(p => p.productType === 'sale').length)).toFixed(1)}%
                                 </div>
@@ -654,31 +653,31 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-bold text-white">{getLabel('rentals')}</h2>
-                                    <p className="text-slate-400 text-sm">{language === 'ar' ? 'المعدات والأدوات للتأجير' : 'Equipment & tools for rent'}</p>
+                                    <p className="text-slate-400 text-sm">{t('المعدات والأدوات للتأجير', 'Equipment & tools for rent')}</p>
                                 </div>
                             </div>
                             <button className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-400 text-white rounded-xl transition-colors">
                                 <Plus className="w-5 h-5" />
-                                {language === 'ar' ? 'إضافة منتج للتأجير' : 'Add Rental Product'}
+                                {t('إضافة منتج للتأجير', 'Add Rental Product')}
                             </button>
                         </div>
 
                         {/* Stats */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-orange-500/30">
-                                <div className="text-orange-400 text-sm mb-1">{language === 'ar' ? 'منتجات التأجير' : 'Rental Products'}</div>
+                                <div className="text-orange-400 text-sm mb-1">{t('منتجات التأجير', 'Rental Products')}</div>
                                 <div className="text-2xl font-bold text-white">{products.filter(p => p.productType === 'rental').length}</div>
                             </div>
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-emerald-500/30">
-                                <div className="text-emerald-400 text-sm mb-1">{language === 'ar' ? 'متاح للتأجير' : 'Available'}</div>
+                                <div className="text-emerald-400 text-sm mb-1">{t('متاح للتأجير', 'Available')}</div>
                                 <div className="text-2xl font-bold text-white">{products.filter(p => p.productType === 'rental' && p.status === 'active').length}</div>
                             </div>
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-slate-500/30">
-                                <div className="text-slate-400 text-sm mb-1">{language === 'ar' ? 'إجمالي التسعيرات' : 'Total Pricings'}</div>
+                                <div className="text-slate-400 text-sm mb-1">{t('إجمالي التسعيرات', 'Total Pricings')}</div>
                                 <div className="text-2xl font-bold text-white">{products.filter(p => p.productType === 'rental').reduce((sum, p) => sum + p.pricings, 0).toLocaleString()}</div>
                             </div>
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-amber-500/30">
-                                <div className="text-amber-400 text-sm mb-1">{language === 'ar' ? 'نسبة التحويل' : 'Conversion'}</div>
+                                <div className="text-amber-400 text-sm mb-1">{t('نسبة التحويل', 'Conversion')}</div>
                                 <div className="text-2xl font-bold text-white">
                                     {(products.filter(p => p.productType === 'rental').reduce((sum, p) => sum + p.conversionRate, 0) / Math.max(1, products.filter(p => p.productType === 'rental').length)).toFixed(1)}%
                                 </div>
@@ -687,13 +686,13 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
 
                         {/* Rental Categories */}
                         <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
-                            <h3 className="text-lg font-bold text-white mb-4">{language === 'ar' ? 'تصنيفات التأجير' : 'Rental Categories'}</h3>
+                            <h3 className="text-lg font-bold text-white mb-4">{t('تصنيفات التأجير', 'Rental Categories')}</h3>
                             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                                 {Object.entries(PRODUCT_CATEGORIES).filter(([_, cat]) => cat.type === 'rental').map(([key, cat]) => (
                                     <div key={key} className="p-3 bg-slate-700/30 rounded-xl border border-slate-600/50 hover:border-orange-500/50 transition-all cursor-pointer">
                                         <div className="text-white font-medium text-sm">{cat[language]}</div>
                                         <div className="text-slate-400 text-xs mt-1">
-                                            {products.filter(p => p.category === key).length} {language === 'ar' ? 'منتج' : 'items'}
+                                            {products.filter(p => p.category === key).length} {t('منتج', 'items')}
                                         </div>
                                     </div>
                                 ))}
@@ -766,7 +765,7 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                                     <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                                     <input
                                         type="text"
-                                        placeholder={language === 'ar' ? 'بحث عن منتج...' : 'Search products...'}
+                                        placeholder={t('بحث عن منتج...', 'Search products...')}
                                         className="bg-slate-800/50 border border-slate-700 rounded-xl py-2 ps-10 pe-4 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 w-64"
                                     />
                                 </div>
@@ -863,7 +862,7 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                                             <td className="px-4 py-3 text-end text-white font-medium">{quote.total.toLocaleString()} {getLabel('sar')}</td>
                                             <td className="px-4 py-3 text-center">
                                                 <button className="px-3 py-1 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded-lg text-sm transition-colors">
-                                                    {language === 'ar' ? 'عرض' : 'View'}
+                                                    {t('عرض', 'View')}
                                                 </button>
                                             </td>
                                         </tr>
@@ -882,28 +881,28 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-slate-700/50">
                                 <div className="flex items-center gap-3 mb-2">
                                     <Eye className="w-5 h-5 text-blue-400" />
-                                    <span className="text-slate-400 text-sm">{language === 'ar' ? 'إجمالي المشاهدات' : 'Total Views'}</span>
+                                    <span className="text-slate-400 text-sm">{t('إجمالي المشاهدات', 'Total Views')}</span>
                                 </div>
                                 <div className="text-2xl font-bold text-white">{products.reduce((sum, p) => sum + p.views, 0).toLocaleString()}</div>
                             </div>
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-slate-700/50">
                                 <div className="flex items-center gap-3 mb-2">
                                     <DollarSign className="w-5 h-5 text-emerald-400" />
-                                    <span className="text-slate-400 text-sm">{language === 'ar' ? 'إجمالي التسعيرات' : 'Total Pricings'}</span>
+                                    <span className="text-slate-400 text-sm">{t('إجمالي التسعيرات', 'Total Pricings')}</span>
                                 </div>
                                 <div className="text-2xl font-bold text-white">{products.reduce((sum, p) => sum + p.pricings, 0).toLocaleString()}</div>
                             </div>
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-slate-700/50">
                                 <div className="flex items-center gap-3 mb-2">
                                     <ShoppingCart className="w-5 h-5 text-purple-400" />
-                                    <span className="text-slate-400 text-sm">{language === 'ar' ? 'أُضيف للعروض' : 'Added to Quotes'}</span>
+                                    <span className="text-slate-400 text-sm">{t('أُضيف للعروض', 'Added to Quotes')}</span>
                                 </div>
                                 <div className="text-2xl font-bold text-white">{products.reduce((sum, p) => sum + p.addedToQuotes, 0).toLocaleString()}</div>
                             </div>
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-slate-700/50">
                                 <div className="flex items-center gap-3 mb-2">
                                     <TrendingUp className="w-5 h-5 text-amber-400" />
-                                    <span className="text-slate-400 text-sm">{language === 'ar' ? 'متوسط التحويل' : 'Avg. Conversion'}</span>
+                                    <span className="text-slate-400 text-sm">{t('متوسط التحويل', 'Avg. Conversion')}</span>
                                 </div>
                                 <div className="text-2xl font-bold text-white">{(products.reduce((sum, p) => sum + p.conversionRate, 0) / products.length).toFixed(1)}%</div>
                             </div>
@@ -924,9 +923,9 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                                             <th className="px-4 py-3 text-start text-sm text-slate-400">{getLabel('productName')}</th>
                                             <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('views')}</th>
                                             <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('pricings')}</th>
-                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{language === 'ar' ? 'أُضيف للعروض' : 'Quotes'}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{t('أُضيف للعروض', 'Quotes')}</th>
                                             <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('conversionRate')}</th>
-                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{language === 'ar' ? 'الأداء' : 'Performance'}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{t('الأداء', 'Performance')}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -985,15 +984,15 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                         {/* Promotions Stats */}
                         <div className="grid grid-cols-3 gap-4">
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-emerald-500/30">
-                                <div className="text-emerald-400 text-sm mb-1">{language === 'ar' ? 'العروض النشطة' : 'Active Promotions'}</div>
+                                <div className="text-emerald-400 text-sm mb-1">{t('العروض النشطة', 'Active Promotions')}</div>
                                 <div className="text-2xl font-bold text-white">{promotions.filter(p => p.status === 'active').length}</div>
                             </div>
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-amber-500/30">
-                                <div className="text-amber-400 text-sm mb-1">{language === 'ar' ? 'إجمالي الاستخدامات' : 'Total Uses'}</div>
+                                <div className="text-amber-400 text-sm mb-1">{t('إجمالي الاستخدامات', 'Total Uses')}</div>
                                 <div className="text-2xl font-bold text-white">{promotions.reduce((sum, p) => sum + p.currentUses, 0)}</div>
                             </div>
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-slate-500/30">
-                                <div className="text-slate-400 text-sm mb-1">{language === 'ar' ? 'العروض المنتهية' : 'Expired'}</div>
+                                <div className="text-slate-400 text-sm mb-1">{t('العروض المنتهية', 'Expired')}</div>
                                 <div className="text-2xl font-bold text-white">{promotions.filter(p => p.status === 'expired').length}</div>
                             </div>
                         </div>
@@ -1006,10 +1005,10 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                                         <tr className="bg-slate-700/30">
                                             <th className="px-4 py-3 text-start text-sm text-slate-400">{getLabel('productName')}</th>
                                             <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('discountType')}</th>
-                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{language === 'ar' ? 'الخصم' : 'Discount'}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{t('الخصم', 'Discount')}</th>
                                             <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('targetCustomers')}</th>
-                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{language === 'ar' ? 'الفترة' : 'Period'}</th>
-                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{language === 'ar' ? 'الاستخدام' : 'Usage'}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{t('الفترة', 'Period')}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{t('الاستخدام', 'Usage')}</th>
                                             <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('status')}</th>
                                         </tr>
                                     </thead>
@@ -1033,7 +1032,7 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                                                         {promo.discountType === 'percentage' ? `${promo.discountValue}%` : `${promo.discountValue} ${getLabel('sar')}`}
                                                     </span>
                                                     <div className="text-xs text-slate-500">
-                                                        {language === 'ar' ? 'من' : 'from'} {promo.originalPrice} {getLabel('sar')}
+                                                        {t('من', 'from')} {promo.originalPrice} {getLabel('sar')}
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-3 text-center">
@@ -1046,7 +1045,7 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                                                 </td>
                                                 <td className="px-4 py-3 text-center text-slate-400 text-sm">
                                                     <div>{promo.startDate}</div>
-                                                    <div className="text-slate-500">{language === 'ar' ? 'إلى' : 'to'}</div>
+                                                    <div className="text-slate-500">{t('إلى', 'to')}</div>
                                                     <div>{promo.endDate}</div>
                                                 </td>
                                                 <td className="px-4 py-3 text-center">
@@ -1075,7 +1074,7 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
 
                         {/* Quick Create Promotion Button for Products */}
                         <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
-                            <h3 className="text-lg font-bold text-white mb-4">{language === 'ar' ? 'إنشاء عرض سريع' : 'Quick Create Promotion'}</h3>
+                            <h3 className="text-lg font-bold text-white mb-4">{t('إنشاء عرض سريع', 'Quick Create Promotion')}</h3>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                 {products.filter(p => p.status === 'active').map((product) => (
                                     <button
@@ -1090,7 +1089,7 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                                         <div className="text-slate-400 text-xs mt-1">{product.price} {getLabel('sar')} / {product.unit}</div>
                                         <div className="flex items-center gap-1 mt-2 text-emerald-400 text-xs">
                                             <Plus className="w-3 h-3" />
-                                            {language === 'ar' ? 'إنشاء عرض' : 'Create Offer'}
+                                            {t('إنشاء عرض', 'Create Offer')}
                                         </div>
                                     </button>
                                 ))}
@@ -1105,22 +1104,22 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                         <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
                             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                 <Settings className="w-5 h-5 text-emerald-400" />
-                                {language === 'ar' ? 'إعدادات الحساب' : 'Account Settings'}
+                                {t('إعدادات الحساب', 'Account Settings')}
                             </h3>
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-slate-300 text-sm font-medium mb-2">
-                                        {language === 'ar' ? 'اسم المنشأة' : 'Business Name'}
+                                        {t('اسم المنشأة', 'Business Name')}
                                     </label>
                                     <input
                                         type="text"
                                         className="w-full bg-slate-700/50 border border-slate-600 rounded-xl py-3 px-4 text-white focus:outline-none focus:border-emerald-500"
-                                        defaultValue={language === 'ar' ? 'شركة التوريدات المتحدة' : 'United Supplies Co.'}
+                                        defaultValue={t('شركة التوريدات المتحدة', 'United Supplies Co.')}
                                     />
                                 </div>
                                 <div>
                                     <label className="block text-slate-300 text-sm font-medium mb-2">
-                                        {language === 'ar' ? 'البريد الإلكتروني' : 'Email'}
+                                        {t('البريد الإلكتروني', 'Email')}
                                     </label>
                                     <input
                                         type="email"
@@ -1130,7 +1129,7 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                                 </div>
                                 <div>
                                     <label className="block text-slate-300 text-sm font-medium mb-2">
-                                        {language === 'ar' ? 'رقم الجوال' : 'Phone'}
+                                        {t('رقم الجوال', 'Phone')}
                                     </label>
                                     <input
                                         type="tel"
@@ -1139,7 +1138,7 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                                     />
                                 </div>
                                 <button className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-medium transition-colors">
-                                    {language === 'ar' ? 'حفظ التغييرات' : 'Save Changes'}
+                                    {t('حفظ التغييرات', 'Save Changes')}
                                 </button>
                             </div>
                         </div>

@@ -43,6 +43,7 @@ import {
     Supplier, SupplierProduct, PurchaseInvoice, PurchaseInvoiceItem, SupplierPayment, SupplierBalance,
     PURCHASE_INVOICE_STATUS_TRANSLATIONS, PAYMENT_METHOD_TRANSLATIONS as SUPPLIER_PAYMENT_METHOD_TRANSLATIONS
 } from '../../../services/supplierService';
+import { Language } from '../../../types';
 import {
     discountRequestService,
     DiscountRequest,
@@ -54,7 +55,7 @@ import {
 // ====================== Purchase Invoice Modal ======================
 interface PurchaseInvoiceModalProps {
     supplier: Supplier;
-    language: 'ar' | 'en';
+    language: Language;
     employeeName: string;
     onClose: () => void;
     onSubmit: (data: {
@@ -67,7 +68,7 @@ interface PurchaseInvoiceModalProps {
 const PurchaseInvoiceModal: React.FC<PurchaseInvoiceModalProps> = ({
     supplier, language, employeeName, onClose, onSubmit
 }) => {
-    const t = (ar: string, en: string) => language === 'ar' ? ar : en;
+    const t = (ar: string, en: string) => { const map: Record<string, string> = { ar, en, fr: en, zh: en }; return map[language] || en; };
 
     const [items, setItems] = useState<PurchaseInvoiceItem[]>([
         { productId: '', productName: '', quantity: 1, unitPrice: 0, total: 0 }
@@ -250,7 +251,7 @@ const PurchaseInvoiceModal: React.FC<PurchaseInvoiceModalProps> = ({
 interface SupplierPaymentModalProps {
     supplier: Supplier;
     invoices: PurchaseInvoice[];
-    language: 'ar' | 'en';
+    language: Language;
     employeeName: string;
     onClose: () => void;
     onSubmit: (data: {
@@ -265,7 +266,7 @@ interface SupplierPaymentModalProps {
 const SupplierPaymentModal: React.FC<SupplierPaymentModalProps> = ({
     supplier, invoices, language, employeeName, onClose, onSubmit
 }) => {
-    const t = (ar: string, en: string) => language === 'ar' ? ar : en;
+    const t = (ar: string, en: string) => { const map: Record<string, string> = { ar, en, fr: en, zh: en }; return map[language] || en; };
 
     const [selectedInvoiceId, setSelectedInvoiceId] = useState<string>('');
     const [amount, setAmount] = useState<number>(0);
@@ -436,15 +437,15 @@ const SupplierPaymentModal: React.FC<SupplierPaymentModalProps> = ({
 
 // ====================== Main Component ======================
 interface AccountantPageProps {
-    language: 'ar' | 'en';
+    language: Language;
     employee: Employee;
 }
 
 type TabType = 'overview' | 'invoices' | 'payments' | 'ledger' | 'subscriptions' | 'registrations' | 'suppliers' | 'discount_requests' | 'chart_of_accounts' | 'journal' | 'reports';
 
 const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) => {
-    const t = (ar: string, en: string) => language === 'ar' ? ar : en;
-    const dir = language === 'ar' ? 'rtl' : 'ltr';
+    const t = (ar: string, en: string) => { const map: Record<string, string> = { ar, en, fr: en, zh: en }; return map[language] || en; };
+    const dir = t('rtl', 'ltr');
 
     // States
     const [activeTab, setActiveTab] = useState<TabType>('overview');
@@ -1710,7 +1711,7 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
                                                 <div>
                                                     <span className="text-slate-500">{t('تاريخ الطلب:', 'Date:')}</span>
                                                     <span className="text-slate-300 mr-2">
-                                                        {new Date(req.createdAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
+                                                        {new Date(req.createdAt).toLocaleDateString(t('ar-SA', 'en-US'))}
                                                     </span>
                                                 </div>
                                             </div>
@@ -2499,7 +2500,24 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
                                         }`}>
                                         {trialBalance.isBalanced ? t('متوازن ✓', 'Balanced ✓') : t('غير متوازن ✗', 'Unbalanced ✗')}
                                     </span>
-                                    <button className="flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 text-sm">
+                                    <button onClick={() => {
+                                        if (!trialBalance) return;
+                                        const lines = [
+                                            'ميزان المراجعة — Trial Balance',
+                                            '═'.repeat(60),
+                                            `${t('الكود', 'Code').padEnd(10)}${t('الحساب', 'Account').padEnd(30)}${t('مدين', 'Debit').padStart(12)}${t('دائن', 'Credit').padStart(12)}`,
+                                            '─'.repeat(60),
+                                            ...trialBalance.accounts.map(a => `${a.code.padEnd(10)}${a.name.padEnd(30)}${a.debit > 0 ? a.debit.toLocaleString().padStart(12) : '-'.padStart(12)}${a.credit > 0 ? a.credit.toLocaleString().padStart(12) : '-'.padStart(12)}`),
+                                            '═'.repeat(60),
+                                            `${''.padEnd(10)}${t('الإجمالي', 'Total').padEnd(30)}${trialBalance.totalDebit.toLocaleString().padStart(12)}${trialBalance.totalCredit.toLocaleString().padStart(12)}`,
+                                            '',
+                                            trialBalance.isBalanced ? '✓ متوازن — Balanced' : '✗ غير متوازن — Unbalanced'
+                                        ];
+                                        const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+                                        const url = URL.createObjectURL(blob);
+                                        const a = document.createElement('a'); a.href = url; a.download = `trial_balance_${new Date().toISOString().slice(0,10)}.txt`;
+                                        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+                                    }} className="flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 text-sm">
                                         <Download className="w-4 h-4" />
                                         {t('PDF', 'PDF')}
                                     </button>

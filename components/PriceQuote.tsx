@@ -123,14 +123,14 @@ const PriceQuote: React.FC<PriceQuoteProps> = ({
         printCompany: { ar: 'طباعة (بيانات الشركة)', en: 'Print (Company Info)' }
     };
 
-    const getLabel = (key: string) => t[key as keyof typeof t]?.[language] || key;
+    const getLabel = (key: string) => t[key as keyof typeof t]?.[(language as 'ar' | 'en')] || t[key as keyof typeof t]?.['en'] || key;
 
     const quoteNumber = `ARB-${Date.now().toString().slice(-8)}`;
     const today = new Date();
     const validUntil = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
 
     const formatDate = (date: Date) => {
-        return date.toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US', {
+        return date.toLocaleDateString(language === 'ar' ? 'ar-SA' : language === 'fr' ? 'fr-FR' : language === 'zh' ? 'zh-CN' : 'en-US', {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
@@ -636,7 +636,7 @@ const PriceQuote: React.FC<PriceQuoteProps> = ({
                                 ? <Loader2 className="w-4 h-4 animate-spin" />
                                 : <Download className="w-4 h-4" />
                             }
-                            {language === 'ar' ? 'تصدير PDF احترافي' : 'Export Pro PDF'}
+                            {getLabel('print')}
                         </button>
                         {/* Print PDF - Dropdown */}
                         <div className="relative">
@@ -669,7 +669,7 @@ const PriceQuote: React.FC<PriceQuoteProps> = ({
                                         className="w-full text-right px-4 py-3 hover:bg-slate-100 flex items-center gap-2"
                                     >
                                         <Download className="w-4 h-4 text-teal-500" />
-                                        {language === 'ar' ? 'PDF احترافي (بيانات الشركة)' : 'Pro PDF (Company Info)'}
+                                        {getLabel('printCompany')}
                                     </button>
                                 </div>
                             )}
@@ -803,7 +803,7 @@ const PriceQuote: React.FC<PriceQuoteProps> = ({
                         <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
                             <div className="w-1 h-6 bg-emerald-500 rounded"></div>
                             {getLabel('pricingBreakdown')}
-                            <span className="text-sm font-normal text-slate-500">({activeItems.length} {language === 'ar' ? 'بند' : 'items'})</span>
+                            <span className="text-sm font-normal text-slate-500">({activeItems.length} {getLabel('item')})</span>
                         </h3>
 
                         {activeItems.length === 0 ? (

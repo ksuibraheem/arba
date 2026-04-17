@@ -9,18 +9,21 @@
 import emailjs from '@emailjs/browser';
 
 // ====================== Configuration ======================
-// TODO: Replace these with your actual EmailJS credentials
-// Get them from: https://www.emailjs.com/
+// EmailJS credentials — read from .env (VITE_EMAILJS_*)
 const EMAILJS_CONFIG = {
-    serviceId: 'service_arba_support',    // Create at EmailJS > Email Services
-    publicKey: 'YOUR_PUBLIC_KEY',          // From EmailJS > Account > API Keys
+    serviceId: import.meta.env.VITE_EMAILJS_SERVICE_ID || 'service_arba_support',
+    publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY || '',
     templates: {
-        ticketCreated: 'template_ticket_created',
+        ticketCreated: import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'template_ticket_created',
         ticketResponse: 'template_ticket_response',
         ticketInquiry: 'template_ticket_inquiry',
         ticketClosed: 'template_ticket_closed',
     }
 };
+
+// Centralized admin email — always use env var
+const ADMIN_EMAIL = import.meta.env.VITE_SUPER_ADMIN_EMAIL || 'info@arba-sys.com';
+const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || ADMIN_EMAIL;
 
 // Track initialization
 let initialized = false;
@@ -33,7 +36,7 @@ export function initEmailService() {
     try {
         emailjs.init(EMAILJS_CONFIG.publicKey);
         initialized = true;
-        console.log('📧 Email service initialized');
+
     } catch (error) {
         console.warn('📧 Email service initialization failed:', error);
     }
@@ -62,10 +65,10 @@ export async function sendTicketConfirmation(params: {
             ticket_category: params.category,
             ticket_priority: params.priority,
             company_name: 'أربا للتسعير | Arba Pricing',
-            support_email: 'support@arba-sys.com',
+            support_email: SUPPORT_EMAIL,
             message: `تم استلام تذكرتك بنجاح برقم ${params.ticketNumber}. سيقوم فريق الدعم الفني بمراجعتها والرد عليك في أقرب وقت.`,
         });
-        console.log(`📧 Confirmation email sent to ${params.userEmail} for ticket ${params.ticketNumber}`);
+
         return true;
     } catch (error) {
         console.warn('📧 Failed to send confirmation email:', error);
@@ -96,7 +99,7 @@ export async function sendResponseNotification(params: {
             company_name: 'أربا للتسعير | Arba Pricing',
             message: `تم إضافة رد جديد على تذكرتك رقم ${params.ticketNumber} من قبل ${params.responderName}.`,
         });
-        console.log(`📧 Response notification sent to ${params.userEmail} for ticket ${params.ticketNumber}`);
+
         return true;
     } catch (error) {
         console.warn('📧 Failed to send response notification:', error);
@@ -127,7 +130,7 @@ export async function sendInquiryNotification(params: {
             company_name: 'أربا للتسعير | Arba Pricing',
             message: `لدينا استفسار بخصوص تذكرتك رقم ${params.ticketNumber}. يرجى الرد في أقرب وقت ممكن.`,
         });
-        console.log(`📧 Inquiry notification sent to ${params.userEmail} for ticket ${params.ticketNumber}`);
+
         return true;
     } catch (error) {
         console.warn('📧 Failed to send inquiry notification:', error);
@@ -156,10 +159,10 @@ export async function sendTicketClosedNotification(params: {
             ticket_subject: params.subject,
             status_text: statusText,
             company_name: 'أربا للتسعير | Arba Pricing',
-            support_email: 'support@arba-sys.com',
+            support_email: SUPPORT_EMAIL,
             message: `${statusText} - تذكرة رقم ${params.ticketNumber}: "${params.subject}". إذا كنت بحاجة لمزيد من المساعدة، لا تتردد في فتح تذكرة جديدة.`,
         });
-        console.log(`📧 Closure notification sent to ${params.userEmail} for ticket ${params.ticketNumber}`);
+
         return true;
     } catch (error) {
         console.warn('📧 Failed to send closure notification:', error);
@@ -181,17 +184,17 @@ export async function sendNewTicketAlertToStaff(params: {
 }): Promise<boolean> {
     try {
         await emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templates.ticketCreated, {
-            to_email: 'info@arba-sys.com', // Sending to staff email
+            to_email: ADMIN_EMAIL, // Sending to staff email
             to_name: 'فريق الدعم الفني والإدارة',
             ticket_number: params.ticketNumber,
             ticket_subject: params.subject,
             ticket_category: params.category,
             ticket_priority: params.priority,
             company_name: 'أربا للتسعير | Arba Pricing',
-            support_email: 'support@arba-sys.com',
+            support_email: SUPPORT_EMAIL,
             message: `تذكرة جديدة رقم ${params.ticketNumber} تم إنشاؤها بواسطة ${params.userName} (${params.userEmail}). يُرجى متابعتها.`,
         });
-        console.log(`📧 Staff alert sent for new ticket ${params.ticketNumber}`);
+
         return true;
     } catch (error) {
         console.warn('📧 Failed to send staff alert for new ticket:', error);
@@ -211,7 +214,7 @@ export async function sendResponseAlertToStaff(params: {
 }): Promise<boolean> {
     try {
         await emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templates.ticketResponse, {
-            to_email: 'info@arba-sys.com', // Sending to staff email
+            to_email: ADMIN_EMAIL, // Sending to staff email
             to_name: 'فريق الدعم الفني والإدارة',
             ticket_number: params.ticketNumber,
             ticket_subject: params.subject,
@@ -220,7 +223,7 @@ export async function sendResponseAlertToStaff(params: {
             company_name: 'أربا للتسعير | Arba Pricing',
             message: `قام العميل ${params.userName} بإضافة رد جديد على التذكرة رقم ${params.ticketNumber}.`,
         });
-        console.log(`📧 Staff alert sent for response on ticket ${params.ticketNumber}`);
+
         return true;
     } catch (error) {
         console.warn('📧 Failed to send staff alert for response:', error);
@@ -241,17 +244,17 @@ export async function sendEditRequestAlertToManager(params: {
 }): Promise<boolean> {
     try {
         await emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templates.ticketCreated, {
-            to_email: 'info@arba-sys.com',
+            to_email: ADMIN_EMAIL,
             to_name: 'المدير العام',
             ticket_number: params.invoiceNumber,
             ticket_subject: `طلب تعديل فاتورة #${params.invoiceNumber}`,
             ticket_category: 'طلب تعديل فاتورة',
             ticket_priority: 'عاجل',
             company_name: 'أربا للتسعير | Arba Pricing',
-            support_email: 'info@arba-sys.com',
+            support_email: ADMIN_EMAIL,
             message: `قام ${params.requestedByName} بإرسال طلب تعديل للفاتورة رقم ${params.invoiceNumber}. السبب: ${params.reason}. يُرجى مراجعة الطلب من لوحة التحكم.`,
         });
-        console.log(`📧 Edit request alert sent to manager for invoice ${params.invoiceNumber}`);
+
         return true;
     } catch (error) {
         console.warn('📧 Failed to send edit request alert to manager:', error);
@@ -276,7 +279,7 @@ export async function sendEditRequestDecisionToEmployee(params: {
 
     try {
         await emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templates.ticketResponse, {
-            to_email: params.employeeEmail || 'info@arba-sys.com',
+            to_email: params.employeeEmail || ADMIN_EMAIL,
             to_name: params.employeeName,
             ticket_number: params.invoiceNumber,
             ticket_subject: `${statusText} على طلب تعديل فاتورة #${params.invoiceNumber}`,
@@ -287,7 +290,7 @@ export async function sendEditRequestDecisionToEmployee(params: {
             company_name: 'أربا للتسعير | Arba Pricing',
             message: `${statusText} على طلب تعديل الفاتورة رقم ${params.invoiceNumber} بواسطة ${params.decisionByName}.`,
         });
-        console.log(`📧 Edit request decision (${params.decision}) sent to ${params.employeeEmail}`);
+        // Decision email sent
         return true;
     } catch (error) {
         console.warn('📧 Failed to send edit request decision email:', error);
@@ -306,17 +309,17 @@ export async function sendGenericStaffAlert(params: {
 }): Promise<boolean> {
     try {
         await emailjs.send(EMAILJS_CONFIG.serviceId, EMAILJS_CONFIG.templates.ticketCreated, {
-            to_email: 'info@arba-sys.com',
+            to_email: ADMIN_EMAIL,
             to_name: 'فريق الإدارة',
             ticket_number: '-',
             ticket_subject: params.subject,
             ticket_category: 'إشعار عام',
             ticket_priority: 'متوسط',
             company_name: 'أربا للتسعير | Arba Pricing',
-            support_email: 'info@arba-sys.com',
+            support_email: ADMIN_EMAIL,
             message: `${params.fromName}: ${params.message}`,
         });
-        console.log(`📧 Generic staff alert sent: ${params.subject}`);
+
         return true;
     } catch (error) {
         console.warn('📧 Failed to send generic staff alert:', error);

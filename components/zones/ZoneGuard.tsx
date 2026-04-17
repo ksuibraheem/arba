@@ -11,17 +11,19 @@ import { useRole } from '../../contexts/RoleContext';
 import { ZoneType } from '../../services/projectTypes';
 import { createSecurityAlert } from '../../services/projectService';
 import SecurityRedirect from './SecurityRedirect';
+import { Language } from '../../types';
 
 interface ZoneGuardProps {
     requiredZone: ZoneType;
     children: React.ReactNode;
-    language: 'ar' | 'en';
+    language: Language;
     isDemoMode?: boolean;
 }
 
 const ZoneGuard: React.FC<ZoneGuardProps> = ({ requiredZone, children, language, isDemoMode }) => {
     const { canAccessZone, uid, displayName, isLoading, isAuthenticated } = useRole();
     const hasLoggedViolation = useRef(false);
+    const t = (ar: string, en: string) => { const m: Record<string, string> = { ar, en, fr: en, zh: en }; return m[language] || en; };
 
     // In demo mode, always grant access (no Firestore role data)
     if (isDemoMode) {
@@ -39,9 +41,10 @@ const ZoneGuard: React.FC<ZoneGuardProps> = ({ requiredZone, children, language,
                 severity: 'critical',
                 userId: uid,
                 userName: displayName,
-                description: language === 'ar'
-                    ? `محاولة وصول غير مصرح: ${displayName} حاول الدخول إلى المنطقة ${requiredZone}`
-                    : `Unauthorized access attempt: ${displayName} tried to access Zone ${requiredZone}`,
+                description: t(
+                    `محاولة وصول غير مصرح: ${displayName} حاول الدخول إلى المنطقة ${requiredZone}`,
+                    `Unauthorized access attempt: ${displayName} tried to access Zone ${requiredZone}`
+                ),
                 resolved: false,
                 createdAt: new Date(),
             }).catch(err => console.error('Failed to log security alert:', err));
@@ -55,7 +58,7 @@ const ZoneGuard: React.FC<ZoneGuardProps> = ({ requiredZone, children, language,
                 <div className="text-center">
                     <div className="w-12 h-12 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mx-auto mb-4" />
                     <p className="text-slate-400 text-sm">
-                        {language === 'ar' ? 'جارٍ التحقق من الصلاحيات...' : 'Verifying access...'}
+                        {t('جارٍ التحقق من الصلاحيات...', 'Verifying access...')}
                     </p>
                 </div>
             </div>

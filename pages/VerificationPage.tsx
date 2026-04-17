@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Language } from '../types';
 import { Mail, ArrowRight, ArrowLeft, Check, RefreshCw, Shield, ExternalLink } from 'lucide-react';
 import { PAGE_TRANSLATIONS } from '../companyData';
 import { resendVerificationEmail, checkEmailVerified } from '../firebase/authService';
 
 interface VerificationPageProps {
-    language: 'ar' | 'en';
+    language: Language;
     onNavigate: (page: string) => void;
     email?: string;
     phone?: string;
@@ -120,7 +121,7 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
                 );
                 setResendCooldown(60);
             } else {
-                setError(result.error || (language === 'ar' ? 'حدث خطأ' : 'An error occurred'));
+                setError(result.error || (t('حدث خطأ', 'An error occurred')));
             }
         } catch {
             setError(
@@ -153,7 +154,7 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
                                 <Check className="w-10 h-10 text-green-500" />
                             </div>
                             <h2 className="text-2xl font-bold text-slate-800 mb-2">
-                                {language === 'ar' ? 'تم التحقق بنجاح!' : 'Email Verified!'}
+                                {t('تم التحقق بنجاح!', 'Email Verified!')}
                             </h2>
                             <p className="text-slate-500 mb-8">
                                 {language === 'ar'
@@ -162,7 +163,7 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
                             </p>
                             <div className="flex items-center justify-center gap-2 text-slate-400">
                                 <RefreshCw className="w-5 h-5 animate-spin" />
-                                <span>{language === 'ar' ? 'جاري التحويل...' : 'Redirecting...'}</span>
+                                <span>{t('جاري التحويل...', 'Redirecting...')}</span>
                             </div>
                         </div>
                     ) : (
@@ -177,7 +178,7 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
 
                             {/* Title */}
                             <h2 className="text-xl font-bold text-slate-800 text-center mb-2">
-                                {language === 'ar' ? 'تفقّد بريدك الإلكتروني' : 'Check Your Email'}
+                                {t('تفقّد بريدك الإلكتروني', 'Check Your Email')}
                             </h2>
 
                             {/* Message */}
@@ -229,12 +230,12 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
                                 {isChecking ? (
                                     <>
                                         <RefreshCw className="w-5 h-5 animate-spin" />
-                                        {language === 'ar' ? 'جاري التحقق...' : 'Checking...'}
+                                        {t('جاري التحقق...', 'Checking...')}
                                     </>
                                 ) : (
                                     <>
                                         <Check className="w-5 h-5" />
-                                        {language === 'ar' ? 'تحقق من حالة التفعيل' : 'Check Verification Status'}
+                                        {t('تحقق من حالة التفعيل', 'Check Verification Status')}
                                     </>
                                 )}
                             </button>
@@ -248,7 +249,7 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
                                 {isResending ? (
                                     <>
                                         <RefreshCw className="w-4 h-4 animate-spin" />
-                                        {language === 'ar' ? 'جاري الإرسال...' : 'Sending...'}
+                                        {t('جاري الإرسال...', 'Sending...')}
                                     </>
                                 ) : resendCooldown > 0 ? (
                                     <span className="text-slate-400">
@@ -257,7 +258,7 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
                                 ) : (
                                     <>
                                         <Mail className="w-4 h-4" />
-                                        {language === 'ar' ? 'إعادة إرسال رابط التحقق' : 'Resend Verification Link'}
+                                        {t('إعادة إرسال رابط التحقق', 'Resend Verification Link')}
                                     </>
                                 )}
                             </button>
@@ -272,7 +273,7 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
                         className="w-full mt-6 text-slate-400 hover:text-white transition-colors flex items-center justify-center gap-2"
                     >
                         <ExternalLink className="w-4 h-4" />
-                        {language === 'ar' ? 'الانتقال لصفحة تسجيل الدخول' : 'Go to Login Page'}
+                        {t('الانتقال لصفحة تسجيل الدخول', 'Go to Login Page')}
                     </button>
                 )}
             </div>

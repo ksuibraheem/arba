@@ -1,3 +1,4 @@
+import { Language } from '../../types';
 /**
  * Rate Library Component — مكتبة الأسعار
  * Material rates reference for Saudi construction
@@ -17,7 +18,7 @@ interface RateItem {
 }
 
 interface RateLibraryProps {
-    language: 'ar' | 'en';
+    language: Language;
 }
 
 // Initial Saudi market rates (50 materials as per market rates engine spec)

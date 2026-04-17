@@ -1,3 +1,4 @@
+import { Language } from '../../types';
 /**
  * ProjectChat — شات المشروع الداخلي (محسّن)
  * رسائل نصية + صور + PDF + Excel + AutoCAD
@@ -10,7 +11,7 @@ import { connectService, ChatMessage, MessageCategory, formatChatTime, compressI
 import { projectSupplierService, ChatChannel } from '../../services/projectSupplierService';
 
 interface ProjectChatProps {
-    language: 'ar' | 'en';
+    language: Language;
     userId: string;
     userName: string;
     companyName?: string;
@@ -97,7 +98,7 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ language, userId, userName, c
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const isRtl = language === 'ar';
-    const t = (ar: string, en: string) => language === 'ar' ? ar : en;
+    const t = (ar: string, en: string) => { const m: Record<string, string> = { ar, en, fr: en, zh: en }; return m[language] || en; };
 
     useEffect(() => {
         projectSupplierService.initSampleData();

@@ -6,10 +6,10 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Upload, FileSpreadsheet, X, Check, AlertCircle, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { BaseItem } from '../types';
+import { BaseItem, Language } from '../types';
 
 interface QSSmartImporterProps {
-    language: 'ar' | 'en';
+    language: Language;
     onImport: (items: Partial<BaseItem>[]) => void;
     onClose: () => void;
     onActionLog?: (action: string, target: string, metadata?: any) => void;
@@ -33,7 +33,7 @@ const SYSTEM_FIELDS: { key: string; label: { ar: string; en: string }; required:
 ];
 
 const QSSmartImporter: React.FC<QSSmartImporterProps> = ({ language, onImport, onClose, onActionLog }) => {
-    const t = (ar: string, en: string) => language === 'ar' ? ar : en;
+    const t = (ar: string, en: string) => { const m: Record<string, string> = { ar, en, fr: en, zh: en }; return m[language] || en; };
 
     // Steps: 1=upload, 2=mapping, 3=preview, 4=done
     const [step, setStep] = useState(1);

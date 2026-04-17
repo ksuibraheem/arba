@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Language } from '../types';
 import {
     Users,
     Plus,
@@ -28,7 +29,7 @@ import {
 } from '../services/supplierManagementService';
 
 interface SupplierEmployeeManagerProps {
-    language: 'ar' | 'en';
+    language: Language;
     employees: SupplierEmployee[];
     onUpdate: (employees: SupplierEmployee[]) => void;
     readOnly?: boolean;
@@ -41,6 +42,7 @@ const SupplierEmployeeManager: React.FC<SupplierEmployeeManagerProps> = ({
     readOnly = false
 }) => {
     const isRtl = language === 'ar';
+    const tl = (ar: string, en: string) => { const m: Record<string, string> = { ar, en, fr: en, zh: en }; return m[language] || en; };
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingEmployee, setEditingEmployee] = useState<SupplierEmployee | null>(null);
     const [showPermissions, setShowPermissions] = useState<string | null>(null);
@@ -93,7 +95,7 @@ const SupplierEmployeeManager: React.FC<SupplierEmployeeManagerProps> = ({
         inviteSent: { ar: 'أرسلت الدعوة', en: 'Invite Sent' }
     };
 
-    const getLabel = (key: keyof typeof t) => t[key][language];
+    const getLabel = (key: keyof typeof t) => t[key][language as 'ar' | 'en'] || t[key]['en'];
 
     const permissionGroups = {
         productPermissions: ['view_products', 'add_products', 'edit_products', 'delete_products', 'edit_prices'] as EmployeePermission[],
@@ -237,7 +239,7 @@ const SupplierEmployeeManager: React.FC<SupplierEmployeeManagerProps> = ({
                 {employees.length === 0 ? (
                     <div className="p-8 text-center text-slate-400">
                         <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                        <p>{language === 'ar' ? 'لا يوجد موظفين مضافين' : 'No employees added'}</p>
+                        <p>{tl('لا يوجد موظفين مضافين', 'No employees added')}</p>
                         {!readOnly && (
                             <button
                                 onClick={() => setShowAddModal(true)}
@@ -298,7 +300,7 @@ const SupplierEmployeeManager: React.FC<SupplierEmployeeManagerProps> = ({
                                             </td>
                                             <td className="px-4 py-3 text-center text-slate-400 text-sm">
                                                 {employee.lastLogin
-                                                    ? new Date(employee.lastLogin).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')
+                                                    ? new Date(employee.lastLogin).toLocaleDateString(language === 'ar' ? 'ar-SA' : language === 'fr' ? 'fr-FR' : language === 'zh' ? 'zh-CN' : 'en-US')
                                                     : getLabel('never')
                                                 }
                                             </td>
@@ -350,14 +352,14 @@ const SupplierEmployeeManager: React.FC<SupplierEmployeeManagerProps> = ({
 
             {/* Permission Levels Reference */}
             <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4">
-                <h4 className="text-white font-bold mb-3">{language === 'ar' ? 'مستويات الصلاحيات' : 'Permission Levels'}</h4>
+                <h4 className="text-white font-bold mb-3">{tl('مستويات الصلاحيات', 'Permission Levels')}</h4>
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
                     {Object.entries(EMPLOYEE_ROLE_TRANSLATIONS).map(([role, labels]) => (
                         <div key={role} className="p-3 bg-slate-700/30 rounded-lg text-center">
                             <div className="text-2xl mb-1">{getRoleIcon(role as EmployeeRole)}</div>
                             <div className="text-white text-sm font-medium">{labels[language]}</div>
                             <div className="text-slate-400 text-xs mt-1">
-                                {ROLE_PERMISSIONS[role as EmployeeRole].length} {language === 'ar' ? 'صلاحية' : 'perms'}
+                                {ROLE_PERMISSIONS[role as EmployeeRole].length} {tl('صلاحية', 'perms')}
                             </div>
                         </div>
                     ))}
@@ -511,10 +513,7 @@ const SupplierEmployeeManager: React.FC<SupplierEmployeeManagerProps> = ({
                                     <div>
                                         <p className="text-blue-400 font-medium">{getLabel('sendInvite')}</p>
                                         <p className="text-slate-400 text-sm mt-1">
-                                            {language === 'ar'
-                                                ? 'سيتم إرسال دعوة بالبريد الإلكتروني للموظف لتفعيل حسابه'
-                                                : 'An email invite will be sent to the employee to activate their account'
-                                            }
+                                        {tl('سيتم إرسال دعوة بالبريد الإلكتروني للموظف لتفعيل حسابه', 'An email invite will be sent to the employee to activate their account')}
                                         </p>
                                     </div>
                                 </div>

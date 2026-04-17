@@ -81,7 +81,9 @@ export interface AuthResult {
 }
 
 /**
- * تسجيل مستخدم جديد
+ * تسجيل مستخدم جديد — Atomic Registration
+ * 🛡️ إذا فشلت كتابة Firestore، يتم حذف حساب Auth تلقائياً (Rollback)
+ * هذا يمنع مشكلة "Phantom Users" — مستخدم في Auth بدون بيانات في Firestore
  */
 export const registerWithFirebase = async (userData: {
     userType: 'individual' | 'company' | 'supplier';
@@ -94,40 +96,22 @@ export const registerWithFirebase = async (userData: {
     password: string;
     plan: string;
 }): Promise<AuthResult> => {
+    let firebaseUser: any = null; // Track for rollback
+
     try {
-        // إنشاء حساب في Firebase Auth (مع حماية من التعليق)
+        // ═══════════════════════════════════════════════════════
+        // STEP 1: Create Auth user (CRITICAL — rollback if later steps fail)
+        // ═══════════════════════════════════════════════════════
         const userCredential = await withTimeout(
             createUserWithEmailAndPassword(auth, userData.email, userData.password),
             10000,
             'انتهت مهلة إنشاء الحساب. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.'
         );
+        firebaseUser = userCredential.user;
 
-        const firebaseUser = userCredential.user;
-
-        // تحديث اسم المستخدم
-        await withTimeout(
-            updateProfile(firebaseUser, { displayName: userData.name }),
-            10000,
-            'انتهت مهلة تحديث بيانات الحساب. يرجى المحاولة مرة أخرى.'
-        );
-
-        // إرسال رابط التحقق من البريد الإلكتروني مع إعدادات الإجراء
-        // Fallback: if verification email fails, registration still succeeds
-        let emailVerificationSent = false;
-        try {
-            await withTimeout(
-                sendEmailVerification(firebaseUser, VERIFY_EMAIL_SETTINGS),
-                10000,
-                'تعذر إرسال رابط التحقق من البريد الإلكتروني. يرجى المحاولة لاحقاً.'
-            );
-            emailVerificationSent = true;
-            console.log('✅ تم إنشاء الحساب وإرسال رابط التحقق إلى:', userData.email);
-        } catch (verifyError) {
-            console.warn('⚠️ تم إنشاء الحساب لكن تعذر إرسال رابط التحقق:', verifyError);
-            console.info('ℹ️ يمكن للمستخدم طلب إعادة إرسال الرابط لاحقاً أو الانتقال يدوياً إلى صفحة تسجيل الدخول.');
-        }
-
-        // حفظ بيانات المستخدم في Firestore
+        // ═══════════════════════════════════════════════════════
+        // STEP 2: Write user document to Firestore (CRITICAL — MUST succeed)
+        // ═══════════════════════════════════════════════════════
         const userDoc = {
             uid: firebaseUser.uid,
             userType: userData.userType,
@@ -149,6 +133,48 @@ export const registerWithFirebase = async (userData: {
             'انتهت مهلة حفظ بيانات المستخدم. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.'
         );
 
+        // ═══════════════════════════════════════════════════════
+        // STEP 3: Write userRoles document (CRITICAL — RBAC depends on this)
+        // ═══════════════════════════════════════════════════════
+        await withTimeout(
+            setDoc(doc(db, 'userRoles', firebaseUser.uid), {
+                role: 'user',
+                userType: userData.userType,
+                plan: userData.plan,
+                createdAt: serverTimestamp()
+            }),
+            10000,
+            'انتهت مهلة حفظ صلاحيات المستخدم.'
+        );
+
+        // ═══════════════════════════════════════════════════════
+        // STEP 4: Non-critical operations (won't trigger rollback)
+        // ═══════════════════════════════════════════════════════
+        
+        // Update display name (optional — won't rollback on failure)
+        try {
+            await withTimeout(
+                updateProfile(firebaseUser, { displayName: userData.name }),
+                5000,
+                'تعذر تحديث اسم المستخدم.'
+            );
+        } catch (profileError) {
+            console.warn('⚠️ تعذر تحديث اسم المستخدم (غير حرج):', profileError);
+        }
+
+        // Send email verification (optional — won't rollback on failure)
+        let emailVerificationSent = false;
+        try {
+            await withTimeout(
+                sendEmailVerification(firebaseUser, VERIFY_EMAIL_SETTINGS),
+                5000,
+                'تعذر إرسال رابط التحقق من البريد الإلكتروني.'
+            );
+            emailVerificationSent = true;
+        } catch (verifyError) {
+            console.warn('⚠️ تم إنشاء الحساب لكن تعذر إرسال رابط التحقق:', verifyError);
+        }
+
         return {
             success: true,
             emailVerificationSent,
@@ -168,7 +194,19 @@ export const registerWithFirebase = async (userData: {
             }
         };
     } catch (error: any) {
-        console.error('Registration error:', error);
+        console.error('❌ Registration error:', error);
+
+        // ═══════════════════════════════════════════════════════
+        // ROLLBACK: Delete Auth user if Firestore write failed
+        // This prevents "Phantom Users" (Auth exists, Firestore missing)
+        // ═══════════════════════════════════════════════════════
+        if (firebaseUser) {
+            try {
+                await firebaseUser.delete();
+            } catch (deleteError) {
+                console.error('⚠️ Rollback failed — manual cleanup needed for:', userData.email, deleteError);
+            }
+        }
 
         // Handle timeout errors
         if (error.message && !error.code) {
@@ -223,7 +261,7 @@ export const loginWithFirebase = async (
         if (userDocSnap.exists()) {
             const userData = userDocSnap.data() as Omit<UserData, 'uid'>;
             // Super Admin: override plan to enterprise
-            const isSuperAdmin = (userData.email || email).toLowerCase() === 'info@arba-sys.com';
+            const isSuperAdmin = (userData.email || email).toLowerCase() === (import.meta.env.VITE_SUPER_ADMIN_EMAIL || '').toLowerCase();
             return {
                 success: true,
                 user: {
@@ -235,7 +273,7 @@ export const loginWithFirebase = async (
             };
         } else {
             // المستخدم موجود في Auth لكن ليس في Firestore
-            const isSuperAdmin = (firebaseUser.email || email).toLowerCase() === 'info@arba-sys.com';
+            const isSuperAdmin = (firebaseUser.email || email).toLowerCase() === (import.meta.env.VITE_SUPER_ADMIN_EMAIL || '').toLowerCase();
             return {
                 success: true,
                 user: {
@@ -313,7 +351,6 @@ export const resetPasswordWithFirebase = async (email: string): Promise<AuthResu
             10000,
             'تعذر إرسال رابط إعادة تعيين كلمة المرور. يرجى المحاولة لاحقاً.'
         );
-        console.log('✅ تم إرسال رابط إعادة تعيين كلمة المرور إلى:', email);
         return { success: true };
     } catch (error: any) {
         console.error('Password reset error:', error);
@@ -379,7 +416,6 @@ export const resendVerificationEmail = async (): Promise<AuthResult> => {
             10000,
             'تعذر إرسال رابط التحقق. يرجى المحاولة لاحقاً.'
         );
-        console.log('✅ تم إعادة إرسال رابط التحقق');
         return { success: true };
     } catch (error: any) {
         console.error('Resend verification error:', error);
@@ -418,7 +454,6 @@ export const handleVerificationReturn = async (oobCode: string): Promise<AuthRes
         if (auth.currentUser) {
             await auth.currentUser.reload();
         }
-        console.log('✅ تم تفعيل البريد بنجاح');
         return { success: true };
     } catch (error: any) {
         console.error('Apply action code error:', error);

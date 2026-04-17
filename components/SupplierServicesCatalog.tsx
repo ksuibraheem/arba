@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Language } from '../types';
 import {
     Truck,
     Wrench,
@@ -37,7 +38,7 @@ import {
 } from '../services/supplierManagementService';
 
 interface SupplierServicesCatalogProps {
-    language: 'ar' | 'en';
+    language: Language;
     services: SupplierServicesCatalog;
     onUpdate: (services: SupplierServicesCatalog) => void;
     readOnly?: boolean;
@@ -121,7 +122,7 @@ const SupplierServicesCatalogComponent: React.FC<SupplierServicesCatalogProps> =
     };
 
     const getLabel = (key: string): string => {
-        return (t as any)[key]?.[language] || key;
+        return (t as any)[key]?.[language as 'ar' | 'en'] || (t as any)[key]?.['en'] || key;
     };
 
     const categoryIcons: Record<ServiceCategory, React.ReactNode> = {
@@ -309,7 +310,7 @@ const SupplierServicesCatalogComponent: React.FC<SupplierServicesCatalogProps> =
                     )}
                     {service.priceIndividual !== undefined && (
                         <div>
-                            <span className="text-slate-400">{language === 'ar' ? 'فردي:' : 'Individual:'}</span>
+                            <span className="text-slate-400">{getLabel('price')}:</span>
                             <span className="text-emerald-400 font-bold ms-2">{service.priceIndividual} {getLabel('sar')}</span>
                         </div>
                     )}
@@ -321,7 +322,7 @@ const SupplierServicesCatalogComponent: React.FC<SupplierServicesCatalogProps> =
                     )}
                     {service.responseTime && (
                         <div>
-                            <span className="text-slate-400">{language === 'ar' ? 'الاستجابة:' : 'Response:'}</span>
+                            <span className="text-slate-400">{getLabel('duration')}:</span>
                             <span className="text-white ms-2">{service.responseTime}</span>
                         </div>
                     )}
@@ -363,7 +364,7 @@ const SupplierServicesCatalogComponent: React.FC<SupplierServicesCatalogProps> =
                                 <div className="text-start">
                                     <span className="text-white font-medium">{categoryInfo[language]}</span>
                                     <span className="text-slate-400 text-sm ms-2">
-                                        ({enabledCount}/{categoryServices.length} {language === 'ar' ? 'مفعل' : 'enabled'})
+                                        ({enabledCount}/{categoryServices.length} {getLabel('enabled')})
                                     </span>
                                 </div>
                             </div>

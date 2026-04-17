@@ -93,7 +93,6 @@ export async function createUserData(
         }
 
         await setDoc(doc(db, 'users', uid), userData);
-        console.log('✅ تم حفظ بيانات المستخدم');
         return true;
     } catch (error) {
         console.error('❌ خطأ في حفظ بيانات المستخدم:', error);
@@ -146,8 +145,6 @@ export async function updateUserData(
             ...updates,
             updatedAt: serverTimestamp()
         });
-
-        console.log('✅ تم تحديث بيانات المستخدم');
         return true;
     } catch (error) {
         console.error('❌ خطأ في تحديث بيانات المستخدم:', error);
@@ -181,8 +178,6 @@ export async function createCompanyData(data: CompanyData): Promise<string | nul
             crVerifiedAt: null,
             createdAt: serverTimestamp()
         });
-
-        console.log('✅ تم حفظ بيانات الشركة');
         return companyRef.id;
     } catch (error) {
         console.error('❌ خطأ في حفظ بيانات الشركة:', error);
@@ -225,8 +220,6 @@ export async function createSubscription(data: Omit<SubscriptionData, 'startsAt'
             startsAt: serverTimestamp(),
             createdAt: serverTimestamp()
         });
-
-        console.log('✅ تم إنشاء الاشتراك');
         return subRef.id;
     } catch (error) {
         console.error('❌ خطأ في إنشاء الاشتراك:', error);
@@ -270,8 +263,6 @@ export async function createPaymentRecord(data: Omit<PaymentData, 'createdAt'>):
             ...data,
             createdAt: serverTimestamp()
         });
-
-        console.log('✅ تم إنشاء سجل الدفع');
         return paymentRef.id;
     } catch (error) {
         console.error('❌ خطأ في إنشاء سجل الدفع:', error);
@@ -288,15 +279,15 @@ export async function updatePaymentStatus(
     gatewayTransactionId?: string
 ): Promise<boolean> {
     try {
-        const docRef = doc(db, 'arba_config', `payments__${paymentId}`);
+        // paymentId already includes 'payments__' prefix from createPaymentRecord
+        const docId = paymentId.startsWith('payments__') ? paymentId : `payments__${paymentId}`;
+        const docRef = doc(db, 'arba_config', docId);
 
         await updateDoc(docRef, {
             status,
             gatewayTransactionId: gatewayTransactionId || null,
             updatedAt: serverTimestamp()
         });
-
-        console.log('✅ تم تحديث حالة الدفع');
         return true;
     } catch (error) {
         console.error('❌ خطأ في تحديث حالة الدفع:', error);

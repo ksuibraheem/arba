@@ -3,11 +3,11 @@
  * Employee Dashboard - displays role-specific content
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     LogOut, Home, Settings, Key, Eye, EyeOff, Check, X,
     Calculator, Code, Headphones, Megaphone, CheckCircle,
-    UserCog, Users, Crown, Mail, Bell, User
+    UserCog, Users, Crown, Mail, Bell, User, Clock
 } from 'lucide-react';
 import {
     Employee, EmployeeRole, employeeService,
@@ -23,9 +23,10 @@ import MarketingPage from './roles/MarketingPage';
 import DeputyPage from './roles/DeputyPage';
 import QualityPage from './roles/QualityPage';
 import QuantitySurveyorPage from './roles/QuantitySurveyorPage';
+import { Language } from '../../types';
 
 interface EmployeeDashboardProps {
-    language: 'ar' | 'en';
+    language: Language;
     employee: Employee;
     onLogout: () => void;
     onNavigate: (page: string) => void;
@@ -38,6 +39,8 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
     onNavigate
 }) => {
     const isRtl = language === 'ar';
+    const t = (ar: string, en: string) => { const map: Record<string, string> = { ar, en, fr: en, zh: en }; return map[language] || en; };
+
     const [activeTab, setActiveTab] = useState<'work' | 'profile' | 'settings'>('work');
     const [showChangePassword, setShowChangePassword] = useState(false);
     const [passwordForm, setPasswordForm] = useState({
@@ -49,8 +52,24 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
     const [passwordSuccess, setPasswordSuccess] = useState('');
     const [showOldPassword, setShowOldPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
+    const [showNotifications, setShowNotifications] = useState(false);
+    const [notifications, setNotifications] = useState([
+        { id: '1', text: t('تم تسجيل دخولك بنجاح', 'Logged in successfully'), time: new Date().toLocaleTimeString(t('ar-SA', 'en-US'), { hour: '2-digit', minute: '2-digit' }), read: false },
+        { id: '2', text: t('تذكير: تحديث كلمة المرور كل 90 يوم', 'Reminder: Update password every 90 days'), time: '09:00 AM', read: false },
+        { id: '3', text: t('تحديث النظام: تم إصلاح مشاكل الأداء', 'System update: Performance fixes applied'), time: '08:30 AM', read: true },
+    ]);
+    const notifRef = useRef<HTMLDivElement>(null);
 
-    const t = (ar: string, en: string) => language === 'ar' ? ar : en;
+    // Close notifications on outside click
+    useEffect(() => {
+        const handler = (e: MouseEvent) => { if (notifRef.current && !notifRef.current.contains(e.target as Node)) setShowNotifications(false); };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    const dismissNotif = (id: string) => setNotifications(prev => prev.filter(n => n.id !== id));
+    const unreadCount = notifications.filter(n => !n.read).length;
 
     const roleIcons: Record<EmployeeRole, React.ReactNode> = {
         manager: <Crown className="w-6 h-6" />,
@@ -65,7 +84,7 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
     };
 
     // تغيير كلمة المرور
-    const handleChangePassword = (e: React.FormEvent) => {
+    const handleChangePassword = async (e: React.FormEvent) => {
         e.preventDefault();
         setPasswordError('');
         setPasswordSuccess('');
@@ -80,7 +99,7 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
             return;
         }
 
-        const result = employeeService.changePassword(
+        const result = await employeeService.changePassword(
             employee.employeeNumber,
             passwordForm.oldPassword,
             passwordForm.newPassword
@@ -147,13 +166,42 @@ const EmployeeDashboard: React.FC<EmployeeDashboardProps> = ({
                         >
                             <Home className="w-5 h-5" />
                         </button>
-                        <button
-                            className="p-2 text-slate-400 hover:text-emerald-400 hover:bg-slate-700/50 rounded-lg transition-all relative"
-                            title={t('الإشعارات', 'Notifications')}
-                        >
-                            <Bell className="w-5 h-5" />
-                            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-                        </button>
+                        <div className="relative" ref={notifRef}>
+                            <button
+                                onClick={() => { setShowNotifications(!showNotifications); if (!showNotifications) markAllRead(); }}
+                                className="p-2 text-slate-400 hover:text-emerald-400 hover:bg-slate-700/50 rounded-lg transition-all relative"
+                                title={t('الإشعارات', 'Notifications')}
+                            >
+                                <Bell className="w-5 h-5" />
+                                {unreadCount > 0 && <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>}
+                            </button>
+                            {showNotifications && (
+                                <div className={`absolute top-12 ${isRtl ? 'right-0' : 'left-0'} w-80 bg-slate-800/95 backdrop-blur-xl border border-slate-700/50 rounded-xl shadow-2xl shadow-black/30 z-50 overflow-hidden`}>
+                                    <div className="px-4 py-3 border-b border-slate-700/30 flex items-center justify-between">
+                                        <h4 className="text-sm font-bold text-white">{t('الإشعارات', 'Notifications')}</h4>
+                                        {notifications.length > 0 && <button onClick={markAllRead} className="text-[10px] text-emerald-400 hover:text-emerald-300">{t('قراءة الكل', 'Mark all read')}</button>}
+                                    </div>
+                                    <div className="max-h-[250px] overflow-y-auto">
+                                        {notifications.length === 0 ? (
+                                            <p className="text-center text-slate-500 text-sm py-6">{t('لا توجد إشعارات', 'No notifications')}</p>
+                                        ) : (
+                                            notifications.map(n => (
+                                                <div key={n.id} className={`px-4 py-3 border-b border-slate-700/20 flex items-start justify-between gap-2 hover:bg-slate-700/20 transition-colors ${!n.read ? 'bg-emerald-500/5' : ''}`}>
+                                                    <div className="flex items-start gap-2.5 min-w-0">
+                                                        <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${n.read ? 'bg-slate-600' : 'bg-emerald-400'}`} />
+                                                        <div className="min-w-0">
+                                                            <p className="text-sm text-slate-200 leading-snug">{n.text}</p>
+                                                            <p className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1"><Clock className="w-3 h-3" />{n.time}</p>
+                                                        </div>
+                                                    </div>
+                                                    <button onClick={() => dismissNotif(n.id)} className="text-slate-600 hover:text-red-400 flex-shrink-0"><X className="w-3.5 h-3.5" /></button>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                         <button
                             onClick={onLogout}
                             className="flex items-center gap-2 px-4 py-2 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg transition-all"

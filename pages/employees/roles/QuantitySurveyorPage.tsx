@@ -52,11 +52,12 @@ import { FULL_ITEMS_DATABASE } from '../../../constants';
 import { ProjectType, BaseItem } from '../../../types';
 import QSDataGrid from '../../../components/QSDataGrid';
 import QSSmartImporter from '../../../components/QSSmartImporter';
+import { Language } from '../../../types';
 
 // ====================== Props ======================
 interface QuantitySurveyorPageProps {
     employee: Employee;
-    language: 'ar' | 'en';
+    language: Language;
     onLogout: () => void;
 }
 
@@ -68,7 +69,7 @@ type SectionType = 'home' | 'cost_center' | 'items_library' | 'suppliers_mgmt' |
 const QuantitySurveyorPage: React.FC<QuantitySurveyorPageProps> = ({
     employee, language, onLogout
 }) => {
-    const t = (ar: string, en: string) => language === 'ar' ? ar : en;
+    const t = (ar: string, en: string) => { const map: Record<string, string> = { ar, en, fr: en, zh: en }; return map[language] || en; };
 
     // State
     const [activeSection, setActiveSection] = useState<SectionType>('home');
@@ -736,7 +737,7 @@ const QuantitySurveyorPage: React.FC<QuantitySurveyorPageProps> = ({
                                         ))}
                                     </div>
 
-                                    <button className={`w-full py-3 rounded-xl border text-sm font-semibold transition ${section.actionColor}`}>
+                                    <button onClick={(e) => { e.stopPropagation(); navigateToSection(section.id); }} className={`w-full py-3 rounded-xl border text-sm font-semibold transition ${section.actionColor}`}>
                                         {section.actionLabel} ←
                                     </button>
                                 </div>
@@ -1103,9 +1104,9 @@ const QuantitySurveyorPage: React.FC<QuantitySurveyorPageProps> = ({
                                                     )}
 
                                                     <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-700/50 text-xs text-slate-500">
-                                                        <span>{t('تاريخ الطلب:', 'Requested:')} {new Date(request.requestedAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}</span>
+                                                        <span>{t('تاريخ الطلب:', 'Requested:')} {new Date(request.requestedAt).toLocaleDateString(t('ar-SA', 'en-US'))}</span>
                                                         {request.completedAt && (
-                                                            <span className="text-green-400">{t('اكتمل:', 'Completed:')} {new Date(request.completedAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}</span>
+                                                            <span className="text-green-400">{t('اكتمل:', 'Completed:')} {new Date(request.completedAt).toLocaleDateString(t('ar-SA', 'en-US'))}</span>
                                                         )}
                                                     </div>
                                                 </div>
@@ -1219,7 +1220,7 @@ const QuantitySurveyorPage: React.FC<QuantitySurveyorPageProps> = ({
                                                             <td className="px-4 py-3 text-slate-300">{individual.email}</td>
                                                             <td className="px-4 py-3 text-slate-300" dir="ltr">{individual.phone}</td>
                                                             <td className="px-4 py-3 text-center text-slate-400 text-sm">
-                                                                {new Date(individual.createdAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
+                                                                {new Date(individual.createdAt).toLocaleDateString(t('ar-SA', 'en-US'))}
                                                             </td>
                                                             <td className="px-4 py-3 text-center">
                                                                 <button
@@ -1316,11 +1317,11 @@ const QuantitySurveyorPage: React.FC<QuantitySurveyorPageProps> = ({
                                                         </div>
                                                         <div>
                                                             <p className="text-slate-400">{t('من', 'From')}</p>
-                                                            <p className="text-white">{new Date(request.startDate).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}</p>
+                                                            <p className="text-white">{new Date(request.startDate).toLocaleDateString(t('ar-SA', 'en-US'))}</p>
                                                         </div>
                                                         <div>
                                                             <p className="text-slate-400">{t('إلى', 'To')}</p>
-                                                            <p className="text-white">{new Date(request.endDate).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}</p>
+                                                            <p className="text-white">{new Date(request.endDate).toLocaleDateString(t('ar-SA', 'en-US'))}</p>
                                                         </div>
                                                     </div>
 
@@ -1428,7 +1429,7 @@ const QuantitySurveyorPage: React.FC<QuantitySurveyorPageProps> = ({
                                                                 </td>
                                                                 <td className="px-4 py-3 text-center text-white">{supplierPrices.length}</td>
                                                                 <td className="px-4 py-3 text-center text-slate-400 text-sm">
-                                                                    {new Date(supplier.updatedAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
+                                                                    {new Date(supplier.updatedAt).toLocaleDateString(t('ar-SA', 'en-US'))}
                                                                 </td>
                                                                 <td className="px-4 py-3 text-center">
                                                                     <div className="flex justify-center gap-2">
@@ -2135,7 +2136,7 @@ const QuantitySurveyorPage: React.FC<QuantitySurveyorPageProps> = ({
 // ====================== Review Modal ======================
 interface ReviewModalProps {
     review: SupplierDataReview;
-    language: 'ar' | 'en';
+    language: Language;
     onClose: () => void;
     onApprove: () => void;
     onRequestRevision: (notes: string) => void;
@@ -2143,7 +2144,7 @@ interface ReviewModalProps {
 }
 
 const ReviewModal: React.FC<ReviewModalProps> = ({ review, language, onClose, onApprove, onRequestRevision, onReject }) => {
-    const t = (ar: string, en: string) => language === 'ar' ? ar : en;
+    const t = (ar: string, en: string) => { const map: Record<string, string> = { ar, en, fr: en, zh: en }; return map[language] || en; };
     const [action, setAction] = useState<'approve' | 'revision' | 'reject' | null>(null);
     const [notes, setNotes] = useState('');
 
@@ -2252,7 +2253,7 @@ interface DiscountModalProps {
         reason: string;
         notes?: string;
     };
-    language: 'ar' | 'en';
+    language: Language;
     companies: RegistrationRequest[];
     individuals: RegistrationRequest[];
     onFormChange: (form: any) => void;
@@ -2261,7 +2262,7 @@ interface DiscountModalProps {
 }
 
 const DiscountModal: React.FC<DiscountModalProps> = ({ form, language, companies, individuals, onFormChange, onClose, onSubmit }) => {
-    const t = (ar: string, en: string) => language === 'ar' ? ar : en;
+    const t = (ar: string, en: string) => { const map: Record<string, string> = { ar, en, fr: en, zh: en }; return map[language] || en; };
     const targets = form.targetType === 'company' ? companies : individuals;
 
     return (

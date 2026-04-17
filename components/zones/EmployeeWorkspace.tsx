@@ -1,3 +1,4 @@
+import { Language } from '../../types';
 /**
  * Employee Workspace — مساحة عمل الفريق التقني (Zone A)
  * 
@@ -32,7 +33,7 @@ type WorkspaceSection =
     | 'upload' | 'purge' | 'calc-grid' | 'connect';
 
 interface EmployeeWorkspaceProps {
-    language: 'ar' | 'en';
+    language: Language;
     onOpenPricing: (project?: ArbaProject, setupData?: ProjectSetupData) => void;
     onLogout: () => void;
     userId?: string;

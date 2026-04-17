@@ -56,38 +56,42 @@ export const EDIT_REQUEST_STATUS_TRANSLATIONS: Record<EditRequestStatus, { ar: s
 class InvoiceEditRequestService {
     private requestsKey = 'arba_invoice_edit_requests';
     private versionsKey = 'arba_invoice_versions';
-    private _loaded = false;
+    private fsRequests = 'invoice_edit_requests';
+    private _cache: InvoiceEditRequest[] | null = null;
+    private _listenerInit = false;
 
     constructor() {
-        this.loadFromFirestore().catch(() => {});
+        this.initListener();
     }
 
-    private async loadFromFirestore(): Promise<void> {
-        if (this._loaded) return;
-        try {
-            const requests = await firestoreDataService.getCollection(
-                'invoice_edit_requests', undefined, { localCacheKey: this.requestsKey }
-            );
-            if (requests.length > 0) localStorage.setItem(this.requestsKey, JSON.stringify(requests));
-            const versions = await firestoreDataService.getCollection(
-                'invoice_versions', undefined, { localCacheKey: this.versionsKey }
-            );
-            if (versions.length > 0) localStorage.setItem(this.versionsKey, JSON.stringify(versions));
-            this._loaded = true;
-        } catch { this._loaded = true; }
+    private initListener(): void {
+        if (this._listenerInit) return;
+        this._listenerInit = true;
+        firestoreDataService.subscribeToCollection<InvoiceEditRequest>(
+            this.fsRequests,
+            (items) => {
+                this._cache = items;
+                localStorage.setItem(this.requestsKey, JSON.stringify(items));
+            },
+            undefined, this.requestsKey
+        );
     }
 
     // =================== طلبات التعديل ===================
 
     getRequests(): InvoiceEditRequest[] {
+        if (this._cache !== null) return this._cache;
         const data = localStorage.getItem(this.requestsKey);
         return data ? JSON.parse(data) : [];
     }
 
     private saveRequests(requests: InvoiceEditRequest[]): void {
+        this._cache = requests;
         localStorage.setItem(this.requestsKey, JSON.stringify(requests));
         const items = requests.map(r => ({ id: r.id, data: { ...r } }));
-        firestoreDataService.batchWrite('invoice_edit_requests', items).catch(() => {});
+        firestoreDataService.batchWrite(this.fsRequests, items).catch((err) => {
+            console.error('❌ [InvoiceEdit] Batch write failed:', err);
+        });
     }
 
     getRequestById(id: string): InvoiceEditRequest | null {
@@ -195,7 +199,7 @@ class InvoiceEditRequestService {
 
         // Notify the employee who requested the edit
         sendEditRequestDecisionToEmployee({
-            employeeEmail: 'info@arba-sys.com', // Will be replaced with actual employee email
+            employeeEmail: request.requestedByEmail || import.meta.env.VITE_SUPER_ADMIN_EMAIL || '',
             employeeName: request.requestedByName,
             invoiceNumber: request.invoiceNumber,
             decision: 'approved',
@@ -247,7 +251,7 @@ class InvoiceEditRequestService {
 
         // Notify the employee about rejection
         sendEditRequestDecisionToEmployee({
-            employeeEmail: 'info@arba-sys.com', // Will be replaced with actual employee email
+            employeeEmail: request.requestedByEmail || import.meta.env.VITE_SUPER_ADMIN_EMAIL || '',
             employeeName: request.requestedByName,
             invoiceNumber: request.invoiceNumber,
             decision: 'rejected',

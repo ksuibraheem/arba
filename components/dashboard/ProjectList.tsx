@@ -1,3 +1,4 @@
+import { Language } from '../../types';
 /**
  * Project List Component — قائمة المشاريع
  * Grid/Table view with status filtering and actions
@@ -8,7 +9,7 @@ import { ArbaProject, ProjectStatus } from '../../services/projectTypes';
 
 interface ProjectListProps {
     projects: ArbaProject[];
-    language: 'ar' | 'en';
+    language: Language;
     loading?: boolean;
     onOpenProject: (project: ArbaProject) => void;
     onCreateProject: () => void;

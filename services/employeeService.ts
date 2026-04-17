@@ -4,7 +4,7 @@
  */
 
 import { db } from '../firebase/config';
-import { doc, updateDoc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc, setDoc, getDoc, serverTimestamp, collection, query, where, getDocs, onSnapshot, Unsubscribe, Timestamp } from 'firebase/firestore';
 import {
     ArbaClient, CompanyEmployee, EmployeePermission,
     SubscriptionPlan, PLAN_EMPLOYEE_LIMITS, EXTRA_SEAT_PRICE_SAR,
@@ -254,7 +254,7 @@ async function syncManagerCredentialsToFirestore(creds: typeof DEFAULT_MANAGER_C
             ...creds,
             updatedAt: serverTimestamp(),
         }, { merge: true });
-        console.log('✅ Manager credentials synced to Firestore');
+
     } catch (error) {
         console.warn('⚠️ Failed to sync manager credentials to Firestore:', error);
     }
@@ -271,7 +271,7 @@ export async function loadManagerCredentialsFromFirestore(): Promise<typeof DEFA
             const merged = { ...DEFAULT_MANAGER_CREDENTIALS, ...data };
             localStorage.setItem('arba_manager_credentials', JSON.stringify(merged));
             Object.assign(MANAGER_CREDENTIALS, merged);
-            console.log('✅ Manager credentials loaded from Firestore');
+
             return merged as typeof DEFAULT_MANAGER_CREDENTIALS;
         }
     } catch (error) {
@@ -290,7 +290,7 @@ async function syncEmployeesToFirestore(employees: Employee[]) {
             count: employees.length,
             updatedAt: serverTimestamp(),
         });
-        console.log(`✅ ${employees.length} employees synced to Firestore`);
+
     } catch (error) {
         console.warn('⚠️ Failed to sync employees to Firestore:', error);
     }
@@ -308,14 +308,14 @@ export async function loadEmployeesFromFirestore(): Promise<Employee[]> {
             const employees: Employee[] = data.employees || [];
             // Always sync Firestore → localStorage (even if empty)
             localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(employees));
-            console.log(`✅ ${employees.length} employees loaded from Firestore`);
+
             return employees;
         } else {
-            console.log('ℹ️ No employees document in Firestore yet');
+
             // If no doc in Firestore but we have local data, push local → Firestore
             const localEmployees = getStoredEmployees();
             if (localEmployees.length > 0) {
-                console.log(`⬆️ Pushing ${localEmployees.length} local employees to Firestore`);
+
                 await syncEmployeesToFirestore(localEmployees);
             }
             return localEmployees;
@@ -387,19 +387,30 @@ export const employeeService = {
         return password;
     },
 
-    login(employeeNumberOrEmail: string, password: string): { success: boolean; employee?: Employee | { role: 'manager'; name: string; employeeNumber: string }; error?: string } {
-        // Check manager credentials first
+    async login(employeeNumberOrEmail: string, password: string): Promise<{ success: boolean; employee?: Employee | { role: 'manager'; name: string; employeeNumber: string }; error?: string }> {
+        // Hash the input password
+        const inputHash = await hashPassword(password);
+        // Check manager credentials (compare hash)
         const mgr = getManagerCredentials();
-        if (employeeNumberOrEmail === mgr.employeeNumber && password === mgr.password) {
+        const mgrPasswordHash = await hashPassword(mgr.password);
+        if (employeeNumberOrEmail === mgr.employeeNumber && inputHash === mgrPasswordHash) {
             return { success: true, employee: { role: 'manager', name: mgr.name, employeeNumber: mgr.employeeNumber } };
         }
-        // Check regular employees
+        // Check regular employees — compare against stored passwordHash
         const employees = getStoredEmployees();
         const emp = employees.find(
             e => (e.employeeNumber === employeeNumberOrEmail || e.email === employeeNumberOrEmail)
-                && e.password === password && e.isActive
+                && (e.passwordHash === inputHash || e.password === password) && e.isActive
         );
-        if (emp) return { success: true, employee: emp };
+        if (emp) {
+            // Migration: if employee still has plaintext password, hash it now
+            if (!emp.passwordHash && emp.password === password) {
+                emp.passwordHash = inputHash;
+                delete (emp as any).password;
+                saveEmployees(employees);
+            }
+            return { success: true, employee: emp };
+        }
         return { success: false, error: 'رقم الموظف أو كلمة المرور غير صحيحة' };
     },
 
@@ -415,7 +426,7 @@ export const employeeService = {
         } catch (err) {
             console.warn('⚠️ Firestore load failed during loginAsync, using local data:', err);
         }
-        // 2) استخدام دالة تسجيل الدخول العادية (localStorage مُحدَّث الآن)
+        // 2) استخدام دالة تسجيل الدخول المُحدّثة (hashed)
         return this.login(employeeNumberOrEmail, password);
     },
 
@@ -443,24 +454,29 @@ export const employeeService = {
         }
     },
 
-    changePassword(employeeNumber: string, oldPassword: string, newPassword: string): { success: boolean; error?: string } {
+    async changePassword(employeeNumber: string, oldPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
+        const oldHash = await hashPassword(oldPassword);
+        const newHash = await hashPassword(newPassword);
         // Check manager credentials
         const mgr = getManagerCredentials();
         if (employeeNumber === mgr.employeeNumber) {
-            if (oldPassword !== mgr.password) {
+            const mgrHash = await hashPassword(mgr.password);
+            if (oldHash !== mgrHash) {
                 return { success: false, error: 'كلمة المرور الحالية غير صحيحة' };
             }
             updateManagerCredentials({ password: newPassword });
             return { success: true };
         }
-        // Check regular employees
+        // Check regular employees (compare hash)
         const employees = getStoredEmployees();
         const emp = employees.find(e => e.employeeNumber === employeeNumber);
         if (!emp) return { success: false, error: 'الموظف غير موجود' };
-        if (emp.password !== oldPassword) {
+        const storedHash = emp.passwordHash || await hashPassword(emp.password || '');
+        if (oldHash !== storedHash) {
             return { success: false, error: 'كلمة المرور الحالية غير صحيحة' };
         }
-        emp.password = newPassword;
+        emp.passwordHash = newHash;
+        delete (emp as any).password;
         saveEmployees(employees);
         return { success: true };
     },
@@ -495,74 +511,266 @@ export const employeeService = {
         };
     },
 
-    // Attendance Methods
-    initializeTodayAttendance(): void {
+    // Attendance Methods — Firestore-First
+    async initializeTodayAttendance(): Promise<void> {
         const today = new Date().toISOString().split('T')[0];
-        const key = `arba_attendance_${today}`;
-        if (!localStorage.getItem(key)) {
-            const employees = getStoredEmployees();
-            const records: AttendanceRecord[] = employees.map(emp => ({
-                id: crypto.randomUUID(),
-                employeeId: emp.id,
+        const employees = getStoredEmployees();
+
+        for (const emp of employees) {
+            const docId = `${emp.id}_${today}`;
+            const docRef = doc(db, 'attendance', docId);
+            const existing = await getDoc(docRef);
+
+            if (!existing.exists()) {
+                const record: AttendanceRecord = {
+                    id: docId,
+                    employeeId: emp.id,
+                    employeeNumber: emp.employeeNumber,
+                    employeeName: emp.name,
+                    date: today,
+                    status: 'absent',
+                    totalWorkMinutes: 0,
+                    totalBreakMinutes: 0,
+                    breaks: [],
+                    tasks: [],
+                };
+                await setDoc(docRef, { ...record, createdAt: serverTimestamp() });
+            }
+        }
+    },
+
+    async clockIn(employeeId: string): Promise<AttendanceRecord | null> {
+        const today = new Date().toISOString().split('T')[0];
+        const docId = `${employeeId}_${today}`;
+        const docRef = doc(db, 'attendance', docId);
+        const snap = await getDoc(docRef);
+
+        const now = new Date().toISOString();
+        const isLate = new Date().getHours() >= 9; // Late if after 9 AM
+
+        if (snap.exists()) {
+            await updateDoc(docRef, {
+                clockIn: now,
+                status: isLate ? 'late' : 'present',
+                updatedAt: serverTimestamp(),
+            });
+        } else {
+            const emp = getStoredEmployees().find(e => e.id === employeeId);
+            if (!emp) return null;
+            const record: AttendanceRecord = {
+                id: docId,
+                employeeId,
                 employeeNumber: emp.employeeNumber,
                 employeeName: emp.name,
                 date: today,
-                status: 'present' as const,
-                clockIn: new Date(new Date().setHours(8, 0, 0)).toISOString(),
-                clockOut: undefined,
+                status: isLate ? 'late' : 'present',
+                clockIn: now,
                 totalWorkMinutes: 0,
                 totalBreakMinutes: 0,
                 breaks: [],
                 tasks: [],
-            }));
-            localStorage.setItem(key, JSON.stringify(records));
+            };
+            await setDoc(docRef, { ...record, createdAt: serverTimestamp() });
+        }
+
+        const updated = await getDoc(docRef);
+        return updated.exists() ? (updated.data() as AttendanceRecord) : null;
+    },
+
+    async clockOut(employeeId: string): Promise<AttendanceRecord | null> {
+        const today = new Date().toISOString().split('T')[0];
+        const docId = `${employeeId}_${today}`;
+        const docRef = doc(db, 'attendance', docId);
+        const snap = await getDoc(docRef);
+
+        if (!snap.exists()) return null;
+
+        const record = snap.data() as AttendanceRecord;
+        const now = new Date();
+        const clockInTime = record.clockIn ? new Date(record.clockIn) : now;
+        const totalMinutes = Math.round((now.getTime() - clockInTime.getTime()) / 60000);
+
+        await updateDoc(docRef, {
+            clockOut: now.toISOString(),
+            totalWorkMinutes: Math.max(0, totalMinutes - (record.totalBreakMinutes || 0)),
+            status: totalMinutes < 360 ? 'early_leave' : record.status,
+            updatedAt: serverTimestamp(),
+        });
+
+        const updated = await getDoc(docRef);
+        return updated.exists() ? (updated.data() as AttendanceRecord) : null;
+    },
+
+    async getAttendanceByDate(date: string): Promise<AttendanceRecord[]> {
+        try {
+            const q = query(
+                collection(db, 'attendance'),
+                where('date', '==', date)
+            );
+            const snapshot = await getDocs(q);
+            return snapshot.docs.map(d => d.data() as AttendanceRecord);
+        } catch (error) {
+            console.warn('⚠️ Attendance query failed, falling back to localStorage:', error);
+            const key = `arba_attendance_${date}`;
+            try { return JSON.parse(localStorage.getItem(key) || '[]'); }
+            catch { return []; }
         }
     },
 
-    getAttendanceByDate(date: string): AttendanceRecord[] {
-        const key = `arba_attendance_${date}`;
-        try {
-            return JSON.parse(localStorage.getItem(key) || '[]');
-        } catch { return []; }
-    },
-
     getWeeklyStats() {
+        // Compute from cached attendance data
+        const today = new Date();
+        const weekDays: string[] = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date(today);
+            d.setDate(d.getDate() - i);
+            weekDays.push(d.toISOString().split('T')[0]);
+        }
+
+        // Read from localStorage cache for performance
+        let totalWorkHours = 0;
+        let presentCount = 0;
+        let lateCount = 0;
+        let absentCount = 0;
+        let totalRecords = 0;
+
+        for (const day of weekDays) {
+            const key = `arba_attendance_${day}`;
+            try {
+                const records: AttendanceRecord[] = JSON.parse(localStorage.getItem(key) || '[]');
+                for (const r of records) {
+                    totalRecords++;
+                    totalWorkHours += (r.totalWorkMinutes || 0) / 60;
+                    if (r.status === 'present') presentCount++;
+                    if (r.status === 'late') lateCount++;
+                    if (r.status === 'absent') absentCount++;
+                }
+            } catch {}
+        }
+
+        const attendanceRate = totalRecords > 0
+            ? Math.round(((presentCount + lateCount) / totalRecords) * 100)
+            : 0;
+
         return {
-            totalWorkHours: 160,
-            averageAttendanceRate: 92,
-            lateCount: 3,
-            absentCount: 1,
-            topPerformers: [
-                { employeeId: 'emp_1', name: 'أحمد محمد', workHours: 42 },
-                { employeeId: 'emp_5', name: 'فهد القحطاني', workHours: 40 },
-            ],
-            lowPerformers: [
-                { employeeId: 'emp_4', name: 'نورة السبيعي', workHours: 32 },
-            ],
+            totalWorkHours: Math.round(totalWorkHours),
+            averageAttendanceRate: attendanceRate,
+            lateCount,
+            absentCount,
+            topPerformers: [] as { employeeId: string; name: string; workHours: number }[],
+            lowPerformers: [] as { employeeId: string; name: string; workHours: number }[],
         };
     },
 
     getAttendanceAlerts(): { severity: 'info' | 'warning' | 'critical'; message: { ar: string; en: string }; employeeName: string }[] {
-        return [];
+        const today = new Date().toISOString().split('T')[0];
+        const key = `arba_attendance_${today}`;
+        const alerts: { severity: 'info' | 'warning' | 'critical'; message: { ar: string; en: string }; employeeName: string }[] = [];
+
+        try {
+            const records: AttendanceRecord[] = JSON.parse(localStorage.getItem(key) || '[]');
+            const now = new Date();
+            const currentHour = now.getHours();
+
+            for (const record of records) {
+                if (currentHour >= 9 && record.status === 'absent' && !record.clockIn) {
+                    alerts.push({
+                        severity: 'warning',
+                        message: {
+                            ar: `لم يسجل حضوره حتى الآن`,
+                            en: `Has not clocked in yet`,
+                        },
+                        employeeName: record.employeeName,
+                    });
+                }
+                if (record.status === 'late') {
+                    alerts.push({
+                        severity: 'info',
+                        message: {
+                            ar: `تأخر في الحضور اليوم`,
+                            en: `Was late today`,
+                        },
+                        employeeName: record.employeeName,
+                    });
+                }
+            }
+        } catch {}
+
+        return alerts;
     },
 
     getMonthlyReport(employeeId: string, year: number, month: number) {
         const emp = getStoredEmployees().find(e => e.id === employeeId);
         if (!emp) return null;
+
+        // Compute from stored attendance records
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        let presentDays = 0, lateDays = 0, absentDays = 0;
+        let totalWorkMinutes = 0;
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+            const key = `arba_attendance_${dateStr}`;
+            try {
+                const records: AttendanceRecord[] = JSON.parse(localStorage.getItem(key) || '[]');
+                const empRecord = records.find(r => r.employeeId === employeeId);
+                if (empRecord) {
+                    if (empRecord.status === 'present') presentDays++;
+                    else if (empRecord.status === 'late') { lateDays++; presentDays++; }
+                    else if (empRecord.status === 'absent') absentDays++;
+                    totalWorkMinutes += empRecord.totalWorkMinutes || 0;
+                }
+            } catch {}
+        }
+
+        const totalWorkHours = Math.round(totalWorkMinutes / 60);
+        const workedDays = presentDays + lateDays;
         return {
             employeeName: emp.name,
             month,
             year,
-            presentDays: 22,
-            lateDays: 2,
-            absentDays: 1,
-            totalWorkHours: 176,
-            averageWorkHoursPerDay: 8,
-            attendanceRate: 88,
-            punctualityRate: 91,
+            presentDays,
+            lateDays,
+            absentDays,
+            totalWorkHours,
+            averageWorkHoursPerDay: workedDays > 0 ? Math.round(totalWorkHours / workedDays) : 0,
+            attendanceRate: daysInMonth > 0 ? Math.round((presentDays / daysInMonth) * 100) : 0,
+            punctualityRate: (presentDays + lateDays) > 0 ? Math.round((presentDays / (presentDays + lateDays)) * 100) : 0,
         };
     },
 };
+
+// ========================
+// Real-time Attendance Listener
+// ========================
+
+/**
+ * Subscribe to attendance records for a specific date.
+ * Returns an unsubscribe function.
+ */
+export function subscribeToAttendance(
+    date: string,
+    callback: (records: AttendanceRecord[]) => void
+): Unsubscribe {
+    const q = query(
+        collection(db, 'attendance'),
+        where('date', '==', date)
+    );
+
+    return onSnapshot(q, (snapshot) => {
+        const records = snapshot.docs.map(d => d.data() as AttendanceRecord);
+        // Also cache in localStorage for offline access/ stats computation
+        localStorage.setItem(`arba_attendance_${date}`, JSON.stringify(records));
+        callback(records);
+    }, (error) => {
+        console.error('❌ Attendance listener error:', error);
+        // Fallback to cached data
+        try {
+            const cached = JSON.parse(localStorage.getItem(`arba_attendance_${date}`) || '[]');
+            callback(cached);
+        } catch { callback([]); }
+    });
+}
 
 // ========================
 // Additional Types

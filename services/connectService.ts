@@ -324,7 +324,53 @@ const CONNECT_KEYS = {
     settings: 'arba_connect_settings',
 };
 
+// ═══════════════════════════════════════════════
+// FIRESTORE-FIRST CACHES + LISTENERS
+// ═══════════════════════════════════════════════
+
+const FS_COLLECTIONS: Record<string, string> = {
+    [CONNECT_KEYS.messages]: 'connect_messages',
+    [CONNECT_KEYS.mail]: 'connect_mail',
+    [CONNECT_KEYS.forms]: 'connect_forms',
+    [CONNECT_KEYS.notes]: 'connect_notes',
+};
+
+// In-memory caches populated by onSnapshot
+const _caches: Record<string, any[] | null> = {
+    [CONNECT_KEYS.messages]: null,
+    [CONNECT_KEYS.mail]: null,
+    [CONNECT_KEYS.forms]: null,
+    [CONNECT_KEYS.notes]: null,
+};
+
+let _listenersInit = false;
+
+function initConnectListeners(): void {
+    if (_listenersInit) return;
+    _listenersInit = true;
+
+    Object.entries(FS_COLLECTIONS).forEach(([localKey, fsCollection]) => {
+        firestoreDataService.subscribeToCollection(
+            fsCollection,
+            (items: any[]) => {
+                _caches[localKey] = items;
+                localStorage.setItem(localKey, JSON.stringify(items));
+            },
+            undefined,
+            localKey
+        );
+    });
+}
+
+// Initialize on module load
+initConnectListeners();
+
 function getLocalData<T>(key: string): T[] {
+    // Firestore-first: use cache if available
+    if (_caches[key] !== null && _caches[key] !== undefined) {
+        return _caches[key] as T[];
+    }
+    // Fallback to localStorage
     try {
         const data = localStorage.getItem(key);
         return data ? JSON.parse(data) : [];
@@ -332,21 +378,19 @@ function getLocalData<T>(key: string): T[] {
 }
 
 function saveLocalData<T>(key: string, data: T[]) {
+    // Update cache immediately
+    _caches[key] = data as any[];
     localStorage.setItem(key, JSON.stringify(data));
-    // 🔥 Sync to Firestore
-    const collectionMap: Record<string, string> = {
-        [CONNECT_KEYS.messages]: 'connect_messages',
-        [CONNECT_KEYS.mail]: 'connect_mail',
-        [CONNECT_KEYS.forms]: 'connect_forms',
-        [CONNECT_KEYS.notes]: 'connect_notes',
-    };
-    const fsCollection = collectionMap[key];
+    // Write to Firestore (source of truth)
+    const fsCollection = FS_COLLECTIONS[key];
     if (fsCollection && Array.isArray(data)) {
         const items = (data as any[]).map((item: any) => ({
             id: item.id || crypto.randomUUID(),
             data: { ...item },
         }));
-        firestoreDataService.batchWrite(fsCollection, items).catch(console.error);
+        firestoreDataService.batchWrite(fsCollection, items).catch((err) => {
+            console.error(`❌ [Connect] Batch write failed for ${fsCollection}:`, err);
+        });
     }
 }
 
@@ -551,6 +595,13 @@ export const connectService = {
             }
             saveLocalData(CONNECT_KEYS.forms, forms);
         }
+    },
+
+    deleteForm(formId: string) {
+        const forms = getLocalData<DeliveryForm>(CONNECT_KEYS.forms).filter(f => f.id !== formId);
+        saveLocalData(CONNECT_KEYS.forms, forms);
+        // Also delete from Firestore directly
+        firestoreDataService.deleteDocument('connect_forms', formId).catch(() => {});
     },
 
     getPendingFormsCount(): number {

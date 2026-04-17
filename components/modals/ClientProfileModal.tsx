@@ -1,3 +1,4 @@
+import { Language } from '../../types';
 /**
  * ClientProfileModal — صفحة ملف العميل التفصيلية
  *
@@ -18,11 +19,12 @@ import {
 import * as documentService from '../../services/documentService';
 import * as clientService from '../../services/clientService';
 import * as employeeService from '../../services/employeeService';
+import { getCurrentPlan } from '../../services/subscriptionService';
 
 // ─── Props ───────────────────────────────────────
 interface ClientProfileModalProps {
     client: ArbaClient;
-    language: 'ar' | 'en';
+    language: Language;
     onClose: () => void;
     onClientUpdated: (updated: ArbaClient) => void;
 }
@@ -73,7 +75,7 @@ const ClientProfileModal: React.FC<ClientProfileModalProps> = ({
     const [empForm, setEmpForm] = useState({ name: '', username: '', password: '', permissions: [] as EmployeePermission[] });
     const [empSaving, setEmpSaving] = useState(false);
     const [empError, setEmpError] = useState('');
-    const currentPlan: SubscriptionPlan = 'basic'; // TODO: get from user subscription
+    const currentPlan: SubscriptionPlan = getCurrentPlan();
     const [activeDocUpload, setActiveDocUpload] = useState<string | null>(null);
 
     // ─── Info Form ──────────────────────────────

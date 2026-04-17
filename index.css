@@ -1,0 +1,72 @@
+/* ARBA Pricing Platform — Main Stylesheet */
+@import "tailwindcss";
+@import "./styles/design-tokens.css";
+
+/* ═══════ Base Theme ═══════ */
+@theme {
+  --font-sans: 'Tajawal', 'Inter', sans-serif;
+  --color-primary: #6366F1;
+  --color-primary-dark: #4338CA;
+  --color-accent: #F59E0B;
+}
+
+/* ═══════ Language-Specific Adjustments ═══════ */
+
+/* RTL (Arabic) — wider spacing for Arabic script */
+[dir="rtl"] {
+  font-family: 'Tajawal', 'Inter', sans-serif;
+  letter-spacing: 0;
+  word-spacing: 0.05em;
+}
+
+[dir="rtl"] input,
+[dir="rtl"] textarea {
+  text-align: right;
+}
+
+[dir="rtl"] input[type="tel"],
+[dir="rtl"] input[type="email"],
+[dir="rtl"] input[type="number"] {
+  text-align: left;
+  direction: ltr;
+}
+
+/* LTR (English, French, Chinese) */
+[dir="ltr"] {
+  font-family: 'Inter', 'Noto Sans SC', sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* Chinese — slightly larger base for CJK characters */
+[lang="zh"] {
+  font-family: 'Noto Sans SC', 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  line-height: 1.6;
+}
+
+[lang="zh"] h1,
+[lang="zh"] h2,
+[lang="zh"] h3 {
+  letter-spacing: 0.02em;
+}
+
+/* French — handle longer text with slight reduction */
+[lang="fr"] button,
+[lang="fr"] .nav-link {
+  font-size: 0.95em;
+}
+
+/* Ensure buttons don't overflow with longer translations */
+[lang="fr"] .btn-primary,
+[lang="zh"] .btn-primary {
+  padding-inline: 1.25rem;
+  white-space: nowrap;
+}
+
+/* Responsive text sizing for multilingual tabs */
+[dir="ltr"] .text-\[10px\] {
+  font-size: 0.65rem;
+}
+
+[lang="zh"] .text-\[10px\] {
+  font-size: 0.7rem;
+}

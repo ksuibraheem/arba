@@ -174,7 +174,6 @@ class FirebaseService {
             }));
             const result = await firestoreDataService.batchWrite(collectionName, batchItems);
             if (result.success) {
-                console.log(`✅ Synced ${result.data} items to ${collectionName}`);
             }
             return {
                 success: result.success,
@@ -210,9 +209,6 @@ class FirebaseService {
             });
 
             localStorage.setItem(localKey, JSON.stringify(items));
-
-            console.log(`✅ Imported ${items.length} items from ${collectionName}`);
-
             return {
                 success: true,
                 message: `Imported ${items.length} items`,

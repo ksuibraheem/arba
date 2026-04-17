@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { Language } from '../types';
 import { Upload, CreditCard, Building2, ArrowLeft, ArrowRight, Check, FileText, AlertCircle, Smartphone, RefreshCw } from 'lucide-react';
 import { registrationService, RegistrationRequest, PaymentMethod, PLAN_PRICES } from '../services/registrationService';
 
 interface PaymentUploadPageProps {
-    language: 'ar' | 'en';
+    language: Language;
     onNavigate: (page: string) => void;
     registrationRequestId?: string;
     onPaymentSubmitted?: () => void;
@@ -28,6 +29,7 @@ const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
     registrationRequestId,
     onPaymentSubmitted
 }) => {
+    const t = (ar: string, en: string) => { const map: Record<string, string> = { ar, en, fr: en, zh: en }; return map[language] || en; };
     const isRtl = language === 'ar';
     const Arrow = isRtl ? ArrowLeft : ArrowRight;
 
@@ -66,13 +68,13 @@ const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
 
         // Check file size (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
-            setError(language === 'ar' ? 'حجم الملف يجب أن يكون أقل من 5 ميجابايت' : 'File size must be less than 5MB');
+            setError(t('حجم الملف يجب أن يكون أقل من 5 ميجابايت', 'File size must be less than 5MB'));
             return;
         }
 
         // Check file type
         if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
-            setError(language === 'ar' ? 'يرجى رفع صورة أو ملف PDF' : 'Please upload an image or PDF file');
+            setError(t('يرجى رفع صورة أو ملف PDF', 'Please upload an image or PDF file'));
             return;
         }
 
@@ -87,14 +89,14 @@ const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
 
     const handleSubmit = async () => {
         if (!selectedMethod) {
-            setError(language === 'ar' ? 'يرجى اختيار طريقة الدفع' : 'Please select a payment method');
+            setError(t('يرجى اختيار طريقة الدفع', 'Please select a payment method'));
             return;
         }
 
         const methodInfo = PAYMENT_METHODS.find(m => m.id === selectedMethod);
 
         if (methodInfo?.requiresReceipt && !receiptFile) {
-            setError(language === 'ar' ? 'يرجى رفع إيصال الدفع' : 'Please upload the payment receipt');
+            setError(t('يرجى رفع إيصال الدفع', 'Please upload the payment receipt'));
             return;
         }
 
@@ -135,17 +137,17 @@ const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
                         <Check className="w-10 h-10 text-green-500" />
                     </div>
                     <h2 className="text-2xl font-bold text-slate-800 mb-4">
-                        {language === 'ar' ? 'تم استلام طلب الدفع!' : 'Payment Request Received!'}
+                        {t('تم استلام طلب الدفع!', 'Payment Request Received!')}
                     </h2>
                     <p className="text-slate-500 mb-6">
                         {selectedMethod === 'bank_transfer'
-                            ? (language === 'ar' ? 'تم رفع إيصال الدفع بنجاح. سيتم مراجعته من قبل فريقنا.' : 'Payment receipt uploaded successfully. It will be reviewed by our team.')
-                            : (language === 'ar' ? 'طلب الدفع تم بنجاح. سيتم مراجعته والتأكد منه قريباً.' : 'Payment submitted successfully. It will be verified soon.')
+                            ? (t('تم رفع إيصال الدفع بنجاح. سيتم مراجعته من قبل فريقنا.', 'Payment receipt uploaded successfully. It will be reviewed by our team.'))
+                            : (t('طلب الدفع تم بنجاح. سيتم مراجعته والتأكد منه قريباً.', 'Payment submitted successfully. It will be verified soon.'))
                         }
                     </p>
                     <div className="flex items-center justify-center gap-2 text-slate-400">
                         <RefreshCw className="w-5 h-5 animate-spin" />
-                        <span>{language === 'ar' ? 'جاري التحويل...' : 'Redirecting...'}</span>
+                        <span>{t('جاري التحويل...', 'Redirecting...')}</span>
                     </div>
                 </div>
             </div>
@@ -161,10 +163,10 @@ const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
                         <CreditCard className="w-8 h-8 text-white" />
                     </div>
                     <h1 className="text-2xl font-bold text-white mb-2">
-                        {language === 'ar' ? 'إتمام عملية الدفع' : 'Complete Payment'}
+                        {t('إتمام عملية الدفع', 'Complete Payment')}
                     </h1>
                     <p className="text-slate-400">
-                        {language === 'ar' ? 'اختر طريقة الدفع المناسبة لك' : 'Choose your preferred payment method'}
+                        {t('اختر طريقة الدفع المناسبة لك', 'Choose your preferred payment method')}
                     </p>
                 </div>
 
@@ -173,20 +175,20 @@ const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
                     {/* Amount */}
                     <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6 text-center">
                         <p className="text-green-600 text-sm mb-1">
-                            {language === 'ar' ? 'المبلغ المطلوب' : 'Amount Due'}
+                            {t('المبلغ المطلوب', 'Amount Due')}
                         </p>
                         <p className="text-3xl font-bold text-green-700">
-                            {amount.toLocaleString()} <span className="text-lg">{language === 'ar' ? 'ر.س' : 'SAR'}</span>
+                            {amount.toLocaleString()} <span className="text-lg">{t('ر.س', 'SAR')}</span>
                         </p>
                         <p className="text-green-500 text-sm mt-1">
-                            {language === 'ar' ? 'اشتراك سنوي - الباقة الاحترافية' : 'Annual Subscription - Professional Plan'}
+                            {t('اشتراك سنوي - الباقة الاحترافية', 'Annual Subscription - Professional Plan')}
                         </p>
                     </div>
 
                     {/* Payment Methods */}
                     <div className="mb-6">
                         <h3 className="text-lg font-semibold text-slate-800 mb-4">
-                            {language === 'ar' ? 'طريقة الدفع' : 'Payment Method'}
+                            {t('طريقة الدفع', 'Payment Method')}
                         </h3>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                             {PAYMENT_METHODS.map(method => (
@@ -203,7 +205,7 @@ const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
                                 >
                                     {method.comingSoon && (
                                         <span className="absolute top-1 right-1 bg-amber-500 text-white text-[10px] px-2 py-0.5 rounded-full font-medium">
-                                            {language === 'ar' ? 'قريباً' : 'Soon'}
+                                            {t('قريباً', 'Soon')}
                                         </span>
                                     )}
                                     {method.icon}
@@ -222,23 +224,23 @@ const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
                             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
                                 <h4 className="text-blue-800 font-semibold mb-3 flex items-center gap-2">
                                     <Building2 className="w-5 h-5" />
-                                    {language === 'ar' ? 'معلومات الحساب البنكي' : 'Bank Account Details'}
+                                    {t('معلومات الحساب البنكي', 'Bank Account Details')}
                                 </h4>
                                 <div className="space-y-2 text-sm">
                                     <div className="flex justify-between">
-                                        <span className="text-blue-600">{language === 'ar' ? 'البنك:' : 'Bank:'}</span>
+                                        <span className="text-blue-600">{t('البنك:', 'Bank:')}</span>
                                         <span className="font-medium text-blue-800">{BANK_ACCOUNT_INFO.bankName[language]}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-blue-600">{language === 'ar' ? 'اسم الحساب:' : 'Account Name:'}</span>
+                                        <span className="text-blue-600">{t('اسم الحساب:', 'Account Name:')}</span>
                                         <span className="font-medium text-blue-800">{BANK_ACCOUNT_INFO.accountName[language]}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-blue-600">{language === 'ar' ? 'رقم الآيبان:' : 'IBAN:'}</span>
+                                        <span className="text-blue-600">{t('رقم الآيبان:', 'IBAN:')}</span>
                                         <span className="font-medium text-blue-800 font-mono text-xs" dir="ltr">{BANK_ACCOUNT_INFO.iban}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-blue-600">{language === 'ar' ? 'رقم الحساب:' : 'Account No:'}</span>
+                                        <span className="text-blue-600">{t('رقم الحساب:', 'Account No:')}</span>
                                         <span className="font-medium text-blue-800 font-mono">{BANK_ACCOUNT_INFO.accountNumber}</span>
                                     </div>
                                 </div>
@@ -248,7 +250,7 @@ const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
                             <div>
                                 <h4 className="text-slate-700 font-semibold mb-3 flex items-center gap-2">
                                     <Upload className="w-5 h-5" />
-                                    {language === 'ar' ? 'رفع إيصال الدفع' : 'Upload Payment Receipt'}
+                                    {t('رفع إيصال الدفع', 'Upload Payment Receipt')}
                                 </h4>
                                 <label className={`block border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${receiptFile
                                     ? 'border-green-500 bg-green-50'
@@ -265,17 +267,17 @@ const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
                                             <FileText className="w-10 h-10 mx-auto mb-2" />
                                             <p className="font-medium">{receiptFileName}</p>
                                             <p className="text-sm text-green-500">
-                                                {language === 'ar' ? 'اضغط لتغيير الملف' : 'Click to change file'}
+                                                {t('اضغط لتغيير الملف', 'Click to change file')}
                                             </p>
                                         </div>
                                     ) : (
                                         <div className="text-slate-500">
                                             <Upload className="w-10 h-10 mx-auto mb-2" />
                                             <p className="font-medium">
-                                                {language === 'ar' ? 'اضغط لرفع إيصال الدفع' : 'Click to upload payment receipt'}
+                                                {t('اضغط لرفع إيصال الدفع', 'Click to upload payment receipt')}
                                             </p>
                                             <p className="text-sm">
-                                                {language === 'ar' ? 'صورة أو PDF (حد أقصى 5 ميجا)' : 'Image or PDF (max 5MB)'}
+                                                {t('صورة أو PDF (حد أقصى 5 ميجا)', 'Image or PDF (max 5MB)')}
                                             </p>
                                         </div>
                                     )}
@@ -291,13 +293,10 @@ const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
                                 <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5" />
                                 <div>
                                     <p className="text-amber-800 font-medium">
-                                        {language === 'ar' ? 'ملاحظة مهمة' : 'Important Note'}
+                                        {t('ملاحظة مهمة', 'Important Note')}
                                     </p>
                                     <p className="text-amber-600 text-sm">
-                                        {language === 'ar'
-                                            ? 'بعد إتمام عملية الدفع، ستكون حالة الدفع "تحت المراجعة" وسيتم التحقق منها من قبل فريقنا.'
-                                            : 'After completing the payment, it will be marked as "Under Review" and verified by our team.'
-                                        }
+                                        {t('بعد إتمام عملية الدفع، ستكون حالة الدفع "تحت المراجعة" وسيتم التحقق منها من قبل فريقنا.', 'After completing the payment, it will be marked as "Under Review" and verified by our team.')}
                                     </p>
                                 </div>
                             </div>
@@ -321,13 +320,13 @@ const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
                         {isLoading ? (
                             <>
                                 <RefreshCw className="w-5 h-5 animate-spin" />
-                                {language === 'ar' ? 'جاري المعالجة...' : 'Processing...'}
+                                {t('جاري المعالجة...', 'Processing...')}
                             </>
                         ) : (
                             <>
                                 {selectedMethod === 'bank_transfer'
-                                    ? (language === 'ar' ? 'تأكيد وإرسال الإيصال' : 'Confirm & Submit Receipt')
-                                    : (language === 'ar' ? 'تأكيد الدفع' : 'Confirm Payment')
+                                    ? (t('تأكيد وإرسال الإيصال', 'Confirm & Submit Receipt'))
+                                    : (t('تأكيد الدفع', 'Confirm Payment'))
                                 }
                                 <Arrow className="w-5 h-5" />
                             </>
@@ -341,7 +340,7 @@ const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
                     className="w-full mt-6 text-slate-400 hover:text-white transition-colors flex items-center justify-center gap-2"
                 >
                     <Arrow className="w-4 h-4 rotate-180" />
-                    {language === 'ar' ? 'رجوع' : 'Back'}
+                    {t('رجوع', 'Back')}
                 </button>
             </div>
         </div>

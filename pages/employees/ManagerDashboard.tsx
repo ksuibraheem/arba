@@ -21,6 +21,7 @@ import { invoiceEditRequestService, InvoiceEditRequest, EDIT_REQUEST_STATUS_TRAN
 import { registrationService, RegistrationRequest, USER_TYPE_TRANSLATIONS, REGISTRATION_STATUS_TRANSLATIONS } from '../../services/registrationService';
 import { supportTicketService, SupportTicket, Attachment } from '../../services/supportTicketService';
 import { notificationService, AppNotification, NOTIFICATION_TYPE_TRANSLATIONS } from '../../services/notificationService';
+import { Language } from '../../types';
 import {
     getAllTestPermissions,
     setEmployeeTestPermissions,
@@ -41,7 +42,7 @@ import {
 } from '../../services/testModeService';
 
 interface ManagerDashboardProps {
-    language: 'ar' | 'en';
+    language: Language;
     onLogout: () => void;
     onNavigate: (page: string) => void;
     onStartTestMode?: (plan: string, userType: string) => void;
@@ -49,7 +50,7 @@ interface ManagerDashboardProps {
 
 // ================= Manager Settings Tab Component =================
 interface ManagerSettingsTabProps {
-    language: 'ar' | 'en';
+    language: Language;
     t: (ar: string, en: string) => string;
     onNavigate: (page: string) => void;
 }
@@ -324,10 +325,10 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
             setEmployees(employeeService.getEmployees());
 
             setShowEditModal(false);
-            setFormSuccess(language === 'ar' ? 'تم تحديث البيانات بنجاح' : 'Employee updated successfully');
+            setFormSuccess(t('تم تحديث البيانات بنجاح', 'Employee updated successfully'));
             setTimeout(() => setFormSuccess(''), 3000);
         } catch (error) {
-            setFormError(language === 'ar' ? 'حدث خطأ أثناء التحديث' : 'Error updating employee');
+            setFormError(t('حدث خطأ أثناء التحديث', 'Error updating employee'));
         }
     };
     const [formError, setFormError] = useState('');
@@ -406,14 +407,14 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
         setFormSuccess('');
 
         if (!newEmployee.name || !newEmployee.email || !newEmployee.employeeNumber || !newEmployee.password) {
-            setFormError(language === 'ar' ? 'جميع الحقول مطلوبة' : 'All fields are required');
+            setFormError(t('جميع الحقول مطلوبة', 'All fields are required'));
             return;
         }
 
         try {
             employeeService.addEmployee(newEmployee);
             setEmployees(employeeService.getEmployees());
-            setFormSuccess(language === 'ar' ? 'تم إضافة الموظف بنجاح' : 'Employee added successfully');
+            setFormSuccess(t('تم إضافة الموظف بنجاح', 'Employee added successfully'));
             setNewEmployee({
                 name: '',
                 email: '',
@@ -429,7 +430,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
 
     // حذف موظف
     const handleDeleteEmployee = (id: string) => {
-        if (confirm(language === 'ar' ? 'هل أنت متأكد من حذف هذا الموظف؟' : 'Are you sure you want to delete this employee?')) {
+        if (confirm(t('هل أنت متأكد من حذف هذا الموظف؟', 'Are you sure you want to delete this employee?'))) {
             employeeService.deleteEmployee(id);
             setEmployees(employeeService.getEmployees());
         }
@@ -461,7 +462,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
         }, {} as Record<EmployeeRole, number>)
     };
 
-    const t = (ar: string, en: string) => language === 'ar' ? ar : en;
+    const t = (ar: string, en: string) => { const map: Record<string, string> = { ar, en, fr: en, zh: en }; return map[language] || en; };
 
     const roleIcons: Record<EmployeeRole, React.ReactNode> = {
         manager: <Crown className="w-6 h-6" />,
@@ -1611,8 +1612,8 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
                                                                         }`}
                                                                 >
                                                                     <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${hasPermission
-                                                                        ? language === 'ar' ? '-translate-x-4' : 'translate-x-4'
-                                                                        : language === 'ar' ? 'translate-x-0' : 'translate-x-0.5'
+                                                                        ? t('-translate-x-4', 'translate-x-4')
+                                                                        : t('translate-x-0', 'translate-x-0.5')
                                                                         }`} />
                                                                 </button>
                                                             </td>

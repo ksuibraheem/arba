@@ -46,7 +46,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.scheduledSessionCleanup = exports.getHealthStatus = exports.getMarketRates = exports.autoProcessFile = exports.sanitizeAndProcess = exports.parseAndScan = void 0;
+exports.scheduledSessionCleanup = exports.verifyTapCharge = exports.createTapCharge = exports.certifyProjectPrice = exports.getHealthStatus = exports.getMarketRates = exports.autoProcessFile = exports.sanitizeAndProcess = exports.parseAndScan = void 0;
 const https_1 = require("firebase-functions/v2/https");
 const scheduler_1 = require("firebase-functions/v2/scheduler");
 const admin = __importStar(require("firebase-admin"));
@@ -517,10 +517,247 @@ exports.getHealthStatus = (0, https_1.onCall)({
             'parseAndScan',
             'sanitizeAndProcess',
             'autoProcessFile',
+            'certifyProjectPrice',
             'getMarketRates',
             'getHealthStatus',
         ],
     };
+});
+// =================== Function 6: Certify Price ===================
+/**
+ * certifyProjectPrice — Generate an Official Certified Price
+ *
+ * Part of Arba Hybrid Pricing Engine v2 🏗️
+ *
+ * Processes items through the secret formula with 4-decimal precision,
+ * generates HMAC integrity packet and QR verification hash.
+ *
+ * Used by:
+ * - B2C Portal: Display "Certified Final Price" + QR Code
+ * - B2B Portal: Request official certification for quotes
+ *
+ * ⚠️ Formula lockdown: Total = [(Materials × Wastage) + Labor + Equipment] × Overheads
+ */
+exports.certifyProjectPrice = (0, https_1.onCall)({
+    maxInstances: 10,
+    timeoutSeconds: 60,
+    memory: '512MiB',
+    region: 'us-central1',
+}, async (request) => {
+    // Auth check
+    if (!request.auth) {
+        throw new https_1.HttpsError('unauthenticated', 'يجب تسجيل الدخول / Authentication required');
+    }
+    const { projectId, items, overheadConfig: clientOverhead, pricingSource } = request.data;
+    if (!projectId || !items || !Array.isArray(items) || items.length === 0) {
+        throw new https_1.HttpsError('invalid-argument', 'Project ID and items array are required');
+    }
+    try {
+        const overheadConfig = {
+            overheadMultiplier: clientOverhead?.overheadMultiplier || 1.15,
+            profitMargin: clientOverhead?.profitMargin || 0.10,
+            contingency: clientOverhead?.contingency || 0.05,
+        };
+        // Run certification through the secret formula
+        const result = (0, formulaEngine_1.certifyPrice)(request.auth.uid, projectId, items, overheadConfig, pricingSource || 'arba_benchmark');
+        // Save certified result to Firestore
+        const certRef = db.collection('projects').doc(projectId)
+            .collection('certifications').doc(`cert_${Date.now()}`);
+        await certRef.set({
+            userId: request.auth.uid,
+            finalPrice: result.finalPrice,
+            totalItems: result.totalItems,
+            integrity: result.integrity,
+            qrVerificationHash: result.qrVerificationHash,
+            certifiedAt: result.certifiedAt,
+            pricingSource: result.pricingSource,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        // Log the certification action
+        await db.collection('action_logs').add({
+            userId: request.auth.uid,
+            action: 'price_certification',
+            target: projectId,
+            metadata: {
+                finalPrice: result.finalPrice,
+                totalItems: result.totalItems,
+                pricingSource: result.pricingSource,
+                engineVersion: result.integrity.engineVersion,
+            },
+            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        // Return safe data to client (no formula details)
+        return {
+            success: true,
+            projectId: result.projectId,
+            finalPrice: result.finalPrice,
+            totalItems: result.totalItems,
+            certifiedAt: result.certifiedAt,
+            qrVerificationHash: result.qrVerificationHash,
+            integrity: {
+                signature: result.integrity.signature,
+                version: result.integrity.version,
+                engineVersion: result.integrity.engineVersion,
+            },
+            // Safe item summaries (no formula breakdown)
+            items: result.items.map(item => ({
+                id: item.id,
+                name: item.name,
+                unit: item.unit,
+                qty: item.qty,
+                totalUnitCost: Math.round(item.totalUnitCost * 10000) / 10000,
+                totalLinePrice: Math.round(item.totalLinePrice * 10000) / 10000,
+                category: item.category,
+            })),
+        };
+    }
+    catch (error) {
+        console.error('certifyProjectPrice error:', error);
+        if (error instanceof https_1.HttpsError)
+            throw error;
+        throw new https_1.HttpsError('internal', `Certification failed: ${error.message}`);
+    }
+});
+// =================== Function 7: Tap Payment — Create Charge ===================
+/**
+ * createTapCharge — Server-side Tap Payments charge creation
+ *
+ * Security: Secret key stays on the server, never exposed to the client.
+ * The client calls this function, gets back a redirect URL to Tap's payment page.
+ */
+exports.createTapCharge = (0, https_1.onCall)({
+    maxInstances: 10,
+    timeoutSeconds: 30,
+    memory: '256MiB',
+    region: 'us-central1',
+}, async (request) => {
+    if (!request.auth) {
+        throw new https_1.HttpsError('unauthenticated', 'يجب تسجيل الدخول / Authentication required');
+    }
+    const { amount, currency, userName, userEmail, paymentId, redirectUrl } = request.data;
+    if (!amount || !paymentId || !redirectUrl) {
+        throw new https_1.HttpsError('invalid-argument', 'amount, paymentId, and redirectUrl are required');
+    }
+    // Get Tap secret key from Firebase environment config
+    const tapSecretKey = process.env.TAP_SECRET_KEY || '';
+    const tapMerchantId = process.env.TAP_MERCHANT_ID || '599424';
+    try {
+        const response = await fetch('https://api.tap.company/v2/charges', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${tapSecretKey}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                amount,
+                currency: currency || 'SAR',
+                customer_initiated: true,
+                threeDSecure: true,
+                save_card: false,
+                description: 'Arba Pricing - Professional Plan Subscription',
+                metadata: {
+                    arba_payment_id: paymentId,
+                    arba_user_id: request.auth.uid,
+                    arba_plan: 'professional'
+                },
+                receipt: { email: true, sms: false },
+                customer: {
+                    first_name: userName || 'User',
+                    email: userEmail || request.auth.token.email || ''
+                },
+                merchant: { id: tapMerchantId },
+                source: { id: 'src_all' },
+                redirect: { url: redirectUrl },
+                post: { url: redirectUrl }
+            })
+        });
+        const data = await response.json();
+        if (data.transaction && data.transaction.url) {
+            // Log the payment attempt
+            await db.collection('action_logs').add({
+                userId: request.auth.uid,
+                action: 'tap_charge_created',
+                target: paymentId,
+                metadata: {
+                    amount,
+                    currency: currency || 'SAR',
+                    tapChargeId: data.id,
+                },
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            });
+            return {
+                success: true,
+                paymentUrl: data.transaction.url,
+                chargeId: data.id,
+            };
+        }
+        // API returned error
+        return {
+            success: false,
+            error: data.errors?.[0]?.description || 'Tap API error',
+            details: data.errors || [],
+        };
+    }
+    catch (error) {
+        console.error('createTapCharge error:', error);
+        throw new https_1.HttpsError('internal', `Tap API call failed: ${error.message}`);
+    }
+});
+// =================== Function 8: Tap Payment — Verify Charge ===================
+/**
+ * verifyTapCharge — Server-side Tap charge verification
+ *
+ * After user returns from Tap, verify the payment status and amount.
+ */
+exports.verifyTapCharge = (0, https_1.onCall)({
+    maxInstances: 10,
+    timeoutSeconds: 30,
+    memory: '256MiB',
+    region: 'us-central1',
+}, async (request) => {
+    if (!request.auth) {
+        throw new https_1.HttpsError('unauthenticated', 'يجب تسجيل الدخول / Authentication required');
+    }
+    const { tapChargeId, expectedAmount } = request.data;
+    if (!tapChargeId) {
+        throw new https_1.HttpsError('invalid-argument', 'tapChargeId is required');
+    }
+    const tapSecretKey = process.env.TAP_SECRET_KEY || '';
+    try {
+        const response = await fetch(`https://api.tap.company/v2/charges/${tapChargeId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${tapSecretKey}`,
+                'Accept': 'application/json'
+            }
+        });
+        const charge = await response.json();
+        // Log verification attempt
+        await db.collection('action_logs').add({
+            userId: request.auth.uid,
+            action: 'tap_charge_verified',
+            target: tapChargeId,
+            metadata: {
+                status: charge.status,
+                amount: charge.amount,
+                expectedAmount,
+            },
+            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        return {
+            success: charge.status === 'CAPTURED',
+            status: charge.status,
+            amount: charge.amount,
+            amountMatches: expectedAmount ? charge.amount === expectedAmount : true,
+            transactionId: charge.id,
+            receiptId: charge.receipt?.id,
+        };
+    }
+    catch (error) {
+        console.error('verifyTapCharge error:', error);
+        throw new https_1.HttpsError('internal', `Tap verification failed: ${error.message}`);
+    }
 });
 // =================== Scheduled: Session Cleanup ===================
 /**

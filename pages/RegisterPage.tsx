@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Language } from '../types';
 import {
     Calculator,
     Mail,
@@ -19,7 +20,7 @@ import { COMPANY_INFO, SUBSCRIPTION_PLANS, PAGE_TRANSLATIONS } from '../companyD
 import ArbaLogo from '../components/ArbaLogo';
 
 interface RegisterPageProps {
-    language: 'ar' | 'en';
+    language: Language;
     onNavigate: (page: string) => void;
     onRegister: (userData: RegisterData) => void;
 }
@@ -82,29 +83,29 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ language, onNavigate, onReg
 
         // Validation
         if (!formData.name || !formData.email || !formData.password) {
-            setError(language === 'ar' ? 'يرجى ملء جميع الحقول المطلوبة' : 'Please fill all required fields');
+            setError(t('يرجى ملء جميع الحقول المطلوبة', 'Please fill all required fields'));
             return;
         }
 
         if (formData.password !== confirmPassword) {
-            setError(language === 'ar' ? 'كلمات المرور غير متطابقة' : 'Passwords do not match');
+            setError(t('كلمات المرور غير متطابقة', 'Passwords do not match'));
             return;
         }
 
         // Validate commercial register for companies and suppliers
         if ((userType === 'company' || userType === 'supplier') && formData.commercialRegister) {
             if (!formData.commercialRegister.startsWith('7')) {
-                setError(language === 'ar' ? 'رقم السجل التجاري يجب أن يبدأ بالرقم 7' : 'Commercial register must start with 7');
+                setError(t('رقم السجل التجاري يجب أن يبدأ بالرقم 7', 'Commercial register must start with 7'));
                 return;
             }
             if (!/^\d{10}$/.test(formData.commercialRegister)) {
-                setError(language === 'ar' ? 'رقم السجل التجاري يجب أن يكون 10 أرقام' : 'Commercial register must be 10 digits');
+                setError(t('رقم السجل التجاري يجب أن يكون 10 أرقام', 'Commercial register must be 10 digits'));
                 return;
             }
         }
 
         if (!agreeTerms) {
-            setError(language === 'ar' ? 'يرجى الموافقة على الشروط والأحكام' : 'Please agree to the terms and conditions');
+            setError(t('يرجى الموافقة على الشروط والأحكام', 'Please agree to the terms and conditions'));
             return;
         }
 
@@ -132,7 +133,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ language, onNavigate, onReg
                     className="flex items-center gap-2 text-sm sm:text-base text-slate-400 hover:text-white transition-colors mb-4 sm:mb-8"
                 >
                     <Arrow className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>{language === 'ar' ? 'العودة للرئيسية' : 'Back to Home'}</span>
+                    <span>{t('العودة للرئيسية', 'Back to Home')}</span>
                 </button>
 
                 {/* Register Card */}
@@ -156,7 +157,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ language, onNavigate, onReg
                         {/* User Type Selector */}
                         <div className="mb-4 sm:mb-6">
                             <label className="block text-slate-300 text-sm font-medium mb-2 sm:mb-3">
-                                {language === 'ar' ? 'نوع الحساب' : 'Account Type'}
+                                {t('نوع الحساب', 'Account Type')}
                             </label>
                             <div className="grid grid-cols-3 gap-2 sm:gap-3">
                                 {userTypes.map((type) => {
@@ -187,10 +188,10 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ language, onNavigate, onReg
                             <div>
                                 <label className="block text-slate-300 text-sm font-medium mb-2">
                                     {userType === 'individual'
-                                        ? (language === 'ar' ? 'الاسم الكامل' : 'Full Name')
+                                        ? (t('الاسم الكامل', 'Full Name'))
                                         : userType === 'company'
-                                            ? (language === 'ar' ? 'اسم المسؤول' : 'Contact Person')
-                                            : (language === 'ar' ? 'اسم المسؤول' : 'Contact Person')
+                                            ? (t('اسم المسؤول', 'Contact Person'))
+                                            : (t('اسم المسؤول', 'Contact Person'))
                                     } <span className="text-red-400">*</span>
                                 </label>
                                 <div className="relative">
@@ -199,7 +200,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ language, onNavigate, onReg
                                         type="text"
                                         value={formData.name}
                                         onChange={(e) => handleChange('name', e.target.value)}
-                                        placeholder={language === 'ar' ? 'الاسم الكامل' : 'Full Name'}
+                                        placeholder={t('الاسم الكامل', 'Full Name')}
                                         className="w-full bg-slate-700/50 border border-slate-600 rounded-xl py-3 ps-12 pe-4 text-white placeholder-slate-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all"
                                         autoComplete="name"
                                         required
@@ -220,7 +221,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ language, onNavigate, onReg
                                         type="email"
                                         value={formData.email}
                                         onChange={(e) => handleChange('email', e.target.value)}
-                                        placeholder={language === 'ar' ? 'البريد الإلكتروني' : 'Email Address'}
+                                        placeholder={t('البريد الإلكتروني', 'Email Address')}
                                         className="w-full bg-slate-700/50 border border-slate-600 rounded-xl py-3 ps-12 pe-4 text-white placeholder-slate-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all"
                                         autoComplete="email"
                                         required
@@ -241,7 +242,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ language, onNavigate, onReg
                                         type="tel"
                                         value={formData.phone}
                                         onChange={(e) => handleChange('phone', e.target.value)}
-                                        placeholder={language === 'ar' ? '+966 5x xxx xxxx' : '+966 5x xxx xxxx'}
+                                        placeholder={t('+966 5x xxx xxxx', '+966 5x xxx xxxx')}
                                         className="w-full bg-slate-700/50 border border-slate-600 rounded-xl py-3 ps-12 pe-4 text-white placeholder-slate-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all"
                                         autoComplete="tel"
                                         required
@@ -251,7 +252,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ language, onNavigate, onReg
                                     />
                                 </div>
                                 <p className="text-xs text-slate-500 mt-1">
-                                    {language === 'ar' ? 'أدخل الرقم بصيغة دولية مثل: +966501234567' : 'Enter in international format: +966501234567'}
+                                    {t('أدخل الرقم بصيغة دولية مثل: +966501234567', 'Enter in international format: +966501234567')}
                                 </p>
                             </div>
 
@@ -260,8 +261,8 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ language, onNavigate, onReg
                                 <div>
                                     <label className="block text-slate-300 text-sm font-medium mb-2">
                                         {userType === 'company'
-                                            ? (language === 'ar' ? 'اسم الشركة' : 'Company Name')
-                                            : (language === 'ar' ? 'اسم المنشأة' : 'Business Name')
+                                            ? (t('اسم الشركة', 'Company Name'))
+                                            : (t('اسم المنشأة', 'Business Name'))
                                         } <span className="text-red-400">*</span>
                                     </label>
                                     <div className="relative">
@@ -270,7 +271,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ language, onNavigate, onReg
                                             type="text"
                                             value={formData.company}
                                             onChange={(e) => handleChange('company', e.target.value)}
-                                            placeholder={language === 'ar' ? 'اسم الشركة' : 'Company Name'}
+                                            placeholder={t('اسم الشركة', 'Company Name')}
                                             className="w-full bg-slate-700/50 border border-slate-600 rounded-xl py-3 ps-12 pe-4 text-white placeholder-slate-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all"
                                             autoComplete="organization"
                                             required
@@ -285,7 +286,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ language, onNavigate, onReg
                             {userType === 'company' && (
                                 <div>
                                     <label className="block text-slate-300 text-sm font-medium mb-2">
-                                        {language === 'ar' ? 'رقم السجل التجاري' : 'Commercial Register No.'} <span className="text-red-400">*</span>
+                                        {t('رقم السجل التجاري', 'Commercial Register No.')} <span className="text-red-400">*</span>
                                     </label>
                                     <div className="relative">
                                         <FileText className="absolute top-1/2 -translate-y-1/2 start-4 w-5 h-5 text-slate-500" />
@@ -293,7 +294,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ language, onNavigate, onReg
                                             type="text"
                                             value={formData.commercialRegister || ''}
                                             onChange={(e) => handleChange('commercialRegister', e.target.value)}
-                                            placeholder={language === 'ar' ? 'رقم السجل التجاري' : 'Commercial Register Number'}
+                                            placeholder={t('رقم السجل التجاري', 'Commercial Register Number')}
                                             className="w-full bg-slate-700/50 border border-slate-600 rounded-xl py-3 ps-12 pe-4 text-white placeholder-slate-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all"
                                             required
                                             id="register-commercial"
@@ -307,7 +308,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ language, onNavigate, onReg
                             {userType === 'supplier' && (
                                 <div>
                                     <label className="block text-slate-300 text-sm font-medium mb-2">
-                                        {language === 'ar' ? 'نوع النشاط' : 'Business Type'} <span className="text-red-400">*</span>
+                                        {t('نوع النشاط', 'Business Type')} <span className="text-red-400">*</span>
                                     </label>
                                     <div className="relative">
                                         <Truck className="absolute top-1/2 -translate-y-1/2 start-4 w-5 h-5 text-slate-500" />
@@ -319,12 +320,12 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ language, onNavigate, onReg
                                             id="register-business-type"
                                             name="businessType"
                                         >
-                                            <option value="">{language === 'ar' ? 'اختر نوع النشاط' : 'Select Business Type'}</option>
-                                            <option value="construction">{language === 'ar' ? 'مواد بناء' : 'Construction Materials'}</option>
-                                            <option value="electrical">{language === 'ar' ? 'كهرباء' : 'Electrical'}</option>
-                                            <option value="plumbing">{language === 'ar' ? 'سباكة' : 'Plumbing'}</option>
-                                            <option value="finishing">{language === 'ar' ? 'تشطيبات' : 'Finishing'}</option>
-                                            <option value="general">{language === 'ar' ? 'توريدات عامة' : 'General Supplies'}</option>
+                                            <option value="">{t('اختر نوع النشاط', 'Select Business Type')}</option>
+                                            <option value="construction">{t('مواد بناء', 'Construction Materials')}</option>
+                                            <option value="electrical">{t('كهرباء', 'Electrical')}</option>
+                                            <option value="plumbing">{t('سباكة', 'Plumbing')}</option>
+                                            <option value="finishing">{t('تشطيبات', 'Finishing')}</option>
+                                            <option value="general">{t('توريدات عامة', 'General Supplies')}</option>
                                         </select>
                                     </div>
                                 </div>
@@ -341,7 +342,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ language, onNavigate, onReg
                                         type={showPassword ? 'text' : 'password'}
                                         value={formData.password}
                                         onChange={(e) => handleChange('password', e.target.value)}
-                                        placeholder={language === 'ar' ? 'كلمة المرور' : 'Password'}
+                                        placeholder={t('كلمة المرور', 'Password')}
                                         className="w-full bg-slate-700/50 border border-slate-600 rounded-xl py-3 ps-12 pe-12 text-white placeholder-slate-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all"
                                         autoComplete="new-password"
                                         required
@@ -370,7 +371,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ language, onNavigate, onReg
                                         type={showPassword ? 'text' : 'password'}
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
-                                        placeholder={language === 'ar' ? 'تأكيد كلمة المرور' : 'Confirm Password'}
+                                        placeholder={t('تأكيد كلمة المرور', 'Confirm Password')}
                                         className="w-full bg-slate-700/50 border border-slate-600 rounded-xl py-3 ps-12 pe-4 text-white placeholder-slate-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all"
                                     />
                                 </div>
@@ -429,25 +430,25 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ language, onNavigate, onReg
                                     </div>
                                     <div>
                                         <div className="font-bold text-white">
-                                            {language === 'ar' ? 'حساب مورد مجاني' : 'Free Supplier Account'}
+                                            {t('حساب مورد مجاني', 'Free Supplier Account')}
                                         </div>
                                         <div className="text-sm text-green-300">
-                                            {language === 'ar' ? 'بدون رسوم اشتراك' : 'No subscription fees'}
+                                            {t('بدون رسوم اشتراك', 'No subscription fees')}
                                         </div>
                                     </div>
                                 </div>
                                 <ul className="text-sm text-slate-300 space-y-1 mt-3">
                                     <li className="flex items-center gap-2">
                                         <Check className="w-4 h-4 text-green-400" />
-                                        {language === 'ar' ? 'عرض منتجاتك وأسعارك للعملاء' : 'Display your products and prices to customers'}
+                                        {t('عرض منتجاتك وأسعارك للعملاء', 'Display your products and prices to customers')}
                                     </li>
                                     <li className="flex items-center gap-2">
                                         <Check className="w-4 h-4 text-green-400" />
-                                        {language === 'ar' ? 'استقبال طلبات عروض الأسعار' : 'Receive quote requests'}
+                                        {t('استقبال طلبات عروض الأسعار', 'Receive quote requests')}
                                     </li>
                                     <li className="flex items-center gap-2">
                                         <Check className="w-4 h-4 text-green-400" />
-                                        {language === 'ar' ? 'لوحة تحكم خاصة بالموردين' : 'Dedicated supplier dashboard'}
+                                        {t('لوحة تحكم خاصة بالموردين', 'Dedicated supplier dashboard')}
                                     </li>
                                 </ul>
                             </div>
@@ -476,7 +477,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ language, onNavigate, onReg
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                     </svg>
-                                    <span>{language === 'ar' ? 'جاري إنشاء الحساب...' : 'Creating account...'}</span>
+                                    <span>{t('جاري إنشاء الحساب...', 'Creating account...')}</span>
                                 </span>
                             ) : (
                                 t('register_submit')

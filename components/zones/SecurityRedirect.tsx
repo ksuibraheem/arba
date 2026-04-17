@@ -1,3 +1,4 @@
+import { Language } from '../../types';
 /**
  * Security Redirect — صفحة إعادة التوجيه الأمني
  * 403 Forbidden page with Arba branding
@@ -9,7 +10,7 @@ import React from 'react';
 import { ZoneType } from '../../services/projectTypes';
 
 interface SecurityRedirectProps {
-    language: 'ar' | 'en';
+    language: Language;
     attemptedZone: ZoneType;
     onGoBack?: () => void;
 }

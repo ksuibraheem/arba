@@ -470,7 +470,10 @@ export const calculateProjectCosts = (state: AppState): CalculationResult => {
     const totalProjectCost = totalDirect + state.fixedOverhead;
 
     let globalProfitPercentage = 0;
-    if (state.pricingStrategy === 'target_roi') {
+    if (state.pricingStrategy === 'arba_standard') {
+        // ARBA Standard: 75% markup on cost price (certified pricing model)
+        globalProfitPercentage = 0.75;
+    } else if (state.pricingStrategy === 'target_roi') {
         const targetProfitAmount = state.totalInvestment * (state.targetROI / 100);
         if (totalProjectCost > 0) {
             globalProfitPercentage = targetProfitAmount / totalProjectCost;

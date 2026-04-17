@@ -1,3 +1,4 @@
+import { Language } from '../../types';
 /**
  * ConnectHub — الصفحة الرئيسية لنظام التواصل الداخلي
  * حصري لباقة المؤسسات (Enterprise)
@@ -19,7 +20,7 @@ import CompanySettings from './CompanySettings';
 type ConnectTab = 'overview' | 'chat' | 'mail' | 'gallery' | 'forms' | 'notes' | 'suppliers' | 'team' | 'company' | 'settings';
 
 interface ConnectHubProps {
-    language: 'ar' | 'en';
+    language: Language;
     userId: string;
     userName: string;
     userEmail?: string;
@@ -63,7 +64,7 @@ const ConnectHub: React.FC<ConnectHubProps> = ({
         { id: 'company', icon: <Building2 className="w-5 h-5" />, label: { ar: 'الشركة', en: 'Company' }, color: 'from-teal-500 to-cyan-500' },
     ];
 
-    const t = (ar: string, en: string) => language === 'ar' ? ar : en;
+    const t = (ar: string, en: string) => { const m: Record<string, string> = { ar, en, fr: en, zh: en }; return m[language] || en; };
 
     // Render sub-components
     if (activeTab === 'chat') {

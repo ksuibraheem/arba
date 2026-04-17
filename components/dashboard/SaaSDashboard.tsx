@@ -1,3 +1,4 @@
+import { Language } from '../../types';
 /**
  * Arba SaaS Dashboard — لوحة تحكم أربا السحابية
  * Main dashboard layout with collapsible sidebar navigation
@@ -27,7 +28,7 @@ interface SaaSDashboardProps {
     userId: string;
     userName: string;
     userEmail: string;
-    language: 'ar' | 'en';
+    language: Language;
     onOpenPricing: (project?: ArbaProject) => void;
     onLogout: () => void;
 }

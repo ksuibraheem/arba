@@ -245,86 +245,134 @@ service cloud.firestore {
     // =================== ARBA CONFIG (Employees & Manager) ===================
     // بيانات الموظفين وبيانات المدير
     match /arba_config/{docId} {
-      allow read: if true;
-      allow write: if true;
+      allow read: if true; // Needed for login flow
+      allow write: if isAuth();
     }
 
     // =================== REGISTRATION REQUESTS ===================
     match /registration_requests/{requestId} {
-      allow read: if true;
-      allow write: if true;
+      allow read: if isAuth();
+      allow create: if true; // Allow unauthenticated registration
+      allow update, delete: if isAuth();
     }
 
     // =================== ACCOUNTING ===================
     match /invoices/{invoiceId} {
-      allow read, write: if true;
+      allow read, write: if isAuth();
     }
 
     match /ledger_entries/{entryId} {
-      allow read, write: if true;
+      allow read, write: if isAuth();
     }
 
     match /accounting_clients/{clientId} {
-      allow read, write: if true;
+      allow read, write: if isAuth();
     }
 
     // =================== SUPPLIER DATA (NEW) ===================
     match /supplier_products/{productId} {
-      allow read, write: if true;
+      allow read, write: if isAuth();
     }
 
     match /purchase_invoices/{invoiceId} {
-      allow read, write: if true;
+      allow read, write: if isAuth();
     }
 
     match /supplier_payments/{paymentId} {
-      allow read, write: if true;
+      allow read, write: if isAuth();
     }
 
     // =================== CONNECT (Communication) ===================
     match /connect_messages/{messageId} {
-      allow read, write: if true;
+      allow read, write: if isAuth();
     }
 
     match /connect_mail/{mailId} {
-      allow read, write: if true;
+      allow read, write: if isAuth();
     }
 
     match /connect_forms/{formId} {
-      allow read, write: if true;
+      allow read, write: if isAuth();
     }
 
     match /connect_notes/{noteId} {
-      allow read, write: if true;
+      allow read, write: if isAuth();
     }
 
     match /connect_gallery/{photoId} {
-      allow read, write: if true;
+      allow read, write: if isAuth();
     }
 
     // =================== EMPLOYEES ===================
     match /employees/{empId} {
-      allow read, write: if true;
+      allow read, write: if isAuth();
     }
 
     // =================== NOTIFICATIONS ===================
     match /notifications/{notifId} {
-      allow read, write: if true;
+      allow read, write: if isAuth();
     }
 
     // =================== ATTENDANCE ===================
     match /attendance/{recordId} {
-      allow read, write: if true;
+      allow read, write: if isAuth();
     }
 
     // =================== DISCOUNT REQUESTS ===================
     match /discount_requests/{requestId} {
-      allow read, write: if true;
+      allow read, write: if isAuth();
     }
 
     // =================== SUPPORT TICKETS ===================
     match /support_tickets/{ticketId} {
-      allow read, write: if true;
+      allow read, write: if isAuth();
+    }
+
+    // =================== AUTH USERS ===================
+    match /auth_users/{userId} {
+      allow read, write: if isAuth();
+    }
+
+    // =================== EXTERNAL SUPPLIERS ===================
+    match /external_suppliers/{supplierId} {
+      allow read, write: if isAuth();
+    }
+
+    match /external_prices/{priceId} {
+      allow read, write: if isAuth();
+    }
+
+    // =================== SUPPLIER STORAGE ===================
+    match /supplier_storage/{storageId} {
+      allow read, write: if isAuth();
+    }
+
+    // =================== DATA CORRECTIONS ===================
+    match /data_correction_requests/{requestId} {
+      allow read, write: if isAuth();
+    }
+
+    match /supplier_notifs/{notifId} {
+      allow read, write: if isAuth();
+    }
+
+    // =================== COMPANY SETTINGS ===================
+    match /company_settings/{settingId} {
+      allow read, write: if isAuth();
+    }
+
+    match /company_employees/{empId} {
+      allow read, write: if isAuth();
+    }
+
+    // =================== INVOICE EDIT REQUESTS ===================
+    match /invoice_edit_requests/{requestId} {
+      allow read, write: if isAuth();
+    }
+
+    // =================== SUPPLIER REVIEWS ===================
+    match /supplier_reviews/{reviewId} {
+      allow read, write: if isAuth();
     }
 
     // =================== DEFAULT: DENY ALL ===================

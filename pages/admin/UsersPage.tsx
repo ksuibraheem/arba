@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Language } from '../../types';
 import {
     Users, Search, Plus, Edit2, Trash2, MoreVertical, Mail, Phone,
     Calendar, Shield, Check, X, ChevronLeft, ChevronRight, Download,
@@ -6,7 +7,7 @@ import {
 } from 'lucide-react';
 
 interface UsersPageProps {
-    language: 'ar' | 'en';
+    language: Language;
 }
 
 interface User {

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Language } from '../types';
 import {
     Calculator,
     Target,
@@ -17,7 +18,7 @@ import {
 import { COMPANY_INFO, SERVICES, PAGE_TRANSLATIONS } from '../companyData';
 
 interface AboutPageProps {
-    language: 'ar' | 'en';
+    language: Language;
     onNavigate: (page: string) => void;
 }
 
@@ -68,7 +69,7 @@ const AboutPage: React.FC<AboutPageProps> = ({ language, onNavigate }) => {
                         className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-8"
                     >
                         <Arrow className="w-5 h-5" />
-                        <span>{language === 'ar' ? 'العودة للرئيسية' : 'Back to Home'}</span>
+                        <span>{t('العودة للرئيسية', 'Back to Home')}</span>
                     </button>
 
                     <div className="text-center max-w-3xl mx-auto">
@@ -116,10 +117,10 @@ const AboutPage: React.FC<AboutPageProps> = ({ language, onNavigate }) => {
                 <div className="max-w-7xl mx-auto">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                         {[
-                            { icon: TrendingUp, value: '500+', label: language === 'ar' ? 'مشروع تم تسعيره' : 'Projects Priced' },
-                            { icon: Users, value: '150+', label: language === 'ar' ? 'عميل راضٍ' : 'Happy Clients' },
-                            { icon: Shield, value: '99%', label: language === 'ar' ? 'دقة التسعير' : 'Pricing Accuracy' },
-                            { icon: Award, value: '10+', label: language === 'ar' ? 'سنوات خبرة' : 'Years Experience' }
+                            { icon: TrendingUp, value: '500+', label: t('مشروع تم تسعيره', 'Projects Priced') },
+                            { icon: Users, value: '150+', label: t('عميل راضٍ', 'Happy Clients') },
+                            { icon: Shield, value: '99%', label: t('دقة التسعير', 'Pricing Accuracy') },
+                            { icon: Award, value: '10+', label: t('سنوات خبرة', 'Years Experience') }
                         ].map((stat, index) => (
                             <div key={index} className="text-center p-6 bg-slate-800/50 rounded-2xl border border-slate-700/50">
                                 <stat.icon className="w-8 h-8 text-emerald-400 mx-auto mb-3" />
@@ -160,10 +161,10 @@ const AboutPage: React.FC<AboutPageProps> = ({ language, onNavigate }) => {
                     <h2 className="text-3xl font-bold text-white text-center mb-12">{t('section_contact')}</h2>
                     <div className="grid md:grid-cols-4 gap-6 max-w-4xl mx-auto">
                         {[
-                            { icon: Phone, label: language === 'ar' ? 'الهاتف' : 'Phone', value: COMPANY_INFO.phone, isLtr: true },
-                            { icon: Mail, label: language === 'ar' ? 'البريد' : 'Email', value: COMPANY_INFO.email, isLtr: true },
-                            { icon: MapPin, label: language === 'ar' ? 'الموقع' : 'Location', value: COMPANY_INFO.location[language], isLtr: false },
-                            { icon: Clock, label: language === 'ar' ? 'ساعات العمل' : 'Hours', value: COMPANY_INFO.workingHours[language], isLtr: false }
+                            { icon: Phone, label: t('الهاتف', 'Phone'), value: COMPANY_INFO.phone, isLtr: true },
+                            { icon: Mail, label: t('البريد', 'Email'), value: COMPANY_INFO.email, isLtr: true },
+                            { icon: MapPin, label: t('الموقع', 'Location'), value: COMPANY_INFO.location[language], isLtr: false },
+                            { icon: Clock, label: t('ساعات العمل', 'Hours'), value: COMPANY_INFO.workingHours[language], isLtr: false }
                         ].map((item, index) => (
                             <div key={index} className="text-center p-6 bg-slate-800/50 rounded-2xl border border-slate-700/50">
                                 <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center mx-auto mb-4">
@@ -181,7 +182,7 @@ const AboutPage: React.FC<AboutPageProps> = ({ language, onNavigate }) => {
             <section className="py-20 px-6">
                 <div className="max-w-3xl mx-auto text-center">
                     <h2 className="text-3xl font-bold text-white mb-6">
-                        {language === 'ar' ? 'جاهز للبدء؟' : 'Ready to Get Started?'}
+                        {t('جاهز للبدء؟', 'Ready to Get Started?')}
                     </h2>
                     <p className="text-slate-400 mb-8">
                         {language === 'ar'

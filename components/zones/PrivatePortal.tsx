@@ -24,6 +24,7 @@ const PrivatePortal: React.FC<PrivatePortalProps> = ({
     // We mock fetching "consumer-level" items here, or wrap ItemTable.
 
     const isRtl = language === 'ar';
+    const t = (ar: string, en: string) => { const m: Record<string, string> = { ar, en, fr: en, zh: en }; return m[language] || en; };
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -51,10 +52,10 @@ const PrivatePortal: React.FC<PrivatePortalProps> = ({
                             </div>
                             <div>
                                 <h1 className="text-xl font-bold text-white flex items-center gap-2">
-                                    {language === 'ar' ? 'صفحة الأفراد' : 'Private Individuals Portal'}
+                                    {t('صفحة الأفراد', 'Private Individuals Portal')}
                                 </h1>
                                 <p className="text-purple-300 text-sm">
-                                    {language === 'ar' ? 'تسعير السوق للمستهلك' : 'Consumer Market Pricing'}
+                                    {t('تسعير السوق للمستهلك', 'Consumer Market Pricing')}
                                 </p>
                             </div>
                         </div>
@@ -65,7 +66,7 @@ const PrivatePortal: React.FC<PrivatePortalProps> = ({
                                 </div>
                                 <div className="text-sm">
                                     <div className="font-medium text-white">{userName}</div>
-                                    <div className="text-xs text-purple-300">{language === 'ar' ? 'حساب أفراد' : 'Individual Account'}</div>
+                                    <div className="text-xs text-purple-300">{t('حساب أفراد', 'Individual Account')}</div>
                                 </div>
                             </div>
                             <button
@@ -86,19 +87,17 @@ const PrivatePortal: React.FC<PrivatePortalProps> = ({
                             <div className="flex flex-col items-center justify-center mt-32">
                                 <div className="w-16 h-16 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin"></div>
                                 <p className="mt-4 text-purple-300">
-                                    {language === 'ar' ? 'جاري تحميل أسعار المستهلكين...' : 'Loading Consumer Rates...'}
+                                    {t('جاري تحميل أسعار المستهلكين...', 'Loading Consumer Rates...')}
                                 </p>
                             </div>
                         ) : (
                             <div className="bg-slate-800/80 backdrop-blur-xl border border-purple-500/20 rounded-2xl p-8 shadow-2xl">
                                 <div className="text-center mb-8">
                                     <h2 className="text-2xl font-bold text-white mb-2">
-                                        {language === 'ar' ? 'مرحباً بك في صفحة الأفراد' : 'Welcome to the Private Portal'}
+                                        {t('مرحباً بك في صفحة الأفراد', 'Welcome to the Private Portal')}
                                     </h2>
                                     <p className="text-slate-400">
-                                        {language === 'ar'
-                                            ? 'الأسعار المعروضة هنا مخصصة للمستهلكين المباشرين، وتم فلترتها لضمان الخصوصية.'
-                                            : 'The rates shown here are for direct consumers and have been filtered for privacy.'}
+                                        {t('الأسعار المعروضة هنا مخصصة للمستهلكين المباشرين، وتم فلترتها لضمان الخصوصية.', 'The rates shown here are for direct consumers and have been filtered for privacy.')}
                                     </p>
                                 </div>
 
@@ -108,10 +107,10 @@ const PrivatePortal: React.FC<PrivatePortalProps> = ({
                                             <Crown className="w-6 h-6 text-purple-400" />
                                         </div>
                                         <h3 className="text-lg font-bold text-white mb-2">
-                                            {language === 'ar' ? 'أسعار السوق (أفراد)' : 'Market Rates (Consumer)'}
+                                            {t('أسعار السوق (أفراد)', 'Market Rates (Consumer)')}
                                         </h3>
                                         <p className="text-sm text-slate-400">
-                                            {language === 'ar' ? 'استعرض أحدث أسعار البناء والتشطيب في السوق' : 'Browse latest construction and finishing market rates'}
+                                            {t('استعرض أحدث أسعار البناء والتشطيب في السوق', 'Browse latest construction and finishing market rates')}
                                         </p>
                                     </div>
                                     <div className="bg-slate-900/50 p-6 rounded-xl border border-slate-700/50 hover:border-purple-500/50 transition-colors cursor-pointer group">
@@ -119,10 +118,10 @@ const PrivatePortal: React.FC<PrivatePortalProps> = ({
                                             <Lock className="w-6 h-6 text-purple-400" />
                                         </div>
                                         <h3 className="text-lg font-bold text-white mb-2">
-                                            {language === 'ar' ? 'مشاريعي المحمية' : 'Protected Projects'}
+                                            {t('مشاريعي المحمية', 'Protected Projects')}
                                         </h3>
                                         <p className="text-sm text-slate-400">
-                                            {language === 'ar' ? 'عرض المشاريع الخاصة المرتبطة بهويتك' : 'View private projects linked to your identity'}
+                                            {t('عرض المشاريع الخاصة المرتبطة بهويتك', 'View private projects linked to your identity')}
                                         </p>
                                     </div>
                                 </div>

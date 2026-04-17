@@ -1553,11 +1553,10 @@ class SupplierService {
                 }
             ];
 
-            console.log('عدد المنتجات اليدوية:', sampleProducts.length);
             for (const product of sampleProducts) {
                 this.addProduct(product);
             }
-            console.log('تم إضافة المنتجات اليدوية، الإجمالي الآن:', this.getProducts().length);
+            // Products initialized
 
             // =================== إضافة منتجات من ITEMS_DATABASE ===================
             // ربط تصنيفات ITEMS_DATABASE بتصنيفات الموردين والموردين المناسبين
@@ -1576,7 +1575,7 @@ class SupplierService {
             };
 
             // تحويل بنود ITEMS_DATABASE إلى منتجات
-            console.log('بدء تحميل ITEMS_DATABASE، عدد البنود:', FULL_ITEMS_DATABASE.length);
+
             let addedCount = 0;
             for (const item of FULL_ITEMS_DATABASE) {
                 try {
@@ -1623,7 +1622,7 @@ class SupplierService {
                     console.error('خطأ في إضافة بند:', item.id, error);
                 }
             }
-            console.log('تم إضافة', addedCount, 'بند من ITEMS_DATABASE');
+
         }
     }
 }

@@ -1,3 +1,4 @@
+import { Language } from '../../types';
 /**
  * Client Manager Component — إدارة العملاء
  * Client directory with CRUD and project linking
@@ -9,7 +10,7 @@ import ClientProfileModal from '../modals/ClientProfileModal';
 
 interface ClientManagerProps {
     clients: ArbaClient[];
-    language: 'ar' | 'en';
+    language: Language;
     loading?: boolean;
     onCreateClient: (data: Partial<ArbaClient>) => void;
     onUpdateClient: (id: string, data: Partial<ArbaClient>) => void;

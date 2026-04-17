@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
+import { Language } from '../types';
 import { Mail, ArrowLeft, ArrowRight, KeyRound, Check, RefreshCw } from 'lucide-react';
 import { PAGE_TRANSLATIONS } from '../companyData';
 import { resetPasswordWithFirebase } from '../firebase/authService';
 
 interface PasswordResetPageProps {
-    language: 'ar' | 'en';
+    language: Language;
     onNavigate: (page: string) => void;
 }
 
 const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ language, onNavigate }) => {
+    const t = (ar: string, en: string) => { const map: Record<string, string> = { ar, en, fr: en, zh: en }; return map[language] || en; };
     const isRtl = language === 'ar';
     const Arrow = isRtl ? ArrowLeft : ArrowRight;
 
@@ -20,14 +22,14 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ language, onNavig
     // Send password reset link via email
     const handleSendResetLink = async () => {
         if (!email) {
-            setError(language === 'ar' ? 'يرجى إدخال البريد الإلكتروني' : 'Please enter your email');
+            setError(t('يرجى إدخال البريد الإلكتروني', 'Please enter your email'));
             return;
         }
 
         // Basic email validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            setError(language === 'ar' ? 'يرجى إدخال بريد إلكتروني صحيح' : 'Please enter a valid email');
+            setError(t('يرجى إدخال بريد إلكتروني صحيح', 'Please enter a valid email'));
             return;
         }
 
@@ -39,10 +41,10 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ language, onNavig
             if (result.success) {
                 setStep('sent');
             } else {
-                setError(result.error || (language === 'ar' ? 'حدث خطأ' : 'An error occurred'));
+                setError(result.error || (t('حدث خطأ', 'An error occurred')));
             }
         } catch (err) {
-            setError(language === 'ar' ? 'حدث خطأ غير متوقع. يرجى المحاولة لاحقاً.' : 'An unexpected error occurred. Please try later.');
+            setError(t('حدث خطأ غير متوقع. يرجى المحاولة لاحقاً.', 'An unexpected error occurred. Please try later.'));
         } finally {
             setIsLoading(false);
         }
@@ -73,7 +75,7 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ language, onNavig
                         <KeyRound className="w-8 h-8 text-white" />
                     </div>
                     <h1 className="text-2xl font-bold text-white">
-                        {language === 'ar' ? 'استعادة كلمة المرور' : 'Reset Password'}
+                        {t('استعادة كلمة المرور', 'Reset Password')}
                     </h1>
                 </div>
 
@@ -86,7 +88,7 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ language, onNavig
                                 <Check className="w-10 h-10 text-green-500" />
                             </div>
                             <h2 className="text-2xl font-bold text-slate-800 mb-2">
-                                {language === 'ar' ? 'تم الإرسال!' : 'Link Sent!'}
+                                {t('تم الإرسال!', 'Link Sent!')}
                             </h2>
                             <p className="text-slate-500 mb-4">
                                 {language === 'ar'
@@ -115,12 +117,12 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ language, onNavig
                                 {isLoading ? (
                                     <>
                                         <RefreshCw className="w-4 h-4 animate-spin" />
-                                        {language === 'ar' ? 'جاري الإرسال...' : 'Sending...'}
+                                        {t('جاري الإرسال...', 'Sending...')}
                                     </>
                                 ) : (
                                     <>
                                         <Mail className="w-4 h-4" />
-                                        {language === 'ar' ? 'إعادة إرسال الرابط' : 'Resend Link'}
+                                        {t('إعادة إرسال الرابط', 'Resend Link')}
                                     </>
                                 )}
                             </button>
@@ -130,7 +132,7 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ language, onNavig
                                 onClick={() => onNavigate('login')}
                                 className="w-full py-3 bg-gradient-to-r from-green-500 to-lime-500 text-white rounded-xl font-bold hover:from-green-400 hover:to-lime-400 transition-all flex items-center justify-center gap-2 shadow-lg shadow-green-500/20"
                             >
-                                {language === 'ar' ? 'العودة لتسجيل الدخول' : 'Back to Login'}
+                                {t('العودة لتسجيل الدخول', 'Back to Login')}
                                 <Arrow className="w-5 h-5" />
                             </button>
                         </div>
@@ -144,7 +146,7 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ language, onNavig
                             </div>
 
                             <h2 className="text-xl font-bold text-slate-800 text-center mb-2">
-                                {language === 'ar' ? 'أدخل بريدك الإلكتروني' : 'Enter Your Email'}
+                                {t('أدخل بريدك الإلكتروني', 'Enter Your Email')}
                             </h2>
                             <p className="text-slate-500 text-center mb-6">
                                 {language === 'ar'
@@ -157,7 +159,7 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ language, onNavig
                                     type="email"
                                     value={email}
                                     onChange={(e) => { setEmail(e.target.value); setError(''); }}
-                                    placeholder={language === 'ar' ? 'البريد الإلكتروني' : 'Email address'}
+                                    placeholder={t('البريد الإلكتروني', 'Email address')}
                                     className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl text-lg focus:border-green-500 focus:outline-none transition-all"
                                     dir="ltr"
                                 />
@@ -175,11 +177,11 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ language, onNavig
                                 {isLoading ? (
                                     <>
                                         <RefreshCw className="w-5 h-5 animate-spin" />
-                                        {language === 'ar' ? 'جاري الإرسال...' : 'Sending...'}
+                                        {t('جاري الإرسال...', 'Sending...')}
                                     </>
                                 ) : (
                                     <>
-                                        {language === 'ar' ? 'إرسال رابط الاستعادة' : 'Send Reset Link'}
+                                        {t('إرسال رابط الاستعادة', 'Send Reset Link')}
                                         <Arrow className="w-5 h-5" />
                                     </>
                                 )}
@@ -195,7 +197,7 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ language, onNavig
                         className="w-full mt-6 text-slate-400 hover:text-white transition-colors flex items-center justify-center gap-2"
                     >
                         <Arrow className="w-4 h-4 rotate-180" />
-                        {language === 'ar' ? 'العودة لتسجيل الدخول' : 'Back to Login'}
+                        {t('العودة لتسجيل الدخول', 'Back to Login')}
                     </button>
                 )}
             </div>

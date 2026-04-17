@@ -1,3 +1,4 @@
+import { Language } from '../../types';
 /**
  * Quick Stats Component — بطاقات الإحصائيات السريعة
  * Dashboard summary cards for Arba SaaS
@@ -8,7 +9,7 @@ import { DashboardStats } from '../../services/projectTypes';
 
 interface QuickStatsProps {
     stats: DashboardStats;
-    language: 'ar' | 'en';
+    language: Language;
     loading?: boolean;
 }
 

@@ -1,3 +1,4 @@
+import { Language } from '../../types';
 /**
  * Security Alerts Component — سجل التنبيهات الأمنية
  * Audit log for OCR/RegEx blocks, purges, and access alerts
@@ -8,7 +9,7 @@ import { SecurityAlert, AlertType, AlertSeverity } from '../../services/projectT
 
 interface SecurityAlertsProps {
     alerts: SecurityAlert[];
-    language: 'ar' | 'en';
+    language: Language;
     loading?: boolean;
     onResolve: (alertId: string) => void;
 }

@@ -1,13 +1,15 @@
+import { Language } from '../../types';
 /**
  * CompanySettings — إعدادات الشركة المستفيدة
  * شعار + بيانات + إضافة موظفين + وثائق
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, Building2, Camera, Save, UserPlus, Users, Trash2, Edit3, FileText, Upload, CheckCircle, X, Mail, Phone, MapPin, Hash, Image } from 'lucide-react';
+import { firestoreDataService } from '../../services/firestoreDataService';
 
 interface CompanySettingsProps {
-    language: 'ar' | 'en';
+    language: Language;
     userId: string;
     onBack: () => void;
 }
@@ -46,11 +48,20 @@ function loadCompany(): CompanyData {
         };
     } catch { return { name: '', nameEn: '', logo: '', email: '', phone: '', address: '', cr: '', vat: '', website: '' }; }
 }
-function saveCompany(data: CompanyData) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+function saveCompany(data: CompanyData) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    // 🔥 Sync to Firestore
+    firestoreDataService.saveDocument('company_settings', 'main', data).catch(() => {});
+}
 function loadEmployees(): CompanyEmployee[] {
     try { return JSON.parse(localStorage.getItem(EMPLOYEES_KEY) || '[]'); } catch { return []; }
 }
-function saveEmployees(list: CompanyEmployee[]) { localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(list)); }
+function saveEmployees(list: CompanyEmployee[]) {
+    localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(list));
+    // 🔥 Sync to Firestore
+    const items = list.map(e => ({ id: e.id, data: { ...e } }));
+    firestoreDataService.batchWrite('company_employees', items).catch(() => {});
+}
 
 const CompanySettings: React.FC<CompanySettingsProps> = ({ language, userId, onBack }) => {
     const [tab, setTab] = useState<'info' | 'employees' | 'docs'>('info');
@@ -62,7 +73,25 @@ const CompanySettings: React.FC<CompanySettingsProps> = ({ language, userId, onB
     const logoRef = useRef<HTMLInputElement>(null);
 
     const isRtl = language === 'ar';
-    const t = (ar: string, en: string) => language === 'ar' ? ar : en;
+    const t = (ar: string, en: string) => { const m: Record<string, string> = { ar, en, fr: en, zh: en }; return m[language] || en; };
+
+    // 🔥 Load from Firestore on mount
+    useEffect(() => {
+        (async () => {
+            try {
+                const fsCompany = await firestoreDataService.getDocument<CompanyData>('company_settings', 'main');
+                if (fsCompany && fsCompany.name) {
+                    setCompany(fsCompany);
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(fsCompany));
+                }
+                const fsEmps = await firestoreDataService.getCollection<CompanyEmployee>('company_employees');
+                if (fsEmps.length > 0) {
+                    setEmployees(fsEmps);
+                    localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(fsEmps));
+                }
+            } catch {}
+        })();
+    }, []);
 
     const handleSaveCompany = () => {
         saveCompany(company);

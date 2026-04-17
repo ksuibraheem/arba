@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Language } from '../../types';
 import {
     Database, Search, Download, RefreshCw, BarChart3, PieChart, TrendingUp,
     Calendar, Filter, FileSpreadsheet, FileText, Clock, HardDrive,
@@ -6,7 +7,7 @@ import {
 } from 'lucide-react';
 
 interface DataPageProps {
-    language: 'ar' | 'en';
+    language: Language;
 }
 
 const DataPage: React.FC<DataPageProps> = ({ language }) => {
@@ -84,7 +85,7 @@ const DataPage: React.FC<DataPageProps> = ({ language }) => {
                     </h1>
                     <p className="text-slate-500 mt-1 flex items-center gap-2">
                         <Clock className="w-4 h-4" />
-                        {getLabel('lastUpdated')}: {new Date().toLocaleString(language === 'ar' ? 'ar-SA' : 'en-US')}
+                        {getLabel('lastUpdated')}: {new Date().toLocaleString(t('ar-SA', 'en-US'))}
                     </p>
                 </div>
                 <div className="flex items-center gap-3">

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Language } from '../../types';
 import {
     ArrowLeft,
     ArrowRight,
@@ -37,7 +38,7 @@ import {
 } from '../../services/supplierManagementService';
 
 interface SuppliersManagementPageProps {
-    language: 'ar' | 'en';
+    language: Language;
     onNavigate: (page: string) => void;
 }
 
@@ -403,7 +404,7 @@ const SuppliersManagementPage: React.FC<SuppliersManagementPageProps> = ({ langu
                         {/* Stats */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-slate-700/50">
-                                <div className="text-slate-400 text-sm mb-1">{language === 'ar' ? 'إجمالي الموردين' : 'Total Suppliers'}</div>
+                                <div className="text-slate-400 text-sm mb-1">{t('إجمالي الموردين', 'Total Suppliers')}</div>
                                 <div className="text-2xl font-bold text-white">{suppliers.length}</div>
                             </div>
                             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-4 border border-emerald-500/30">
@@ -584,7 +585,7 @@ const SuppliersManagementPage: React.FC<SuppliersManagementPageProps> = ({ langu
                             <div className="p-4 border-b border-slate-700/50">
                                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                     <AlertTriangle className="w-5 h-5 text-amber-400" />
-                                    {language === 'ar' ? 'الموردون الذين يحتاجون تجديد السجل التجاري' : 'Suppliers Needing CR Renewal'}
+                                    {t('الموردون الذين يحتاجون تجديد السجل التجاري', 'Suppliers Needing CR Renewal')}
                                 </h3>
                             </div>
                             <div className="overflow-x-auto">
@@ -593,7 +594,7 @@ const SuppliersManagementPage: React.FC<SuppliersManagementPageProps> = ({ langu
                                         <tr className="bg-slate-700/30">
                                             <th className="px-4 py-3 text-start text-sm text-slate-400">{getLabel('companyName')}</th>
                                             <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('crNumber')}</th>
-                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{language === 'ar' ? 'تاريخ الانتهاء' : 'Expiry Date'}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{t('تاريخ الانتهاء', 'Expiry Date')}</th>
                                             <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('crStatus')}</th>
                                             <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('actions')}</th>
                                         </tr>
@@ -616,7 +617,7 @@ const SuppliersManagementPage: React.FC<SuppliersManagementPageProps> = ({ langu
                                                             <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${daysLeft < 0 ? 'bg-red-500/10 text-red-400' : 'bg-amber-500/10 text-amber-400'
                                                                 }`}>
                                                                 {daysLeft < 0
-                                                                    ? `❌ ${language === 'ar' ? 'منتهي' : 'Expired'}`
+                                                                    ? `❌ ${t('منتهي', 'Expired')}`
                                                                     : `⚠️ ${daysLeft} ${getLabel('daysLeft')}`
                                                                 }
                                                             </span>
@@ -654,7 +655,7 @@ const SuppliersManagementPage: React.FC<SuppliersManagementPageProps> = ({ langu
                         <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
                             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                 <Shield className="w-5 h-5 text-blue-400" />
-                                {language === 'ar' ? 'إدارة ميزة الشروط والأحكام للموردين' : 'Supplier Terms & Conditions Management'}
+                                {t('إدارة ميزة الشروط والأحكام للموردين', 'Supplier Terms & Conditions Management')}
                             </h3>
                             <p className="text-slate-400 mb-6">
                                 {language === 'ar'
@@ -668,7 +669,7 @@ const SuppliersManagementPage: React.FC<SuppliersManagementPageProps> = ({ langu
                                     <thead>
                                         <tr className="bg-slate-700/30">
                                             <th className="px-4 py-3 text-start text-sm text-slate-400">{getLabel('companyName')}</th>
-                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{language === 'ar' ? 'التقييم' : 'Rating'}</th>
+                                            <th className="px-4 py-3 text-center text-sm text-slate-400">{t('التقييم', 'Rating')}</th>
                                             <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('status')}</th>
                                             <th className="px-4 py-3 text-center text-sm text-slate-400">{getLabel('actions')}</th>
                                         </tr>
@@ -819,7 +820,7 @@ const SuppliersManagementPage: React.FC<SuppliersManagementPageProps> = ({ langu
                         </div>
                         <div className="p-4 space-y-4">
                             <div className="text-slate-300">
-                                {language === 'ar' ? 'المورد:' : 'Supplier:'} <span className="text-white font-medium">{selectedSupplier.companyName[language]}</span>
+                                {t('المورد:', 'Supplier:')} <span className="text-white font-medium">{selectedSupplier.companyName[language]}</span>
                             </div>
 
                             {(actionType === 'suspend' || actionType === 'ban' || actionType === 'delete') && (
@@ -831,7 +832,7 @@ const SuppliersManagementPage: React.FC<SuppliersManagementPageProps> = ({ langu
                                             onChange={(e) => setActionReason(e.target.value)}
                                             className="w-full bg-slate-700/50 border border-slate-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-blue-500"
                                         >
-                                            <option value="">{language === 'ar' ? '-- اختر السبب --' : '-- Select Reason --'}</option>
+                                            <option value="">{t('-- اختر السبب --', '-- Select Reason --')}</option>
                                             {suspendReasons.map((reason, i) => (
                                                 <option key={i} value={reason[language]}>{reason[language]}</option>
                                             ))}

@@ -40,27 +40,34 @@ export interface AppNotification {
 // ====================== Constants ======================
 
 const NOTIFICATIONS_KEY = 'arba_notifications';
+const FIRESTORE_COLLECTION = 'notifications';
 const MAX_NOTIFICATIONS = 100; // أقصى عدد إشعارات مخزنة
 
-let _notificationsLoadedFromFirestore = false;
+// ====================== Firestore-First Storage Layer ======================
 
-async function loadNotificationsFromFirestore(): Promise<void> {
-    if (_notificationsLoadedFromFirestore) return;
-    try {
-        const items = await firestoreDataService.getCollection(
-            'notifications', undefined, { localCacheKey: NOTIFICATIONS_KEY }
-        );
-        if (items.length > 0) {
-            localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(items));
-        }
-        _notificationsLoadedFromFirestore = true;
-    } catch {
-        _notificationsLoadedFromFirestore = true;
-    }
+let _firestoreListenerActive = false;
+let _notificationsCache: AppNotification[] | null = null;
+
+/**
+ * Initialize real-time Firestore listener (onSnapshot)
+ */
+function initFirestoreListener(): void {
+    if (_firestoreListenerActive) return;
+    _firestoreListenerActive = true;
+
+    firestoreDataService.subscribeToCollection<AppNotification>(
+        FIRESTORE_COLLECTION,
+        (notifications) => {
+            _notificationsCache = notifications;
+            localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications));
+        },
+        undefined,
+        NOTIFICATIONS_KEY
+    );
 }
 
-// Auto-load on import
-loadNotificationsFromFirestore().catch(() => {});
+// Start listener on import
+initFirestoreListener();
 
 // ====================== Translations ======================
 
@@ -87,6 +94,7 @@ class NotificationService {
     // =================== Core CRUD ===================
 
     private getAll(): AppNotification[] {
+        if (_notificationsCache !== null) return _notificationsCache;
         try {
             const data = localStorage.getItem(NOTIFICATIONS_KEY);
             return data ? JSON.parse(data) : [];
@@ -98,10 +106,25 @@ class NotificationService {
     private saveAll(notifications: AppNotification[]): void {
         // Trim to max
         const trimmed = notifications.slice(0, MAX_NOTIFICATIONS);
+        // Update local cache immediately for responsiveness
+        _notificationsCache = trimmed;
         localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(trimmed));
-        // 🔥 Fire-and-forget sync to Firestore
+        // Write to Firestore (Firestore-first via batch)
         const items = trimmed.map(n => ({ id: n.id, data: { ...n } }));
-        firestoreDataService.batchWrite('notifications', items).catch(() => {});
+        firestoreDataService.batchWrite(FIRESTORE_COLLECTION, items).catch((err) => {
+            console.error('❌ [Notifications] Batch write failed:', err);
+        });
+    }
+
+    /**
+     * Save a single notification to Firestore (Firestore-first)
+     */
+    private async saveOneToFirestore(notification: AppNotification): Promise<void> {
+        try {
+            await firestoreDataService.saveDocument(FIRESTORE_COLLECTION, notification.id, { ...notification });
+        } catch (error) {
+            console.error('❌ [Notifications] Firestore save failed:', error);
+        }
     }
 
     // =================== Public API ===================
@@ -141,8 +164,6 @@ class NotificationService {
         // Insert at top (newest first)
         notifications.unshift(newNotification);
         this.saveAll(notifications);
-
-        console.log(`🔔 Notification added: [${params.type}] ${params.title} → ${params.targetRole}`);
         return newNotification;
     }
 

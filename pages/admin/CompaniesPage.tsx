@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Language } from '../../types';
 import {
     Building2, Search, Plus, Edit2, Trash2, Mail, Phone, MapPin,
     Calendar, Users, FolderOpen, Star, Check, ChevronLeft, ChevronRight,
@@ -6,7 +7,7 @@ import {
 } from 'lucide-react';
 
 interface CompaniesPageProps {
-    language: 'ar' | 'en';
+    language: Language;
 }
 
 interface Company {

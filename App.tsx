@@ -15,7 +15,10 @@ import ZoneGuard from './components/zones/ZoneGuard';
 import SecurityRedirect from './components/zones/SecurityRedirect';
 import PrivatePortal from './components/zones/PrivatePortal';
 import { RoleProvider, useRole } from './contexts/RoleContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { BrowserRouter } from 'react-router-dom';
 import { ArbaProject, ROLE_ZONE } from './services/projectTypes';
+import { Language } from './types';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage, { RegisterData } from './pages/RegisterPage';
@@ -41,11 +44,14 @@ import QuantitySurveyorPage from './pages/employees/roles/QuantitySurveyorPage';
 import SupportPage from './pages/employees/roles/SupportPage';
 import SupplierCatalog from './pages/SupplierCatalog';
 import SuppliersManagementPage from './pages/admin/SuppliersManagementPage';
+import TeamLoginPage from './pages/TeamLoginPage';
+import TeamDashboard from './pages/TeamDashboard';
+import { ProjectMember } from './services/projectSupplierService';
 import { AppState, CalculatedItem, ProjectType, CustomParams, BlueprintConfig, SurfaceLocation, RoomFinishes, BaseItem } from './types';
 import { INITIAL_OVERHEAD, PROJECT_DEFAULTS, PROJECT_TITLES, TRANSLATIONS } from './constants';
 import { calculateProjectCosts } from './utils/calculations';
 import { Download, Calendar, User, Briefcase, Hash, LogOut, Calculator, Lock, Crown, AlertTriangle, HardDrive, FolderOpen, Upload, Image, Zap } from 'lucide-react';
-import { COMPANY_INFO, SUBSCRIPTION_PLANS, encryptSupplierName, getStorageInfo, getRemainingProjects, FREE_PLAN_RESTRICTIONS } from './companyData';
+import { COMPANY_INFO, SUBSCRIPTION_PLANS, encryptSupplierName, getStorageInfo, getRemainingProjects, FREE_PLAN_RESTRICTIONS, PAGE_TRANSLATIONS, getLocalizedText } from './companyData';
 // Local auth service (fallback)
 import { registerUser, loginUser, logoutUser, getCurrentUser, StoredUser } from './services/authService';
 // Firebase auth service
@@ -57,13 +63,13 @@ import SplashScreen from './components/SplashScreen';
 // Toggle Firebase mode - set to true to use Firebase
 const USE_FIREBASE = true;
 
-type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'pricing-calc' | 'client-portal' | 'private' | 'security-403' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant' | 'password-reset' | 'cloud-sync' | 'support-center' | 'support' | 'developer' | 'marketing' | 'quality' | 'deputy' | 'supplier' | 'quantity_surveyor' | 'supplier-catalog' | 'admin-suppliers' | 'demo';
+type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'pricing-calc' | 'client-portal' | 'private' | 'security-403' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant' | 'password-reset' | 'cloud-sync' | 'support-center' | 'support' | 'developer' | 'marketing' | 'quality' | 'deputy' | 'supplier' | 'quantity_surveyor' | 'supplier-catalog' | 'admin-suppliers' | 'demo' | 'team-login' | 'team-dashboard' | 'employee-login';
 
-// مفتاح الوصول السري للوحة المدير - غيره لمفتاح خاص بك
-const ADMIN_SECRET_KEY = 'arba2025secure';
+// مفتاح الوصول السري للوحة المدير — يُقرأ من .env
+const ADMIN_SECRET_KEY = import.meta.env.VITE_ADMIN_SECRET_KEY || '';
 
-// Super Admin — full access bypass
-const SUPER_ADMIN_EMAIL = 'info@arba-sys.com';
+// Super Admin — full access bypass (from .env)
+const SUPER_ADMIN_EMAIL = import.meta.env.VITE_SUPER_ADMIN_EMAIL || '';
 
 interface AuthUser {
     uid?: string; // معرف المستخدم الفريد
@@ -103,7 +109,25 @@ const App: React.FC = () => {
         return null;
     });
 
-    const [language, setLanguage] = useState<'ar' | 'en'>('ar');
+    const [language, setLanguage] = useState<Language>('ar');
+    const t = (key: string) => PAGE_TRANSLATIONS[key]?.[language] || PAGE_TRANSLATIONS[key]?.['en'] || key;
+    const tl = (obj: Record<string, string> | undefined) => getLocalizedText(obj, language);
+    const isRtl = language === 'ar';
+    const isCjk = language === 'zh';
+
+    // Update <html> direction and language attributes dynamically
+    useEffect(() => {
+        const html = document.documentElement;
+        html.setAttribute('dir', isRtl ? 'rtl' : 'ltr');
+        html.setAttribute('lang', language);
+        // Adjust body font for CJK
+        document.body.style.fontFamily = isCjk
+            ? "'Noto Sans SC', 'Inter', 'PingFang SC', sans-serif"
+            : isRtl
+            ? "'Tajawal', 'Inter', sans-serif"
+            : "'Inter', 'Tajawal', sans-serif";
+    }, [language, isRtl, isCjk]);
+
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [upgradeFeature, setUpgradeFeature] = useState('');
     const [showPriceQuote, setShowPriceQuote] = useState(false);
@@ -136,6 +160,8 @@ const App: React.FC = () => {
     // Active project from SaaS Dashboard
     const [activeProject, setActiveProject] = useState<ArbaProject | null>(null);
     const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
+    // Team member state (Project Team Access)
+    const [teamMember, setTeamMember] = useState<ProjectMember | null>(null);
 
     // Sidebar collapse state
     const [isSidebarOpen, setIsSidebarOpen] = useState(() => typeof window !== 'undefined' ? window.innerWidth >= 1024 : true);
@@ -171,7 +197,6 @@ const App: React.FC = () => {
                         const { handleVerificationReturn } = await import('./firebase/authService');
                         const result = await handleVerificationReturn(oobCode);
                         if (result.success) {
-                            console.log('✅ تم تفعيل البريد من الرابط');
                             setLoginSuccess('✅ تم تأكيد بريدك الإلكتروني بنجاح! يمكنك الآن تسجيل الدخول.');
                             // Clean URL and redirect to login
                             window.history.replaceState({}, document.title, window.location.pathname);
@@ -202,9 +227,6 @@ const App: React.FC = () => {
                 try {
                     const { verifyTapPayment, activateSubscription, PLAN_PRICES, PAYMENT_MESSAGES } = await import('./src/services/paymentService');
                     const { getUserData } = await import('./firebase/authService');
-
-                    console.log('💳 معالجة callback من Tap:', tapId);
-
                     const result = await verifyTapPayment(tapId, arbaPid, PLAN_PRICES.professional);
 
                     // Clean URL
@@ -363,7 +385,6 @@ const App: React.FC = () => {
         // 🔥 Initialize Firestore data layer (one-time migration + load)
         initializeFirestoreData().then(result => {
             if (result.migratedCount > 0) {
-                console.log(`🔥 Firestore: Migrated ${result.migratedCount} documents`);
             }
             // Reload supplier data after Firestore sync
             loadSupplierData();
@@ -461,7 +482,7 @@ const App: React.FC = () => {
         supplierProducts: [],
     });
 
-    const t = (key: string) => TRANSLATIONS[key]?.[state.language] || key;
+    const tt = (key: string) => TRANSLATIONS[key]?.[state.language] || PAGE_TRANSLATIONS[key]?.[language] || key;
 
     // Get current plan details
     const currentPlan = SUBSCRIPTION_PLANS.find(p => p.id === user?.plan) || SUBSCRIPTION_PLANS[0];
@@ -788,9 +809,7 @@ const App: React.FC = () => {
                 setPendingRegistrationEmail(data.email);
                 setCurrentPage('verification');
                 if (result.emailVerificationSent) {
-                    console.log('📧 تم إرسال رابط التحقق — يرجى فحص البريد الإلكتروني');
                 } else {
-                    console.log('⚠️ تم إنشاء الحساب لكن تعذر إرسال رابط التحقق — يمكن إعادة الإرسال من صفحة التحقق');
                 }
             } catch (error: any) {
                 console.error('Registration error (caught):', error);
@@ -1037,7 +1056,7 @@ const App: React.FC = () => {
         setShowPriceQuote(true);
     };
 
-    const isRtl = state.language === 'ar';
+
 
     // Splash Screen - يظهر عند أول تسجيل دخول أثناء استرجاع البيانات
     if (showSplash) {
@@ -1049,8 +1068,27 @@ const App: React.FC = () => {
         return <LandingPage language={language} onNavigate={handleNavigate} onLanguageChange={setLanguage} />;
     }
 
+    if (currentPage === 'team-login') {
+        return <TeamLoginPage language={language} onNavigate={handleNavigate} onTeamLogin={(member) => {
+            setTeamMember(member);
+            setCurrentPage('team-dashboard');
+        }} />;
+    }
+
+    if (currentPage === 'team-dashboard' && teamMember) {
+        return <TeamDashboard language={language} member={teamMember} onLogout={() => {
+            setTeamMember(null);
+            sessionStorage.removeItem('arba_team_session');
+            setCurrentPage('login');
+        }} onNavigate={handleNavigate} />;
+    }
+
     if (currentPage === 'login') {
-        return <LoginPage language={language} onNavigate={(page) => { setLoginSuccess(''); handleNavigate(page); }} onLogin={handleLogin} loginError={loginError} loginSuccess={loginSuccess} />;
+        return <LoginPage language={language} onNavigate={(page) => { setLoginSuccess(''); handleNavigate(page); }} onLogin={handleLogin} onTeamLogin={(member) => { setTeamMember(member); setCurrentPage('team-dashboard'); }} loginError={loginError} loginSuccess={loginSuccess} />;
+    }
+
+    if (currentPage === 'employee-login') {
+        return <LoginPage language={language} onNavigate={(page) => { setLoginSuccess(''); handleNavigate(page); }} onLogin={handleLogin} loginError={loginError} loginSuccess={loginSuccess} initialUserType="employee" />;
     }
 
     if (currentPage === 'register') {
@@ -1142,7 +1180,7 @@ const App: React.FC = () => {
     // Admin Login Page (Secret Access)
     if (currentPage === 'admin-login') {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-6" dir={isRtl ? 'rtl' : 'ltr'}>
                 <div className="bg-slate-800/50 backdrop-blur-xl rounded-3xl border border-slate-700/50 p-8 shadow-2xl max-w-md w-full">
                     <div className="text-center mb-8">
                         <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -1196,7 +1234,7 @@ const App: React.FC = () => {
         // تحقق من صلاحية الوصول للوحة المدير
         if (!adminAccessGranted || !user || user.plan !== 'enterprise') {
             return (
-                <div className="min-h-screen bg-gradient-to-br from-slate-900 via-red-900 to-slate-900 flex items-center justify-center p-6" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                <div className="min-h-screen bg-gradient-to-br from-slate-900 via-red-900 to-slate-900 flex items-center justify-center p-6" dir={isRtl ? 'rtl' : 'ltr'}>
                     <div className="text-center">
                         <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
                             <AlertTriangle className="w-10 h-10 text-red-500" />
@@ -1334,7 +1372,7 @@ const App: React.FC = () => {
             <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
                 {/* Header */}
                 <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 sticky top-0 z-50">
-                    <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                    <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between" dir={isRtl ? 'rtl' : 'ltr'}>
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
                                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1417,7 +1455,7 @@ const App: React.FC = () => {
         return (
             <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
                 <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 sticky top-0 z-50">
-                    <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                    <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between" dir={isRtl ? 'rtl' : 'ltr'}>
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
                                 <Calculator className="w-7 h-7 text-white" />
@@ -1464,7 +1502,7 @@ const App: React.FC = () => {
         return (
             <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
                 <header className="bg-slate-800/50 backdrop-blur-lg border-b border-slate-700/50 sticky top-0 z-50">
-                    <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                    <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between" dir={isRtl ? 'rtl' : 'ltr'}>
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center">
                                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1522,95 +1560,18 @@ const App: React.FC = () => {
         );
     }
 
-    // Developer Page (placeholder)
-    if (currentPage === 'developer') {
+    // Developer/Marketing/Quality/Deputy — redirect to EmployeeDashboard (role pages are already wired there)
+    if (['developer', 'marketing', 'quality', 'deputy'].includes(currentPage) && currentEmployee) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-                <div className="text-center">
-                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-slate-500 to-gray-600 flex items-center justify-center mx-auto mb-6">
-                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                        </svg>
-                    </div>
-                    <h1 className="text-2xl font-bold text-white mb-2">{language === 'ar' ? 'لوحة المطور' : 'Developer Dashboard'}</h1>
-                    <p className="text-slate-400 mb-6">{language === 'ar' ? 'قريباً...' : 'Coming soon...'}</p>
-                    <button
-                        onClick={() => setCurrentPage(isManager ? 'manager' : 'employee')}
-                        className="px-6 py-3 bg-slate-700 text-white rounded-xl hover:bg-slate-600 transition-colors"
-                    >
-                        {language === 'ar' ? 'رجوع' : 'Back'}
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
-    // Marketing Page (placeholder)
-    if (currentPage === 'marketing') {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-                <div className="text-center">
-                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center mx-auto mb-6">
-                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-                        </svg>
-                    </div>
-                    <h1 className="text-2xl font-bold text-white mb-2">{language === 'ar' ? 'لوحة التسويق' : 'Marketing Dashboard'}</h1>
-                    <p className="text-slate-400 mb-6">{language === 'ar' ? 'قريباً...' : 'Coming soon...'}</p>
-                    <button
-                        onClick={() => setCurrentPage(isManager ? 'manager' : 'employee')}
-                        className="px-6 py-3 bg-slate-700 text-white rounded-xl hover:bg-slate-600 transition-colors"
-                    >
-                        {language === 'ar' ? 'رجوع' : 'Back'}
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
-    // Quality Page (placeholder)
-    if (currentPage === 'quality') {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-                <div className="text-center">
-                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-teal-500 to-green-600 flex items-center justify-center mx-auto mb-6">
-                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <h1 className="text-2xl font-bold text-white mb-2">{language === 'ar' ? 'لوحة الجودة' : 'Quality Dashboard'}</h1>
-                    <p className="text-slate-400 mb-6">{language === 'ar' ? 'قريباً...' : 'Coming soon...'}</p>
-                    <button
-                        onClick={() => setCurrentPage(isManager ? 'manager' : 'employee')}
-                        className="px-6 py-3 bg-slate-700 text-white rounded-xl hover:bg-slate-600 transition-colors"
-                    >
-                        {language === 'ar' ? 'رجوع' : 'Back'}
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
-    // Deputy Manager Page (placeholder)
-    if (currentPage === 'deputy') {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-                <div className="text-center">
-                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center mx-auto mb-6">
-                        <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <h1 className="text-2xl font-bold text-white mb-2">{language === 'ar' ? 'لوحة نائب المدير' : 'Deputy Manager Dashboard'}</h1>
-                    <p className="text-slate-400 mb-6">{language === 'ar' ? 'قريباً...' : 'Coming soon...'}</p>
-                    <button
-                        onClick={() => setCurrentPage(isManager ? 'manager' : 'employee')}
-                        className="px-6 py-3 bg-slate-700 text-white rounded-xl hover:bg-slate-600 transition-colors"
-                    >
-                        {language === 'ar' ? 'رجوع' : 'Back'}
-                    </button>
-                </div>
-            </div>
+            <EmployeeDashboard
+                language={language}
+                employee={currentEmployee}
+                onLogout={() => {
+                    setCurrentEmployee(null);
+                    setCurrentPage('landing');
+                }}
+                onNavigate={(page) => setCurrentPage(page as PageRoute)}
+            />
         );
     }
 
@@ -2072,7 +2033,7 @@ const App: React.FC = () => {
                             </div>
                             <div className="flex flex-col gap-1">
                                 <h1 className="text-base sm:text-xl md:text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2 sm:gap-3">
-                                    {state.viewMode === 'pricing' ? t('boq_title') : state.viewMode === 'blueprint' ? t('blueprint_title') : t('materials')}
+                                    {state.viewMode === 'pricing' ? tt('boq_title') : state.viewMode === 'blueprint' ? tt('blueprint_title') : tt('materials')}
                                     <span className="bg-gradient-to-r from-emerald-400 to-emerald-600 text-white p-1 px-3 rounded-lg text-[10px] font-bold shadow-sm shadow-emerald-500/20 uppercase tracking-widest">PRO</span>
                                 </h1>
                                 <p className="text-slate-500 text-sm font-medium flex items-center gap-2">
@@ -2228,9 +2189,13 @@ const App: React.FC = () => {
 };
 
 const RootApp = () => (
-    <RoleProvider>
-        <App />
-    </RoleProvider>
+    <BrowserRouter>
+        <RoleProvider>
+            <AuthProvider>
+                <App />
+            </AuthProvider>
+        </RoleProvider>
+    </BrowserRouter>
 );
 
 export default RootApp;

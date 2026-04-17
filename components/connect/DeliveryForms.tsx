@@ -1,3 +1,4 @@
+import { Language } from '../../types';
 /**
  * DeliveryForms — نماذج التسليم والاستلام (محسّن)
  * إضافة/حذف/تعديل مواد + وحدات شاملة + توقيع إلكتروني
@@ -9,7 +10,7 @@ import { connectService, DeliveryForm, FormSignature, FORM_TEMPLATES, formatChat
 import type { FormType, FormStatus } from '../../services/connectService';
 
 interface DeliveryFormsProps {
-    language: 'ar' | 'en';
+    language: Language;
     userId: string;
     userName: string;
     companyName?: string;
@@ -124,7 +125,7 @@ const DeliveryForms: React.FC<DeliveryFormsProps> = ({ language, userId, userNam
     const [isDrawing, setIsDrawing] = useState(false);
 
     const isRtl = language === 'ar';
-    const t = (ar: string, en: string) => language === 'ar' ? ar : en;
+    const t = (ar: string, en: string) => { const m: Record<string, string> = { ar, en, fr: en, zh: en }; return m[language] || en; };
     const getUnit = (id: string) => UNITS.find(u => u.id === id);
 
     useEffect(() => { loadForms(); }, []);
@@ -193,8 +194,7 @@ const DeliveryForms: React.FC<DeliveryFormsProps> = ({ language, userId, userNam
     };
 
     const handleDeleteForm = (id: string) => {
-        const forms = connectService.getForms().filter(f => f.id !== id);
-        localStorage.setItem('arba_connect_forms', JSON.stringify(forms));
+        connectService.deleteForm(id);
         loadForms(); if (selectedForm?.id === id) { setSelectedForm(null); setView('list'); }
     };
 

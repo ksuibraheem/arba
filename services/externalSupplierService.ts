@@ -1,7 +1,10 @@
 /**
  * خدمة الموردين الخارجيين
  * External Supplier Service - Manages pricing from external suppliers without accounts
+ * 🔥 Synced with Firestore via firestoreDataService
  */
+
+import { firestoreDataService } from './firestoreDataService';
 
 // ====================== الأنواع ======================
 
@@ -129,6 +132,28 @@ class ExternalSupplierService {
     private readonly SUPPLIERS_KEY = 'external_suppliers';
     private readonly PRICES_KEY = 'external_prices';
     private readonly REQUESTS_KEY = 'price_update_requests';
+    // Firestore collection names
+    private readonly FS_SUPPLIERS = 'external_suppliers';
+    private readonly FS_PRICES = 'external_prices';
+    private _loadedFromFirestore = false;
+
+    /**
+     * تحميل من Firestore مرة واحدة عند أول استخدام
+     */
+    async loadFromFirestore(): Promise<void> {
+        if (this._loadedFromFirestore) return;
+        try {
+            const [suppliers, prices] = await Promise.all([
+                firestoreDataService.getCollection<ExternalSupplier>(this.FS_SUPPLIERS, undefined, { localCacheKey: this.SUPPLIERS_KEY }),
+                firestoreDataService.getCollection<ExternalPrice>(this.FS_PRICES, undefined, { localCacheKey: this.PRICES_KEY }),
+            ]);
+            if (suppliers.length > 0) localStorage.setItem(this.SUPPLIERS_KEY, JSON.stringify(suppliers));
+            if (prices.length > 0) localStorage.setItem(this.PRICES_KEY, JSON.stringify(prices));
+            this._loadedFromFirestore = true;
+        } catch {
+            this._loadedFromFirestore = true;
+        }
+    }
 
     // =================== إدارة الموردين ===================
 
@@ -139,6 +164,9 @@ class ExternalSupplierService {
 
     private saveSuppliers(suppliers: ExternalSupplier[]): void {
         localStorage.setItem(this.SUPPLIERS_KEY, JSON.stringify(suppliers));
+        // 🔥 Sync to Firestore
+        const items = suppliers.map(s => ({ id: s.id, data: { ...s } }));
+        firestoreDataService.batchWrite(this.FS_SUPPLIERS, items).catch(() => {});
     }
 
     addSupplier(supplier: Omit<ExternalSupplier, 'id' | 'createdAt' | 'updatedAt'>): ExternalSupplier {
@@ -198,6 +226,9 @@ class ExternalSupplierService {
 
     private savePrices(prices: ExternalPrice[]): void {
         localStorage.setItem(this.PRICES_KEY, JSON.stringify(prices));
+        // 🔥 Sync to Firestore
+        const items = prices.map(p => ({ id: p.id, data: { ...p } }));
+        firestoreDataService.batchWrite(this.FS_PRICES, items).catch(() => {});
     }
 
     addPrice(price: Omit<ExternalPrice, 'id' | 'createdAt' | 'updatedAt'>): ExternalPrice {

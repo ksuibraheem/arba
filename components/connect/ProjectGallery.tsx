@@ -1,3 +1,4 @@
+import { Language } from '../../types';
 /**
  * ProjectGallery — معرض صور المشروع
  * رفع + ضغط تلقائي (WebP) + تصنيف + ربط ببنود BOQ
@@ -10,7 +11,7 @@ import { calculateStorageUsage, formatStorageSize, canUploadFile } from '../../s
 import type { PhotoCategory } from '../../services/connectService';
 
 interface ProjectGalleryProps {
-    language: 'ar' | 'en';
+    language: Language;
     userId: string;
     userName: string;
     storageGB: number;
@@ -35,7 +36,7 @@ const ProjectGallery: React.FC<ProjectGalleryProps> = ({ language, userId, userN
     const [uploadError, setUploadError] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
     const isRtl = language === 'ar';
-    const t = (ar: string, en: string) => language === 'ar' ? ar : en;
+    const t = (ar: string, en: string) => { const m: Record<string, string> = { ar, en, fr: en, zh: en }; return m[language] || en; };
 
     useEffect(() => { loadPhotos(); }, []);
 

@@ -26,6 +26,7 @@ export const TRANSLATIONS: Record<string, Record<Language, string>> = {
     'pricing_strategy': { ar: 'استراتيجية التسعير', en: 'Pricing Strategy', fr: 'Stratégie de Prix', zh: '定价策略' },
     'strat_fixed': { ar: 'هامش ربح ثابت', en: 'Fixed Margin', fr: 'Marge Fixe', zh: '固定利润率' },
     'strat_roi': { ar: 'العائد على الاستثمار', en: 'Target ROI', fr: 'ROI Cible', zh: '目标投资回报率' },
+    'strat_arba': { ar: 'آربا القياسي (75%)', en: 'ARBA Standard (75%)', fr: 'ARBA Standard (75%)', zh: 'ARBA标准 (75%)' },
     'profit_margin': { ar: 'نسبة هامش الربح (%)', en: 'Profit Margin (%)', fr: 'Marge Bénéficiaire (%)', zh: '利润率 (%)' },
     'invested_capital': { ar: 'رأس المال المستثمر', en: 'Invested Capital', fr: 'Capital Investi', zh: '投资资本' },
     'target_roi': { ar: 'العائد المستهدف (%)', en: 'Target ROI (%)', fr: 'ROI Cible (%)', zh: '目标回报率 (%)' },

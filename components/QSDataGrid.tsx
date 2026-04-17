@@ -5,12 +5,12 @@
  */
 import React, { useState, useMemo, useCallback } from 'react';
 import { ChevronDown, ChevronUp, ChevronsUpDown, ChevronRight, Search, Filter } from 'lucide-react';
-import { BaseItem } from '../types';
+import { BaseItem, Language } from '../types';
 import WatermarkOverlay from './WatermarkOverlay';
 
 interface QSDataGridProps {
     items: BaseItem[];
-    language: 'ar' | 'en';
+    language: Language;
     employeeName: string;
     employeeId: string;
     onItemUpdate?: (itemId: string, field: string, value: any) => void;
@@ -39,7 +39,8 @@ const CATEGORY_LABELS: Record<string, { ar: string; en: string; color: string }>
 const QSDataGrid: React.FC<QSDataGridProps> = ({
     items, language, employeeName, employeeId, onItemUpdate, onItemClick, onActionLog
 }) => {
-    const t = (ar: string, en: string) => language === 'ar' ? ar : en;
+    const t = (ar: string, en: string) => { const m: Record<string, string> = { ar, en, fr: en, zh: en }; return m[language] || en; };
+    const langKey = (language === 'ar' ? 'ar' : 'en') as 'ar' | 'en';
 
     // State
     const [searchQuery, setSearchQuery] = useState('');
@@ -81,8 +82,8 @@ const QSDataGrid: React.FC<QSDataGridProps> = ({
         return [...filteredItems].sort((a, b) => {
             let aVal: any, bVal: any;
             if (sortField === 'name') {
-                aVal = language === 'ar' ? a.name.ar : a.name.en;
-                bVal = language === 'ar' ? b.name.ar : b.name.en;
+                aVal = langKey === 'ar' ? a.name.ar : a.name.en;
+                bVal = langKey === 'ar' ? b.name.ar : b.name.en;
             } else {
                 aVal = (a as any)[sortField];
                 bVal = (b as any)[sortField];
@@ -164,8 +165,8 @@ const QSDataGrid: React.FC<QSDataGridProps> = ({
     // Get display value for a cell
     const getCellValue = (item: BaseItem, field: SortField): string => {
         switch (field) {
-            case 'name': return language === 'ar' ? item.name.ar : item.name.en;
-            case 'category': return CATEGORY_LABELS[item.category]?.[language] || item.category;
+            case 'name': return langKey === 'ar' ? item.name.ar : item.name.en;
+            case 'category': return CATEGORY_LABELS[item.category]?.[langKey] || item.category;
             case 'type': return item.type;
             case 'unit': return item.unit;
             case 'qty': return item.qty.toLocaleString();
@@ -208,7 +209,7 @@ const QSDataGrid: React.FC<QSDataGridProps> = ({
                 >
                     <option value="all">{t('كل الفئات', 'All Categories')}</option>
                     {Object.entries(CATEGORY_LABELS).map(([k, v]) => (
-                        <option key={k} value={k}>{v[language]}</option>
+                        <option key={k} value={k}>{v[langKey]}</option>
                     ))}
                 </select>
 
@@ -279,7 +280,7 @@ const QSDataGrid: React.FC<QSDataGridProps> = ({
                                             : <ChevronDown className="w-4 h-4" />
                                         }
                                         <span className="text-sm font-bold">
-                                            {CATEGORY_LABELS[category]?.[language] || category}
+                                            {CATEGORY_LABELS[category]?.[langKey] || category}
                                         </span>
                                         <span className="text-xs opacity-70">({items.length} {t('بند', 'items')})</span>
                                     </div>

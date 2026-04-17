@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ArbaLogo from '../components/ArbaLogo';
 import {
     Calculator,
@@ -9,44 +9,63 @@ import {
     ArrowLeft,
     ArrowRight,
     User,
+    Users,
     Building2,
     Truck,
     Shield,
     Phone,
-    Briefcase
+    Briefcase,
+    HardHat
 } from 'lucide-react';
-import { COMPANY_INFO, PAGE_TRANSLATIONS } from '../companyData';
+import { COMPANY_INFO, PAGE_TRANSLATIONS, getLocalizedText } from '../companyData';
+import { Language } from '../types';
+import { projectSupplierService, ProjectMember } from '../services/projectSupplierService';
 
 interface LoginPageProps {
-    language: 'ar' | 'en';
+    language: Language;
     onNavigate: (page: string) => void;
     onLogin: (email: string, password: string, userType?: string) => void;
+    onTeamLogin?: (member: ProjectMember) => void;
     loginError?: string;
     loginSuccess?: string;
+    initialUserType?: UserType;
 }
 
-type UserType = 'individual' | 'company' | 'supplier' | 'employee';
+type UserType = 'individual' | 'company' | 'supplier' | 'employee' | 'team_member';
 
-const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, loginError, loginSuccess }) => {
-    const [userType, setUserType] = useState<UserType>('individual');
+const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, onTeamLogin, loginError, loginSuccess, initialUserType }) => {
+    const [userType, setUserType] = useState<UserType>(initialUserType || 'individual');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [phone, setPhone] = useState('');
     const [employeeId, setEmployeeId] = useState('');
+    const [teamPhone, setTeamPhone] = useState('');
+    const [teamPassword, setTeamPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [rememberMe, setRememberMe] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const t = (key: string) => PAGE_TRANSLATIONS[key]?.[language] || key;
+    // Init sample data for team members
+    useEffect(() => { projectSupplierService.initSampleData(); }, []);
+
+    const t = (key: string) => PAGE_TRANSLATIONS[key]?.[language] || PAGE_TRANSLATIONS[key]?.['en'] || key;
+    const tl = (obj: Record<string, string> | undefined) => getLocalizedText(obj, language);
     const isRtl = language === 'ar';
+    const isCjk = language === 'zh';
     const Arrow = isRtl ? ArrowRight : ArrowLeft;
 
-    const userTypes: { id: UserType; label: { ar: string; en: string }; icon: React.ElementType; color: string }[] = [
-        { id: 'individual', label: { ar: 'أفراد', en: 'Individual' }, icon: User, color: 'from-blue-500 to-blue-600' },
-        { id: 'company', label: { ar: 'شركات', en: 'Company' }, icon: Building2, color: 'from-green-500 to-lime-500' },
-        { id: 'supplier', label: { ar: 'موردين', en: 'Supplier' }, icon: Truck, color: 'from-amber-500 to-orange-500' },
-        { id: 'employee', label: { ar: 'موظفين آربا', en: 'ARBA Staff' }, icon: Shield, color: 'from-purple-500 to-indigo-500' }
+    const userTypes: { id: UserType; label: Record<string, string>; icon: React.ElementType; color: string }[] = [
+        { id: 'individual', label: { ar: 'أفراد', en: 'Individual', fr: 'Individu', zh: '个人' }, icon: User, color: 'from-blue-500 to-blue-600' },
+        { id: 'company', label: { ar: 'شركات', en: 'Company', fr: 'Entreprise', zh: '公司' }, icon: Building2, color: 'from-green-500 to-lime-500' },
+        { id: 'supplier', label: { ar: 'موردين', en: 'Supplier', fr: 'Fournisseur', zh: '供应商' }, icon: Truck, color: 'from-amber-500 to-orange-500' },
+        { id: 'team_member', label: { ar: 'فريق المشروع', en: 'Project Team', fr: 'Équipe Projet', zh: '项目团队' }, icon: HardHat, color: 'from-emerald-500 to-teal-500' }
+    ];
+
+    // All types including hidden employee for config lookup
+    const allTypeConfigs: { id: UserType; label: Record<string, string>; icon: React.ElementType; color: string }[] = [
+        ...userTypes,
+        { id: 'employee', label: { ar: 'موظفين آربا', en: 'ARBA Staff', fr: 'Personnel ARBA', zh: 'ARBA员工' }, icon: Shield, color: 'from-purple-500 to-indigo-500' }
     ];
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -54,21 +73,48 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, lo
         setError('');
         setLoading(true);
 
-        // Validate based on user type
+        // Team member auth — separate flow
+        if (userType === 'team_member') {
+            const cleanPhone = teamPhone.trim();
+            if (!cleanPhone || cleanPhone.length < 10) {
+                setError(t('login_enter_phone'));
+                setLoading(false); return;
+            }
+            if (!teamPassword) {
+                setError(t('login_enter_password'));
+                setLoading(false); return;
+            }
+            try {
+                const result = await projectSupplierService.authenticateTeamMember(cleanPhone, teamPassword);
+                if (result.success && result.member && onTeamLogin) {
+                    sessionStorage.setItem('arba_team_session', JSON.stringify({
+                        memberId: result.member.id, phone: cleanPhone,
+                        projectId: result.member.projectId, loginAt: new Date().toISOString(),
+                    }));
+                    onTeamLogin(result.member);
+                } else {
+                    setError(result.error || t('login_invalid_credentials'));
+                }
+            } catch { setError(t('login_error_retry')); }
+            finally { setLoading(false); }
+            return;
+        }
+
+        // Standard login types
         let isValid = true;
         if (userType === 'employee') {
             if (!employeeId || !password) {
-                setError(language === 'ar' ? 'يرجى إدخال رقم الموظف وكلمة المرور' : 'Please enter employee ID and password');
+                setError(t('login_enter_employee_id'));
                 isValid = false;
             }
         } else if (userType === 'supplier') {
             if (!phone || !password) {
-                setError(language === 'ar' ? 'يرجى إدخال رقم الجوال وكلمة المرور' : 'Please enter phone and password');
+                setError(t('login_enter_phone'));
                 isValid = false;
             }
         } else {
             if (!email || !password) {
-                setError(language === 'ar' ? 'يرجى إدخال البريد وكلمة المرور' : 'Please enter email and password');
+                setError(t('login_enter_email'));
                 isValid = false;
             }
         }
@@ -78,7 +124,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, lo
             return;
         }
 
-        // Simulate login
         setTimeout(() => {
             const loginIdentifier = userType === 'employee' ? employeeId : (userType === 'supplier' ? phone : email);
             onLogin(loginIdentifier, password, userType);
@@ -90,41 +135,49 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, lo
         switch (userType) {
             case 'employee':
                 return {
-                    title: { ar: 'دخول الموظفين', en: 'Staff Login' },
-                    subtitle: { ar: 'مخصص لموظفي آربا فقط', en: 'For ARBA employees only' },
-                    idLabel: { ar: 'رقم الموظف', en: 'Employee ID' },
-                    idPlaceholder: { ar: 'أدخل رقم الموظف', en: 'Enter employee ID' },
+                    title: { ar: 'دخول الموظفين', en: 'Staff Login', fr: 'Connexion Employé', zh: '员工登录' },
+                    subtitle: { ar: 'مخصص لموظفي آربا فقط', en: 'For ARBA employees only', fr: 'Réservé aux employés ARBA', zh: '仅限ARBA员工' },
+                    idLabel: { ar: 'رقم الموظف', en: 'Employee ID', fr: 'ID Employé', zh: '员工编号' },
+                    idPlaceholder: { ar: 'أدخل رقم الموظف', en: 'Enter employee ID', fr: 'Entrez l\'ID employé', zh: '请输入员工编号' },
                     idIcon: Briefcase
                 };
             case 'supplier':
                 return {
-                    title: { ar: 'دخول الموردين', en: 'Supplier Login' },
-                    subtitle: { ar: 'لموردي مواد البناء', en: 'For construction material suppliers' },
-                    idLabel: { ar: 'رقم الجوال', en: 'Phone Number' },
-                    idPlaceholder: { ar: 'أدخل رقم الجوال', en: 'Enter phone number' },
+                    title: { ar: 'دخول الموردين', en: 'Supplier Login', fr: 'Connexion Fournisseur', zh: '供应商登录' },
+                    subtitle: { ar: 'لموردي مواد البناء', en: 'For construction material suppliers', fr: 'Pour les fournisseurs de matériaux', zh: '建筑材料供应商' },
+                    idLabel: { ar: 'رقم الجوال', en: 'Phone Number', fr: 'Numéro de Téléphone', zh: '电话号码' },
+                    idPlaceholder: { ar: 'أدخل رقم الجوال', en: 'Enter phone number', fr: 'Entrez le numéro', zh: '请输入电话号码' },
                     idIcon: Phone
                 };
             case 'company':
                 return {
-                    title: { ar: 'دخول الشركات', en: 'Company Login' },
-                    subtitle: { ar: 'للمقاولين وشركات البناء', en: 'For contractors & construction companies' },
-                    idLabel: { ar: 'البريد الإلكتروني', en: 'Email' },
-                    idPlaceholder: { ar: 'أدخل بريد الشركة', en: 'Enter company email' },
+                    title: { ar: 'دخول الشركات', en: 'Company Login', fr: 'Connexion Entreprise', zh: '公司登录' },
+                    subtitle: { ar: 'للمقاولين وشركات البناء', en: 'For contractors & construction companies', fr: 'Pour les entrepreneurs et sociétés', zh: '承包商和建筑公司' },
+                    idLabel: { ar: 'البريد الإلكتروني', en: 'Email', fr: 'E-mail', zh: '电子邮箱' },
+                    idPlaceholder: { ar: 'أدخل بريد الشركة', en: 'Enter company email', fr: 'Entrez l\'e-mail', zh: '请输入公司邮箱' },
                     idIcon: Mail
+                };
+            case 'team_member':
+                return {
+                    title: { ar: 'دخول فريق المشروع', en: 'Project Team Login', fr: 'Connexion Équipe Projet', zh: '项目团队登录' },
+                    subtitle: { ar: 'لأعضاء فريق المشروع فقط', en: 'For project team members only', fr: 'Réservé aux membres de l\'\u00e9quipe', zh: '仅限项目团队成员' },
+                    idLabel: { ar: 'رقم الجوال', en: 'Phone Number', fr: 'Numéro de Téléphone', zh: '电话号码' },
+                    idPlaceholder: { ar: '05xxxxxxxx', en: '05xxxxxxxx', fr: '05xxxxxxxx', zh: '05xxxxxxxx' },
+                    idIcon: Phone
                 };
             default:
                 return {
-                    title: { ar: 'تسجيل الدخول', en: 'Login' },
-                    subtitle: { ar: 'للأفراد والمستخدمين', en: 'For individuals & users' },
-                    idLabel: { ar: 'البريد الإلكتروني', en: 'Email' },
-                    idPlaceholder: { ar: 'أدخل بريدك الإلكتروني', en: 'Enter your email' },
+                    title: { ar: 'تسجيل الدخول', en: 'Login', fr: 'Connexion', zh: '登录' },
+                    subtitle: { ar: 'للأفراد والمستخدمين', en: 'For individuals & users', fr: 'Pour les individus et utilisateurs', zh: '个人用户' },
+                    idLabel: { ar: 'البريد الإلكتروني', en: 'Email', fr: 'E-mail', zh: '电子邮箱' },
+                    idPlaceholder: { ar: 'أدخل بريدك الإلكتروني', en: 'Enter your email', fr: 'Entrez votre e-mail', zh: '请输入您的邮箱' },
                     idIcon: Mail
                 };
         }
     };
 
     const config = getTypeConfig();
-    const selectedType = userTypes.find(u => u.id === userType)!;
+    const selectedType = allTypeConfigs.find(u => u.id === userType)!;
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#070914] via-[#0E132B] to-[#050711] flex items-center justify-center p-6" dir={isRtl ? 'rtl' : 'ltr'}>
@@ -141,7 +194,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, lo
                     className="flex items-center gap-2 text-sm font-medium text-slate-400 hover:text-white transition-colors bg-[#080B1A]/40 px-6 py-2 rounded-lg border border-[#2B2D6E]/30 mb-8"
                 >
                     <Arrow className="w-5 h-5" />
-                    <span>{language === 'ar' ? 'العودة للرئيسية' : 'Back to Home'}</span>
+                    <span>{t('nav_back_home')}</span>
                 </button>
 
                 {/* Login Card */}
@@ -152,8 +205,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, lo
                         </div>
                     </div>
 
-                    {/* User Type Tabs */}
-                    <div className="grid grid-cols-4 gap-2 mb-8">
+                    {/* User Type Tabs - hidden when employee mode is active */}
+                    {userType !== 'employee' && <div className="grid grid-cols-4 gap-1.5 mb-8">
                         {userTypes.map((type) => (
                             <button
                                 key={type.id}
@@ -167,18 +220,18 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, lo
                                     }`}
                             >
                                 <type.icon className="w-5 h-5" />
-                                <span className="text-[10px] font-medium">{type.label[language]}</span>
+                                <span className={`${isCjk ? 'text-[11px]' : 'text-[10px]'} font-medium`}>{tl(type.label)}</span>
                             </button>
                         ))}
-                    </div>
+                    </div>}
 
                     {/* Dynamic Header */}
                     <div className="text-center mb-6">
                         <div className={`w-14 h-14 bg-gradient-to-br ${selectedType.color} rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg`}>
                             <selectedType.icon className="w-7 h-7 text-white" />
                         </div>
-                        <h1 className="text-2xl font-bold text-white mb-1">{config.title[language]}</h1>
-                        <p className="text-slate-400 text-sm">{config.subtitle[language]}</p>
+                        <h1 className={`${isCjk ? 'text-xl' : 'text-2xl'} font-bold text-white mb-1`}>{tl(config.title)}</h1>
+                        <p className="text-slate-400 text-sm">{tl(config.subtitle)}</p>
                     </div>
 
                     {/* Success Message */}
@@ -200,7 +253,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, lo
                         {/* Dynamic ID Field */}
                         <div>
                             <label className="block text-slate-300 text-sm font-medium mb-2">
-                                {config.idLabel[language]}
+                                {tl(config.idLabel)}
                             </label>
                             <div className="relative">
                                 <config.idIcon className="absolute top-1/2 -translate-y-1/2 start-4 w-5 h-5 text-slate-500" />
@@ -209,7 +262,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, lo
                                         type="text"
                                         value={employeeId}
                                         onChange={(e) => setEmployeeId(e.target.value)}
-                                        placeholder={config.idPlaceholder[language]}
+                                        placeholder={tl(config.idPlaceholder)}
                                         className="w-full bg-slate-700/50 border border-slate-600 rounded-xl py-3 ps-12 pe-4 text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
                                         autoComplete="username"
                                         required
@@ -221,7 +274,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, lo
                                         type="tel"
                                         value={phone}
                                         onChange={(e) => setPhone(e.target.value)}
-                                        placeholder={config.idPlaceholder[language]}
+                                        placeholder={tl(config.idPlaceholder)}
                                         className="w-full bg-[#080B1A]/60 border border-[#2B2D6E]/50 rounded-xl py-3 ps-12 pe-4 text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all shadow-inner"
                                         autoComplete="tel"
                                         required
@@ -229,12 +282,25 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, lo
                                         name="phone"
                                         dir="ltr"
                                     />
+                                ) : userType === 'team_member' ? (
+                                    <input
+                                        type="tel"
+                                        value={teamPhone}
+                                        onChange={(e) => setTeamPhone(e.target.value)}
+                                        placeholder={tl(config.idPlaceholder)}
+                                        className="w-full bg-[#080B1A]/60 border border-[#2B2D6E]/50 rounded-xl py-3 ps-12 pe-4 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all shadow-inner"
+                                        autoComplete="tel"
+                                        required
+                                        id="login-team-phone"
+                                        name="team-phone"
+                                        dir="ltr"
+                                    />
                                 ) : (
                                     <input
                                         type="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        placeholder={config.idPlaceholder[language]}
+                                        placeholder={tl(config.idPlaceholder)}
                                         className={`w-full bg-[#080B1A]/60 border border-[#2B2D6E]/50 rounded-xl py-3 ps-12 pe-4 text-white placeholder-slate-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all shadow-inner`}
                                         autoComplete="email"
                                         required
@@ -248,15 +314,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, lo
                         {/* Password Field */}
                         <div>
                             <label className="block text-slate-300 text-sm font-medium mb-2">
-                                {t('login_password')}
+                                {userType === 'team_member' ? t('login_password') : t('login_password')}
                             </label>
                             <div className="relative">
                                 <Lock className="absolute top-1/2 -translate-y-1/2 start-4 w-5 h-5 text-slate-500" />
                                 <input
                                     type={showPassword ? 'text' : 'password'}
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder={language === 'ar' ? 'أدخل كلمة المرور' : 'Enter your password'}
+                                    value={userType === 'team_member' ? teamPassword : password}
+                                    onChange={(e) => userType === 'team_member' ? setTeamPassword(e.target.value) : setPassword(e.target.value)}
+                                    placeholder={t('login_enter_password')}
                                     className="w-full bg-[#080B1A]/60 border border-[#2B2D6E]/50 rounded-xl py-3 ps-12 pe-12 text-white placeholder-slate-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all shadow-inner"
                                     autoComplete="current-password"
                                     required
@@ -305,7 +371,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, lo
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                     </svg>
-                                    <span>{language === 'ar' ? 'جاري الدخول...' : 'Logging in...'}</span>
+                                    <span>{t('login_loading')}</span>
                                 </span>
                             ) : (
                                 t('login_submit')
@@ -329,12 +395,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, lo
                     {/* Supplier Registration Link */}
                     {userType === 'supplier' && (
                         <div className="mt-8 text-center text-slate-400">
-                            <span>{language === 'ar' ? 'تريد أن تصبح مورداً؟' : 'Want to become a supplier?'} </span>
+                            <span>{t('login_supplier_prompt')} </span>
                             <button
                                 onClick={() => onNavigate('register')}
                                 className="text-amber-400 hover:text-amber-300 font-medium transition-colors"
                             >
-                                {language === 'ar' ? 'سجل كمورد' : 'Register as Supplier'}
+                                {t('login_supplier_register')}
                             </button>
                         </div>
                     )}
@@ -343,15 +409,24 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, lo
                     {userType === 'employee' && (
                         <div className="mt-8 text-center">
                             <p className="text-slate-500 text-sm">
-                                {language === 'ar' ? 'للمساعدة تواصل مع قسم الموارد البشرية' : 'For help, contact HR department'}
+                                {t('login_employee_help')}
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Team Member Help */}
+                    {userType === 'team_member' && (
+                        <div className="mt-8 text-center">
+                            <p className="text-slate-500 text-sm">
+                                {t('login_team_help')}
                             </p>
                         </div>
                     )}
                 </div>
 
                 {/* Footer */}
-                <p className="text-center text-slate-500 text-sm mt-8">
-                    © 2025 {COMPANY_INFO.companyName[language]} - {COMPANY_INFO.systemName[language]}. {language === 'ar' ? 'جميع الحقوق محفوظة' : 'All rights reserved'}
+                <p className="text-center text-slate-500 text-sm mt-4">
+                    © 2025 {tl(COMPANY_INFO.companyName)} - {tl(COMPANY_INFO.systemName)}. {t('footer_rights')}
                 </p>
             </div>
         </div>

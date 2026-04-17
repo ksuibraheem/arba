@@ -99,7 +99,7 @@ export async function unassignProjectFromUser(projectId: string, engineerUid: st
 // =================== INITIALIZATION ===================
 
 /** Super Admin email — gets 'superadmin' role automatically */
-const SUPER_ADMIN_EMAIL = 'info@arba-sys.com';
+const SUPER_ADMIN_EMAIL = import.meta.env.VITE_SUPER_ADMIN_EMAIL || '';
 
 /**
  * Ensure a user has a role record. If not, create a default one.

@@ -422,7 +422,7 @@ class RegistrationService {
 
             const allRequests = [...existing, ...sampleRequests];
             this.saveRequests(allRequests);
-            console.log('✅ تم إضافة بيانات التسجيل التجريبية');
+
         }
     }
 
@@ -460,7 +460,7 @@ class RegistrationService {
             );
             if (items.length > 0) {
                 localStorage.setItem(this.storageKey, JSON.stringify(items));
-                console.log(`✅ Loaded ${items.length} registration requests from Firestore`);
+
             }
             this.firestoreLoaded = true;
             return items.length > 0 ? items : this.getRequests();
@@ -510,7 +510,7 @@ class RegistrationService {
         };
 
         this.saveRequests(requests);
-        console.log(`🔐 [PASSWORD] Updated for user: ${requests[index].email}`);
+
         return { success: true };
     }
 
@@ -571,7 +571,6 @@ class RegistrationService {
                 `${customDays} أيام`;
         this.sendSuspensionNotification(requests[index].email, `${reason} (المدة: ${durationText})`, requestId);
 
-        console.log(`🚫 [SUSPENDED] Account: ${requests[index].email} | Type: ${suspensionType} | Reason: ${reason}`);
         return { success: true };
     }
 
@@ -603,7 +602,6 @@ class RegistrationService {
         // إرسال إشعار بالتنبيه
         this.sendWarningNotification(requests[index].email, message, requestId);
 
-        console.log(`⚠️ [WARNING] Account: ${requests[index].email} | Message: ${message}`);
         return { success: true };
     }
 
@@ -629,7 +627,6 @@ class RegistrationService {
         // إرسال إشعار بإلغاء الحظر
         this.sendUnsuspensionNotification(requests[index].email, requestId);
 
-        console.log(`✅ [UNSUSPENDED] Account: ${requests[index].email}`);
         return { success: true };
     }
 
@@ -1276,7 +1273,7 @@ class RegistrationService {
             relatedRequestId: requestId
         };
         this.saveNotification(notification);
-        console.log(`📧 [EMAIL] To: ${email} | Code: ${code}`);
+
     }
 
     private sendSMSVerification(phone: string, code: string, requestId: string): void {
@@ -1289,7 +1286,7 @@ class RegistrationService {
             relatedRequestId: requestId
         };
         this.saveNotification(notification);
-        console.log(`📱 [SMS] To: ${phone} | Code: ${code}`);
+
     }
 
     private sendUnderReviewNotification(email: string, requestId: string): void {
@@ -1303,7 +1300,7 @@ class RegistrationService {
             relatedRequestId: requestId
         };
         this.saveNotification(notification);
-        console.log(`📧 [EMAIL] To: ${email} | Subject: Under Review`);
+
     }
 
     private sendApprovalNotification(email: string, requestId: string): void {
@@ -1317,7 +1314,7 @@ class RegistrationService {
             relatedRequestId: requestId
         };
         this.saveNotification(notification);
-        console.log(`📧 [EMAIL] To: ${email} | Subject: Account Approved`);
+
     }
 
     private sendRejectionNotification(email: string, reason: string, requestId: string): void {
@@ -1331,7 +1328,7 @@ class RegistrationService {
             relatedRequestId: requestId
         };
         this.saveNotification(notification);
-        console.log(`📧 [EMAIL] To: ${email} | Subject: Registration Rejected`);
+
     }
 
     private sendCRVerificationNotification(email: string, approved: boolean, requestId: string, reason?: string): void {
@@ -1347,7 +1344,7 @@ class RegistrationService {
             relatedRequestId: requestId
         };
         this.saveNotification(notification);
-        console.log(`📧 [EMAIL] To: ${email} | Subject: CR ${approved ? 'Verified' : 'Rejected'}`);
+
     }
 
     private sendPaymentRejectionNotification(email: string, reason: string, requestId: string): void {
@@ -1361,7 +1358,7 @@ class RegistrationService {
             relatedRequestId: requestId
         };
         this.saveNotification(notification);
-        console.log(`📧 [EMAIL] To: ${email} | Subject: Payment Rejected`);
+
     }
 
     private sendNewReceiptRequestNotification(email: string, reason: string, requestId: string): void {
@@ -1375,7 +1372,7 @@ class RegistrationService {
             relatedRequestId: requestId
         };
         this.saveNotification(notification);
-        console.log(`📧 [EMAIL] To: ${email} | Subject: New Receipt Required`);
+
     }
 
     private sendSuspensionNotification(email: string, reason: string, requestId: string): void {
@@ -1389,7 +1386,7 @@ class RegistrationService {
             relatedRequestId: requestId
         };
         this.saveNotification(notification);
-        console.log(`📧 [EMAIL] To: ${email} | Subject: Account Suspended`);
+
     }
 
     private sendUnsuspensionNotification(email: string, requestId: string): void {
@@ -1403,7 +1400,7 @@ class RegistrationService {
             relatedRequestId: requestId
         };
         this.saveNotification(notification);
-        console.log(`📧 [EMAIL] To: ${email} | Subject: Account Unsuspended`);
+
     }
 
     private sendWarningNotification(email: string, message: string, requestId: string): void {
@@ -1417,7 +1414,7 @@ class RegistrationService {
             relatedRequestId: requestId
         };
         this.saveNotification(notification);
-        console.log(`📧 [EMAIL] To: ${email} | Subject: Warning`);
+
     }
 
     // =================== إحصائيات ===================

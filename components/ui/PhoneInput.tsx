@@ -1,3 +1,4 @@
+import { Language } from '../../types';
 /**
  * PhoneInput — مدخل رقم الهاتف الدولي
  *
@@ -82,7 +83,7 @@ export interface PhoneValue {
 interface PhoneInputProps {
     value: PhoneValue;
     onChange: (v: PhoneValue) => void;
-    language: 'ar' | 'en';
+    language: Language;
     optional?: boolean;
 }
 

@@ -1,7 +1,10 @@
 /**
  * خدمة طلبات تصحيح بيانات الموردين
  * Supplier Data Correction Request Service
+ * 🔥 Synced with Firestore via firestoreDataService
  */
+
+import { firestoreDataService } from './firestoreDataService';
 
 // نوع طلب التصحيح
 export type CorrectionRequestStatus = 'pending' | 'acknowledged' | 'completed' | 'rejected';
@@ -116,6 +119,9 @@ class DataCorrectionService {
     // حفظ الطلبات
     private saveRequests(requests: DataCorrectionRequest[]): void {
         localStorage.setItem(this.storageKey, JSON.stringify(requests));
+        // 🔥 Sync to Firestore
+        const items = requests.map(r => ({ id: r.id, data: { ...r } }));
+        firestoreDataService.batchWrite('data_correction_requests', items).catch(() => {});
     }
 
     // إنشاء طلب جديد
@@ -226,6 +232,9 @@ class DataCorrectionService {
         });
 
         localStorage.setItem(this.notificationsKey, JSON.stringify(notifications));
+        // 🔥 Sync notifications to Firestore
+        const items = notifications.map((n: SupplierNotification) => ({ id: n.id, data: { ...n } }));
+        firestoreDataService.batchWrite('supplier_notifs', items).catch(() => {});
     }
 
     // الحصول على إشعارات المورد

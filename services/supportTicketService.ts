@@ -128,6 +128,7 @@ export const STATUS_COLORS: Record<TicketStatus, string> = {
 
 const STORAGE_KEY = 'arba_support_tickets';
 const TICKET_COUNTER_KEY = 'arba_ticket_counter';
+const FIRESTORE_COLLECTION = 'support_tickets';
 
 // ====================== Helper Functions ======================
 
@@ -141,38 +142,76 @@ const generateId = (): string => {
     return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
 };
 
-let _ticketsLoadedFromFirestore = false;
+// ====================== Firestore-First Storage Layer ======================
+// Pattern: Firestore = Source of Truth, localStorage = Read-through Cache
+// All writes go to Firestore FIRST, then cache updates via onSnapshot
 
+let _firestoreListenerActive = false;
+let _ticketsCache: SupportTicket[] | null = null;
+
+/**
+ * Initialize real-time Firestore listener (onSnapshot)
+ * Updates localStorage cache automatically when Firestore changes
+ */
+const initFirestoreListener = (): void => {
+    if (_firestoreListenerActive) return;
+    _firestoreListenerActive = true;
+
+    firestoreDataService.subscribeToCollection<SupportTicket>(
+        FIRESTORE_COLLECTION,
+        (tickets) => {
+            _ticketsCache = tickets;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets));
+        },
+        undefined,
+        STORAGE_KEY
+    );
+};
+
+// Start listener on import
+initFirestoreListener();
+
+/**
+ * Get tickets — reads from memory cache (fed by onSnapshot), fallback to localStorage
+ */
 const getTickets = (): SupportTicket[] => {
-    const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
-};
-
-const saveTickets = (tickets: SupportTicket[]): void => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets));
-    // 🔥 Fire-and-forget sync to Firestore
-    const items = tickets.map(t => ({ id: t.id, data: { ...t } }));
-    firestoreDataService.batchWrite('support_tickets', items).catch(() => {});
-};
-
-const loadTicketsFromFirestore = async (): Promise<void> => {
-    if (_ticketsLoadedFromFirestore) return;
+    if (_ticketsCache !== null) return _ticketsCache;
     try {
-        const items = await firestoreDataService.getCollection(
-            'support_tickets', undefined, { localCacheKey: STORAGE_KEY }
-        );
-        if (items.length > 0) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-            console.log(`✅ ${items.length} tickets loaded from Firestore`);
-        }
-        _ticketsLoadedFromFirestore = true;
-    } catch {
-        _ticketsLoadedFromFirestore = true;
+        const data = localStorage.getItem(STORAGE_KEY);
+        return data ? JSON.parse(data) : [];
+    } catch { return []; }
+};
+
+/**
+ * Save a single ticket to Firestore (Firestore-first)
+ * Cache updates automatically via onSnapshot listener
+ */
+const saveTicketToFirestore = async (ticket: SupportTicket): Promise<void> => {
+    try {
+        await firestoreDataService.saveDocument(FIRESTORE_COLLECTION, ticket.id, { ...ticket });
+    } catch (error) {
+        console.error('❌ [Tickets] Firestore save failed, saving to localStorage fallback:', error);
+        // Fallback: save to localStorage if Firestore fails
+        const tickets = getTickets();
+        const idx = tickets.findIndex(t => t.id === ticket.id);
+        if (idx >= 0) tickets[idx] = ticket; else tickets.unshift(ticket);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets));
     }
 };
 
-// Auto-load on import
-loadTicketsFromFirestore().catch(() => {});
+/**
+ * Save all tickets (batch) — used for bulk operations
+ */
+const saveTickets = (tickets: SupportTicket[]): void => {
+    // Update local cache immediately for responsiveness
+    _ticketsCache = tickets;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets));
+    // Write to Firestore (fire-and-forget for batch, individual ops use saveTicketToFirestore)
+    const items = tickets.map(t => ({ id: t.id, data: { ...t } }));
+    firestoreDataService.batchWrite(FIRESTORE_COLLECTION, items).catch((err) => {
+        console.error('❌ [Tickets] Batch write failed:', err);
+    });
+};
 
 // Determine route based on category
 const determineRoute = (category: TicketCategory): TicketRoute => {
@@ -285,13 +324,6 @@ class SupportTicketService {
     createGitHubIssue(ticket: SupportTicket): { url: string; number: number } {
         // Mock implementation - ready for real GitHub API
         const mockIssueNumber = Math.floor(Math.random() * 1000) + 1;
-
-        console.log('[GitHub Mock] Creating issue:', {
-            title: `[${ticket.ticketNumber}] ${ticket.subject}`,
-            body: ticket.description,
-            labels: [ticket.category, ticket.priority]
-        });
-
         // In real implementation:
         // 1. Use Firebase Cloud Function to call GitHub API
         // 2. Store GitHub credentials securely in Firebase

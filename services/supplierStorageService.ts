@@ -1,9 +1,11 @@
 /**
  * خدمة تخزين بيانات الموردين
  * Supplier Storage Service - Manages supplier data persistence
+ * 🔥 Synced with Firestore via firestoreDataService
  */
 
 import { SupplierEmployee, SupplierServicesCatalog, createDefaultServicesCatalog } from './supplierManagementService';
+import { firestoreDataService } from './firestoreDataService';
 
 // =================== مفاتيح التخزين ===================
 const SUPPLIER_DATA_KEY = 'arba_supplier_data';
@@ -18,6 +20,30 @@ export interface SupplierStorageData {
     services: SupplierServicesCatalog;
     lastUpdated: string;
 }
+
+// =================== تحميل من Firestore ===================
+
+let _loadedFromFS = false;
+export const loadSupplierStorageFromFirestore = async (): Promise<void> => {
+    if (_loadedFromFS) return;
+    try {
+        const items = await firestoreDataService.getCollection<SupplierStorageData & { id: string }>('supplier_storage', undefined, { localCacheKey: SUPPLIER_DATA_KEY + '_fs' });
+        if (items.length > 0) {
+            const map: Record<string, SupplierStorageData> = {};
+            for (const item of items) {
+                map[item.id] = { supplierId: item.supplierId || item.id, employees: item.employees || [], services: item.services || createDefaultServicesCatalog(), lastUpdated: item.lastUpdated || new Date().toISOString() };
+            }
+            // Merge with local
+            const local = getAllSuppliersData();
+            const merged = { ...map, ...local };
+            localStorage.setItem(SUPPLIER_DATA_KEY, JSON.stringify(merged));
+        }
+        _loadedFromFS = true;
+    } catch { _loadedFromFS = true; }
+};
+
+// Auto-load
+loadSupplierStorageFromFirestore().catch(() => {});
 
 // =================== دوال التخزين العامة ===================
 
@@ -40,6 +66,9 @@ const getAllSuppliersData = (): Record<string, SupplierStorageData> => {
 const saveAllSuppliersData = (data: Record<string, SupplierStorageData>): void => {
     try {
         localStorage.setItem(SUPPLIER_DATA_KEY, JSON.stringify(data));
+        // 🔥 Sync each supplier's data to Firestore
+        const items = Object.entries(data).map(([id, d]) => ({ id, data: { ...d } }));
+        firestoreDataService.batchWrite('supplier_storage', items).catch(() => {});
     } catch (error) {
         console.error('خطأ في حفظ بيانات الموردين:', error);
     }
@@ -68,7 +97,6 @@ export const initializeSupplierData = (supplierId: string): SupplierStorageData 
     allData[supplierId] = newData;
     saveAllSuppliersData(allData);
 
-    console.log('✅ تم إنشاء بيانات المورد:', supplierId);
     return newData;
 };
 
@@ -96,7 +124,6 @@ export const saveSupplierEmployees = (supplierId: string, employees: SupplierEmp
     allData[supplierId].lastUpdated = new Date().toISOString();
     saveAllSuppliersData(allData);
 
-    console.log(`✅ تم حفظ ${employees.length} موظف للمورد:`, supplierId);
 };
 
 /**
@@ -121,7 +148,6 @@ export const addSupplierEmployee = (supplierId: string, employee: SupplierEmploy
     employees.push(newEmployee);
     saveSupplierEmployees(supplierId, employees);
 
-    console.log('✅ تم إضافة موظف:', newEmployee.name);
     return newEmployee;
 };
 
@@ -144,7 +170,6 @@ export const updateSupplierEmployee = (
     employees[index] = { ...employees[index], ...updates };
     saveSupplierEmployees(supplierId, employees);
 
-    console.log('✅ تم تحديث الموظف:', employees[index].name);
     return employees[index];
 };
 
@@ -161,7 +186,7 @@ export const deleteSupplierEmployee = (supplierId: string, employeeId: string): 
     }
 
     saveSupplierEmployees(supplierId, filteredEmployees);
-    console.log('✅ تم حذف الموظف');
+
     return true;
 };
 
@@ -197,7 +222,6 @@ export const saveSupplierServices = (supplierId: string, services: SupplierServi
     allData[supplierId].lastUpdated = new Date().toISOString();
     saveAllSuppliersData(allData);
 
-    console.log('✅ تم حفظ خدمات المورد:', supplierId);
 };
 
 // =================== إحصائيات ===================

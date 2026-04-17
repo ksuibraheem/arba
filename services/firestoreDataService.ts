@@ -122,7 +122,18 @@ function sanitizeForFirestore(obj: any): any {
 const ALLOWED_TOP_LEVEL = new Set([
     'users', 'clients', 'projects', 'userRoles',
     'security_alerts', 'action_logs', 'suppliers', 'demoSessions', 'testSessions',
-    'arba_config', '_connection_test'
+    'arba_config', '_connection_test',
+    // Phase 0: Dedicated collections (migrated from arba_config)
+    'support_tickets', 'notifications', 'invoices', 'ledger_entries',
+    'subscriptions', 'payments', 'accounting_clients',
+    'registration_requests', 'discount_requests', 'invoice_edit_requests',
+    'supplier_reviews', 'connect_messages', 'connect_mail',
+    'connect_forms', 'connect_notes', 'connect_gallery',
+    'employees', 'attendance',
+    // Phase 1: Newly synced collections
+    'auth_users', 'external_suppliers', 'external_prices',
+    'supplier_storage', 'data_correction_requests', 'supplier_notifs',
+    'company_settings', 'company_employees',
 ]);
 
 function resolveCollectionPath(collectionName: string): string {
@@ -341,7 +352,7 @@ export const firestoreDataService = {
             }
 
             invalidateCache(collectionName);
-            console.log(`✅ Batch wrote ${written} docs to ${collectionName}`);
+
             return { success: true, data: written };
         } catch (error: any) {
             console.error(`❌ Firestore batchWrite [${collectionName}]:`, error);
@@ -444,8 +455,6 @@ export const firestoreDataService = {
             return { success: true, data: 0 };
         }
 
-        console.log(`🔄 Migrating ${localData.length} items from ${localKey} → ${collectionName}`);
-
         const items: BatchItem[] = localData.map((item: any) => ({
             id: item[options?.idField || 'id'] || crypto.randomUUID(),
             data: {
@@ -459,7 +468,7 @@ export const firestoreDataService = {
 
         if (result.success) {
             localStorage.setItem(migrationFlag, 'true');
-            console.log(`✅ Migration complete: ${localKey} → ${collectionName} (${result.data} docs)`);
+            // Migration complete
         }
 
         return result;
@@ -487,6 +496,13 @@ export const firestoreDataService = {
             { localKey: 'arba_connect_mail', collection: 'connect_mail', label: 'البريد الداخلي' },
             { localKey: 'arba_connect_forms', collection: 'connect_forms', label: 'النماذج' },
             { localKey: 'arba_connect_notes', collection: 'connect_notes', label: 'الملاحظات' },
+            // Phase 1: Newly synced
+            { localKey: 'arba_users', collection: 'auth_users', label: 'المستخدمين' },
+            { localKey: 'external_suppliers', collection: 'external_suppliers', label: 'الموردين الخارجيين' },
+            { localKey: 'external_prices', collection: 'external_prices', label: 'الأسعار الخارجية' },
+            { localKey: 'arba_data_correction_requests', collection: 'data_correction_requests', label: 'طلبات التصحيح' },
+            { localKey: 'arba_company_settings', collection: 'company_settings', label: 'إعدادات الشركة' },
+            { localKey: 'arba_company_employees', collection: 'company_employees', label: 'موظفي الشركة' },
         ];
 
         let totalMigrated = 0;
@@ -505,7 +521,7 @@ export const firestoreDataService = {
         }
 
         if (errors.length === 0) {
-            console.log(`✅ All migrations complete! Total: ${totalMigrated} documents`);
+
         } else {
             console.warn(`⚠️ Migrations completed with ${errors.length} errors`);
         }

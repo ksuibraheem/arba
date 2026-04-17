@@ -25,8 +25,6 @@ export async function initializeFirestoreData(
     }
 
     isInitializing = true;
-    console.log('🔥 Initializing Firestore data layer...');
-
     const errors: string[] = [];
     let migratedCount = 0;
 
@@ -59,9 +57,6 @@ export async function initializeFirestoreData(
 
         isInitialized = true;
         isInitializing = false;
-
-        console.log(`✅ Firestore initialized! Migrated: ${migratedCount} docs, Errors: ${errors.length}`);
-
         return { success: errors.length === 0, migratedCount, errors };
 
     } catch (error: any) {
@@ -109,7 +104,6 @@ async function loadBackgroundData(): Promise<void> {
                 { localCacheKey: localKey }
             );
             if (items.length > 0) {
-                console.log(`📥 Loaded ${items.length} items from ${collection}`);
             }
         } catch {
             // Silent fallback to localStorage — no console noise

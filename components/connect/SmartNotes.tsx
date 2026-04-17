@@ -1,3 +1,4 @@
+import { Language } from '../../types';
 /**
  * SmartNotes — الملاحظات الذكية
  * ملاحظات مرتبطة ببنود BOQ + أولوية + مشاركة + تذكيرات
@@ -9,7 +10,7 @@ import { connectService, SmartNote, formatChatTime } from '../../services/connec
 import type { NotePriority } from '../../services/connectService';
 
 interface SmartNotesProps {
-    language: 'ar' | 'en';
+    language: Language;
     userId: string;
     userName: string;
     onBack: () => void;
@@ -35,7 +36,7 @@ const SmartNotes: React.FC<SmartNotesProps> = ({ language, userId, userName, onB
     const [newItemCode, setNewItemCode] = useState('');
 
     const isRtl = language === 'ar';
-    const t = (ar: string, en: string) => language === 'ar' ? ar : en;
+    const t = (ar: string, en: string) => { const m: Record<string, string> = { ar, en, fr: en, zh: en }; return m[language] || en; };
 
     useEffect(() => { loadNotes(); }, []);
 

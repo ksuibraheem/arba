@@ -11,6 +11,7 @@ import {
     Download, Filter, UserCheck, UserX, Building, GraduationCap,
     Bell, TrendingUp, BarChart3, AlertCircle, Info
 } from 'lucide-react';
+import { Language } from '../../../types';
 import {
     Employee, EmployeeRole, Certificate, Experience, SalaryStructure,
     ContractInfo, Note, Warning, WarningType, AttendanceRecord, BreakRecord, TaskSummary,
@@ -18,11 +19,11 @@ import {
     WARNING_TRANSLATIONS, DEFAULT_SALARY, DEFAULT_CONTRACT, calculateTotalSalary,
     ATTENDANCE_STATUS_TRANSLATIONS, BREAK_TYPE_TRANSLATIONS,
     isSuperAdmin, hasFullPermissions, shouldHideActivityStats, isExcludedFromActivityTracking,
-    SUPER_ADMIN_EMPLOYEE_NUMBER
+    SUPER_ADMIN_EMPLOYEE_NUMBER, subscribeToAttendance
 } from '../../../services/employeeService';
 
 interface HRPageProps {
-    language: 'ar' | 'en';
+    language: Language;
     employee: Employee;
 }
 
@@ -30,8 +31,8 @@ type ViewMode = 'list' | 'add' | 'edit' | 'view' | 'attendance' | 'reports';
 type TabType = 'info' | 'certificates' | 'experience' | 'salary' | 'contract' | 'warnings';
 
 const HRPage: React.FC<HRPageProps> = ({ language, employee }) => {
-    const t = (ar: string, en: string) => language === 'ar' ? ar : en;
-    const dir = language === 'ar' ? 'rtl' : 'ltr';
+    const t = (ar: string, en: string) => { const map: Record<string, string> = { ar, en, fr: en, zh: en }; return map[language] || en; };
+    const dir = t('rtl', 'ltr');
 
     // التحقق من صلاحيات المدير العام (Super Admin)
     const currentEmployeeNumber = (employee as any)?.employeeNumber || SUPER_ADMIN_EMPLOYEE_NUMBER;
@@ -104,7 +105,6 @@ const HRPage: React.FC<HRPageProps> = ({ language, employee }) => {
         employeeService.initializeSampleData();
         employeeService.initializeTodayAttendance();
         loadEmployees();
-        loadAttendance();
         loadAdvancedStats();
     }, []);
 
@@ -112,8 +112,9 @@ const HRPage: React.FC<HRPageProps> = ({ language, employee }) => {
         setEmployees(employeeService.getEmployees());
     };
 
-    const loadAttendance = () => {
-        setAttendanceRecords(employeeService.getAttendanceByDate(attendanceDate));
+    const loadAttendance = async () => {
+        const records = await employeeService.getAttendanceByDate(attendanceDate);
+        setAttendanceRecords(records);
     };
 
     const loadAdvancedStats = () => {
@@ -129,9 +130,12 @@ const HRPage: React.FC<HRPageProps> = ({ language, employee }) => {
         }
     };
 
-    // Reload attendance when date changes
+    // Real-time attendance subscription when date changes
     useEffect(() => {
-        loadAttendance();
+        const unsub = subscribeToAttendance(attendanceDate, (records) => {
+            setAttendanceRecords(records);
+        });
+        return () => unsub();
     }, [attendanceDate]);
 
     // Filter employees

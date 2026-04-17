@@ -1,3 +1,4 @@
+import { Language } from '../../types';
 /**
  * ProjectSetupModal — نافذة إعداد المشروع وبيانات العميل
  *
@@ -35,7 +36,7 @@ export interface ProjectSetupData {
 }
 
 interface ProjectSetupModalProps {
-    language: 'ar' | 'en';
+    language: Language;
     onConfirm: (data: ProjectSetupData) => void;
     onClose: () => void;
 }

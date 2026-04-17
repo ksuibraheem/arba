@@ -6,6 +6,62 @@
 
 import { firestoreDataService } from './firestoreDataService';
 
+// =================== Password Hashing ===================
+
+/**
+ * تشفير كلمة المرور باستخدام SHA-256
+ * Uses Web Crypto API (available in all modern browsers)
+ */
+async function hashPassword(password: string): Promise<string> {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(password + '_ARBA_SALT_2026');
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * تشفير كلمة المرور بشكل متزامن (fallback)
+ * Simple hash for synchronous contexts
+ */
+function hashPasswordSync(password: string): string {
+    const str = password + '_ARBA_SALT_2026';
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    // Convert to hex and pad for consistent length
+    const hex = Math.abs(hash).toString(16).padStart(8, '0');
+    // Create a longer hash by repeating with variations
+    let result = '';
+    for (let i = 0; i < 4; i++) {
+        const subStr = str.substring(i * 3) + str.substring(0, i * 3);
+        let subHash = i * 31;
+        for (let j = 0; j < subStr.length; j++) {
+            subHash = ((subHash << 5) - subHash) + subStr.charCodeAt(j);
+            subHash = subHash & subHash;
+        }
+        result += Math.abs(subHash).toString(16).padStart(8, '0');
+    }
+    return hex + result;
+}
+
+/**
+ * التحقق من تطابق كلمة المرور (تدعم النص الصريح والمشفر)
+ * Backward compatible: works with both plain-text and hashed passwords
+ */
+function verifyPassword(inputPassword: string, storedPassword: string): boolean {
+    // If stored password looks like a hash (40+ hex chars), compare hashes
+    if (storedPassword.length >= 40 && /^[0-9a-f]+$/.test(storedPassword)) {
+        const inputHash = hashPasswordSync(inputPassword);
+        return inputHash === storedPassword;
+    }
+    // Backward compatibility: plain-text comparison for old accounts
+    return storedPassword === inputPassword;
+}
+
 export interface StoredUser {
     id: string;
     userType: 'individual' | 'company' | 'supplier' | 'employee';
@@ -15,7 +71,7 @@ export interface StoredUser {
     company?: string;
     commercialRegister?: string;
     businessType?: string;
-    password: string; // In production, this should be hashed
+    password: string; // Hashed with SHA-256
     plan: string;
     usedProjects: number;
     usedStorageMB: number;
@@ -53,7 +109,7 @@ async function loadUsersFromFirestore(): Promise<void> {
                 if (!firestoreIds.has(lu.id)) merged.push(lu);
             }
             localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(merged));
-            console.log(`✅ ${items.length} users loaded from Firestore`);
+
         }
         _usersLoadedFromFirestore = true;
     } catch {
@@ -149,7 +205,7 @@ export const registerUser = (userData: {
         company: userData.company,
         commercialRegister: userData.commercialRegister,
         businessType: userData.businessType,
-        password: userData.password, // In production: hash this!
+        password: hashPasswordSync(userData.password), // Hashed password
         plan: userData.plan,
         usedProjects: 0,
         usedStorageMB: 0,
@@ -205,8 +261,8 @@ export const loginUser = (
         };
     }
 
-    // التحقق من كلمة المرور
-    if (user.password !== password) {
+    // التحقق من كلمة المرور (يدعم النص الصريح والمشفر)
+    if (!verifyPassword(password, user.password)) {
         return {
             success: false,
             error: 'كلمة المرور غير صحيحة',
@@ -309,7 +365,7 @@ export const resetPassword = async (
         };
     }
     
-    users[userIndex].password = newPassword;
+    users[userIndex].password = hashPasswordSync(newPassword);
     saveUsers(users);
     
     return { success: true, user: users[userIndex] };

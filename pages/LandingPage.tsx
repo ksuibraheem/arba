@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ArbaLogo from '../components/ArbaLogo';
 import {
     Calculator,
@@ -19,15 +19,24 @@ import {
     Star,
     Globe,
     Headphones,
-    Eye
+    Eye,
+    ChevronDown
 } from 'lucide-react';
-import { COMPANY_INFO, SERVICES, FEATURES, SUBSCRIPTION_PLANS, PAGE_TRANSLATIONS } from '../companyData';
+import { Language } from '../types';
+import { COMPANY_INFO, SERVICES, FEATURES, SUBSCRIPTION_PLANS, PAGE_TRANSLATIONS, getLocalizedText, getLocalizedArray } from '../companyData';
 
 interface LandingPageProps {
-    language: 'ar' | 'en';
+    language: Language;
     onNavigate: (page: string) => void;
-    onLanguageChange?: (lang: 'ar' | 'en') => void;
+    onLanguageChange?: (lang: Language) => void;
 }
+
+const LANG_OPTIONS: { id: Language; label: string; flag: string }[] = [
+    { id: 'ar', label: 'العربية', flag: '🇸🇦' },
+    { id: 'en', label: 'English', flag: '🇬🇧' },
+    { id: 'fr', label: 'Français', flag: '🇫🇷' },
+    { id: 'zh', label: '中文', flag: '🇨🇳' },
+];
 
 const IconMap: Record<string, React.ElementType> = {
     Calculator,
@@ -41,9 +50,12 @@ const IconMap: Record<string, React.ElementType> = {
 };
 
 const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLanguageChange }) => {
-    const t = (key: string) => PAGE_TRANSLATIONS[key]?.[language] || key;
+    const [langMenuOpen, setLangMenuOpen] = useState(false);
+    const t = (key: string) => PAGE_TRANSLATIONS[key]?.[language] || PAGE_TRANSLATIONS[key]?.['en'] || key;
+    const tl = (obj: Record<string, string> | undefined) => getLocalizedText(obj, language);
     const isRtl = language === 'ar';
     const Arrow = isRtl ? ArrowLeft : ArrowRight;
+    const currentLang = LANG_OPTIONS.find(l => l.id === language) || LANG_OPTIONS[0];
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#070914] via-[#0E132B] to-[#050711]" dir={isRtl ? 'rtl' : 'ltr'}>
@@ -55,7 +67,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                             <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center bg-[#131A3B]/60 border border-[#2B2D6E]/40 shadow-lg shadow-green-500/10">
                                 <ArbaLogo size={32} />
                             </div>
-                            <span className="text-base sm:text-xl font-bold text-white">{COMPANY_INFO.systemName[language]}</span>
+                            <span className="text-base sm:text-xl font-bold text-white">{tl(COMPANY_INFO.systemName)}</span>
                         </div>
 
                         <div className="hidden md:flex items-center gap-8">
@@ -66,7 +78,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                                 onClick={() => onNavigate('company')}
                                 className="text-slate-300 hover:text-white transition-colors"
                             >
-                                {language === 'ar' ? 'الشركة' : 'Company'}
+                                {t('nav_about')}
                             </button>
                             <button
                                 onClick={() => onNavigate('about')}
@@ -79,23 +91,46 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                                 className="text-slate-300 hover:text-white transition-colors flex items-center gap-1"
                             >
                                 <Headphones className="w-4 h-4" />
-                                {language === 'ar' ? 'الدعم' : 'Support'}
+                                {t('nav_support')}
+                            </button>
+                            <button
+                                onClick={() => onNavigate('employee-login')}
+                                className="text-slate-300 hover:text-white transition-colors"
+                            >
+                                {t('nav_staff')}
                             </button>
                         </div>
 
                         <div className="flex items-center gap-1.5 sm:gap-3">
-                            {/* Language Toggle */}
+                            {/* Language Dropdown */}
                             {onLanguageChange && (
-                                <button
-                                    onClick={() => onLanguageChange(language === 'ar' ? 'en' : 'ar')}
-                                    className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-slate-700/50 hover:bg-slate-600/50 rounded-lg text-slate-300 hover:text-white transition-all border border-slate-600/50"
-                                    title={language === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
-                                >
-                                    <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                                    <span className="text-xs sm:text-sm font-medium">
-                                        {language === 'ar' ? 'EN' : 'عربي'}
-                                    </span>
-                                </button>
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setLangMenuOpen(!langMenuOpen)}
+                                        className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-slate-700/50 hover:bg-slate-600/50 rounded-lg text-slate-300 hover:text-white transition-all border border-slate-600/50"
+                                    >
+                                        <span className="text-sm">{currentLang.flag}</span>
+                                        <span className="text-xs sm:text-sm font-medium hidden sm:inline">{currentLang.label}</span>
+                                        <ChevronDown className="w-3 h-3" />
+                                    </button>
+                                    {langMenuOpen && (
+                                        <div className="absolute top-full mt-1 right-0 bg-[#0E132B] border border-[#2B2D6E]/60 rounded-lg shadow-xl z-50 min-w-[140px] overflow-hidden">
+                                            {LANG_OPTIONS.map(opt => (
+                                                <button
+                                                    key={opt.id}
+                                                    onClick={() => { onLanguageChange(opt.id); setLangMenuOpen(false); }}
+                                                    className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+                                                        language === opt.id ? 'bg-green-500/20 text-green-400' : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'
+                                                    }`}
+                                                >
+                                                    <span>{opt.flag}</span>
+                                                    <span>{opt.label}</span>
+                                                    {language === opt.id && <Check className="w-3 h-3 ml-auto" />}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             )}
                             <button
                                 onClick={() => onNavigate('login')}
@@ -123,7 +158,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                     <div className="text-center max-w-4xl mx-auto">
                         <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-green-500/10 border border-green-500/20 rounded-full text-green-400 text-xs sm:text-sm mb-4 sm:mb-8">
                             <Star className="w-4 h-4" />
-                            <span>{COMPANY_INFO.tagline[language]}</span>
+                            <span>{tl(COMPANY_INFO.tagline)}</span>
                         </div>
 
                         <h1 className="text-2xl sm:text-4xl md:text-6xl font-extrabold text-white mb-4 sm:mb-6 leading-tight">
@@ -147,7 +182,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                                 className="group w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-[#2B2D6E] to-[#3B3E8E] hover:from-[#3B3E8E] hover:to-[#4A4D9A] text-white rounded-xl font-bold text-base sm:text-lg transition-all shadow-xl shadow-[#2B2D6E]/30 flex items-center justify-center gap-2"
                             >
                                 <Eye className="w-5 h-5" />
-                                {language === 'ar' ? 'استعرض البرنامج' : 'Preview Demo'}
+                                {t('hero_demo')}
                             </button>
                             <button
                                 onClick={() => onNavigate('about')}
@@ -161,10 +196,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                     {/* Stats */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-20">
                         {[
-                            { value: '500+', label: language === 'ar' ? 'مشروع تم تسعيره' : 'Projects Priced' },
-                            { value: '150+', label: language === 'ar' ? 'عميل راضٍ' : 'Happy Clients' },
-                            { value: '99%', label: language === 'ar' ? 'دقة التسعير' : 'Pricing Accuracy' },
-                            { value: '24/7', label: language === 'ar' ? 'دعم متواصل' : 'Support Available' }
+                            { value: '500+', label: t('stat_items') },
+                            { value: '150+', label: t('stat_clients') },
+                            { value: '99%', label: t('stat_accuracy') },
+                            { value: '24/7', label: t('stat_support') }
                         ].map((stat, index) => (
                             <div key={index} className="text-center p-6 bg-[#0E132B]/70 rounded-2xl border border-[#2B2D6E]/40 backdrop-blur-sm hover:border-green-500/20 transition-colors">
                                 <div className="text-3xl md:text-4xl font-extrabold text-green-400 mb-2">{stat.value}</div>
@@ -194,8 +229,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                                     <div className="w-14 h-14 bg-gradient-to-br from-green-500/20 to-indigo-500/20 rounded-xl flex items-center justify-center mb-5 group-hover:from-green-500/30 group-hover:to-indigo-500/30 transition-colors">
                                         <Icon className="w-7 h-7 text-green-400" />
                                     </div>
-                                    <h3 className="text-lg font-bold text-white mb-3">{service.title[language]}</h3>
-                                    <p className="text-slate-400 text-sm leading-relaxed">{service.description[language]}</p>
+                                    <h3 className="text-lg font-bold text-white mb-3">{tl(service.title)}</h3>
+                                    <p className="text-slate-400 text-sm leading-relaxed">{tl(service.description)}</p>
                                 </div>
                             );
                         })}
@@ -221,8 +256,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                                     <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-green-500/25">
                                         <Icon className="w-8 h-8 text-white" />
                                     </div>
-                                    <h3 className="text-lg font-bold text-white mb-2">{feature.title[language]}</h3>
-                                    <p className="text-slate-400 text-sm">{feature.description[language]}</p>
+                                    <h3 className="text-lg font-bold text-white mb-2">{tl(feature.title)}</h3>
+                                    <p className="text-slate-400 text-sm">{tl(feature.description)}</p>
                                 </div>
                             );
                         })}
@@ -235,7 +270,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-16">
                         <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">{t('section_plans')}</h2>
-                        <p className="text-slate-400">{language === 'ar' ? 'اختر الخطة المناسبة لاحتياجاتك' : 'Choose the plan that fits your needs'}</p>
+                        <p className="text-slate-400">{t('payment_subtitle')}</p>
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -253,18 +288,18 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                                     </div>
                                 )}
 
-                                <h3 className="text-xl font-bold text-white mb-2">{plan.name[language]}</h3>
+                                <h3 className="text-xl font-bold text-white mb-2">{tl(plan.name)}</h3>
                                 <div className="flex items-baseline gap-1 mb-2">
                                     <span className="text-4xl font-extrabold text-white">{plan.price}</span>
-                                    <span className="text-slate-400">{t('sar')} / {plan.period[language]}</span>
+                                    <span className="text-slate-400">{t('sar')} / {tl(plan.period)}</span>
                                 </div>
 
                                 {/* Projects & Storage Info */}
                                 <div className="flex gap-4 mb-6 text-sm">
                                     <div className="bg-slate-700/50 px-3 py-1 rounded-lg text-slate-300">
                                         {plan.projectsIncluded === -1
-                                            ? (language === 'ar' ? '∞ مشاريع' : '∞ projects')
-                                            : `${plan.projectsIncluded} ${language === 'ar' ? 'مشاريع' : 'projects'}`
+                                            ? `∞ ${t('payment_projects')}`
+                                            : `${plan.projectsIncluded} ${t('payment_projects')}`
                                         }
                                     </div>
                                     <div className="bg-slate-700/50 px-3 py-1 rounded-lg text-slate-300">
@@ -276,7 +311,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                                 </div>
 
                                 <ul className="space-y-3 mb-6">
-                                    {plan.features[language].map((feature, index) => (
+                                    {getLocalizedArray(plan.features, language).map((feature, index) => (
                                         <li key={index} className="flex items-center gap-3 text-slate-300 text-sm">
                                             <Check className="w-4 h-4 text-green-400 flex-shrink-0" />
                                             <span>{feature}</span>
@@ -287,12 +322,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                                 {/* Show restrictions for free plan */}
                                 {plan.id === 'free' && (
                                     <div className="border-t border-slate-600/50 pt-4 mb-6">
-                                        <p className="text-xs text-orange-400 mb-2">{language === 'ar' ? 'القيود:' : 'Limitations:'}</p>
+                                        <p className="text-xs text-orange-400 mb-2">{t('warning')}:</p>
                                         <ul className="space-y-1 text-xs text-slate-500">
-                                            <li>• {language === 'ar' ? 'أسماء الموردين مشفرة' : 'Encrypted supplier names'}</li>
-                                            <li>• {language === 'ar' ? 'التنزيل غير متاح' : 'Download not available'}</li>
-                                            <li>• {language === 'ar' ? 'بدون تسعير ذكي AI' : 'No AI pricing'}</li>
-                                            <li>• {language === 'ar' ? 'بدون شعار الشركة' : 'No company logo'}</li>
+                                            <li>• {t('encrypted_suppliers')}</li>
+                                            <li>• {t('no_download')}</li>
+                                            <li>• {t('no_ai_pricing')}</li>
+                                            <li>• {t('limited_support')}</li>
                                         </ul>
                                     </div>
                                 )}
@@ -300,10 +335,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                                 {/* Extra project price for professional */}
                                 {plan.extraProjectPrice > 0 && (
                                     <div className="text-xs text-center text-slate-400 mb-4">
-                                        {language === 'ar'
-                                            ? `${plan.extraProjectPrice} ريال لكل مشروع إضافي`
-                                            : `${plan.extraProjectPrice} SAR per extra project`
-                                        }
+                                        {`${plan.extraProjectPrice} ${t('sar')} ${t('per_project')}`}
                                     </div>
                                 )}
 
@@ -331,10 +363,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
 
                     <div className="grid md:grid-cols-4 gap-6 max-w-4xl mx-auto">
                         {[
-                            { icon: Phone, label: language === 'ar' ? 'الهاتف' : 'Phone', value: COMPANY_INFO.phone, isLtr: true },
-                            { icon: Mail, label: language === 'ar' ? 'البريد' : 'Email', value: COMPANY_INFO.email, isLtr: true },
-                            { icon: MapPin, label: language === 'ar' ? 'الموقع' : 'Location', value: COMPANY_INFO.location[language], isLtr: false },
-                            { icon: Clock, label: language === 'ar' ? 'ساعات العمل' : 'Working Hours', value: COMPANY_INFO.workingHours[language], isLtr: false }
+                            { icon: Phone, label: t('contact_phone'), value: COMPANY_INFO.phone, isLtr: true },
+                            { icon: Mail, label: t('contact_email'), value: COMPANY_INFO.email, isLtr: true },
+                            { icon: MapPin, label: t('contact_location'), value: tl(COMPANY_INFO.location), isLtr: false },
+                            { icon: Clock, label: t('contact_hours'), value: tl(COMPANY_INFO.workingHours), isLtr: false }
                         ].map((item, index) => (
                             <div key={index} className="text-center p-6 bg-[#0E132B]/60 rounded-2xl border border-[#2B2D6E]/40 hover:border-green-500/20 transition-colors">
                                 <div className="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center mx-auto mb-4">
@@ -356,7 +388,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center bg-[#0E132B] border border-[#2B2D6E]/40">
                                 <ArbaLogo size={30} />
                             </div>
-                            <span className="text-sm sm:text-base text-white font-bold">{COMPANY_INFO.systemName[language]}</span>
+                            <span className="text-sm sm:text-base text-white font-bold">{tl(COMPANY_INFO.systemName)}</span>
                         </div>
 
                         <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs sm:text-sm text-slate-400">
