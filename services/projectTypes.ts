@@ -229,6 +229,60 @@ export interface ArbaQuote {
     generatedAt: Timestamp | Date;
 }
 
+// =================== ARBA-Ops v4.1 — Immutable Quote Snapshots ===================
+
+/** A frozen, immutable snapshot of a quote at the time of issuance.
+ *  Price updates in the Master Data will NOT affect this unless manually synced. */
+export interface QuoteSnapshot {
+    id: string;
+    projectId: string;
+    quoteId: string;                      // → ArbaQuote.id
+    version: number;
+
+    // 🔒 FROZEN STATE — Immutable after creation
+    frozenState: AppState;                // Full state at issuance time
+    frozenMasterDataVersion: string;      // e.g., "v2.3" — tracks which constants were used
+    frozenSupplierPrices: Record<string, number>; // Supplier prices used at issuance
+
+    // Financial Summary (frozen)
+    totalDirect: number;
+    totalOverhead: number;
+    totalProfit: number;
+    finalPrice: number;
+    totalItems: number;
+
+    // Issuance Metadata
+    issuedBy: string;
+    issuedByName: string;
+    issuedAt: Timestamp | Date;
+
+    // Sync Control
+    isSynced: boolean;                    // Has this been synced to latest prices?
+    lastSyncedAt?: Timestamp | Date;
+    syncDiff?: SyncDiffReport;            // Diff report from last sync attempt
+}
+
+/** Report generated when a QS engineer syncs an old quote with current prices */
+export interface SyncDiffReport {
+    snapshotId: string;
+    itemsChanged: SyncDiffItem[];
+    totalPriceImpact: number;             // +/- SAR
+    totalPriceImpactPercent: number;       // +/- %
+    generatedAt: Timestamp | Date;
+    generatedBy: string;
+    approved: boolean;
+    approvedAt?: Timestamp | Date;
+}
+
+export interface SyncDiffItem {
+    itemId: string;
+    itemName: string;
+    field: 'baseMaterial' | 'baseLabor' | 'waste' | 'supplierPrice';
+    oldValue: number;
+    newValue: number;
+    changePercent: number;
+}
+
 // =================== USER ROLE (RBAC) ===================
 
 export type UserRole = 'admin' | 'superadmin' | 'qs_engineer' | 'client' | 'viewer';

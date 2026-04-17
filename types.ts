@@ -237,6 +237,34 @@ export interface CustomParams {
   manualQty?: number;      // Allow user to override calculated quantity
 }
 
+// =================== ARBA Cognitive Engine v4.1 — Data Types ===================
+
+/** Material consumption linked to a parent item (e.g., tie-wire → steel) */
+export interface ConsumableConfig {
+  childItemId: string;          // e.g., 'consumable_tie_wire'
+  ratioPerParentUnit: number;   // e.g., 10 kg per ton of steel
+  unit: string;                 // kg, liter, bag, etc.
+  isHardLinked: boolean;        // If true: parent qty change triggers child recalc
+}
+
+/** Heavy equipment required for an item (e.g., excavator for site work) */
+export interface EquipmentConfig {
+  equipId: string;              // e.g., 'excavator_320'
+  hoursPerUnit: number;         // Hours needed per unit of parent item
+  costPerHour: number;          // SAR per hour (reference rate)
+}
+
+/** Packaging dimensions for discrete unit math (tiles, blocks, plywood) */
+export interface DimensionConfig {
+  id: string;                   // e.g., 'ceramic_60x60'
+  length: number;               // meters
+  width: number;                // meters
+  packageUnits: number;         // pieces per carton/pallet
+  packageAreaSqm: number;       // total m² per package (length × width × packageUnits)
+}
+
+// =================== BaseItem (Original + Cognitive Extensions) ===================
+
 export interface BaseItem {
   id: string;
   category: 'site' | 'structure' | 'architecture' | 'mep_elec' | 'mep_plumb' | 'mep_hvac' | 'insulation' | 'safety' | 'gov_fees' | 'production' | 'manpower' | 'custom' | 'landscaping' | 'furniture' | 'elevator' | 'fire_protection' | 'smart_systems' | 'renewable_energy' | 'demolition' | 'temporary_works' | 'testing' | 'external_works';
@@ -254,6 +282,12 @@ export interface BaseItem {
   excludeProfit?: boolean;
   defaultParams?: CustomParams;
   isCustom?: boolean; // Flag for user-added items
+
+  // === Cognitive Engine v4.1 Extensions (all optional — zero breakage) ===
+  consumables?: ConsumableConfig[];       // Hidden materials auto-calculated from parent
+  equipments?: EquipmentConfig[];         // Heavy equipment linked to this item
+  dimensionConfig?: DimensionConfig;      // Packaging for discrete unit math (ceil logic)
+  laborComplexity?: 'basic' | 'skilled' | 'specialist'; // Affects labor productivity factor
 }
 
 export interface CalculatedItem extends BaseItem {
