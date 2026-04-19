@@ -59,9 +59,11 @@ service cloud.firestore {
 
     // =================== USER ROLES ===================
     // Users can read their own role, admins can read/write all
+    // Users can CREATE their own role on registration (required by authService.ts)
     match /userRoles/{uid} {
       allow read: if isAuth() && (request.auth.uid == uid || isAdmin());
-      allow write: if isAdmin();
+      allow create: if isAuth() && request.auth.uid == uid;
+      allow update, delete: if isAdmin();
       // SuperAdmins can read roles but NOT modify them
       allow read: if isSuperAdmin();
     }
