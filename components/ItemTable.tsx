@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Box, UserCheck, ShieldCheck, FileText, Settings2, AlertTriangle, TrendingUp, Star, Check, Edit3, Bot, Loader2, Plus, Trash2, Anchor, Lock } from 'lucide-react';
-import { CalculatedItem, CustomParams, SupplierOption, Language, BaseItem } from '../types';
+import React, { useState, useMemo } from 'react';
+import { ChevronDown, ChevronUp, Box, UserCheck, ShieldCheck, FileText, Settings2, AlertTriangle, TrendingUp, Star, Check, Edit3, Bot, Loader2, Plus, Trash2, Anchor, Lock, Brain } from 'lucide-react';
+import { CalculatedItem, CustomParams, SupplierOption, Language, BaseItem, SectionDef } from '../types';
 import { TRANSLATIONS } from '../constants';
 
 interface ItemTableProps {
@@ -14,6 +14,8 @@ interface ItemTableProps {
     encryptSupplierName?: (name: string, planId: string) => string;
     userPlan?: string;
     isDemoMode?: boolean;
+    sections?: SectionDef[];
+    enabledSections?: string[];
 }
 
 const SupplierBadge: React.FC<{ supplier: SupplierOption; language: Language; t: (k: string) => string; isFreePlan?: boolean }> = ({ supplier, language, t, isFreePlan }) => {
@@ -130,6 +132,22 @@ const ItemRow: React.FC<{
                             {hasParams && !isGov && <Settings2 className="w-3 h-3 text-slate-400 hidden sm:inline" />}
                             {item.isOptimalPrice && <span className="text-[10px] bg-amber-200 text-amber-800 px-1 rounded hidden sm:inline">{t('optimal')}</span>}
                             {item.isManualPrice && <span className="text-[10px] bg-blue-100 text-blue-800 px-1 rounded hidden sm:inline-flex items-center gap-1"><Edit3 className="w-3 h-3" /> {t('edit')}</span>}
+                            {/* v8.5 Brain Insight Badge */}
+                            {item.profitStatus === 'loss' && (
+                                <span className="text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full hidden sm:inline-flex items-center gap-1 animate-pulse" title={item.brainWarnings?.[0] || ''}>
+                                    🔴 {language === 'ar' ? 'خسارة' : 'Loss'}
+                                </span>
+                            )}
+                            {item.profitStatus === 'exaggerated' && (
+                                <span className="text-[10px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full hidden sm:inline-flex items-center gap-1" title={item.brainWarnings?.[0] || ''}>
+                                    🟠 {language === 'ar' ? 'مبالغة' : 'High'}
+                                </span>
+                            )}
+                            {item.profitStatus === 'balanced' && (
+                                <span className="text-[10px] bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded-full hidden sm:inline-flex items-center gap-1">
+                                    🟢
+                                </span>
+                            )}
                         </span>
                         <span className="text-xs text-slate-500 mt-1 hidden sm:flex items-center gap-1">
                             {getTypeBadge(item.type, item.category, item.isCustom)}
@@ -269,7 +287,7 @@ const ItemRow: React.FC<{
                                             <div className="flex flex-col gap-1 w-48">
                                                 <label className="text-xs font-medium text-slate-500 flex justify-between">
                                                     <span>Steel Ratio (Load Balance)</span>
-                                                    <span className="text-blue-600">{item.activeParams?.steelRatio || 80} kg/m³</span>
+                                                    <span className="text-blue-600">{item.activeParams?.steelRatio || 80} kg/mآ³</span>
                                                 </label>
                                                 <input
                                                     type="range"
@@ -421,6 +439,25 @@ const ItemRow: React.FC<{
                                     )}
                                 </div>
                             </div>
+
+                            {/* v8.5 Brain Warnings Display */}
+                            {item.brainWarnings && item.brainWarnings.length > 0 && (
+                                <div className="mt-4 space-y-2">
+                                    {item.brainWarnings.map((warning, idx) => (
+                                        <div
+                                            key={idx}
+                                            className={`flex items-start gap-2 p-3 rounded-lg text-xs border ${
+                                                item.profitStatus === 'loss'
+                                                    ? 'bg-red-50 border-red-200 text-red-800'
+                                                    : 'bg-orange-50 border-orange-200 text-orange-800'
+                                            }`}
+                                        >
+                                            <Brain className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                            <span>{warning}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </td>
                 </tr>
@@ -431,7 +468,7 @@ const ItemRow: React.FC<{
 
 const NewItemForm: React.FC<{ onAdd: (item: BaseItem) => void; onCancel: () => void }> = ({ onAdd, onCancel }) => {
     const [name, setName] = useState('');
-    const [unit, setUnit] = useState('م2');
+    const [unit, setUnit] = useState('ظ…2');
     const [qty, setQty] = useState(1);
     const [price, setPrice] = useState(0);
 
@@ -487,37 +524,65 @@ const NewItemForm: React.FC<{ onAdd: (item: BaseItem) => void; onCancel: () => v
     )
 }
 
-const ItemTable: React.FC<ItemTableProps> = ({ items, language, onParamChange, onCheckAI, onAddCustomItem, onDeleteCustomItem, isFreePlan, encryptSupplierName, userPlan, isDemoMode = false }) => {
+const ItemTable: React.FC<ItemTableProps> = ({ items, language, onParamChange, onCheckAI, onAddCustomItem, onDeleteCustomItem, isFreePlan, encryptSupplierName, userPlan, isDemoMode = false, sections = [], enabledSections }) => {
     const [isAdding, setIsAdding] = useState(false);
+    const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
     const t = (key: string) => TRANSLATIONS[key]?.[language] || key;
+    const isAr = language === 'ar';
 
-    // Filter items for demo mode - only show site (excavation) and structure (concrete)
+    const formatCurrency = (val: number) => new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val) + ' ' + t('currency');
+
+    // Filter items for demo mode
     const DEMO_ALLOWED_CATEGORIES = ['site', 'structure'];
     const filteredItems = isDemoMode
         ? items.filter(item => DEMO_ALLOWED_CATEGORIES.includes(item.category))
         : items;
 
-    // Sorting
-    const sortedItems = [...filteredItems].sort((a, b) => {
-        const order = { 'gov_fees': 1, 'site': 2, 'structure': 3, 'insulation': 4, 'architecture': 5, 'mep_elec': 6, 'mep_plumb': 7, 'mep_hvac': 8, 'safety': 9, 'custom': 10 };
-        return (order[a.category] || 10) - (order[b.category] || 10);
-    });
+    // Sort items by ID (which already has section prefix like 01.xx, 05.xx)
+    const sortedItems = [...filteredItems].sort((a, b) => a.id.localeCompare(b.id));
+
+    // Group items by section code (first 2 chars of ID)
+    const groupedItems = useMemo(() => {
+        const groups: Record<string, CalculatedItem[]> = {};
+        for (const item of sortedItems) {
+            const sectionCode = item.id.split('.')[0] || '99';
+            if (!groups[sectionCode]) groups[sectionCode] = [];
+            groups[sectionCode].push(item);
+        }
+        return groups;
+    }, [sortedItems]);
+
+    // Get ordered section codes (use SECTION_DEFINITIONS order if available)
+    const orderedSectionCodes = useMemo(() => {
+        if (sections.length > 0) {
+            const definedCodes = sections.map(s => s.code);
+            const allCodes = Object.keys(groupedItems);
+            const ordered = definedCodes.filter(c => allCodes.includes(c));
+            const remaining = allCodes.filter(c => !definedCodes.includes(c)).sort();
+            return [...ordered, ...remaining];
+        }
+        return Object.keys(groupedItems).sort();
+    }, [sections, groupedItems]);
+
+    const toggleSection = (code: string) => {
+        setCollapsedSections(prev => ({ ...prev, [code]: !prev[code] }));
+    };
+
+    const isSectionEnabled = (code: string) => {
+        if (!enabledSections || enabledSections.length === 0) return true;
+        return enabledSections.includes(code);
+    };
 
     return (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            {/* Free Plan Warning */}
             {isFreePlan && (
                 <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center gap-2">
                     <Lock className="w-4 h-4 text-amber-500" />
                     <span className="text-xs text-amber-700">
-                        {language === 'ar'
-                            ? 'أسماء الموردين مشفرة في الباقة المجانية. قم بالترقية لعرض الأسماء الكاملة.'
-                            : 'Supplier names are encrypted in the free plan. Upgrade to view full names.'
-                        }
+                        {isAr ? 'أسماء الموردين مشفرة في الباقة المجانية. قم بالترقية لعرض الأسماء الكاملة.' : 'Supplier names are encrypted in the free plan. Upgrade to view full names.'}
                     </span>
                 </div>
             )}
-            {/* Demo Mode Info */}
             {isDemoMode && (
                 <div className="bg-blue-50 border-b border-blue-200 px-4 py-3 flex items-center gap-3">
                     <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -525,17 +590,8 @@ const ItemTable: React.FC<ItemTableProps> = ({ items, language, onParamChange, o
                     </div>
                     <div className="flex-1">
                         <span className="text-sm font-medium text-blue-800">
-                            {language === 'ar'
-                                ? '👁️ وضع العرض التجريبي - يعرض بنود الحفر والخرسانة فقط'
-                                : '👁️ Demo Mode - Showing excavation and concrete items only'
-                            }
+                            {isAr ? '🏗️ وضع العرض التجريبي - يعرض بنود الحفر والخرسانة فقط' : '🏗️ Demo Mode - Showing excavation and concrete items only'}
                         </span>
-                        <p className="text-xs text-blue-600 mt-0.5">
-                            {language === 'ar'
-                                ? `يتم عرض ${sortedItems.length} بند من أصل ${items.length} - سجّل للوصول لجميع البنود`
-                                : `Showing ${sortedItems.length} items out of ${items.length} - Register to access all items`
-                            }
-                        </p>
                     </div>
                 </div>
             )}
@@ -554,19 +610,109 @@ const ItemTable: React.FC<ItemTableProps> = ({ items, language, onParamChange, o
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                    {sortedItems.map((item, idx) => (
-                        <ItemRow
-                            key={idx}
-                            item={item}
-                            language={language}
-                            onParamChange={onParamChange}
-                            onCheckAI={onCheckAI}
-                            onDeleteCustomItem={onDeleteCustomItem}
-                            isFreePlan={isFreePlan}
-                            encryptSupplierName={encryptSupplierName}
-                            userPlan={userPlan}
-                        />
-                    ))}
+                    {orderedSectionCodes.map(sectionCode => {
+                        const sectionDef = sections.find(s => s.code === sectionCode);
+                        const sectionItems = groupedItems[sectionCode] || [];
+                        const isEnabled = isSectionEnabled(sectionCode);
+                        const isCollapsed = collapsedSections[sectionCode] ?? !isEnabled;
+                        const subtotal = sectionItems.reduce((sum, item) => sum + item.totalLinePrice, 0);
+                        const grandTotal = items.reduce((sum, item) => sum + item.totalLinePrice, 0);
+                        const sectionPct = grandTotal > 0 ? (subtotal / grandTotal) * 100 : 0;
+                        const sectionColor = sectionDef?.color || '#94a3b8';
+
+                        if (sectionItems.length === 0) return null;
+
+                        return (
+                            <React.Fragment key={sectionCode}>
+                                {/* Section Header Row */}
+                                <tr
+                                    className={`cursor-pointer select-none transition-colors ${isEnabled ? 'hover:bg-slate-50' : 'opacity-50'}`}
+                                    onClick={() => toggleSection(sectionCode)}
+                                    style={{ borderRight: `4px solid ${sectionDef?.color || '#94a3b8'}` }}
+                                >
+                                    <td colSpan={6} className="p-2 sm:p-3">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-lg">{sectionDef?.icon || 'ًں“¦'}</span>
+                                            <span className="font-bold text-sm" style={{ color: sectionDef?.color || '#334155' }}>
+                                                {sectionCode}.
+                                            </span>
+                                            <span className={`font-bold text-sm ${isEnabled ? 'text-slate-800' : 'text-slate-400'}`}>
+                                                {isAr ? sectionDef?.nameAr : sectionDef?.nameEn || `Section ${sectionCode}`}
+                                            </span>
+                                            <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full">
+                                                {sectionItems.length} {isAr ? 'بند' : 'items'}
+                                            </span>
+                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{
+                                                backgroundColor: `${sectionColor}15`,
+                                                color: sectionColor,
+                                            }}>
+                                                {sectionPct.toFixed(1)}%
+                                            </span>
+                                            {!isEnabled && (
+                                                <span className="text-[10px] bg-red-50 text-red-400 px-1.5 py-0.5 rounded-full">
+                                                    {isAr ? 'خارج النطاق' : 'Out of scope'}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {/* Progress Bar */}
+                                        <div className="mt-1.5 h-1.5 rounded-full bg-slate-100 overflow-hidden" style={{ maxWidth: '300px' }}>
+                                            <div
+                                                className="h-full rounded-full transition-all duration-500"
+                                                style={{
+                                                    width: `${Math.min(sectionPct, 100)}%`,
+                                                    backgroundColor: sectionColor,
+                                                    minWidth: sectionPct > 0 ? '4px' : '0',
+                                                }}
+                                            />
+                                        </div>
+                                    </td>
+                                    <td className="p-2 sm:p-3 text-right">
+                                        <span className={`font-bold text-sm ${isEnabled ? 'text-emerald-700' : 'text-slate-400'}`}>
+                                            {formatCurrency(subtotal)}
+                                        </span>
+                                    </td>
+                                    <td className="p-2 sm:p-3 text-center text-slate-400">
+                                        {isCollapsed ? <ChevronDown className="w-4 h-4 inline" /> : <ChevronUp className="w-4 h-4 inline" />}
+                                    </td>
+                                </tr>
+
+                                {/* Section Items (only when expanded) */}
+                                {!isCollapsed && sectionItems.map((item, idx) => (
+                                    <ItemRow
+                                        key={item.id || idx}
+                                        item={item}
+                                        language={language}
+                                        onParamChange={onParamChange}
+                                        onCheckAI={onCheckAI}
+                                        onDeleteCustomItem={onDeleteCustomItem}
+                                        isFreePlan={isFreePlan}
+                                        encryptSupplierName={encryptSupplierName}
+                                        userPlan={userPlan}
+                                    />
+                                ))}
+
+                                {/* Subtotal Row (only when expanded) */}
+                                {!isCollapsed && (
+                                    <tr style={{ borderRight: `4px solid ${sectionColor}` }}>
+                                        <td colSpan={6} className="p-2 sm:p-3 text-right">
+                                            <span className="text-xs font-bold" style={{ color: sectionColor }}>
+                                                {isAr ? `إجمالي ${sectionDef?.nameAr || sectionCode}` : `${sectionDef?.nameEn || sectionCode} Subtotal`}
+                                                <span className="text-slate-400 font-normal mr-2 ml-2">
+                                                    ({sectionItems.length} {isAr ? 'بند' : 'items'})
+                                                </span>
+                                            </span>
+                                        </td>
+                                        <td className="p-2 sm:p-3 text-right">
+                                            <span className="font-extrabold text-sm" style={{ color: sectionColor }}>
+                                                {formatCurrency(subtotal)}
+                                            </span>
+                                        </td>
+                                        <td className="p-2 sm:p-3"></td>
+                                    </tr>
+                                )}
+                            </React.Fragment>
+                        );
+                    })}
                     {isAdding && <NewItemForm onAdd={onAddCustomItem} onCancel={() => setIsAdding(false)} />}
                 </tbody>
             </table>
@@ -578,7 +724,7 @@ const ItemTable: React.FC<ItemTableProps> = ({ items, language, onParamChange, o
                         onClick={() => setIsAdding(true)}
                         className="flex items-center gap-2 text-emerald-600 font-bold hover:bg-emerald-100 px-4 py-2 rounded-lg transition-colors border border-emerald-200"
                     >
-                        <Plus className="w-4 h-4" /> إضافة بند جديد
+                        <Plus className="w-4 h-4" /> {isAr ? 'إضافة بند جديد' : 'Add New Item'}
                     </button>
                 </div>
             )}

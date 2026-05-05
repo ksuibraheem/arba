@@ -285,7 +285,7 @@ export interface SyncDiffItem {
 
 // =================== USER ROLE (RBAC) ===================
 
-export type UserRole = 'admin' | 'superadmin' | 'qs_engineer' | 'client' | 'viewer';
+export type UserRole = 'admin' | 'superadmin' | 'qs_engineer' | 'arba_qs_specialist' | 'client' | 'viewer';
 export type ZoneType = 'A' | 'B';  // A = Employee Workspace, B = Client Portal
 
 // =================== SUBSCRIPTION ===================
@@ -345,6 +345,11 @@ export const PERMISSIONS = {
     // Subscription management
     SUBSCRIPTIONS_MANAGE: 'subscriptions.manage',
     BILLING_APPROVE: 'billing.approve',
+    // === v8.5 Brain & AI Permissions ===
+    BRAIN_ALERTS_VIEW: 'brain.alerts_view',       // تنبيهات الدماغ الداخلي (للعميل - مجاني)
+    BRAIN_DEEP_ANALYSIS: 'brain.deep_analysis',   // تحليل عميق بالذكاء الخارجي (مدفوع)
+    BRAIN_FULL_REPORT: 'brain.full_report',       // تقرير كامل بالتوصيات (مدفوع)
+    QS_REVIEW_SUBMIT: 'qs.review_submit',         // مراجعة وتقديم الكميات (موظفي آربا فقط)
 } as const;
 
 // Role → Permissions mapping
@@ -380,11 +385,35 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
         PERMISSIONS.UPLOAD_FILES,
         PERMISSIONS.SECURITY_VIEW,
         PERMISSIONS.SECURITY_LOGS,
+        PERMISSIONS.BRAIN_ALERTS_VIEW,     // v8.5: تنبيهات الدماغ الداخلي (مجاني)
+    ],
+    // === v8.5: مختص كميات آربا — موظف داخلي يراجع ويقدم الكميات ===
+    // يملك كل صلاحيات المهندس + الذكاء الاصطناعي الخارجي + مراجعة وتقديم الكميات
+    arba_qs_specialist: [
+        PERMISSIONS.PROJECTS_CREATE,
+        PERMISSIONS.PROJECTS_EDIT,
+        PERMISSIONS.PROJECTS_VIEW_ALL,
+        PERMISSIONS.CLIENTS_CREATE,
+        PERMISSIONS.CLIENTS_EDIT,
+        PERMISSIONS.CLIENTS_VIEW_PRIVATE,
+        PERMISSIONS.PDF_EXPORT,
+        PERMISSIONS.PDF_UPLOAD,
+        PERMISSIONS.WORKSPACE_ACCESS,
+        PERMISSIONS.FORMULA_VIEW,
+        PERMISSIONS.CALCULATIONS_VIEW,
+        PERMISSIONS.UPLOAD_FILES,
+        PERMISSIONS.SECURITY_VIEW,
+        PERMISSIONS.SECURITY_LOGS,
+        PERMISSIONS.BRAIN_ALERTS_VIEW,       // تنبيهات الدماغ الداخلي
+        PERMISSIONS.BRAIN_DEEP_ANALYSIS,     // تحليل عميق بالذكاء الخارجي
+        PERMISSIONS.BRAIN_FULL_REPORT,       // تقرير كامل بالتوصيات
+        PERMISSIONS.QS_REVIEW_SUBMIT,        // مراجعة وتقديم الكميات
     ],
     client: [
         PERMISSIONS.PROJECTS_VIEW_OWN,
         PERMISSIONS.PORTAL_ACCESS,
         PERMISSIONS.PDF_EXPORT,
+        PERMISSIONS.BRAIN_ALERTS_VIEW,       // v8.5: يرى التنبيهات الأساسية فقط (🔴🟠🟢)
     ],
     viewer: [
         PERMISSIONS.PORTAL_ACCESS,
@@ -396,6 +425,7 @@ export const ROLE_ZONE: Record<UserRole, ZoneType> = {
     admin: 'A',
     superadmin: 'A',
     qs_engineer: 'A',
+    arba_qs_specialist: 'A',  // v8.5: موظف آربا — منطقة العمل
     client: 'B',
     viewer: 'B',
 };
