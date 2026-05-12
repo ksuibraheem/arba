@@ -12,6 +12,8 @@ import ProjectList from './ProjectList';
 import ClientManager from './ClientManager';
 import SecurityAlerts from './SecurityAlerts';
 import RateLibrary from './RateLibrary';
+import UsageNudgeBanner from './UsageNudgeBanner';
+import UsageQuotaBar from './UsageQuotaBar';
 import {
     ArbaProject, ArbaClient, SecurityAlert as SecurityAlertType,
     DashboardStats, ProjectStatus, UserRole, generateId
@@ -30,9 +32,11 @@ interface SaaSDashboardProps {
     userId: string;
     userName: string;
     userEmail: string;
+    userPlan?: string;
     language: Language;
     onOpenPricing: (project?: ArbaProject) => void;
     onLogout: () => void;
+    onUpgrade?: () => void;
 }
 
 // =================== SIDEBAR NAV CONFIG ===================
@@ -49,7 +53,7 @@ const NAV_ITEMS: { id: DashboardSection; icon: string; label: { ar: string; en: 
 // =================== COMPONENT ===================
 
 const SaaSDashboard: React.FC<SaaSDashboardProps> = ({
-    userId, userName, userEmail, language, onOpenPricing, onLogout
+    userId, userName, userEmail, userPlan = 'free', language, onOpenPricing, onLogout, onUpgrade
 }) => {
     const isAr = language === 'ar';
 
@@ -192,6 +196,12 @@ const SaaSDashboard: React.FC<SaaSDashboardProps> = ({
             case 'overview':
                 return (
                     <div className="space-y-6">
+                        {/* V2: Usage Alerts */}
+                        <UsageNudgeBanner userId={userId} planId={userPlan} language={language} onUpgrade={onUpgrade} />
+
+                        {/* V2: Usage Quota Bars */}
+                        <UsageQuotaBar userId={userId} planId={userPlan} language={language} />
+
                         <QuickStats stats={stats} language={language} loading={loading} />
 
                         {/* Recent Projects */}
@@ -400,6 +410,17 @@ const SaaSDashboard: React.FC<SaaSDashboardProps> = ({
                         </div>
 
                         <div className="flex items-center gap-3">
+                            {/* Plan badge */}
+                            <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase border ${
+                                userPlan === 'enterprise' ? 'bg-purple-500/10 text-purple-400 border-purple-500/30' :
+                                userPlan === 'business' ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' :
+                                userPlan === 'professional' ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' :
+                                userPlan === 'starter' ? 'bg-green-500/10 text-green-400 border-green-500/30' :
+                                'bg-slate-500/10 text-slate-400 border-slate-500/30'
+                            }`}>
+                                {userPlan.toUpperCase()}
+                            </span>
+
                             {/* Role badge */}
                             <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase border ${userRole === 'admin'
                                 ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'

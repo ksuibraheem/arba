@@ -257,12 +257,15 @@ function notifyListeners() {
 
 // =================== Helpers ===================
 
-/** Map internal plan types to companyData plan IDs */
+/** Map internal plan types to companyData plan IDs — V2 */
 function mapPlanId(plan: PlanType): string {
     switch (plan) {
         case 'free': return 'free';
-        case 'basic': return 'professional'; // basic maps to professional in companyData
-        case 'pro': return 'professional';
+        case 'starter': return 'starter';
+        case 'basic': return 'starter';        // legacy alias
+        case 'pro': return 'professional';     // legacy alias
+        case 'professional': return 'professional';
+        case 'business': return 'business';
         case 'enterprise': return 'enterprise';
         default: return 'free';
     }

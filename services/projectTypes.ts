@@ -154,12 +154,15 @@ export interface PlanLimits {
     price: number;                // Monthly price SAR
 }
 
-/** Seat pricing and storage pricing */
+/** Seat pricing and storage pricing — V2 */
 export const PLAN_EMPLOYEE_LIMITS: Record<SubscriptionPlan, PlanLimits> = {
-    free:       { maxEmployees: 1, storageMB: 200,   maxProjects: 2,  price: 0 },
-    basic:      { maxEmployees: 2, storageMB: 1024,  maxProjects: 5,  price: 0 }, // included in basic subscription
-    pro:        { maxEmployees: 4, storageMB: 5120,  maxProjects: 20, price: 299 },
-    enterprise: { maxEmployees: 10, storageMB: 20480, maxProjects: 100, price: 599 },
+    free:         { maxEmployees: 1,  storageMB: 25,     maxProjects: 1,   price: 0 },
+    starter:      { maxEmployees: 1,  storageMB: 200,    maxProjects: 5,   price: 149 },
+    basic:        { maxEmployees: 2,  storageMB: 200,    maxProjects: 5,   price: 149 },  // legacy alias
+    pro:          { maxEmployees: 4,  storageMB: 2048,   maxProjects: 15,  price: 399 },  // legacy alias
+    professional: { maxEmployees: 4,  storageMB: 2048,   maxProjects: 15,  price: 399 },
+    business:     { maxEmployees: 11, storageMB: 10240,  maxProjects: 50,  price: 999 },
+    enterprise:   { maxEmployees: 26, storageMB: 51200,  maxProjects: -1,  price: 1999 },
 };
 
 // Extra seats beyond plan limit (6+ users)
@@ -291,7 +294,7 @@ export type ZoneType = 'A' | 'B';  // A = Employee Workspace, B = Client Portal
 // =================== SUBSCRIPTION ===================
 
 export type SubscriptionStatus = 'active' | 'trial' | 'pending_approval' | 'expired' | 'grace_period' | 'suspended';
-export type SubscriptionPlan = 'free' | 'basic' | 'pro' | 'enterprise';
+export type SubscriptionPlan = 'free' | 'starter' | 'basic' | 'pro' | 'professional' | 'business' | 'enterprise';
 
 export interface ArbaSubscription {
     id: string;

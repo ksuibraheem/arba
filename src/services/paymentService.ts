@@ -31,9 +31,21 @@ const TAP_CONFIG = {
 
 // =================== الأسعار ===================
 
-export const PLAN_PRICES = {
+export const PLAN_PRICES: Record<string, number> = {
     free: 0,
-    professional: 499 // ريال سعودي / شهرياً (يطابق companyData.ts)
+    starter: 149,
+    professional: 399,
+    business: 999,
+    enterprise: 1999
+} as const;
+
+// Annual prices (20% discount)
+export const PLAN_ANNUAL_PRICES: Record<string, number> = {
+    free: 0,
+    starter: 1430,      // 149 × 12 × 0.8
+    professional: 3830,  // 399 × 12 × 0.8
+    business: 9590,      // 999 × 12 × 0.8
+    enterprise: 19190    // 1999 × 12 × 0.8
 } as const;
 
 // =================== أنواع البيانات ===================
@@ -53,7 +65,8 @@ export interface PaymentRequest {
     userEmail: string;
     userName: string;
     amount: number;
-    plan: 'professional';
+    plan: string;  // V2: any plan ID
+    billingCycle?: 'monthly' | 'annual';
     gateway: PaymentGateway;
     receiptFile?: string;
     receiptFileName?: string;
@@ -317,7 +330,7 @@ export async function submitBankTransfer(request: PaymentRequest): Promise<Payme
 /**
  * المحاسب يوافق على التحويل البنكي → تفعيل الاشتراك تلقائياً
  */
-export async function approvePayment(paymentId: string, userId: string, plan: 'professional'): Promise<boolean> {
+export async function approvePayment(paymentId: string, userId: string, plan: string): Promise<boolean> {
     // تحديث حالة الدفع
     const updated = await updatePaymentStatus(paymentId, 'completed', undefined);
     if (!updated) return false;
@@ -340,16 +353,25 @@ export async function rejectPayment(paymentId: string, reason?: string): Promise
  */
 export async function activateSubscription(
     userId: string,
-    plan: 'professional',
-    paymentId: string
+    plan: string,
+    paymentId: string,
+    billingCycle: 'monthly' | 'annual' = 'monthly'
 ): Promise<boolean> {
     const expiresAt = new Date();
-    expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+    if (billingCycle === 'annual') {
+        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+    } else {
+        expiresAt.setMonth(expiresAt.getMonth() + 1);
+    }
+
+    const price = billingCycle === 'annual'
+        ? (PLAN_ANNUAL_PRICES[plan] || 0)
+        : (PLAN_PRICES[plan] || 0);
 
     const subscriptionId = await createSubscription({
         userId,
         plan,
-        amount: PLAN_PRICES[plan],
+        amount: price,
         currency: TAP_CONFIG.currency,
         status: 'active',
         paymentId,

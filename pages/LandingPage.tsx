@@ -73,7 +73,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                         <div className="hidden md:flex items-center gap-8">
                             <a href="#services" className="text-slate-300 hover:text-white transition-colors">{t('nav_services')}</a>
                             <a href="#features" className="text-slate-300 hover:text-white transition-colors">{t('nav_why_us') || t('section_why_us')}</a>
-                            <a href="#pricing" className="text-slate-300 hover:text-white transition-colors">{t('nav_pricing')}</a>
+                            <button onClick={() => onNavigate('pricing')} className="text-slate-300 hover:text-white transition-colors">{t('nav_pricing')}</button>
                             <button
                                 onClick={() => onNavigate('about')}
                                 className="text-slate-300 hover:text-white transition-colors"

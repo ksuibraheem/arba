@@ -26,7 +26,7 @@ export interface UserData {
     name: string;
     phone?: string;
     userType: 'individual' | 'company' | 'supplier';
-    plan: 'free' | 'professional';
+    plan: string;  // V2: free | starter | professional | business | enterprise
     status: 'pending' | 'verified' | 'approved' | 'suspended';
     emailVerified: boolean;
     createdAt: Timestamp;
@@ -45,7 +45,7 @@ export interface CompanyData {
 
 export interface SubscriptionData {
     userId: string;
-    plan: 'free' | 'professional';
+    plan: string;  // V2: any plan ID
     amount: number;
     currency: string;
     status: 'active' | 'expired' | 'cancelled' | 'pending';

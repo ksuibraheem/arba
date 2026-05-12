@@ -70,6 +70,20 @@ export interface UserData {
     usedStorageMB: number;
     companyLogo?: string;
     createdAt: Date | Timestamp;
+
+    // ── V2: Usage Tracking Fields ──
+    usedAIItems?: number;           // عدد بنود AI المستخدمة هذا الشهر
+    usedBOQUploads?: number;        // عدد BOQ المرفوعة هذا الشهر
+    usedEmployees?: number;         // عدد الموظفين الحاليين
+    usedAPICalls?: number;          // عدد API calls هذا الشهر
+    usedTenderReports?: number;     // عدد تقارير المناقصات هذا الشهر
+
+    // ── V2: Billing Fields ──
+    billingCycle?: 'monthly' | 'annual';   // دورة الفوترة
+    subscriptionStart?: string;            // تاريخ بداية الاشتراك (ISO)
+    subscriptionEnd?: string;              // تاريخ نهاية الاشتراك (ISO)
+    lastUsageReset?: string;               // آخر تصفير شهري (ISO)
+    stripeCustomerId?: string;             // معرف عميل Stripe/Tap
 }
 
 export interface AuthResult {
@@ -124,6 +138,16 @@ export const registerWithFirebase = async (userData: {
             plan: userData.plan,
             usedProjects: 0,
             usedStorageMB: 0,
+            // V2: Usage tracking fields
+            usedAIItems: 0,
+            usedBOQUploads: 0,
+            usedEmployees: 0,
+            usedAPICalls: 0,
+            usedTenderReports: 0,
+            // V2: Billing fields
+            billingCycle: 'monthly',
+            subscriptionStart: new Date().toISOString(),
+            lastUsageReset: new Date().toISOString(),
             createdAt: serverTimestamp()
         };
 

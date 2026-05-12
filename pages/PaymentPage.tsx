@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Language } from '../types';
-import { CreditCard, Building2, ArrowLeft, ArrowRight, Check, Shield, Crown, Zap, Star, Clock, Users, HardDrive, Smartphone, AlertCircle, ExternalLink, Upload, FileText } from 'lucide-react';
-import { COMPANY_INFO, SUBSCRIPTION_PLANS, PAGE_TRANSLATIONS } from '../companyData';
-import { initiateElectronicPayment, submitBankTransfer, PLAN_PRICES, PAYMENT_MESSAGES } from '../src/services/paymentService';
+import { CreditCard, Building2, ArrowLeft, ArrowRight, Check, Shield, Crown, Zap, Star, Clock, Users, HardDrive, Smartphone, AlertCircle, ExternalLink, Upload, FileText, Rocket } from 'lucide-react';
+import { COMPANY_INFO, SUBSCRIPTION_PLANS, PAGE_TRANSLATIONS, getPlanAnnualPrice } from '../companyData';
+import { initiateElectronicPayment, submitBankTransfer, PLAN_PRICES, PLAN_ANNUAL_PRICES, PAYMENT_MESSAGES } from '../src/services/paymentService';
 import { registrationService } from '../services/registrationService';
 import ArbaLogo from '../components/ArbaLogo';
 
@@ -47,20 +47,35 @@ const PaymentPage: React.FC<PaymentPageProps> = ({
     const [success, setSuccess] = useState<'electronic' | 'bank' | null>(null);
     const [receiptFile, setReceiptFile] = useState<string | null>(null);
     const [receiptFileName, setReceiptFileName] = useState('');
+    const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
 
-    // Dynamic price based on selected plan
-    const selectedPlanPrice = SUBSCRIPTION_PLANS.find(p => p.id === selectedPlan)?.price || 0;
+    // Dynamic price based on selected plan and billing cycle
+    const getDisplayPrice = (planId: string) => {
+        if (billingCycle === 'annual') {
+            const annual = getPlanAnnualPrice(planId);
+            return Math.round(annual.annual / 12);
+        }
+        return SUBSCRIPTION_PLANS.find(p => p.id === planId)?.price || 0;
+    };
+
+    const selectedPlanPrice = selectedPlan
+        ? (billingCycle === 'annual' ? (PLAN_ANNUAL_PRICES[selectedPlan] || 0) / 12 : (PLAN_PRICES[selectedPlan] || 0))
+        : 0;
 
     const planIcons: Record<string, React.ReactNode> = {
         free: <Zap className="w-6 h-6" />,
+        starter: <Rocket className="w-6 h-6" />,
         professional: <Crown className="w-6 h-6" />,
+        business: <Building2 className="w-6 h-6" />,
         enterprise: <Shield className="w-6 h-6" />
     };
 
     const planColors: Record<string, string> = {
         free: 'from-slate-400 to-slate-500',
-        professional: 'from-green-500 to-lime-500',
-        enterprise: 'from-purple-400 to-indigo-500'
+        starter: 'from-green-400 to-emerald-500',
+        professional: 'from-blue-400 to-blue-600',
+        business: 'from-amber-400 to-orange-500',
+        enterprise: 'from-purple-400 to-violet-600'
     };
 
     // Plan selection

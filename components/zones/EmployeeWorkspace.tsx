@@ -25,6 +25,8 @@ import * as projectService from '../../services/projectService';
 import * as clientService from '../../services/clientService';
 import ConnectHub from '../connect/ConnectHub';
 import { projectSupplierService } from '../../services/projectSupplierService';
+import UsageNudgeBanner from '../dashboard/UsageNudgeBanner';
+import UsageQuotaBar from '../dashboard/UsageQuotaBar';
 
 const LazyBOQUploader = React.lazy(() => import('../BOQUploader'));
 const LazyPriceComparisonPanel = React.lazy(() => import('../panels/PriceComparisonPanel'));
@@ -85,6 +87,7 @@ const EmployeeWorkspace: React.FC<EmployeeWorkspaceProps> = ({
     const [pendingProject, setPendingProject] = useState<ArbaProject | undefined>(undefined);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [loading, setLoading] = useState(true);
+    const userPlan = isDemoMode ? 'professional' : (roleCtx as any).plan || 'free';
 
     // Data
     const [stats, setStats] = useState<DashboardStats>({
@@ -398,6 +401,12 @@ const EmployeeWorkspace: React.FC<EmployeeWorkspaceProps> = ({
             case 'overview':
                 return (
                     <div className="space-y-6">
+                        {/* V2: Usage Alerts */}
+                        <UsageNudgeBanner userId={uid} planId={userPlan} language={language} />
+
+                        {/* V2: Usage Quota Bars */}
+                        <UsageQuotaBar userId={uid} planId={userPlan} language={language} />
+
                         <QuickStats stats={stats} language={language} loading={loading} />
                         <div className="flex items-center justify-between">
                             <h3 className="text-lg font-bold text-white">
@@ -658,6 +667,13 @@ const EmployeeWorkspace: React.FC<EmployeeWorkspaceProps> = ({
 
                         <div className="flex items-center gap-2">
                             <span className="hidden sm:inline px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border bg-teal-500/10 text-teal-400 border-teal-500/30">ZONE A</span>
+                            <span className={`hidden sm:inline px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${
+                                userPlan === 'enterprise' ? 'bg-purple-500/10 text-purple-400 border-purple-500/30' :
+                                userPlan === 'business' ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' :
+                                userPlan === 'professional' ? 'bg-blue-500/10 text-blue-400 border-blue-500/30' :
+                                userPlan === 'starter' ? 'bg-green-500/10 text-green-400 border-green-500/30' :
+                                'bg-slate-500/10 text-slate-400 border-slate-500/30'
+                            }`}>{userPlan.toUpperCase()}</span>
                             <span className={`hidden sm:inline px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${role === 'admin' ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' : 'bg-blue-500/10 text-blue-400 border-blue-500/30'}`}>
                                 {role === 'admin' ? 'ADMIN' : 'QS'}
                             </span>

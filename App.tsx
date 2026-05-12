@@ -29,6 +29,7 @@ import RegisterPage, { RegisterData } from './pages/RegisterPage';
 import AboutPage from './pages/AboutPage';
 import CompanyPage from './pages/CompanyPage';
 import PaymentPage from './pages/PaymentPage';
+import PricingPage from './pages/PricingPage';
 import VerificationPage from './pages/VerificationPage';
 import UnderReviewPage from './pages/UnderReviewPage';
 import PaymentUploadPage from './pages/PaymentUploadPage';
@@ -79,7 +80,7 @@ import SplashScreen from './components/SplashScreen';
 // Toggle Firebase mode - set to true to use Firebase
 const USE_FIREBASE = true;
 
-type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'pricing-calc' | 'client-portal' | 'private' | 'security-403' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant' | 'password-reset' | 'cloud-sync' | 'support-center' | 'support' | 'developer' | 'developer-brain' | 'marketing' | 'quality' | 'deputy' | 'supplier' | 'quantity_surveyor' | 'supplier-catalog' | 'admin-suppliers' | 'demo' | 'team-login' | 'team-dashboard' | 'employee-login' | 'boq-engine';
+type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'pricing' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'pricing-calc' | 'client-portal' | 'private' | 'security-403' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant' | 'password-reset' | 'cloud-sync' | 'support-center' | 'support' | 'developer' | 'developer-brain' | 'marketing' | 'quality' | 'deputy' | 'supplier' | 'quantity_surveyor' | 'supplier-catalog' | 'admin-suppliers' | 'demo' | 'team-login' | 'team-dashboard' | 'employee-login' | 'boq-engine';
 
 // مفتاح الوصول السري للوحة المدير — يُقرأ من .env
 const ADMIN_SECRET_KEY = import.meta.env.VITE_ADMIN_SECRET_KEY || '';
@@ -1289,6 +1290,10 @@ const App: React.FC = () => {
 
     if (currentPage === 'developer-brain') {
         return <DeveloperBrainDashboard language={language} onNavigate={handleNavigate} />;
+    }
+
+    if (currentPage === 'pricing') {
+        return <PricingPage language={language} onNavigate={handleNavigate} currentPlan={user?.plan} onSelectPlan={() => handleNavigate('payment')} />;
     }
 
     if (currentPage === 'payment') {
