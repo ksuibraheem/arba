@@ -2,10 +2,14 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import Sidebar from './components/Sidebar';
 import StatsGrid from './components/StatsGrid';
+import CostBreakdownChart from './components/charts/CostBreakdownChart';
+import CategoryBarChart from './components/charts/CategoryBarChart';
+import PriceBenchmark from './components/charts/PriceBenchmark';
 import ItemTable from './components/ItemTable';
 import BlueprintEditor from './components/BlueprintEditor';
 import InteriorEditor from './components/InteriorEditor';
 import AreaBreakdownDisplay from './components/AreaBreakdown';
+import ItemProfitabilityChart from './components/charts/ItemProfitabilityChart';
 import PriceQuote from './components/PriceQuote';
 import UniversalImporter from './components/UniversalImporter';
 import SaaSDashboard from './components/dashboard/SaaSDashboard';
@@ -48,8 +52,20 @@ import TeamLoginPage from './pages/TeamLoginPage';
 import TeamDashboard from './pages/TeamDashboard';
 import { ProjectMember } from './services/projectSupplierService';
 import { AppState, CalculatedItem, ProjectType, CustomParams, BlueprintConfig, SurfaceLocation, RoomFinishes, BaseItem } from './types';
-import { INITIAL_OVERHEAD, PROJECT_DEFAULTS, PROJECT_TITLES, TRANSLATIONS } from './constants';
+import { INITIAL_OVERHEAD, PROJECT_DEFAULTS, PROJECT_TITLES, TRANSLATIONS, DELIVERY_SCOPE_SECTIONS, SECTION_DEFINITIONS, DELIVERY_SCOPE_OPTIONS } from './constants';
 import { calculateProjectCosts } from './utils/calculations';
+import { generateInsightReport, InsightReport } from './services/goldenOutputService';
+import { estimateSchedule, ScheduleEstimate } from './services/scheduleEstimator';
+import { FULL_ITEMS_DATABASE } from './constants';
+import BrainInsightsBar from './components/BrainInsightsBar';
+import { silentBrainTracker } from './services/silentBrainTracker';
+import { temporalAuditService } from './services/temporalAuditService';
+import { budgetGuardian } from './services/budgetGuardian';
+import { collectiveBrainService } from './services/collectiveBrainService';
+import { initializeBrain } from './services/brainDataLoader';
+import { internalMetadataService } from './services/internalMetadataService';
+import { proactiveSweepEngine } from './services/proactiveSweepEngine';
+import DeveloperBrainDashboard from './pages/admin/DeveloperBrainDashboard';
 import { Download, Calendar, User, Briefcase, Hash, LogOut, Calculator, Lock, Crown, AlertTriangle, HardDrive, FolderOpen, Upload, Image, Zap } from 'lucide-react';
 import { COMPANY_INFO, SUBSCRIPTION_PLANS, encryptSupplierName, getStorageInfo, getRemainingProjects, FREE_PLAN_RESTRICTIONS, PAGE_TRANSLATIONS, getLocalizedText } from './companyData';
 // Local auth service (fallback)
@@ -63,7 +79,7 @@ import SplashScreen from './components/SplashScreen';
 // Toggle Firebase mode - set to true to use Firebase
 const USE_FIREBASE = true;
 
-type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'pricing-calc' | 'client-portal' | 'private' | 'security-403' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant' | 'password-reset' | 'cloud-sync' | 'support-center' | 'support' | 'developer' | 'marketing' | 'quality' | 'deputy' | 'supplier' | 'quantity_surveyor' | 'supplier-catalog' | 'admin-suppliers' | 'demo' | 'team-login' | 'team-dashboard' | 'employee-login';
+type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'pricing-calc' | 'client-portal' | 'private' | 'security-403' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant' | 'password-reset' | 'cloud-sync' | 'support-center' | 'support' | 'developer' | 'developer-brain' | 'marketing' | 'quality' | 'deputy' | 'supplier' | 'quantity_surveyor' | 'supplier-catalog' | 'admin-suppliers' | 'demo' | 'team-login' | 'team-dashboard' | 'employee-login' | 'boq-engine';
 
 // مفتاح الوصول السري للوحة المدير — يُقرأ من .env
 const ADMIN_SECRET_KEY = import.meta.env.VITE_ADMIN_SECRET_KEY || '';
@@ -171,7 +187,19 @@ const App: React.FC = () => {
 
     // Ref to track currentPage without triggering useEffect re-runs
     const currentPageRef = useRef(currentPage);
-    useEffect(() => { currentPageRef.current = currentPage; }, [currentPage]);
+    useEffect(() => { 
+        currentPageRef.current = currentPage; 
+        silentBrainTracker.visitPage(currentPage);
+    }, [currentPage]);
+
+    // Initialize silent brain tracker
+    useEffect(() => {
+        const plan = user?.plan || 'free';
+        silentBrainTracker.startSession(plan);
+        return () => {
+            silentBrainTracker.endSession();
+        };
+    }, []);
 
     // Ref to track manager/employee state for onAuthChange guard
     const isManagerRef = useRef(isManager);
@@ -480,6 +508,9 @@ const App: React.FC = () => {
 
         registeredSuppliers: [],
         supplierProducts: [],
+
+        deliveryScope: 'turnkey',
+        enabledSections: ['00','01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17'],
     });
 
     const tt = (key: string) => TRANSLATIONS[key]?.[state.language] || PAGE_TRANSLATIONS[key]?.[language] || key;
@@ -986,6 +1017,21 @@ const App: React.FC = () => {
     };
 
     const handleItemParamChange = (itemId: string, params: CustomParams) => {
+        // 🧠 SOVEREIGN v8.0: Track price changes in temporal audit
+        if (params.customPrice !== undefined) {
+            const currentItem = calculationResult.items.find(i => i.id === itemId);
+            if (currentItem) {
+                temporalAuditService.recordPriceChange({
+                    itemId,
+                    itemName: currentItem.descriptionAr || currentItem.descriptionEn || itemId,
+                    newPrice: params.customPrice,
+                    previousPrice: currentItem.finalUnitPrice,
+                    source: 'user',
+                    userId: user?.uid,
+                    projectType: state.projectType,
+                });
+            }
+        }
         setState((prev) => ({
             ...prev,
             itemOverrides: {
@@ -1018,6 +1064,21 @@ const App: React.FC = () => {
         }
 
         try {
+            // 🧠 SOVEREIGN v8.0: Budget Guardian — check if AI call is allowed
+            const budgetCheck = budgetGuardian.shouldUseGemini({
+                functionName: 'checkPriceWithAI',
+                estimatedTokens: 500,
+                requiresVision: false,
+                requiresNLP: true,
+                complexity: 0.5,
+                userId: user?.uid || 'anonymous',
+            });
+            if (!budgetCheck.approved) {
+                return language === 'ar'
+                    ? `⚠️ ${budgetCheck.reason}. ${budgetCheck.fallback || ''}`
+                    : `⚠️ ${budgetCheck.reason}. ${budgetCheck.fallback || ''}`;
+            }
+
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
             const prompt = `
@@ -1035,6 +1096,17 @@ const App: React.FC = () => {
                 model: 'gemini-2.5-flash',
                 contents: prompt,
             });
+
+            // 🧠 SOVEREIGN v8.0: Record AI usage in budget guardian
+            budgetGuardian.recordUsage({
+                functionName: 'checkPriceWithAI',
+                estimatedTokens: 500,
+                requiresVision: false,
+                requiresNLP: true,
+                complexity: 0.5,
+                userId: user?.uid || 'anonymous',
+            }, 500);
+
             return response.text || "لم يتم استلام رد";
         } catch (error) {
             console.error("AI Error", error);
@@ -1043,16 +1115,124 @@ const App: React.FC = () => {
     };
 
     const calculationResult = useMemo(() => {
-        return calculateProjectCosts(state);
+        const start = performance.now();
+        const res = calculateProjectCosts(state);
+        silentBrainTracker.trackCalcTime(performance.now() - start);
+        return res;
     }, [state]);
+    // =================== 🧠 Brain Layer: Initialize Training Data (v2.0) ===================
+    React.useEffect(() => {
+        try {
+            const brainData = initializeBrain();
+            if (brainData) {
+                console.log(`🧠 Brain v2.0: ${brainData.totalSources} sources | ${brainData.totalItems} items | ${Object.keys(brainData.categoryBenchmarks).length} benchmarks loaded`);
+            }
+        } catch { /* silent — brain initialization is non-blocking */ }
+    }, []); // Run once on mount
+
+    // =================== 📈 Brain Layer: Commodity Intelligence (V8.3) ===================
+    React.useEffect(() => {
+        try {
+            const { commodityEngine } = require('./services/commodityIntelligenceEngine');
+            const status = commodityEngine.initialize();
+            const alerts = commodityEngine.getAlerts();
+            const critical = alerts.filter((a: any) => a.severity === 'critical');
+            console.log(`📈 Commodity Engine: ${status.commodities} commodities | ${status.historyDays} days | ${alerts.length} alerts (${critical.length} critical)`);
+        } catch { /* silent — commodity engine is non-blocking */ }
+    }, []); // Run once on mount
+
+    // =================== 🧠 Brain Layer: Collective Learning (Silent) ===================
+    React.useEffect(() => {
+        if (calculationResult.items.length > 0 && state.buildArea > 0) {
+            try {
+                const totalConcrete = calculationResult.totalConcreteVolume || 0;
+                const totalSteel = calculationResult.items
+                    .filter(i => i.id?.startsWith('02'))
+                    .reduce((s, i) => s + (i.quantity || 0) * (i.baseLabor || 0) / 3000, 0);
+                const totalBlocks = calculationResult.items
+                    .filter(i => i.id?.startsWith('03'))
+                    .reduce((s, i) => s + (i.quantity || 0), 0);
+                const costPerSqm = calculationResult.finalPrice / state.buildArea;
+
+                collectiveBrainService.pushAnonymizedInsight(
+                    state.projectType, state.location, state.buildArea,
+                    state.floors || 2, costPerSqm,
+                    totalConcrete, totalSteel, totalBlocks,
+                    { concrete: 5, steel: 5, blocks: 7, tiles: 10, paint: 5 },
+                    {
+                        substructurePercent: 15, superstructurePercent: 30,
+                        masonryPercent: 12, finishesPercent: 25,
+                        mepPercent: 13, otherPercent: 5
+                    }
+                );
+            } catch { /* silent — brain learning is non-blocking */ }
+        }
+    }, [state.projectType, state.buildArea, state.location]);
+
+    // =================== 🧠 Brain Layer: Internal Metadata Stamping (Silent) ===================
+    // ⚠️ RULE 1: These _internal_status fields NEVER appear in client UI
+    React.useEffect(() => {
+        if (calculationResult.items.length > 0) {
+            try {
+                // Stamp every calculated item with internal metadata
+                internalMetadataService.bulkStamp(
+                    calculationResult.items.map(item => ({
+                        itemId: item.id,
+                        materialName: item.descriptionAr || item.descriptionEn || item.name || '',
+                        category: item.id?.substring(0, 2), // Section prefix as category
+                        currentPrice: item.finalUnitPrice,
+                        previousPrice: item.usedPrice !== item.finalUnitPrice ? item.usedPrice : undefined,
+                    }))
+                );
+
+                // Eager check on volatile items (metals etc.)
+                const volatileItems = calculationResult.items.filter(item => {
+                    const name = (item.descriptionAr || item.name || '').toLowerCase();
+                    return name.includes('حديد') || name.includes('نحاس') || name.includes('ألومنيوم') 
+                        || name.includes('steel') || name.includes('rebar') || name.includes('copper');
+                });
+                if (volatileItems.length > 0) {
+                    proactiveSweepEngine.batchEagerCheck(
+                        volatileItems.map(i => ({
+                            id: i.id,
+                            name: i.descriptionAr || i.name || '',
+                            price: i.finalUnitPrice,
+                            category: i.id?.substring(0, 2),
+                        }))
+                    );
+                }
+            } catch { /* silent — internal metadata is non-blocking */ }
+        }
+    }, [calculationResult.items]);
+
+    // =================== 🧠 Brain Layer: Insight Report ===================
+    const brainInsights = useMemo<InsightReport | null>(() => {
+        try {
+            if (!calculationResult.items || calculationResult.items.length === 0) return null;
+            return generateInsightReport(
+                state,
+                calculationResult.items,
+                FULL_ITEMS_DATABASE
+            );
+        } catch (e) {
+            console.warn('🧠 Brain insight generation failed:', e);
+            return null;
+        }
+    }, [calculationResult, state]);
+
+    // =================== 🧠 Brain Layer: Schedule Estimator ===================
+    const scheduleEstimate = useMemo<ScheduleEstimate | null>(() => {
+        try {
+            if (!state.blueprint || state.blueprint.floors.length === 0) return null;
+            return estimateSchedule(state.blueprint, state.soilType);
+        } catch (e) {
+            console.warn('🧠 Schedule estimation failed:', e);
+            return null;
+        }
+    }, [state.blueprint, state.soilType]);
 
     const handleExport = () => {
-        // Block printing for free plan and demo mode
-        if (isFreePlan || isDemoMode) {
-            // Don't allow printing - show nothing or could show upgrade message
-            return;
-        }
-        // Show price quote for paid users
+        // PDF export available for all users
         setShowPriceQuote(true);
     };
 
@@ -1105,6 +1285,10 @@ const App: React.FC = () => {
 
     if (currentPage === 'company') {
         return <CompanyPage language={language} onNavigate={handleNavigate} />;
+    }
+
+    if (currentPage === 'developer-brain') {
+        return <DeveloperBrainDashboard language={language} onNavigate={handleNavigate} />;
     }
 
     if (currentPage === 'payment') {
@@ -1575,6 +1759,16 @@ const App: React.FC = () => {
         );
     }
 
+    // ═══════ BOQ ENGINE — ARBA V8.2 ═══════
+    if (currentPage === 'boq-engine') {
+        const BOQUploader = React.lazy(() => import('./components/BOQUploader'));
+        return (
+            <React.Suspense fallback={<div className="min-h-screen bg-slate-900 flex items-center justify-center"><div className="animate-pulse text-emerald-400 text-xl">⚡ ARBA Engine...</div></div>}>
+                <BOQUploader language={language} />
+            </React.Suspense>
+        );
+    }
+
     // ═══════ DUAL-ZONE ROUTING ═══════
 
     // Zone A: Employee Workspace (Admin & QS Engineers)
@@ -2000,82 +2194,96 @@ const App: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Free Plan Warning Banner */}
-                    {isFreePlan && (
-                        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-4 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <AlertTriangle className="w-5 h-5 text-amber-500" />
-                                <div>
-                                    <p className="text-sm font-medium text-amber-800">
-                                        {language === 'ar' ? 'أنت تستخدم الباقة المجانية' : "You're on the Free Plan"}
-                                    </p>
-                                    <p className="text-xs text-amber-600">
-                                        {language === 'ar'
-                                            ? 'بعض الميزات محدودة. قم بالترقية لفتح جميع المميزات.'
-                                            : 'Some features are limited. Upgrade to unlock all features.'
-                                        }
-                                    </p>
+                    {/* === COMPACT HEADER FOR BLUEPRINT MODE === */}
+                    {state.viewMode === 'blueprint' ? (
+                        <>
+                            {isFreePlan && (
+                                <div className="bg-amber-50/80 border border-amber-200 rounded-lg px-3 py-1.5 mb-2 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                                        <span className="text-xs font-medium text-amber-800">
+                                            {language === 'ar' ? 'باقة مجانية — بعض الميزات محدودة' : 'Free Plan — Some features limited'}
+                                        </span>
+                                    </div>
+                                    <button onClick={() => handleNavigate('payment')} className="px-2.5 py-1 bg-emerald-500 text-white text-[10px] font-bold rounded-md hover:bg-emerald-400">
+                                        {language === 'ar' ? 'ترقية' : 'Upgrade'}
+                                    </button>
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        <>
+                            {/* Free Plan Warning Banner */}
+                            {isFreePlan && (
+                                <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-4 flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <AlertTriangle className="w-5 h-5 text-amber-500" />
+                                        <div>
+                                            <p className="text-sm font-medium text-amber-800">
+                                                {language === 'ar' ? 'أنت تستخدم الباقة المجانية' : "You're on the Free Plan"}
+                                            </p>
+                                            <p className="text-xs text-amber-600">
+                                                {language === 'ar'
+                                                    ? 'بعض الميزات محدودة. قم بالترقية لفتح جميع المميزات.'
+                                                    : 'Some features are limited. Upgrade to unlock all features.'
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => handleNavigate('payment')}
+                                        className="px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-medium rounded-lg hover:from-emerald-400 hover:to-teal-400 transition-all"
+                                    >
+                                        {language === 'ar' ? 'ترقية' : 'Upgrade'}
+                                    </button>
+                                </div>
+                            )}
+
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white shrink-0">
+                                        <Calculator className="w-6 h-6" />
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <h1 className="text-base sm:text-xl md:text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2 sm:gap-3">
+                                            {state.viewMode === 'pricing' ? tt('boq_title') : state.viewMode === 'blueprint' ? tt('blueprint_title') : tt('materials')}
+                                            <span className="bg-gradient-to-r from-emerald-400 to-emerald-600 text-white p-1 px-3 rounded-lg text-[10px] font-bold shadow-sm shadow-emerald-500/20 uppercase tracking-widest">PRO</span>
+                                        </h1>
+                                        <p className="text-slate-500 text-sm font-medium flex items-center gap-2">
+                                            {PROJECT_TITLES[state.projectType]}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-wrap">
+                                    <div className="text-sm font-medium text-slate-600 bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-2">
+                                        <Calendar className="w-4 h-4 text-emerald-500" />
+                                        <span>{state.metadata.pricingDate}</span>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowUniversalImporter(true)}
+                                        disabled={isFreePlan || isDemoMode}
+                                        title={(isFreePlan || isDemoMode) ? (state.language === 'ar' ? 'غير متاح في الباقة المجانية' : 'Not available in free plan') : (state.language === 'ar' ? 'محلل Arba الذكي' : 'Arba Intelligence Parser')}
+                                        className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all font-bold text-sm shadow-lg ${
+                                            (isFreePlan || isDemoMode)
+                                            ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
+                                            : 'bg-gradient-to-r from-violet-600 hover:from-violet-500 to-indigo-600 hover:to-indigo-500 text-white shadow-indigo-500/25 border border-indigo-400/30 active:scale-95'
+                                        }`}
+                                    >
+                                        {(isFreePlan || isDemoMode) && <Lock className="w-4 h-4" />}
+                                        <Zap className={`w-4 h-4 ${(isFreePlan || isDemoMode) ? '' : 'text-yellow-300 fill-yellow-300'}`} />
+                                        {state.language === 'ar' ? 'استيراد ذكي' : 'Smart Import'}
+                                    </button>
+                                    <button
+                                        onClick={handleExport}
+                                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all font-bold text-sm shadow-md bg-slate-900 hover:bg-slate-800 text-white border border-slate-700 active:scale-95"
+                                    >
+                                        <Download className="w-4 h-4 text-emerald-400" />
+                                        PDF/Excel
+                                    </button>
                                 </div>
                             </div>
-                            <button
-                                onClick={() => handleNavigate('payment')}
-                                className="px-4 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-medium rounded-lg hover:from-emerald-400 hover:to-teal-400 transition-all"
-                            >
-                                {language === 'ar' ? 'ترقية' : 'Upgrade'}
-                            </button>
-                        </div>
+                        </>
                     )}
-
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
-                        <div className="flex items-center gap-4">
-                            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white shrink-0">
-                                <Calculator className="w-6 h-6" />
-                            </div>
-                            <div className="flex flex-col gap-1">
-                                <h1 className="text-base sm:text-xl md:text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2 sm:gap-3">
-                                    {state.viewMode === 'pricing' ? tt('boq_title') : state.viewMode === 'blueprint' ? tt('blueprint_title') : tt('materials')}
-                                    <span className="bg-gradient-to-r from-emerald-400 to-emerald-600 text-white p-1 px-3 rounded-lg text-[10px] font-bold shadow-sm shadow-emerald-500/20 uppercase tracking-widest">PRO</span>
-                                </h1>
-                                <p className="text-slate-500 text-sm font-medium flex items-center gap-2">
-                                    {PROJECT_TITLES[state.projectType]}
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-wrap">
-                            <div className="text-sm font-medium text-slate-600 bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-emerald-500" />
-                                <span>{state.metadata.pricingDate}</span>
-                            </div>
-                            <button
-                                onClick={() => setShowUniversalImporter(true)}
-                                disabled={isFreePlan || isDemoMode}
-                                title={(isFreePlan || isDemoMode) ? (state.language === 'ar' ? 'غير متاح في الباقة المجانية' : 'Not available in free plan') : (state.language === 'ar' ? 'محلل Arba الذكي' : 'Arba Intelligence Parser')}
-                                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all font-bold text-sm shadow-lg ${
-                                    (isFreePlan || isDemoMode)
-                                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
-                                    : 'bg-gradient-to-r from-violet-600 hover:from-violet-500 to-indigo-600 hover:to-indigo-500 text-white shadow-indigo-500/25 border border-indigo-400/30 active:scale-95'
-                                }`}
-                            >
-                                {(isFreePlan || isDemoMode) && <Lock className="w-4 h-4" />}
-                                <Zap className={`w-4 h-4 ${(isFreePlan || isDemoMode) ? '' : 'text-yellow-300 fill-yellow-300'}`} />
-                                {state.language === 'ar' ? 'استيراد ذكي' : 'Smart Import'}
-                            </button>
-                            <button
-                                onClick={handleExport}
-                                disabled={isFreePlan || isDemoMode}
-                                title={(isFreePlan || isDemoMode) ? (state.language === 'ar' ? 'غير متاح في الباقة المجانية' : 'Not available in free plan') : ''}
-                                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all font-bold text-sm shadow-md ${
-                                    (isFreePlan || isDemoMode)
-                                    ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300'
-                                    : 'bg-slate-900 hover:bg-slate-800 text-white border border-slate-700 active:scale-95'
-                                }`}
-                            >
-                                {(isFreePlan || isDemoMode) && <Lock className="w-4 h-4" />}
-                                <Download className="w-4 h-4 text-emerald-400" />
-                                PDF/Excel
-                            </button>
-                        </div>
-                    </div>
                 </header>
 
                 {/* Content Area */}
@@ -2090,8 +2298,36 @@ const App: React.FC = () => {
                                 totalConcreteVolume={calculationResult.totalConcreteVolume}
                                 totalLaborCost={calculationResult.totalLaborCost}
                                 totalMaterialCost={calculationResult.totalMaterialCost}
+                                buildArea={state.buildArea}
                                 language={state.language}
                             />
+
+                            {/* Charts Section — Cost Analysis */}
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                                <CostBreakdownChart
+                                    materialCost={calculationResult.totalMaterialCost}
+                                    laborCost={calculationResult.totalLaborCost}
+                                    overhead={calculationResult.totalOverhead}
+                                    profit={calculationResult.totalProfit}
+                                    language={state.language}
+                                />
+                                <CategoryBarChart
+                                    sectionCosts={(() => {
+                                        const costs: Record<string, number> = {};
+                                        calculationResult.items.forEach(item => {
+                                            const sec = item.id?.substring(0, 2) || '00';
+                                            costs[sec] = (costs[sec] || 0) + (item.totalLinePrice || 0);
+                                        });
+                                        return costs;
+                                    })()}
+                                    language={state.language}
+                                />
+                                <PriceBenchmark
+                                    pricePerSqm={state.buildArea > 0 ? calculationResult.finalPrice / state.buildArea : 0}
+                                    projectType={state.projectType}
+                                    language={state.language}
+                                />
+                            </div>
 
                             {/* Building Area Breakdown Section */}
                             <div className="mt-6 mb-6">
@@ -2100,6 +2336,27 @@ const App: React.FC = () => {
                                     language={state.language}
                                 />
                             </div>
+
+                            {/* 🛡️ SOVEREIGN v8.0: Profitability & Brain Intelligence — HIDDEN from standard users */}
+                            {/* Only Manager, Quality Employee, and Super Admin can see raw profit analysis */}
+                            {(isManager || currentEmployee?.role === 'quality' || currentEmployee?.role === 'deputy' || user?.email === import.meta.env.VITE_SUPER_ADMIN_EMAIL) && (
+                                <>
+                                    {/* Item Profitability Detail Chart */}
+                                    <ItemProfitabilityChart
+                                        items={calculationResult.items}
+                                        language={state.language}
+                                    />
+                                </>
+                            )}
+
+                            {/* 🧠 SOVEREIGN v8.0: Brain Insights Bar — visible only to Manager & Quality */}
+                            {(isManager || currentEmployee?.role === 'quality' || currentEmployee?.role === 'deputy' || user?.email === import.meta.env.VITE_SUPER_ADMIN_EMAIL) && brainInsights && (
+                                <BrainInsightsBar
+                                    insightReport={brainInsights}
+                                    scheduleEstimate={scheduleEstimate}
+                                    language={state.language}
+                                />
+                            )}
 
                             <ItemTable
                                 items={calculationResult.items}
@@ -2112,6 +2369,8 @@ const App: React.FC = () => {
                                 encryptSupplierName={encryptSupplierName}
                                 userPlan={user?.plan || 'free'}
                                 isDemoMode={isDemoMode}
+                                sections={SECTION_DEFINITIONS}
+                                enabledSections={state.enabledSections}
                             />
                         </div>
                     </div>
@@ -2119,6 +2378,15 @@ const App: React.FC = () => {
                     <BlueprintEditor
                         blueprint={state.blueprint}
                         language={state.language}
+                        soilType={state.soilType}
+                        projectType={state.projectType}
+                        projectMeta={{
+                            ownerName: state.metadata.clientName,
+                            projectName: state.metadata.projectName,
+                            planNumber: state.metadata.planNumber,
+                            companyName: state.metadata.companyName,
+                            permitNumber: state.metadata.buildingPermitNumber,
+                        }}
                         onChange={handleBlueprintChange}
                         onUpdateTotalArea={handleUpdateTotalArea}
                     />

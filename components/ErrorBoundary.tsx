@@ -5,15 +5,19 @@ interface ErrorBoundaryState {
     error: Error | null;
 }
 
+interface ErrorBoundaryProps {
+    children: React.ReactNode;
+}
+
 /**
  * Error Boundary — يمنع ظهور صفحة بيضاء عند حدوث أي خطأ
  * يعرض رسالة واضحة بدلاً من صفحة فارغة
  */
-class ErrorBoundary extends React.Component<
-    { children: React.ReactNode },
-    ErrorBoundaryState
-> {
-    constructor(props: { children: React.ReactNode }) {
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+    declare public props: Readonly<ErrorBoundaryProps>;
+    public state: ErrorBoundaryState;
+
+    constructor(props: ErrorBoundaryProps) {
         super(props);
         this.state = { hasError: false, error: null };
     }

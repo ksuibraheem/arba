@@ -1,0 +1,618 @@
+﻿_archive/adf_pricer.cjs(279,5): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(279,7): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(279,9): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(279,11): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(279,13): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(279,14): error TS1136: Property assignment expected.
+_archive/adf_pricer.cjs(279,44): error TS1005: ':' expected.
+_archive/adf_pricer.cjs(279,46): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(279,48): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(279,50): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(279,54): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(279,56): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(279,57): error TS1136: Property assignment expected.
+_archive/adf_pricer.cjs(280,5): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(280,7): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(280,9): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(280,11): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(280,13): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(280,14): error TS1136: Property assignment expected.
+_archive/adf_pricer.cjs(280,46): error TS1005: ':' expected.
+_archive/adf_pricer.cjs(280,48): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(280,50): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(280,52): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(280,56): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(280,58): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(280,59): error TS1136: Property assignment expected.
+_archive/adf_pricer.cjs(281,5): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(281,7): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(281,9): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(281,11): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(281,13): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(281,14): error TS1136: Property assignment expected.
+_archive/adf_pricer.cjs(281,40): error TS1005: ':' expected.
+_archive/adf_pricer.cjs(281,42): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(281,44): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(281,46): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(281,50): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(281,52): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(281,53): error TS1136: Property assignment expected.
+_archive/adf_pricer.cjs(281,63): error TS1005: ',' expected.
+_archive/adf_pricer.cjs(281,73): error TS1005: ',' expected.
+_archive/adf_pricer.cjs(281,74): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(282,5): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(282,7): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(282,9): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(282,11): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(282,13): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(282,14): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(282,42): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(282,44): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(282,46): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(282,50): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(282,52): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(282,53): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(282,81): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(283,5): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(283,7): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(283,9): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(283,11): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(283,13): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(283,14): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(283,38): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(283,40): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(283,42): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(283,46): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(283,48): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(283,49): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(283,60): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(284,5): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(284,7): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(284,9): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(284,11): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(284,13): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(284,14): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(284,43): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(284,45): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(284,47): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(284,51): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(284,53): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(284,54): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(284,64): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(285,5): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(285,7): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(285,9): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(285,11): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(285,13): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(285,14): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(285,61): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(285,63): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(285,65): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(285,69): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(285,71): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(285,72): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(285,89): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(286,5): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(286,7): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(286,9): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(286,11): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(286,13): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(286,14): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(286,47): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(286,49): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(286,51): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(286,55): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(286,57): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(286,58): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(286,86): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(287,5): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(287,7): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(287,9): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(287,11): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(287,13): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(287,14): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(287,45): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(287,47): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(287,49): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(287,53): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(287,55): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(287,56): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(287,84): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(288,5): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(288,7): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(288,9): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(288,11): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(288,13): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(288,14): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(288,41): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(288,43): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(288,45): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(288,49): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(288,51): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(288,52): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(288,80): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(289,5): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(289,7): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(289,9): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(289,11): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(289,13): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(289,14): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(289,32): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(289,34): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(289,36): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(289,40): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(289,42): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(289,43): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(289,71): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(290,1): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(302,66): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,68): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,72): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,74): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,75): error TS1136: Property assignment expected.
+_archive/adf_pricer.cjs(302,79): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,81): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,83): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,86): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,88): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,90): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,92): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,96): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,97): error TS1136: Property assignment expected.
+_archive/adf_pricer.cjs(302,99): error TS1005: ':' expected.
+_archive/adf_pricer.cjs(302,101): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,103): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,109): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,113): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,114): error TS1136: Property assignment expected.
+_archive/adf_pricer.cjs(302,116): error TS1005: ':' expected.
+_archive/adf_pricer.cjs(302,118): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,120): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,122): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,126): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,127): error TS1136: Property assignment expected.
+_archive/adf_pricer.cjs(302,129): error TS1005: ':' expected.
+_archive/adf_pricer.cjs(302,140): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,142): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,144): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,147): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,149): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,151): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,153): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,157): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,160): error TS1109: Expression expected.
+_archive/adf_pricer.cjs(302,170): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,172): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,178): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,182): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,183): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(302,227): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,229): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,231): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,235): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(302,236): error TS1128: Declaration or statement expected.
+_archive/adf_pricer.cjs(317,85): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(317,87): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(317,89): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(317,92): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(317,94): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(317,96): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(317,98): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(317,102): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(317,120): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(317,122): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(317,124): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(317,128): error TS1127: Invalid character.
+_archive/adf_pricer.cjs(317,129): error TS1135: Argument expression expected.
+_archive/adf_pricer_backup.cjs(279,5): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(279,7): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(279,9): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(279,11): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(279,13): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(279,14): error TS1136: Property assignment expected.
+_archive/adf_pricer_backup.cjs(279,44): error TS1005: ':' expected.
+_archive/adf_pricer_backup.cjs(279,46): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(279,48): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(279,50): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(279,54): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(279,56): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(279,57): error TS1136: Property assignment expected.
+_archive/adf_pricer_backup.cjs(280,5): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(280,7): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(280,9): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(280,11): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(280,13): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(280,14): error TS1136: Property assignment expected.
+_archive/adf_pricer_backup.cjs(280,46): error TS1005: ':' expected.
+_archive/adf_pricer_backup.cjs(280,48): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(280,50): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(280,52): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(280,56): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(280,58): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(280,59): error TS1136: Property assignment expected.
+_archive/adf_pricer_backup.cjs(281,5): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(281,7): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(281,9): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(281,11): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(281,13): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(281,14): error TS1136: Property assignment expected.
+_archive/adf_pricer_backup.cjs(281,40): error TS1005: ':' expected.
+_archive/adf_pricer_backup.cjs(281,42): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(281,44): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(281,46): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(281,50): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(281,52): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(281,53): error TS1136: Property assignment expected.
+_archive/adf_pricer_backup.cjs(281,63): error TS1005: ',' expected.
+_archive/adf_pricer_backup.cjs(281,73): error TS1005: ',' expected.
+_archive/adf_pricer_backup.cjs(281,74): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(282,5): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(282,7): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(282,9): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(282,11): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(282,13): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(282,14): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(282,42): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(282,44): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(282,46): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(282,50): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(282,52): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(282,53): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(282,81): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(283,5): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(283,7): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(283,9): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(283,11): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(283,13): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(283,14): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(283,38): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(283,40): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(283,42): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(283,46): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(283,48): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(283,49): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(283,60): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(284,5): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(284,7): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(284,9): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(284,11): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(284,13): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(284,14): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(284,43): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(284,45): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(284,47): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(284,51): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(284,53): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(284,54): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(284,64): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(285,5): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(285,7): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(285,9): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(285,11): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(285,13): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(285,14): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(285,61): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(285,63): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(285,65): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(285,69): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(285,71): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(285,72): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(285,89): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(286,5): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(286,7): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(286,9): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(286,11): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(286,13): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(286,14): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(286,47): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(286,49): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(286,51): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(286,55): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(286,57): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(286,58): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(286,86): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(287,5): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(287,7): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(287,9): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(287,11): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(287,13): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(287,14): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(287,45): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(287,47): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(287,49): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(287,53): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(287,55): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(287,56): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(287,84): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(288,5): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(288,7): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(288,9): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(288,11): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(288,13): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(288,14): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(288,41): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(288,43): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(288,45): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(288,49): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(288,51): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(288,52): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(288,80): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(289,5): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(289,7): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(289,9): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(289,11): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(289,13): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(289,14): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(289,32): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(289,34): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(289,36): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(289,40): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(289,42): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(289,43): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(289,71): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(290,1): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(302,66): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,68): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,72): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,74): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,75): error TS1136: Property assignment expected.
+_archive/adf_pricer_backup.cjs(302,79): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,81): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,83): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,86): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,88): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,90): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,92): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,96): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,97): error TS1136: Property assignment expected.
+_archive/adf_pricer_backup.cjs(302,99): error TS1005: ':' expected.
+_archive/adf_pricer_backup.cjs(302,101): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,103): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,109): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,113): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,114): error TS1136: Property assignment expected.
+_archive/adf_pricer_backup.cjs(302,116): error TS1005: ':' expected.
+_archive/adf_pricer_backup.cjs(302,118): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,120): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,122): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,126): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,127): error TS1136: Property assignment expected.
+_archive/adf_pricer_backup.cjs(302,129): error TS1005: ':' expected.
+_archive/adf_pricer_backup.cjs(302,140): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,142): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,144): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,147): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,149): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,151): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,153): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,157): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,160): error TS1109: Expression expected.
+_archive/adf_pricer_backup.cjs(302,170): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,172): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,178): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,182): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,183): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(302,227): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,229): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,231): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,235): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(302,236): error TS1128: Declaration or statement expected.
+_archive/adf_pricer_backup.cjs(317,85): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(317,87): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(317,89): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(317,92): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(317,94): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(317,96): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(317,98): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(317,102): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(317,120): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(317,122): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(317,124): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(317,128): error TS1127: Invalid character.
+_archive/adf_pricer_backup.cjs(317,129): error TS1135: Argument expression expected.
+_archive/adf_v2.cjs(279,5): error TS1127: Invalid character.
+_archive/adf_v2.cjs(279,7): error TS1127: Invalid character.
+_archive/adf_v2.cjs(279,9): error TS1127: Invalid character.
+_archive/adf_v2.cjs(279,11): error TS1127: Invalid character.
+_archive/adf_v2.cjs(279,13): error TS1127: Invalid character.
+_archive/adf_v2.cjs(279,14): error TS1136: Property assignment expected.
+_archive/adf_v2.cjs(279,44): error TS1005: ':' expected.
+_archive/adf_v2.cjs(279,46): error TS1127: Invalid character.
+_archive/adf_v2.cjs(279,48): error TS1127: Invalid character.
+_archive/adf_v2.cjs(279,50): error TS1127: Invalid character.
+_archive/adf_v2.cjs(279,54): error TS1127: Invalid character.
+_archive/adf_v2.cjs(279,56): error TS1127: Invalid character.
+_archive/adf_v2.cjs(279,57): error TS1136: Property assignment expected.
+_archive/adf_v2.cjs(280,5): error TS1127: Invalid character.
+_archive/adf_v2.cjs(280,7): error TS1127: Invalid character.
+_archive/adf_v2.cjs(280,9): error TS1127: Invalid character.
+_archive/adf_v2.cjs(280,11): error TS1127: Invalid character.
+_archive/adf_v2.cjs(280,13): error TS1127: Invalid character.
+_archive/adf_v2.cjs(280,14): error TS1136: Property assignment expected.
+_archive/adf_v2.cjs(280,46): error TS1005: ':' expected.
+_archive/adf_v2.cjs(280,48): error TS1127: Invalid character.
+_archive/adf_v2.cjs(280,50): error TS1127: Invalid character.
+_archive/adf_v2.cjs(280,52): error TS1127: Invalid character.
+_archive/adf_v2.cjs(280,56): error TS1127: Invalid character.
+_archive/adf_v2.cjs(280,58): error TS1127: Invalid character.
+_archive/adf_v2.cjs(280,59): error TS1136: Property assignment expected.
+_archive/adf_v2.cjs(281,5): error TS1127: Invalid character.
+_archive/adf_v2.cjs(281,7): error TS1127: Invalid character.
+_archive/adf_v2.cjs(281,9): error TS1127: Invalid character.
+_archive/adf_v2.cjs(281,11): error TS1127: Invalid character.
+_archive/adf_v2.cjs(281,13): error TS1127: Invalid character.
+_archive/adf_v2.cjs(281,14): error TS1136: Property assignment expected.
+_archive/adf_v2.cjs(281,40): error TS1005: ':' expected.
+_archive/adf_v2.cjs(281,42): error TS1127: Invalid character.
+_archive/adf_v2.cjs(281,44): error TS1127: Invalid character.
+_archive/adf_v2.cjs(281,46): error TS1127: Invalid character.
+_archive/adf_v2.cjs(281,50): error TS1127: Invalid character.
+_archive/adf_v2.cjs(281,52): error TS1127: Invalid character.
+_archive/adf_v2.cjs(281,53): error TS1136: Property assignment expected.
+_archive/adf_v2.cjs(281,63): error TS1005: ',' expected.
+_archive/adf_v2.cjs(281,73): error TS1005: ',' expected.
+_archive/adf_v2.cjs(281,74): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(282,5): error TS1127: Invalid character.
+_archive/adf_v2.cjs(282,7): error TS1127: Invalid character.
+_archive/adf_v2.cjs(282,9): error TS1127: Invalid character.
+_archive/adf_v2.cjs(282,11): error TS1127: Invalid character.
+_archive/adf_v2.cjs(282,13): error TS1127: Invalid character.
+_archive/adf_v2.cjs(282,14): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(282,42): error TS1127: Invalid character.
+_archive/adf_v2.cjs(282,44): error TS1127: Invalid character.
+_archive/adf_v2.cjs(282,46): error TS1127: Invalid character.
+_archive/adf_v2.cjs(282,50): error TS1127: Invalid character.
+_archive/adf_v2.cjs(282,52): error TS1127: Invalid character.
+_archive/adf_v2.cjs(282,53): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(282,81): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(283,5): error TS1127: Invalid character.
+_archive/adf_v2.cjs(283,7): error TS1127: Invalid character.
+_archive/adf_v2.cjs(283,9): error TS1127: Invalid character.
+_archive/adf_v2.cjs(283,11): error TS1127: Invalid character.
+_archive/adf_v2.cjs(283,13): error TS1127: Invalid character.
+_archive/adf_v2.cjs(283,14): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(283,38): error TS1127: Invalid character.
+_archive/adf_v2.cjs(283,40): error TS1127: Invalid character.
+_archive/adf_v2.cjs(283,42): error TS1127: Invalid character.
+_archive/adf_v2.cjs(283,46): error TS1127: Invalid character.
+_archive/adf_v2.cjs(283,48): error TS1127: Invalid character.
+_archive/adf_v2.cjs(283,49): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(283,60): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(284,5): error TS1127: Invalid character.
+_archive/adf_v2.cjs(284,7): error TS1127: Invalid character.
+_archive/adf_v2.cjs(284,9): error TS1127: Invalid character.
+_archive/adf_v2.cjs(284,11): error TS1127: Invalid character.
+_archive/adf_v2.cjs(284,13): error TS1127: Invalid character.
+_archive/adf_v2.cjs(284,14): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(284,43): error TS1127: Invalid character.
+_archive/adf_v2.cjs(284,45): error TS1127: Invalid character.
+_archive/adf_v2.cjs(284,47): error TS1127: Invalid character.
+_archive/adf_v2.cjs(284,51): error TS1127: Invalid character.
+_archive/adf_v2.cjs(284,53): error TS1127: Invalid character.
+_archive/adf_v2.cjs(284,54): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(284,64): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(285,5): error TS1127: Invalid character.
+_archive/adf_v2.cjs(285,7): error TS1127: Invalid character.
+_archive/adf_v2.cjs(285,9): error TS1127: Invalid character.
+_archive/adf_v2.cjs(285,11): error TS1127: Invalid character.
+_archive/adf_v2.cjs(285,13): error TS1127: Invalid character.
+_archive/adf_v2.cjs(285,14): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(285,61): error TS1127: Invalid character.
+_archive/adf_v2.cjs(285,63): error TS1127: Invalid character.
+_archive/adf_v2.cjs(285,65): error TS1127: Invalid character.
+_archive/adf_v2.cjs(285,69): error TS1127: Invalid character.
+_archive/adf_v2.cjs(285,71): error TS1127: Invalid character.
+_archive/adf_v2.cjs(285,72): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(285,89): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(286,5): error TS1127: Invalid character.
+_archive/adf_v2.cjs(286,7): error TS1127: Invalid character.
+_archive/adf_v2.cjs(286,9): error TS1127: Invalid character.
+_archive/adf_v2.cjs(286,11): error TS1127: Invalid character.
+_archive/adf_v2.cjs(286,13): error TS1127: Invalid character.
+_archive/adf_v2.cjs(286,14): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(286,47): error TS1127: Invalid character.
+_archive/adf_v2.cjs(286,49): error TS1127: Invalid character.
+_archive/adf_v2.cjs(286,51): error TS1127: Invalid character.
+_archive/adf_v2.cjs(286,55): error TS1127: Invalid character.
+_archive/adf_v2.cjs(286,57): error TS1127: Invalid character.
+_archive/adf_v2.cjs(286,58): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(286,86): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(287,5): error TS1127: Invalid character.
+_archive/adf_v2.cjs(287,7): error TS1127: Invalid character.
+_archive/adf_v2.cjs(287,9): error TS1127: Invalid character.
+_archive/adf_v2.cjs(287,11): error TS1127: Invalid character.
+_archive/adf_v2.cjs(287,13): error TS1127: Invalid character.
+_archive/adf_v2.cjs(287,14): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(287,45): error TS1127: Invalid character.
+_archive/adf_v2.cjs(287,47): error TS1127: Invalid character.
+_archive/adf_v2.cjs(287,49): error TS1127: Invalid character.
+_archive/adf_v2.cjs(287,53): error TS1127: Invalid character.
+_archive/adf_v2.cjs(287,55): error TS1127: Invalid character.
+_archive/adf_v2.cjs(287,56): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(287,84): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(288,5): error TS1127: Invalid character.
+_archive/adf_v2.cjs(288,7): error TS1127: Invalid character.
+_archive/adf_v2.cjs(288,9): error TS1127: Invalid character.
+_archive/adf_v2.cjs(288,11): error TS1127: Invalid character.
+_archive/adf_v2.cjs(288,13): error TS1127: Invalid character.
+_archive/adf_v2.cjs(288,14): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(288,41): error TS1127: Invalid character.
+_archive/adf_v2.cjs(288,43): error TS1127: Invalid character.
+_archive/adf_v2.cjs(288,45): error TS1127: Invalid character.
+_archive/adf_v2.cjs(288,49): error TS1127: Invalid character.
+_archive/adf_v2.cjs(288,51): error TS1127: Invalid character.
+_archive/adf_v2.cjs(288,52): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(288,80): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(289,5): error TS1127: Invalid character.
+_archive/adf_v2.cjs(289,7): error TS1127: Invalid character.
+_archive/adf_v2.cjs(289,9): error TS1127: Invalid character.
+_archive/adf_v2.cjs(289,11): error TS1127: Invalid character.
+_archive/adf_v2.cjs(289,13): error TS1127: Invalid character.
+_archive/adf_v2.cjs(289,14): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(289,32): error TS1127: Invalid character.
+_archive/adf_v2.cjs(289,34): error TS1127: Invalid character.
+_archive/adf_v2.cjs(289,36): error TS1127: Invalid character.
+_archive/adf_v2.cjs(289,40): error TS1127: Invalid character.
+_archive/adf_v2.cjs(289,42): error TS1127: Invalid character.
+_archive/adf_v2.cjs(289,43): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(289,71): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(290,1): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(302,66): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,68): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,72): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,74): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,75): error TS1136: Property assignment expected.
+_archive/adf_v2.cjs(302,79): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,81): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,83): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,86): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,88): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,90): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,92): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,96): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,97): error TS1136: Property assignment expected.
+_archive/adf_v2.cjs(302,99): error TS1005: ':' expected.
+_archive/adf_v2.cjs(302,101): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,103): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,109): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,113): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,114): error TS1136: Property assignment expected.
+_archive/adf_v2.cjs(302,116): error TS1005: ':' expected.
+_archive/adf_v2.cjs(302,118): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,120): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,122): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,126): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,127): error TS1136: Property assignment expected.
+_archive/adf_v2.cjs(302,129): error TS1005: ':' expected.
+_archive/adf_v2.cjs(302,140): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,142): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,144): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,147): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,149): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,151): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,153): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,157): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,160): error TS1109: Expression expected.
+_archive/adf_v2.cjs(302,170): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,172): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,178): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,182): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,183): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(302,227): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,229): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,231): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,235): error TS1127: Invalid character.
+_archive/adf_v2.cjs(302,236): error TS1128: Declaration or statement expected.
+_archive/adf_v2.cjs(317,85): error TS1127: Invalid character.
+_archive/adf_v2.cjs(317,87): error TS1127: Invalid character.
+_archive/adf_v2.cjs(317,89): error TS1127: Invalid character.
+_archive/adf_v2.cjs(317,92): error TS1127: Invalid character.
+_archive/adf_v2.cjs(317,94): error TS1127: Invalid character.
+_archive/adf_v2.cjs(317,96): error TS1127: Invalid character.
+_archive/adf_v2.cjs(317,98): error TS1127: Invalid character.
+_archive/adf_v2.cjs(317,102): error TS1127: Invalid character.
+_archive/adf_v2.cjs(317,120): error TS1127: Invalid character.
+_archive/adf_v2.cjs(317,122): error TS1127: Invalid character.
+_archive/adf_v2.cjs(317,124): error TS1127: Invalid character.
+_archive/adf_v2.cjs(317,128): error TS1127: Invalid character.
+_archive/adf_v2.cjs(317,129): error TS1135: Argument expression expected.

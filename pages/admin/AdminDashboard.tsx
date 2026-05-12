@@ -18,7 +18,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ language, onNavigate })
     const [activeTab, setActiveTab] = useState<'overview' | 'finance' | 'operations' | 'browse' | 'users' | 'companies' | 'employees' | 'requests' | 'settings' | 'data' | 'audit'>('overview');
     const [browseSection, setBrowseSection] = useState<'materials' | 'pricing' | 'suppliers'>('materials');
 
-    const t = (key: string) => PAGE_TRANSLATIONS[key]?.[language] || key;
+    const t = (key: string, fallback?: string) => PAGE_TRANSLATIONS[key]?.[language] || fallback || key;
 
     // Mock data
     const stats = [

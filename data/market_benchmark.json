@@ -1,0 +1,585 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "source": "adf_pricer.cjs + marketPrices2026.ts",
+    "region": "northern_borders_arar",
+    "lastSync": "2026-05-10T14:50:50.905Z",
+    "notes": "أسعار سوق عرعر/الحدود الشمالية. تشمل مواد + عمالة + ربح 15%"
+  },
+  "rates": {
+    "excavation": {
+      "rate": 25,
+      "unit": "م3",
+      "category": "earthworks"
+    },
+    "backfill": {
+      "rate": 38,
+      "unit": "م3",
+      "category": "earthworks"
+    },
+    "termite": {
+      "rate": 20,
+      "unit": "م2",
+      "category": "earthworks"
+    },
+    "blinding": {
+      "rate": 300,
+      "unit": "م3",
+      "category": "concrete"
+    },
+    "rc_footing": {
+      "rate": 880,
+      "unit": "م3",
+      "category": "concrete"
+    },
+    "rc_tiebeam": {
+      "rate": 1200,
+      "unit": "م3",
+      "category": "concrete"
+    },
+    "rc_sog": {
+      "rate": 730,
+      "unit": "م3",
+      "category": "concrete"
+    },
+    "rc_neck": {
+      "rate": 1420,
+      "unit": "م3",
+      "category": "concrete"
+    },
+    "rc_column": {
+      "rate": 1400,
+      "unit": "م3",
+      "category": "concrete"
+    },
+    "rc_slab_solid": {
+      "rate": 960,
+      "unit": "م3",
+      "category": "concrete"
+    },
+    "rc_stair": {
+      "rate": 1220,
+      "unit": "م3",
+      "category": "concrete"
+    },
+    "rc_hordi": {
+      "rate": 950,
+      "unit": "م3",
+      "category": "concrete"
+    },
+    "block_20_ext": {
+      "rate": 80,
+      "unit": "م2",
+      "category": "masonry"
+    },
+    "block_15_int": {
+      "rate": 65,
+      "unit": "م2",
+      "category": "masonry"
+    },
+    "block_20_parapet": {
+      "rate": 85,
+      "unit": "م2",
+      "category": "masonry"
+    },
+    "plaster_ext": {
+      "rate": 45,
+      "unit": "م2",
+      "category": "finishes"
+    },
+    "plaster_int": {
+      "rate": 38,
+      "unit": "م2",
+      "category": "finishes"
+    },
+    "plaster_ceiling": {
+      "rate": 40,
+      "unit": "م2",
+      "category": "finishes"
+    },
+    "stone_riyadh": {
+      "rate": 280,
+      "unit": "م2",
+      "category": "finishes"
+    },
+    "marble_floor": {
+      "rate": 250,
+      "unit": "م2",
+      "category": "finishes"
+    },
+    "marble_stair": {
+      "rate": 300,
+      "unit": "م2",
+      "category": "finishes"
+    },
+    "granite_counter": {
+      "rate": 350,
+      "unit": "م2",
+      "category": "finishes"
+    },
+    "porcelain_60": {
+      "rate": 130,
+      "unit": "م2",
+      "category": "finishes"
+    },
+    "porcelain_wall": {
+      "rate": 120,
+      "unit": "م2",
+      "category": "finishes"
+    },
+    "ceramic_wall": {
+      "rate": 100,
+      "unit": "م2",
+      "category": "finishes"
+    },
+    "paint_int": {
+      "rate": 32,
+      "unit": "م2",
+      "category": "finishes"
+    },
+    "paint_ext": {
+      "rate": 42,
+      "unit": "م2",
+      "category": "finishes"
+    },
+    "paint_epoxy": {
+      "rate": 65,
+      "unit": "م2",
+      "category": "finishes"
+    },
+    "paint_ceiling": {
+      "rate": 30,
+      "unit": "م2",
+      "category": "finishes"
+    },
+    "gypsum_board": {
+      "rate": 80,
+      "unit": "م2",
+      "category": "finishes"
+    },
+    "gypsum_tile": {
+      "rate": 60,
+      "unit": "م2",
+      "category": "finishes"
+    },
+    "gypsum_cornice": {
+      "rate": 50,
+      "unit": "م.ط",
+      "category": "finishes"
+    },
+    "door_wood": {
+      "rate": 1800,
+      "unit": "عدد",
+      "category": "doors"
+    },
+    "door_steel": {
+      "rate": 2500,
+      "unit": "عدد",
+      "category": "doors"
+    },
+    "door_fire": {
+      "rate": 3500,
+      "unit": "عدد",
+      "category": "doors"
+    },
+    "door_alum": {
+      "rate": 3500,
+      "unit": "عدد",
+      "category": "doors"
+    },
+    "door_glass": {
+      "rate": 4500,
+      "unit": "عدد",
+      "category": "doors"
+    },
+    "window_alum": {
+      "rate": 700,
+      "unit": "م2",
+      "category": "windows"
+    },
+    "curtain_wall": {
+      "rate": 900,
+      "unit": "م2",
+      "category": "windows"
+    },
+    "elec_panel": {
+      "rate": 8000,
+      "unit": "عدد",
+      "category": "electrical"
+    },
+    "elec_genset": {
+      "rate": 180000,
+      "unit": "عدد",
+      "category": "electrical"
+    },
+    "elec_transformer": {
+      "rate": 95000,
+      "unit": "عدد",
+      "category": "electrical"
+    },
+    "elec_light_led": {
+      "rate": 280,
+      "unit": "عدد",
+      "category": "electrical"
+    },
+    "elec_outlet": {
+      "rate": 85,
+      "unit": "عدد",
+      "category": "electrical"
+    },
+    "elec_switch": {
+      "rate": 65,
+      "unit": "عدد",
+      "category": "electrical"
+    },
+    "ac_split": {
+      "rate": 4500,
+      "unit": "عدد",
+      "category": "hvac"
+    },
+    "ac_duct": {
+      "rate": 85,
+      "unit": "م.ط",
+      "category": "hvac"
+    },
+    "ac_diffuser": {
+      "rate": 250,
+      "unit": "عدد",
+      "category": "hvac"
+    },
+    "plumb_wc": {
+      "rate": 1200,
+      "unit": "عدد",
+      "category": "plumbing"
+    },
+    "plumb_basin": {
+      "rate": 800,
+      "unit": "عدد",
+      "category": "plumbing"
+    },
+    "plumb_heater_50": {
+      "rate": 2500,
+      "unit": "عدد",
+      "category": "plumbing"
+    },
+    "fire_ext_6": {
+      "rate": 350,
+      "unit": "عدد",
+      "category": "fire"
+    },
+    "fire_hose_cab": {
+      "rate": 2800,
+      "unit": "عدد",
+      "category": "fire"
+    },
+    "landscape_paving": {
+      "rate": 90,
+      "unit": "م2",
+      "category": "external"
+    },
+    "landscape_asphalt": {
+      "rate": 85,
+      "unit": "م2",
+      "category": "external"
+    },
+    "elevator": {
+      "rate": 280000,
+      "unit": "عدد",
+      "category": "mep"
+    },
+
+    "_comment_mep": "=== MEP RATES (2026 Saudi Market) ===",
+
+    "plumb_valve": {
+      "rate": 85,
+      "unit": "عدد",
+      "category": "plumbing"
+    },
+    "plumb_floor_drain": {
+      "rate": 120,
+      "unit": "عدد",
+      "category": "plumbing"
+    },
+    "plumb_pump": {
+      "rate": 18000,
+      "unit": "عدد",
+      "category": "plumbing"
+    },
+    "plumb_tank_gnd": {
+      "rate": 15000,
+      "unit": "عدد",
+      "category": "plumbing"
+    },
+    "plumb_manhole": {
+      "rate": 4500,
+      "unit": "عدد",
+      "category": "plumbing"
+    },
+    "plumb_septic": {
+      "rate": 35000,
+      "unit": "عدد",
+      "category": "plumbing"
+    },
+    "plumb_ppr_25": {
+      "rate": 28,
+      "unit": "م.ط",
+      "category": "plumbing"
+    },
+    "plumb_ppr_32": {
+      "rate": 38,
+      "unit": "م.ط",
+      "category": "plumbing"
+    },
+    "plumb_ppr_50": {
+      "rate": 55,
+      "unit": "م.ط",
+      "category": "plumbing"
+    },
+    "plumb_pipe_75": {
+      "rate": 85,
+      "unit": "م.ط",
+      "category": "plumbing"
+    },
+    "plumb_pipe_110": {
+      "rate": 110,
+      "unit": "م.ط",
+      "category": "plumbing"
+    },
+
+    "_comment_hvac": "=== HVAC RATES ===",
+
+    "ac_package": {
+      "rate": 28000,
+      "unit": "عدد",
+      "category": "hvac"
+    },
+    "ac_vrf": {
+      "rate": 45000,
+      "unit": "عدد",
+      "category": "hvac"
+    },
+    "ac_fcu": {
+      "rate": 6500,
+      "unit": "عدد",
+      "category": "hvac"
+    },
+    "ac_ahu": {
+      "rate": 85000,
+      "unit": "عدد",
+      "category": "hvac"
+    },
+    "ac_damper": {
+      "rate": 450,
+      "unit": "عدد",
+      "category": "hvac"
+    },
+    "ac_thermostat": {
+      "rate": 380,
+      "unit": "عدد",
+      "category": "hvac"
+    },
+    "ac_exhaust": {
+      "rate": 2800,
+      "unit": "عدد",
+      "category": "hvac"
+    },
+    "ac_fresh": {
+      "rate": 3200,
+      "unit": "عدد",
+      "category": "hvac"
+    },
+    "ac_insul": {
+      "rate": 65,
+      "unit": "م2",
+      "category": "hvac"
+    },
+
+    "_comment_elec": "=== ELECTRICAL RATES ===",
+
+    "elec_wire": {
+      "rate": 45,
+      "unit": "م.ط",
+      "category": "electrical"
+    },
+    "elec_cable_tray": {
+      "rate": 180,
+      "unit": "م.ط",
+      "category": "electrical"
+    },
+    "elec_conduit": {
+      "rate": 35,
+      "unit": "م.ط",
+      "category": "electrical"
+    },
+    "elec_breaker": {
+      "rate": 350,
+      "unit": "عدد",
+      "category": "electrical"
+    },
+    "elec_light_emrg": {
+      "rate": 450,
+      "unit": "عدد",
+      "category": "electrical"
+    },
+    "elec_earthing": {
+      "rate": 2500,
+      "unit": "عدد",
+      "category": "electrical"
+    },
+    "elec_ups": {
+      "rate": 25000,
+      "unit": "عدد",
+      "category": "electrical"
+    },
+    "elec_ats": {
+      "rate": 35000,
+      "unit": "عدد",
+      "category": "electrical"
+    },
+    "elec_cctv_cam": {
+      "rate": 1800,
+      "unit": "عدد",
+      "category": "electrical"
+    },
+    "elec_access": {
+      "rate": 3500,
+      "unit": "عدد",
+      "category": "electrical"
+    },
+    "elec_intercom": {
+      "rate": 2200,
+      "unit": "عدد",
+      "category": "electrical"
+    },
+    "elec_data_point": {
+      "rate": 350,
+      "unit": "نقطة",
+      "category": "electrical"
+    },
+
+    "_comment_fire": "=== FIRE SYSTEMS ===",
+
+    "fire_pump_sys": {
+      "rate": 120000,
+      "unit": "عدد",
+      "category": "fire"
+    },
+    "fire_auto": {
+      "rate": 85,
+      "unit": "عدد",
+      "category": "fire"
+    },
+    "fire_pipe_4": {
+      "rate": 95,
+      "unit": "م.ط",
+      "category": "fire"
+    },
+
+    "_comment_lighting": "=== LIGHTING FIXTURES ===",
+
+    "elec_light": {
+      "rate": 256,
+      "unit": "عدد",
+      "category": "electrical"
+    },
+
+    "_comment_fire_alarm": "=== FIRE ALARM ===",
+
+    "fire_alarm": {
+      "rate": 301,
+      "unit": "عدد",
+      "category": "fire"
+    },
+
+    "_comment_pa": "=== PA / LOW CURRENT ===",
+
+    "elec_pa": {
+      "rate": 350,
+      "unit": "عدد",
+      "category": "electrical"
+    },
+    "elec_outlet": {
+      "rate": 85,
+      "unit": "عدد",
+      "category": "electrical"
+    },
+
+    "_comment_v82": "=== V8.2 — NEW CATEGORIES (15 إضافة) ===",
+
+    "waterproofing": {
+      "rate": 55,
+      "unit": "م2",
+      "category": "finishes"
+    },
+    "thermal_insul": {
+      "rate": 45,
+      "unit": "م2",
+      "category": "finishes"
+    },
+    "rebar": {
+      "rate": 3200,
+      "unit": "طن",
+      "category": "concrete"
+    },
+    "precast": {
+      "rate": 450,
+      "unit": "م2",
+      "category": "concrete"
+    },
+    "screed": {
+      "rate": 35,
+      "unit": "م2",
+      "category": "finishes"
+    },
+    "handrail": {
+      "rate": 350,
+      "unit": "م.ط",
+      "category": "metalwork"
+    },
+    "steel_struct": {
+      "rate": 18000,
+      "unit": "طن",
+      "category": "structure"
+    },
+    "access_cover": {
+      "rate": 800,
+      "unit": "عدد",
+      "category": "external"
+    },
+    "car_shade": {
+      "rate": 150,
+      "unit": "م2",
+      "category": "external"
+    },
+    "pergola": {
+      "rate": 2500,
+      "unit": "م2",
+      "category": "external"
+    },
+    "rolling_shutter": {
+      "rate": 3500,
+      "unit": "عدد",
+      "category": "doors"
+    },
+    "rc_beam": {
+      "rate": 1300,
+      "unit": "م3",
+      "category": "concrete"
+    },
+    "rc_tank": {
+      "rate": 1500,
+      "unit": "م3",
+      "category": "concrete"
+    },
+    "roof_system": {
+      "rate": 120,
+      "unit": "م2",
+      "category": "finishes"
+    },
+    "landscaping": {
+      "rate": 80,
+      "unit": "م2",
+      "category": "external"
+    }
+  }
+}

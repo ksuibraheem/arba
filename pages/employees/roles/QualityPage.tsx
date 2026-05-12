@@ -9,6 +9,7 @@ import { Employee } from '../../../services/employeeService';
 import { db } from '../../../firebase/config';
 import { collection, getDocs, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Language } from '../../../types';
+import BrainSummaryCard from '../../../components/BrainSummaryCard';
 
 interface QualityPageProps {
     language: Language;
@@ -121,6 +122,9 @@ const QualityPage: React.FC<QualityPageProps> = ({ language, employee }) => {
                     </button>
                 </div>
             </div>
+
+            {/* 🧠 Brain Analytics (Quality Employee Access) */}
+            <BrainSummaryCard language={language} />
 
             {/* Live Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

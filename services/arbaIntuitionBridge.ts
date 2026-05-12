@@ -242,3 +242,166 @@ class FieldFeedbackService {
 }
 
 export const fieldFeedbackService = new FieldFeedbackService();
+
+// =================== Phase 4: Quantity Deviation Detection ===================
+
+export interface QuantityDeviationAlert {
+  itemId: string;
+  itemName: string;
+  currentQty: number;
+  expectedQty: number;
+  deviationPercent: number;
+  severity: 'info' | 'warning' | 'critical';
+  message: Record<Language, string>;
+}
+
+/**
+ * Compare calculated quantities against collective brain averages.
+ * Alerts when quantities deviate significantly from historical norms.
+ */
+export function detectQuantityDeviation(
+  items: Array<{ id: string; name: Record<Language, string>; qty: number; unit: string; category: string }>,
+  buildArea: number,
+  projectType: string,
+): QuantityDeviationAlert[] {
+  const alerts: QuantityDeviationAlert[] = [];
+
+  // Expected ratios per sqm (from كتاب زاد + industry standards)
+  const expectedRatios: Record<string, { perSqm: number; unit: string; tolerance: number }> = {
+    concrete_m3: { perSqm: 0.45, unit: 'م3', tolerance: 0.30 },
+    steel_tons: { perSqm: 0.055, unit: 'طن', tolerance: 0.25 },
+    blocks_m2: { perSqm: 2.5, unit: 'م2', tolerance: 0.35 },
+    plaster_m2: { perSqm: 3.0, unit: 'م2', tolerance: 0.30 },
+    tiles_m2: { perSqm: 1.0, unit: 'م2', tolerance: 0.35 },
+  };
+
+  // Aggregate actual quantities by type
+  let totalConcrete = 0, totalSteel = 0, totalBlocks = 0;
+  for (const item of items) {
+    if (item.unit === 'م3' && (item.category === 'substructure' || item.category === 'superstructure')) {
+      totalConcrete += item.qty;
+    }
+    if (item.unit === 'طن' && item.id.includes('steel')) totalSteel += item.qty;
+    if (item.category === 'masonry' && item.unit === 'م2') totalBlocks += item.qty;
+  }
+
+  const checks: Array<{ key: string; actual: number; nameAr: string; nameEn: string }> = [
+    { key: 'concrete_m3', actual: totalConcrete, nameAr: 'خرسانة', nameEn: 'Concrete' },
+    { key: 'steel_tons', actual: totalSteel, nameAr: 'حديد تسليح', nameEn: 'Rebar Steel' },
+    { key: 'blocks_m2', actual: totalBlocks, nameAr: 'بلوك', nameEn: 'Blockwork' },
+  ];
+
+  for (const check of checks) {
+    const ratio = expectedRatios[check.key];
+    if (!ratio || buildArea <= 0) continue;
+
+    const expectedQty = buildArea * ratio.perSqm;
+    const deviation = (check.actual - expectedQty) / expectedQty;
+    const absDeviation = Math.abs(deviation);
+
+    if (absDeviation > ratio.tolerance) {
+      const pct = Math.round(deviation * 100);
+      const dir = pct > 0 ? 'أعلى' : 'أقل';
+      const dirEn = pct > 0 ? 'higher' : 'lower';
+      const severity: QuantityDeviationAlert['severity'] = absDeviation > 0.5 ? 'critical' : 'warning';
+
+      alerts.push({
+        itemId: check.key,
+        itemName: check.nameAr,
+        currentQty: Math.round(check.actual * 100) / 100,
+        expectedQty: Math.round(expectedQty * 100) / 100,
+        deviationPercent: pct,
+        severity,
+        message: {
+          ar: `⚠️ كمية ${check.nameAr} ${dir} من المعدل بنسبة ${Math.abs(pct)}% — تحقق من المدخلات`,
+          en: `⚠️ ${check.nameEn} is ${Math.abs(pct)}% ${dirEn} than average — verify inputs`,
+          fr: `⚠️ ${check.nameEn} est ${Math.abs(pct)}% ${dirEn} que la moyenne`,
+          zh: `⚠️ ${check.nameEn} 比平均值${dirEn} ${Math.abs(pct)}%`,
+        },
+      });
+    }
+  }
+
+  return alerts;
+}
+
+// =================== Phase 4: Optimal Supplier Suggestion ===================
+
+export interface SupplierSuggestion {
+  itemId: string;
+  currentSupplierId: string;
+  suggestedSupplierId: string;
+  suggestedSupplierName: string;
+  currentPrice: number;
+  suggestedPrice: number;
+  savings: number;
+  reason: Record<Language, string>;
+}
+
+/**
+ * Suggest optimal supplier for each item based on price + availability.
+ */
+export function suggestOptimalSupplier(
+  items: Array<{
+    id: string;
+    category: string;
+    suppliers: Array<{ id: string; name: Record<Language, string>; priceMultiplier: number; dynamicPrice?: number }>;
+    selectedSupplier?: { id: string };
+    baseMaterial: number;
+  }>,
+  supplierProducts: SupplierProduct[],
+): SupplierSuggestion[] {
+  const suggestions: SupplierSuggestion[] = [];
+
+  // Build a stock availability map
+  const stockMap = new Map<string, boolean>();
+  for (const p of supplierProducts) {
+    stockMap.set(p.id, p.stock > 0 && p.status === 'active');
+  }
+
+  for (const item of items) {
+    if (!item.suppliers || item.suppliers.length < 2) continue;
+
+    const currentId = item.selectedSupplier?.id || item.suppliers[0]?.id;
+    const currentSup = item.suppliers.find(s => s.id === currentId);
+    const currentPrice = currentSup?.dynamicPrice || item.baseMaterial * (currentSup?.priceMultiplier || 1);
+
+    let bestPrice = currentPrice;
+    let bestSup = currentSup;
+
+    for (const sup of item.suppliers) {
+      if (sup.id === currentId) continue;
+
+      // Check stock availability
+      const inStock = stockMap.get(sup.id);
+      if (inStock === false) continue; // skip out of stock
+
+      const price = sup.dynamicPrice || item.baseMaterial * sup.priceMultiplier;
+      if (price > 0 && price < bestPrice) {
+        bestPrice = price;
+        bestSup = sup;
+      }
+    }
+
+    if (bestSup && bestSup.id !== currentId && currentPrice - bestPrice > 1) {
+      const savings = Math.round((currentPrice - bestPrice) * 100) / 100;
+      suggestions.push({
+        itemId: item.id,
+        currentSupplierId: currentId || '',
+        suggestedSupplierId: bestSup.id,
+        suggestedSupplierName: bestSup.name?.ar || bestSup.name?.en || '',
+        currentPrice: Math.round(currentPrice * 100) / 100,
+        suggestedPrice: Math.round(bestPrice * 100) / 100,
+        savings,
+        reason: {
+          ar: `توفير ${savings} ر.س/وحدة عند التحويل لـ ${bestSup.name?.ar || bestSup.id}`,
+          en: `Save ${savings} SAR/unit by switching to ${bestSup.name?.en || bestSup.id}`,
+          fr: `Économisez ${savings} SAR/unité avec ${bestSup.name?.en || bestSup.id}`,
+          zh: `切换到 ${bestSup.name?.en || bestSup.id} 可节省 ${savings} SAR/单位`,
+        },
+      });
+    }
+  }
+
+  return suggestions.sort((a, b) => b.savings - a.savings);
+}

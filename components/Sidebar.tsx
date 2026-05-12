@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Settings, MapPin, TrendingUp, Calculator, Briefcase, Ruler, Plus, Trash2, Home, Zap, FileText, User, LayoutGrid, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, RefreshCw, Users, HardHat, DollarSign, LayoutTemplate, Palette, Languages, Check } from 'lucide-react';
-import { AppState, ProjectType, LocationType, SoilType, RoomConfig, FacadeConfig, TeamMember, ExecutionMethod, ViewMode, Language, FoundationType, StructuralSystem, SBCOccupancyGroup, ConstructionType, SeismicZone, ConcreteGrade, ExposureCategory, ParkingType, InsulationType, ScopeOfWork, ContractorClassification } from '../types';
-import { PROJECT_DEFAULTS, TRANSLATIONS } from '../constants';
+import { AppState, ProjectType, LocationType, SoilType, RoomConfig, FacadeConfig, TeamMember, ExecutionMethod, ViewMode, Language, FoundationType, StructuralSystem, SBCOccupancyGroup, ConstructionType, SeismicZone, ConcreteGrade, ExposureCategory, ParkingType, InsulationType, ScopeOfWork, ContractorClassification, DeliveryScope } from '../types';
+import { PROJECT_DEFAULTS, TRANSLATIONS, DELIVERY_SCOPE_OPTIONS, DELIVERY_SCOPE_SECTIONS, SECTION_DEFINITIONS } from '../constants';
 
 interface SidebarProps {
     state: AppState;
@@ -439,70 +439,35 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                                 value={state.projectType}
                                 onChange={(e) => {
                                     const value = e.target.value as ProjectType;
-                                    // في وضع العرض التجريبي، لا يسمح بتغيير لغير الفيلا فقط
-                                    if (isDemoMode && value !== 'villa') {
-                                        return;
-                                    }
                                     onChange({ projectType: value });
                                 }}
                                 className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
                             >
                                 <option value="villa">🏠 {t('proj_villa')}</option>
-                                <option value="rest_house" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🏖️ {t('proj_rest')} {isDemoMode ? '🔒' : ''}</option>
-                                <option value="tower" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🏢 {t('proj_tower')} {isDemoMode ? '🔒' : ''}</option>
-                                <option value="factory" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🏭 {t('proj_factory')} {isDemoMode ? '🔒' : ''}</option>
-                                <option value="school" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🏫 {t('proj_school')} {isDemoMode ? '🔒' : ''}</option>
-                                <option value="hospital" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🏥 {t('proj_hospital')} {isDemoMode ? '🔒' : ''}</option>
-                                <option value="mosque" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🕌 {t('proj_mosque')} {isDemoMode ? '🔒' : ''}</option>
-                                <option value="hotel" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🏨 {t('proj_hotel')} {isDemoMode ? '🔒' : ''}</option>
-                                <option value="residential_building" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🏬 {t('proj_residential')} {isDemoMode ? '🔒' : ''}</option>
-                                <option value="sports_complex" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🏟️ {t('proj_sports')} {isDemoMode ? '🔒' : ''}</option>
-                                <option value="farm" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🌾 {t('proj_farm')} {isDemoMode ? '🔒' : ''}</option>
-                                <option value="gas_station" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>⛽ {tl('محطة وقود', 'Gas Station')} {isDemoMode ? '🔒' : ''}</option>
-                                <option value="mall" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🛒 {tl('مركز تسوق', 'Shopping Mall')} {isDemoMode ? '🔒' : ''}</option>
-                                <option value="restaurant" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🍽️ {tl('مطعم / كافيه', 'Restaurant')} {isDemoMode ? '🔒' : ''}</option>
-                                <option value="car_wash" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🚗 {tl('مغسلة سيارات', 'Car Wash')} {isDemoMode ? '🔒' : ''}</option>
-                                <option value="warehouse" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>📦 {tl('مستودع', 'Warehouse')} {isDemoMode ? '🔒' : ''}</option>
-                                <option value="government" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🏛️ {tl('مبنى حكومي', 'Government')} {isDemoMode ? '🔒' : ''}</option>
-                                <option value="clinic" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🩺 {tl('عيادة / مركز طبي', 'Clinic')} {isDemoMode ? '🔒' : ''}</option>
+                                <option value="rest_house">🏖️ {t('proj_rest')}</option>
+                                <option value="tower">🏢 {t('proj_tower')}</option>
+                                <option value="factory">🏭 {t('proj_factory')}</option>
+                                <option value="school">🏫 {t('proj_school')}</option>
+                                <option value="hospital">🏥 {t('proj_hospital')}</option>
+                                <option value="mosque">🕌 {t('proj_mosque')}</option>
+                                <option value="hotel">🏨 {t('proj_hotel')}</option>
+                                <option value="residential_building">🏬 {t('proj_residential')}</option>
+                                <option value="sports_complex">🏟️ {t('proj_sports')}</option>
+                                <option value="farm">🌾 {t('proj_farm')}</option>
+                                <option value="gas_station">⛽ {tl('محطة وقود', 'Gas Station')}</option>
+                                <option value="mall">🛒 {tl('مركز تسوق', 'Shopping Mall')}</option>
+                                <option value="restaurant">🍽️ {tl('مطعم / كافيه', 'Restaurant')}</option>
+                                <option value="car_wash">🚗 {tl('مغسلة سيارات', 'Car Wash')}</option>
+                                <option value="warehouse">📦 {tl('مستودع', 'Warehouse')}</option>
+                                <option value="government">🏛️ {tl('مبنى حكومي', 'Government')}</option>
+                                <option value="clinic">🩺 {tl('عيادة / مركز طبي', 'Clinic')}</option>
                             </select>
-                            {isDemoMode && (
-                                <p className="text-xs text-blue-400 mt-1">
-                                    ℹ️ {tl('في وضع العرض التجريبي، يمكنك استعراض الفيلا السكنية فقط', 'In demo mode, only Villa is available')}
-                                </p>
-                            )}
                         </div>
 
                         <div className="space-y-4 pt-4 border-t border-slate-700">
                             <h3 className="text-blue-400 font-semibold text-sm flex items-center gap-2">
                                 <HardHat className="w-4 h-4" /> {t('execution_method')}
-                                {isDemoMode && <span className="text-xs text-slate-500 mr-auto">🔒</span>}
                             </h3>
-                            {isDemoMode ? (
-                                <div className="relative">
-                                    <div className="blur-sm opacity-40 pointer-events-none">
-                                        <div className="flex flex-col gap-2">
-                                            <div className="flex items-center gap-2 p-2 rounded bg-slate-700/50">
-                                                <div className="w-3 h-3 rounded-full border border-slate-500"></div>
-                                                <span className="text-sm text-slate-400">{t('exec_in_house')}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2 p-2 rounded bg-slate-700/50">
-                                                <div className="w-3 h-3 rounded-full border border-slate-500"></div>
-                                                <span className="text-sm text-slate-400">{t('exec_sub')}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2 p-2 rounded bg-slate-700/50">
-                                                <div className="w-3 h-3 rounded-full border border-slate-500"></div>
-                                                <span className="text-sm text-slate-400">{t('exec_turnkey')}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <span className="text-xs text-blue-400 bg-slate-800 px-2 py-1 rounded">
-                                            {tl('متاح في النسخة الكاملة', 'Available in full version')}
-                                        </span>
-                                    </div>
-                                </div>
-                            ) : (
                                 <div className="flex flex-col gap-2">
                                     {[
                                         { id: 'in_house', label: t('exec_in_house') },
@@ -521,44 +486,62 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                                         </label>
                                     ))}
                                 </div>
+                        </div>
+
+                        {/* نطاق التسليم — Delivery Scope */}
+                        <div className="space-y-3 pt-4 border-t border-slate-700">
+                            <h3 className="text-amber-400 font-semibold text-sm flex items-center gap-2">
+                                <Briefcase className="w-4 h-4" /> {tl('نطاق التسليم', 'Delivery Scope')}
+                            </h3>
+                            <div className="grid grid-cols-2 gap-1.5">
+                                {DELIVERY_SCOPE_OPTIONS.map(opt => (
+                                    <button
+                                        key={opt.id}
+                                        onClick={() => {
+                                            const sections = opt.id === 'custom' ? state.enabledSections : DELIVERY_SCOPE_SECTIONS[opt.id];
+                                            onChange({ deliveryScope: opt.id as DeliveryScope, enabledSections: sections });
+                                        }}
+                                        className={`text-[11px] px-2 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 ${
+                                            state.deliveryScope === opt.id
+                                                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50 shadow-sm'
+                                                : 'bg-slate-700/50 text-slate-400 border border-slate-600 hover:bg-slate-700 hover:text-slate-300'
+                                        }`}
+                                    >
+                                        <span>{opt.icon}</span>
+                                        <span>{state.language === 'ar' ? opt.nameAr : opt.nameEn}</span>
+                                    </button>
+                                ))}
+                            </div>
+                            {state.deliveryScope === 'custom' && (
+                                <div className="bg-slate-700/50 rounded-lg p-2 space-y-1 max-h-40 overflow-y-auto custom-scrollbar border border-slate-600">
+                                    {SECTION_DEFINITIONS.map(sec => (
+                                        <label key={sec.code} className="flex items-center gap-2 py-0.5 px-1 rounded hover:bg-slate-600/50 cursor-pointer text-[11px]">
+                                            <input
+                                                type="checkbox"
+                                                checked={state.enabledSections.includes(sec.code)}
+                                                onChange={(e) => {
+                                                    const next = e.target.checked
+                                                        ? [...state.enabledSections, sec.code]
+                                                        : state.enabledSections.filter(c => c !== sec.code);
+                                                    onChange({ enabledSections: next });
+                                                }}
+                                                className="accent-amber-500 w-3 h-3"
+                                            />
+                                            <span>{sec.icon}</span>
+                                            <span style={{ color: sec.color }} className="font-mono font-bold">{sec.code}</span>
+                                            <span className="text-slate-300">{state.language === 'ar' ? sec.nameAr : sec.nameEn}</span>
+                                        </label>
+                                    ))}
+                                </div>
                             )}
                         </div>
 
                         <div className="space-y-4 pt-4 border-t border-slate-700">
                             <h3 className="text-blue-400 font-semibold text-sm flex items-center gap-2">
                                 <Calculator className="w-4 h-4" /> {t('pricing_strategy')}
-                                {isDemoMode && <span className="text-xs text-slate-500 mr-auto">🔒</span>}
                             </h3>
 
-                            {isDemoMode ? (
-                                <div className="relative">
-                                    <div className="blur-sm opacity-40 pointer-events-none space-y-3">
-                                        <div className="flex flex-col gap-2">
-                                            <div className="flex items-center gap-2 p-2 rounded bg-slate-700/50">
-                                                <div className="w-3 h-3 rounded-full border border-slate-500"></div>
-                                                <span className="text-sm text-slate-400">{t('strat_fixed')}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2 p-2 rounded bg-slate-700/50">
-                                                <div className="w-3 h-3 rounded-full border border-slate-500"></div>
-                                                <span className="text-sm text-slate-400">{t('strat_roi')}</span>
-                                            </div>
-                                        </div>
-                                        <div className="bg-slate-700/50 rounded p-3">
-                                            <div className="text-xs text-slate-500 mb-1">{t('profit_margin')}</div>
-                                            <div className="bg-slate-600 h-8 rounded"></div>
-                                        </div>
-                                        <div className="bg-slate-700/50 rounded p-3">
-                                            <div className="text-xs text-slate-500 mb-1">{t('global_adjustment')}</div>
-                                            <div className="bg-slate-600 h-8 rounded"></div>
-                                        </div>
-                                    </div>
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <span className="text-xs text-blue-400 bg-slate-800 px-2 py-1 rounded">
-                                            {tl('متاح في النسخة الكاملة', 'Available in full version')}
-                                        </span>
-                                    </div>
-                                </div>
-                            ) : (
+
                                 <>
                                     <div className="flex flex-col gap-2">
                                         <label className="flex items-center gap-2 p-2 rounded hover:bg-slate-700 cursor-pointer">
@@ -664,7 +647,7 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                                         <p className="text-[10px] text-slate-500">{t('discount_hint')}</p>
                                     </div>
                                 </>
-                            )}
+
                         </div>
 
                         <div className="space-y-4 pt-4 border-t border-slate-700">

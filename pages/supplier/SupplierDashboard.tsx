@@ -216,7 +216,7 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
         { id: 'Q004', customerName: 'شركة الإنشاءات المتحدة', date: '2024-12-12', items: 2, status: 'rejected', total: 8000 },
     ];
 
-    const t = {
+    const TRANSLATIONS_DICT = {
         dashboard: { ar: 'لوحة تحكم المورد', en: 'Supplier Dashboard' },
         overview: { ar: 'نظرة عامة', en: 'Overview' },
         categories: { ar: 'أنواع المنتجات', en: 'Product Categories' },
@@ -285,7 +285,8 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
         employees: { ar: 'الموظفين', en: 'Employees' }
     };
 
-    const getLabel = (key: keyof typeof t) => t[key][language];
+    const getLabel = (key: keyof typeof TRANSLATIONS_DICT) => TRANSLATIONS_DICT[key][language];
+    const t = (ar: string, en: string) => language === 'ar' ? ar : en;
 
     const getStatusIcon = (status: QuoteRequest['status']) => {
         switch (status) {

@@ -69,7 +69,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ language, onNavigate, onReg
         setFormData(prev => ({ ...prev, userType: type }));
     };
 
-    const t = (key: string) => PAGE_TRANSLATIONS[key]?.[language] || key;
+    const t = (key: string, fallback?: string) => PAGE_TRANSLATIONS[key]?.[language] || (language === 'en' && fallback ? fallback : key);
     const isRtl = language === 'ar';
     const Arrow = isRtl ? ArrowRight : ArrowLeft;
 

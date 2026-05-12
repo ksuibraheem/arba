@@ -1,6 +1,11 @@
 /**
  * Firebase Configuration
  * تكوين Firebase للمصادقة والاستضافة
+ * 
+ * ⚠️ SOVEREIGN v8.0 — SECURITY RULE:
+ * All credentials MUST come from .env variables.
+ * NO hardcoded fallback values allowed in source code.
+ * This prevents accidental exposure in public GitHub repos.
  */
 
 import { initializeApp } from 'firebase/app';
@@ -10,16 +15,27 @@ import { getStorage } from 'firebase/storage';
 import { getAnalytics } from 'firebase/analytics';
 
 
-// Firebase configuration
-// Uses environment variables when available, falls back to production values
+// ⚠️ Validate required environment variables at startup
+function getRequiredEnv(key: string): string {
+    const value = import.meta.env[key];
+    if (!value) {
+        console.error(`❌ Missing required environment variable: ${key}. Check your .env file.`);
+        // Return empty string instead of crashing — allows the app to load
+        // but Firebase operations will fail gracefully
+        return '';
+    }
+    return value;
+}
+
+// Firebase configuration — ALL values from .env (no hardcoded secrets)
 const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyAqDvfoKIfKP_U9NpThRlfZGcRX57SkS9s',
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'arba-d6baf.firebaseapp.com',
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'arba-d6baf',
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'arba-d6baf.firebasestorage.app',
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '347519117336',
-    appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:347519117336:web:92748f8b8d388676837b6d',
-    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'G-4JPRJRG353'
+    apiKey: getRequiredEnv('VITE_FIREBASE_API_KEY'),
+    authDomain: getRequiredEnv('VITE_FIREBASE_AUTH_DOMAIN'),
+    projectId: getRequiredEnv('VITE_FIREBASE_PROJECT_ID'),
+    storageBucket: getRequiredEnv('VITE_FIREBASE_STORAGE_BUCKET'),
+    messagingSenderId: getRequiredEnv('VITE_FIREBASE_MESSAGING_SENDER_ID'),
+    appId: getRequiredEnv('VITE_FIREBASE_APP_ID'),
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || '' // Optional
 };
 
 // Initialize Firebase
@@ -44,3 +60,4 @@ export const analytics = (() => {
 })();
 
 export default app;
+

@@ -24,7 +24,7 @@ interface CompanyPageProps {
 const CompanyPage: React.FC<CompanyPageProps> = ({ language, onNavigate, companyData }) => {
     const isRtl = language === 'ar';
     const Arrow = isRtl ? ArrowLeft : ArrowRight;
-    const t = (key: string) => PAGE_TRANSLATIONS[key]?.[language] || key;
+    const t = (key: string, fallback?: string) => PAGE_TRANSLATIONS[key]?.[language] || fallback || key;
 
     // Default company data if none provided
     const company = companyData || {

@@ -1,0 +1,200 @@
+{
+  "projectType": "residential_farm",
+  "bua_m2": 6975.87,
+  "mepCostPerM2": 453,
+  "categories": {
+    "uncategorized": {
+      "avgPrice": 345,
+      "minPrice": 27,
+      "maxPrice": 1214,
+      "samples": 15,
+      "costPerM2": 164.98,
+      "percentOfTotal": 36.4
+    },
+    "lighting": {
+      "avgPrice": 439,
+      "minPrice": 78,
+      "maxPrice": 2487,
+      "samples": 18,
+      "costPerM2": 48.22,
+      "percentOfTotal": 10.6
+    },
+    "elec_panels": {
+      "avgPrice": 13744,
+      "minPrice": 3196,
+      "maxPrice": 77609,
+      "samples": 22,
+      "costPerM2": 43.34,
+      "percentOfTotal": 9.6
+    },
+    "air_terminals": {
+      "avgPrice": 338,
+      "minPrice": 173,
+      "maxPrice": 466,
+      "samples": 9,
+      "costPerM2": 40.01,
+      "percentOfTotal": 8.8
+    },
+    "ductwork": {
+      "avgPrice": 144,
+      "minPrice": 144,
+      "maxPrice": 144,
+      "samples": 3,
+      "costPerM2": 39,
+      "percentOfTotal": 8.6
+    },
+    "copper_pipes": {
+      "avgPrice": 106,
+      "minPrice": 41,
+      "maxPrice": 217,
+      "samples": 9,
+      "costPerM2": 32.36,
+      "percentOfTotal": 7.1
+    },
+    "sanitary": {
+      "avgPrice": 812,
+      "minPrice": 228,
+      "maxPrice": 1223,
+      "samples": 6,
+      "costPerM2": 13.43,
+      "percentOfTotal": 3
+    },
+    "pipes_ppr": {
+      "avgPrice": 112,
+      "minPrice": 27,
+      "maxPrice": 444,
+      "samples": 19,
+      "costPerM2": 11.8,
+      "percentOfTotal": 2.6
+    },
+    "vrv_system": {
+      "avgPrice": 1461,
+      "minPrice": 593,
+      "maxPrice": 2328,
+      "samples": 2,
+      "costPerM2": 11.61,
+      "percentOfTotal": 2.6
+    },
+    "cctv": {
+      "avgPrice": 9909,
+      "minPrice": 653,
+      "maxPrice": 35152,
+      "samples": 5,
+      "costPerM2": 8.81,
+      "percentOfTotal": 1.9
+    },
+    "pa_system": {
+      "avgPrice": 14799,
+      "minPrice": 228,
+      "maxPrice": 43826,
+      "samples": 3,
+      "costPerM2": 7.44,
+      "percentOfTotal": 1.6
+    },
+    "fire_alarm": {
+      "avgPrice": 2899,
+      "minPrice": 172,
+      "maxPrice": 15978,
+      "samples": 6,
+      "costPerM2": 6.26,
+      "percentOfTotal": 1.4
+    },
+    "pumps": {
+      "avgPrice": 19950,
+      "minPrice": 12999,
+      "maxPrice": 26900,
+      "samples": 2,
+      "costPerM2": 5.72,
+      "percentOfTotal": 1.3
+    },
+    "fans": {
+      "avgPrice": 3472,
+      "minPrice": 2314,
+      "maxPrice": 5979,
+      "samples": 10,
+      "costPerM2": 4.98,
+      "percentOfTotal": 1.1
+    },
+    "cable_tray": {
+      "avgPrice": 98,
+      "minPrice": 73,
+      "maxPrice": 147,
+      "samples": 6,
+      "costPerM2": 4.46,
+      "percentOfTotal": 1
+    },
+    "elec_sockets": {
+      "avgPrice": 223,
+      "minPrice": 183,
+      "maxPrice": 338,
+      "samples": 6,
+      "costPerM2": 4.26,
+      "percentOfTotal": 0.9
+    },
+    "data_network": {
+      "avgPrice": 580,
+      "minPrice": 580,
+      "maxPrice": 580,
+      "samples": 1,
+      "costPerM2": 2.33,
+      "percentOfTotal": 0.5
+    },
+    "elec_switches": {
+      "avgPrice": 185,
+      "minPrice": 173,
+      "maxPrice": 197,
+      "samples": 4,
+      "costPerM2": 1.94,
+      "percentOfTotal": 0.4
+    },
+    "elevator_supply": {
+      "avgPrice": 898,
+      "minPrice": 898,
+      "maxPrice": 898,
+      "samples": 1,
+      "costPerM2": 0.77,
+      "percentOfTotal": 0.2
+    },
+    "hvac_valves": {
+      "avgPrice": 131,
+      "minPrice": 131,
+      "maxPrice": 131,
+      "samples": 1,
+      "costPerM2": 0.56,
+      "percentOfTotal": 0.1
+    },
+    "ewh_supply": {
+      "avgPrice": 1233,
+      "minPrice": 1233,
+      "maxPrice": 1233,
+      "samples": 1,
+      "costPerM2": 0.35,
+      "percentOfTotal": 0.1
+    },
+    "drainage": {
+      "avgPrice": 1135,
+      "minPrice": 1135,
+      "maxPrice": 1135,
+      "samples": 1,
+      "costPerM2": 0.16,
+      "percentOfTotal": 0
+    },
+    "sauna_supply": {
+      "avgPrice": 247,
+      "minPrice": 247,
+      "maxPrice": 247,
+      "samples": 1,
+      "costPerM2": 0.14,
+      "percentOfTotal": 0
+    },
+    "cables": {
+      "avgPrice": 32,
+      "minPrice": 32,
+      "maxPrice": 32,
+      "samples": 1,
+      "costPerM2": 0,
+      "percentOfTotal": 0
+    }
+  },
+  "trainedAt": "2026-05-05T21:05:56.576Z"
+}

@@ -52,7 +52,8 @@ const ProjectGallery: React.FC<ProjectGalleryProps> = ({ language, userId, userN
         setIsUploading(true);
         setUploadError('');
 
-        for (const file of Array.from(files)) {
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i] as File;
             // Check storage
             const check = canUploadFile(connectService.getStorageUsed(), file.size, storageGB);
             if (!check.allowed) {

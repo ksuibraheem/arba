@@ -20,6 +20,7 @@ export interface InvoiceEditRequest {
     invoiceNumber: string;
     requestedBy: string;           // معرف المحاسب
     requestedByName: string;       // اسم المحاسب
+    requestedByEmail?: string;     // البريد الإلكتروني
     requestReason: string;         // سبب طلب التعديل
     requestDate: string;
     status: EditRequestStatus;

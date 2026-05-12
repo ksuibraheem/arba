@@ -1,0 +1,17 @@
+﻿App.tsx(1021,20): error TS2339: Property 'customPrice' does not exist on type 'CustomParams'.
+App.tsx(1027,38): error TS2339: Property 'customPrice' does not exist on type 'CustomParams'.
+components/charts/ItemProfitabilityChart.tsx(6,10): error TS2305: Module '"../../types"' has no exported member 'ProcessedItem'.
+components/ErrorBoundary.tsx(115,21): error TS2339: Property 'props' does not exist on type 'ErrorBoundary'.
+services/goldenOutputService.ts(113,73): error TS2339: Property 'totalMaterialCost' does not exist on type 'CalculatedItem'.
+services/goldenOutputService.ts(113,105): error TS2339: Property 'totalLaborCost' does not exist on type 'CalculatedItem'.
+services/goldenOutputService.ts(123,28): error TS2339: Property 'totalMaterialCost' does not exist on type 'CalculatedItem'.
+services/goldenOutputService.ts(123,60): error TS2339: Property 'totalLaborCost' does not exist on type 'CalculatedItem'.
+services/goldenOutputService.ts(129,46): error TS2339: Property 'totalMaterialCost' does not exist on type 'CalculatedItem'.
+services/goldenOutputService.ts(129,91): error TS2339: Property 'totalLaborCost' does not exist on type 'CalculatedItem'.
+services/goldenOutputService.ts(136,45): error TS2339: Property 'totalMaterialCost' does not exist on type 'CalculatedItem'.
+services/goldenOutputService.ts(136,89): error TS2339: Property 'totalLaborCost' does not exist on type 'CalculatedItem'.
+services/goldenOutputService.ts(145,45): error TS2339: Property 'descriptionAr' does not exist on type 'CalculatedItem'.
+services/goldenOutputService.ts(146,67): error TS2339: Property 'descriptionAr' does not exist on type 'CalculatedItem'.
+services/goldenOutputService.ts(149,51): error TS2339: Property 'descriptionEn' does not exist on type 'CalculatedItem'.
+services/goldenOutputService.ts(150,66): error TS2339: Property 'descriptionEn' does not exist on type 'CalculatedItem'.
+services/semanticNormalizer.ts(49,44): error TS1117: An object literal cannot have multiple properties with the same name.

@@ -3,6 +3,7 @@ import { runCognitiveEngine, CognitiveOutputItem } from './cognitiveCalculations
 import { calculateAreaBreakdown, CalculationResult, getDynamicMaterialCost, getDynamicLaborCost } from '../utils/calculations';
 import { FULL_ITEMS_DATABASE } from '../constants';
 import { learningFeedbackService } from './learningFeedbackService';
+import { brainDataLoader } from './brainDataLoader';
 
 // =================== Brain Layer 0: ID Bridge ===================
 /**
@@ -120,6 +121,38 @@ const COGNITIVE_TO_DB_MAP: Record<string, string> = {
   'consumable_tie_wire': '03.05', // steel-related
   'consumable_spacers': '03.06', // formwork-related
   'water_total':        '02.06', // site services
+
+  // v8.0 — Drop Beams (G1)
+  'dropbeam_concrete':  '04.03', // same as slab concrete
+  'dropbeam_steel':     '05.03', // same as super steel
+  'dropbeam_formwork':  '03.06', // formwork
+
+  // v8.0 — Stairs (G3)
+  'stairs_concrete':    '04.04', // stair concrete
+  'stairs_steel':       '05.03', // rebar
+  'stairs_formwork':    '03.06', // formwork
+  'stairs_handrail':    '14.03', // metalwork
+
+  // v8.0 — MEP additions (G6, G7, G13, G14)
+  'mep_elec_earthing':  '09.15', // earthing system
+  'mep_elec_main_cable': '09.03', // cables
+  'mep_plumb_manholes': '08.09', // manholes
+
+  // v8.0 — Finishes (G4, G15)
+  'finish_gypsum_cornice': '12.01', // gypsum board
+  'finish_roof_screed':    '06.02', // screed
+
+  // v8.0 — Smart doors/windows (G5)
+  'doors_wood_smart':   '14.02', // wooden doors
+  'windows_alum_smart': '14.01', // aluminum windows
+
+  // v8.0 — External works (G10)
+  'ext_boundary_wall_concrete': '04.01', // concrete
+  'ext_boundary_wall_blocks':   '05.04', // blocks
+  'ext_car_shades':     '17.01', // shades
+  'ext_interlocking':   '17.02', // paving
+  'ext_landscaping':    '17.03', // landscaping
+  'ext_lighting':       '17.04', // ext lighting
 };
 
 /**
@@ -169,6 +202,9 @@ const FALLBACK_PRICES: Record<string, { material: number; labor: number }> = {
   'mep_elec_mdb':         { material: 35000, labor: 5000 },
   'mep_elec_transformer': { material: 120000, labor: 15000 },
   'mep_elec_generator':   { material: 90000, labor: 5000 },
+  'mep_elec_earthing':    { material: 2500,  labor: 1500 },
+  'mep_elec_main_cable':  { material: 85,    labor: 35 },
+  'mep_plumb_manholes':   { material: 450,   labor: 250 },
 
   // HVAC Central
   'mep_hvac_chiller':     { material: 1200, labor: 200 },
@@ -186,6 +222,27 @@ const FALLBACK_PRICES: Record<string, { material: number; labor: number }> = {
   'test_concrete_cubes':  { material: 150,  labor: 50 },
   'test_soil_compaction': { material: 300,  labor: 100 },
   'test_insulation':      { material: 200,  labor: 100 },
+
+  // v8.0 — Drop Beams & Stairs
+  'dropbeam_concrete':    { material: 250, labor: 80 },
+  'dropbeam_steel':       { material: 3200, labor: 800 },
+  'dropbeam_formwork':    { material: 55, labor: 35 },
+  'stairs_concrete':      { material: 280, labor: 120 },
+  'stairs_steel':         { material: 3200, labor: 800 },
+  'stairs_formwork':      { material: 60, labor: 40 },
+  'stairs_handrail':      { material: 180, labor: 120 },
+
+  // v8.0 — Finishes
+  'finish_gypsum_cornice': { material: 25, labor: 20 },
+  'finish_roof_screed':    { material: 180, labor: 60 },
+
+  // v8.0 — External Works
+  'ext_boundary_wall_concrete': { material: 250, labor: 80 },
+  'ext_boundary_wall_blocks':   { material: 2.5, labor: 3.5 },
+  'ext_car_shades':       { material: 120, labor: 40 },
+  'ext_interlocking':     { material: 55, labor: 25 },
+  'ext_landscaping':      { material: 40, labor: 30 },
+  'ext_lighting':         { material: 1200, labor: 800 },
 };
 
 /**
@@ -233,7 +290,10 @@ export function generateDynamicBOQ(state: AppState): CalculationResult {
     ...cognitiveOutput.testing,
     ...cognitiveOutput.safety,
     ...cognitiveOutput.summerAdditives,
-    ...cognitiveOutput.mep              // v8.5 FIX: MEP items were missing from pipeline!
+    ...cognitiveOutput.mep,              // v8.5 FIX: MEP items were missing from pipeline!
+    ...cognitiveOutput.dropBeams,        // v8.0 G1
+    ...cognitiveOutput.stairs,           // v8.0 G3
+    ...cognitiveOutput.externalWorks,    // v8.0 G10
   ];
 
   const calculatedItems: CalculatedItem[] = [];
@@ -265,6 +325,14 @@ export function generateDynamicBOQ(state: AppState): CalculationResult {
     // Try to get dynamic market rates first
     let materialUnitCost = getDynamicMaterialCost(currentItem, state.location) ?? currentItem.baseMaterial;
     let laborUnitCost = getDynamicLaborCost(currentItem) ?? currentItem.baseLabor;
+
+    // v8.0 G8: Apply regional price index (auto-adjusts based on city)
+    const regionKey = (state.location || '').toLowerCase().replace(/\s+/g, '');
+    const regionalFactor = brainDataLoader.getRegionalIndex(regionKey);
+    if (regionalFactor !== 1.0) {
+      materialUnitCost *= regionalFactor;
+      laborUnitCost *= regionalFactor;
+    }
 
     // Apply User Manual Overrides if present
     const userOverride = state.itemOverrides[currentItem.id];
@@ -338,12 +406,62 @@ export function generateDynamicBOQ(state: AppState): CalculationResult {
       }
     }
 
+    // =================== v9.0 Brain Insights: Training Data Validation ===================
+    // Check against benchmarks from brain_mega_training.json (5,121 items)
+    try {
+      const { brainDataLoader } = require('./brainDataLoader');
+      if (brainDataLoader.isLoaded()) {
+        const category = cogItem.category || '';
+        const validation = brainDataLoader.validatePrice(category, directUnitCost);
+        if (validation.status === 'high' && validation.deviation && validation.deviation > 4.0) {
+          brainWarnings.push(
+            state.language === 'ar'
+              ? `🧠 تحذير الدماغ: السعر ${Math.round(validation.deviation * 100)}% من المرجعي — نمط مبالغة مكتشف`
+              : `🧠 Brain: Price is ${Math.round(validation.deviation * 100)}% of benchmark — inflation pattern detected`
+          );
+        }
+        if (validation.status === 'low' && validation.deviation && validation.deviation < 0.3) {
+          brainWarnings.push(
+            state.language === 'ar'
+              ? `🧠 تحذير الدماغ: السعر ${Math.round(validation.deviation * 100)}% فقط من المرجعي — منخفض بشكل مريب`
+              : `🧠 Brain: Price is only ${Math.round(validation.deviation * 100)}% of benchmark — suspiciously low`
+          );
+        }
+        // Warn on excessive waste (SOW-TBC error pattern)
+        if (cogItem.wastePercent > 25) {
+          brainWarnings.push(
+            state.language === 'ar'
+              ? `🧠 نسبة هدر ${cogItem.wastePercent}% مرتفعة — الطبيعي 5-10%`
+              : `🧠 Waste ${cogItem.wastePercent}% is excessive — normal is 5-10%`
+          );
+        }
+      }
+    } catch { /* brainDataLoader not available — skip */ }
+
     totalMaterialCost += lineMatCost;
     totalLaborCost += lineLabCost;
 
+    // === v9.0 Price Intelligence — Build display strings ===
+    const scopeLabel = cogItem.scopeTag
+      ? `${cogItem.scopeTag.label[state.language]} [${cogItem.scopeTag.includes.join('، ')}]`
+      : '';
+    const priceBreakdownDisplay = cogItem.priceBreakdown
+      ? cogItem.priceBreakdown.map(p => `${p.label[state.language]} ${p.unitCost}`).join(' + ')
+      : '';
+    let equipmentDisplay = '';
+    let equipmentCostTotal = 0;
+    if (cogItem.equipmentNeeded && cogItem.equipmentNeeded.length > 0) {
+      equipmentDisplay = cogItem.equipmentNeeded.map(e => `${e.name[state.language]} (${e.costPerUnit} ر.س/${cogItem.unit})`).join(' + ');
+      equipmentCostTotal = cogItem.equipmentNeeded.reduce((s, e) => s + e.costPerUnit, 0);
+    }
+
+    // Build enhanced display name with scope
+    const scopeSuffix = cogItem.scopeTag ? ` [${cogItem.scopeTag.label[state.language]}]` : '';
+    const enhancedDisplayName = cogItem.name[state.language] + (cogItem.notes ? ` (${cogItem.notes})` : '') + scopeSuffix;
+
     calculatedItems.push({
       ...currentItem,
-      displayName: cogItem.name[state.language] + (cogItem.notes ? ` (${cogItem.notes})` : ''),
+      displayName: enhancedDisplayName,
       matCost: lineMatCost,
       labCost: lineLabCost,
       wasteCost: 0, // Waste is already handled in procurementQty
@@ -361,6 +479,12 @@ export function generateDynamicBOQ(state: AppState): CalculationResult {
       isManualQty: userOverride?.manualQty !== undefined,
       profitStatus,         // v8.5 Brain Insight
       brainWarnings,        // v8.5 Brain Insight
+      // === v9.0 Price Intelligence ===
+      scopeLabel,
+      priceBreakdownDisplay,
+      equipmentDisplay,
+      equipmentCost: equipmentCostTotal,
+      elevationZone: cogItem.elevationZone,
     });
   });
 

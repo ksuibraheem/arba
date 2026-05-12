@@ -1,0 +1,137 @@
+{
+  "projectId": "str-package-25970",
+  "projectName": "STR PACKAGE 25970",
+  "projectType": "residential_building",
+  "scope": "structural_design",
+  "source": "STR PACKAGE 25970 (29.04.2026)",
+  "date": "2026-04-29",
+  "trainedAt": "2026-05-06T17:50:00+03:00",
+
+  "buildingProfile": {
+    "floors": ["Foundation", "Ground Floor", "First Floor", "Second Floor", "Roof", "Upper Roof"],
+    "floorsCount": 6,
+    "structuralSystem": "RC Frame (Columns + Beams + Slabs)",
+    "foundationType": "Determined by geotechnical report"
+  },
+
+  "designSpecs": {
+    "concreteGrade": "C35",
+    "concreteStrength_MPa": 35,
+    "steelGrade": "Grade 60 (ASTM A615)",
+    "steelYield_MPa": 420,
+    "slabMinThickness_mm": 160,
+    "shrinkageReinforcement": "Ø10@150 EW (top, for slabs > 160mm)",
+    "concreteUpstand_mm": 100,
+    "upstandSteel": "Ø12@800 dowels",
+    "camber": {
+      "continuousBeam_mm_per_m": 1.5,
+      "simpleBeam_mm_per_m": 2.0,
+      "cantilever_mm": 5.0
+    },
+    "spliceType": "Class B",
+    "matchingRule": "If adjacent beams differ, use the LARGER reinforcement for both"
+  },
+
+  "structuralElements": {
+    "columns": {
+      "referencesInDrawings": 18,
+      "scheduleDrawing": "S-201",
+      "planDrawings": ["S-101", "S-102", "S-103", "S-104", "S-105"]
+    },
+    "beams": {
+      "referencesInDrawings": 154,
+      "schedulesDrawing": "S-202, S-203"
+    },
+    "slabs": {
+      "referencesInDrawings": 64,
+      "types": ["Solid Slab", "Slab on Grade"],
+      "intermediateBars": "Required when thickness > 160mm"
+    },
+    "foundations": {
+      "referencesInDrawings": 49,
+      "planDrawing": "S-106",
+      "tieBeam": "Referenced in general notes"
+    }
+  },
+
+  "drawings": [
+    { "id": "S-001", "title": "General Notes (Page 1)", "type": "notes" },
+    { "id": "S-002", "title": "General Notes (Page 2)", "type": "notes" },
+    { "id": "S-003", "title": "General Notes (Page 3)", "type": "notes" },
+    { "id": "S-101", "title": "Column Plan 1", "type": "column_plan" },
+    { "id": "S-102", "title": "Column Plan 2", "type": "column_plan" },
+    { "id": "S-103", "title": "Column Plan 3", "type": "column_plan" },
+    { "id": "S-104", "title": "Column Plan 4", "type": "column_plan" },
+    { "id": "S-105", "title": "Column Plan 5", "type": "column_plan" },
+    { "id": "S-106", "title": "Foundation Floor Plan", "type": "foundation_plan" },
+    { "id": "S-107", "title": "Ground Floor Plan", "type": "floor_plan" },
+    { "id": "S-108", "title": "First Floor Plan", "type": "floor_plan" },
+    { "id": "S-109", "title": "Second Floor Plan", "type": "floor_plan" },
+    { "id": "S-110", "title": "Roof Floor Plan", "type": "floor_plan" },
+    { "id": "S-111", "title": "Upper Roof Floor Plan", "type": "floor_plan" },
+    { "id": "S-201", "title": "Columns Schedule", "type": "schedule" },
+    { "id": "S-202", "title": "Beams Schedule", "type": "schedule" },
+    { "id": "S-203", "title": "Slabs Schedule", "type": "schedule" },
+    { "id": "S-301", "title": "Sections 1", "type": "section" },
+    { "id": "S-302", "title": "Sections 2", "type": "section" }
+  ],
+
+  "lessonsForBrain": [
+    {
+      "lesson": "مبنى سكني 6 أدوار يحتاج خرسانة C35 (35 MPa) كحد أدنى",
+      "confidence": 0.95,
+      "source": "General Notes - Item 4"
+    },
+    {
+      "lesson": "حديد Grade 60 (fy=420 MPa) هو المعيار لكل العناصر الإنشائية",
+      "confidence": 0.95,
+      "source": "General Notes"
+    },
+    {
+      "lesson": "بلاطات سمكها أكثر من 160مم تحتاج حديد انكماش علوي Ø10@150 بالاتجاهين",
+      "confidence": 0.95,
+      "source": "General Notes - Item 11"
+    },
+    {
+      "lesson": "وصلات الحديد يجب أن تكون Class B Splice",
+      "confidence": 0.90,
+      "source": "General Notes - Splice Details"
+    },
+    {
+      "lesson": "كمرة بامتداد أكثر من 6 متر تحتاج Camber (تقوس) 1.5-2.0 مم/متر",
+      "confidence": 0.90,
+      "source": "General Notes - Item 7,8"
+    },
+    {
+      "lesson": "إذا اختلف حديد كمرتين متجاورتين، استخدم الأكبر للاثنين",
+      "confidence": 0.95,
+      "source": "General Notes - Item 10"
+    },
+    {
+      "lesson": "upstand الخرسانة عند حافة البلاطة = 100مم مع كانات Ø12@800",
+      "confidence": 0.90,
+      "source": "General Notes - Item 12"
+    },
+    {
+      "lesson": "حزمة إنشائية كاملة لمبنى 6 أدوار تشمل 19 لوحة (مخططات + جداول + قطاعات)",
+      "confidence": 0.85,
+      "source": "Drawing Index"
+    }
+  ],
+
+  "pricingRelevance": {
+    "concreteVolume": "يمكن تقدير حجم الخرسانة من مخططات الأساسات والأدوار",
+    "steelWeight": "يمكن حساب وزن الحديد من جداول الأعمدة والكمرات والبلاطات",
+    "formwork": "مساحة الشدة تُحسب من مسطحات البلاطات + محيطات الكمرات والأعمدة",
+    "note": "هذا الملف تصميمي — لا يحتوي أسعار مباشرة لكن يحتوي مواصفات حرجة للتسعير الدقيق"
+  },
+
+  "statistics": {
+    "totalPagesExtracted": 21,
+    "concreteSpecsFound": 286,
+    "steelSpecsFound": 370,
+    "dimensionsFound": 191,
+    "generalNotesFound": 41,
+    "totalDataPoints": 978
+  }
+}

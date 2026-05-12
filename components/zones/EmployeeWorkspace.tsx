@@ -26,11 +26,17 @@ import * as clientService from '../../services/clientService';
 import ConnectHub from '../connect/ConnectHub';
 import { projectSupplierService } from '../../services/projectSupplierService';
 
+const LazyBOQUploader = React.lazy(() => import('../BOQUploader'));
+const LazyPriceComparisonPanel = React.lazy(() => import('../panels/PriceComparisonPanel'));
+const LazyAuditReportPanel = React.lazy(() => import('../panels/AuditReportPanel'));
+const LazyCommodityDashboard = React.lazy(() => import('../panels/CommodityDashboard'));
+
 // =================== TYPES ===================
 
 type WorkspaceSection =
     | 'overview' | 'projects' | 'clients' | 'security' | 'rates'
-    | 'upload' | 'purge' | 'calc-grid' | 'connect';
+    | 'upload' | 'purge' | 'calc-grid' | 'connect' | 'boq-engine'
+    | 'comparison' | 'audit' | 'commodity';
 
 interface EmployeeWorkspaceProps {
     language: Language;
@@ -55,6 +61,10 @@ const NAV_ITEMS: { id: WorkspaceSection; icon: string; label: { ar: string; en: 
     // ──
     { id: 'rates', icon: '📖', label: { ar: 'مكتبة الأسعار', en: 'Rate Library' } },
     { id: 'connect', icon: '🔗', label: { ar: 'التواصل', en: 'Connect' }, divider: true },
+    { id: 'boq-engine', icon: '📊', label: { ar: 'محرك BOQ', en: 'BOQ Engine' } },
+    { id: 'comparison', icon: '⚖️', label: { ar: 'مقارنة العروض', en: 'Compare' } },
+    { id: 'audit', icon: '📋', label: { ar: 'تقارير المراجعة', en: 'Audit' } },
+    { id: 'commodity', icon: '📈', label: { ar: 'بورصة المواد', en: 'Commodity Exchange' } },
 ];
 
 // =================== COMPONENT ===================
@@ -432,6 +442,30 @@ const EmployeeWorkspace: React.FC<EmployeeWorkspaceProps> = ({
                     userName={displayName}
                     companyName={isAr ? 'شركتك' : 'Your Company'}
                 />;
+            case 'boq-engine':
+                return (
+                    <React.Suspense fallback={<div className="text-center py-20 text-slate-400">⏳ {isAr ? 'جاري تحميل محرك BOQ...' : 'Loading BOQ Engine...'}</div>}>
+                        <LazyBOQUploader />
+                    </React.Suspense>
+                );
+            case 'comparison':
+                return (
+                    <React.Suspense fallback={<div className="text-center py-20 text-slate-400">⏳</div>}>
+                        <LazyPriceComparisonPanel />
+                    </React.Suspense>
+                );
+            case 'audit':
+                return (
+                    <React.Suspense fallback={<div className="text-center py-20 text-slate-400">⏳</div>}>
+                        <LazyAuditReportPanel />
+                    </React.Suspense>
+                );
+            case 'commodity':
+                return (
+                    <React.Suspense fallback={<div className="text-center py-20 text-slate-400">⏳ {isAr ? 'جاري تحميل البورصة...' : 'Loading Commodity Exchange...'}</div>}>
+                        <LazyCommodityDashboard language={language} />
+                    </React.Suspense>
+                );
             default:
                 return null;
         }

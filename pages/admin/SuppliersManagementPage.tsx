@@ -160,7 +160,7 @@ const SuppliersManagementPage: React.FC<SuppliersManagementPageProps> = ({ langu
         requireAdminReview: true
     });
 
-    const t = {
+    const pageTranslations = {
         title: { ar: 'إدارة الموردين', en: 'Supplier Management' },
         suppliers: { ar: 'الموردين', en: 'Suppliers' },
         crVerification: { ar: 'التحقق من السجل التجاري', en: 'CR Verification' },
@@ -222,7 +222,8 @@ const SuppliersManagementPage: React.FC<SuppliersManagementPageProps> = ({ langu
         saveSettings: { ar: 'حفظ الإعدادات', en: 'Save Settings' }
     };
 
-    const getLabel = (key: keyof typeof t) => t[key][language];
+    const getLabel = (key: keyof typeof pageTranslations) => pageTranslations[key][language];
+    const t = (ar: string, en: string) => language === 'ar' ? ar : en;
 
     const filteredSuppliers = suppliers.filter(s => {
         const matchesSearch = s.companyName[language].toLowerCase().includes(searchQuery.toLowerCase()) ||

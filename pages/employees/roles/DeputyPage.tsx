@@ -39,7 +39,7 @@ const DeputyPage: React.FC<DeputyPageProps> = ({ language, employee }) => {
 
     // Load real employee count
     useEffect(() => {
-        const emps = employeeService.getAllEmployees();
+        const emps = employeeService.getEmployees();
         setEmployeeCount(emps.length);
     }, []);
 

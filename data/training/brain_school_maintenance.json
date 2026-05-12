@@ -1,0 +1,87 @@
+{
+  "projectId": "sow-tbc-school-maintenance",
+  "projectType": "school",
+  "scope": "maintenance",
+  "source": "SOW-TBC-2026-5-6",
+  "trainedAt": "2026-05-06T17:25:00+03:00",
+  "errorPatterns": [
+    {
+      "id": "ERR_RANDOM_PRICING",
+      "severity": "critical",
+      "description": "استخدام Math.random() في تحديد أسعار البنود",
+      "solution": "استخدام أسعار ثابتة من قاعدة بيانات أسعار السوق",
+      "affectedEngine": "full_pricing_engine.js"
+    },
+    {
+      "id": "ERR_KEYWORD_ORDER",
+      "severity": "critical",
+      "description": "ترتيب keywords خاطئ يسبب تصنيف خاطئ — كلمة عامة تتطابق قبل الكلمة المتخصصة",
+      "solution": "ترتيب القواعد من الأكثر تخصصاً للأعم، أو استخدام scoring",
+      "examples": [
+        "دهانات بلاستيكية ← مصنفة كهربائية بسبب 'لوحة' قبل 'دهان'",
+        "معالجة رشح أسقف ← مصنفة تكييف بدون keyword مطابق"
+      ]
+    },
+    {
+      "id": "ERR_UNIT_MISMATCH",
+      "severity": "critical",
+      "description": "سعر م3 مطبق على بند وحدته م2 بدون تحويل",
+      "solution": "إضافة conversionFactor عند اختلاف الوحدة",
+      "examples": [
+        "خرسانة عادية 10سم: سعر 1,400 ر.س/م3 مطبق كـ 1,400 ر.س/م2"
+      ]
+    },
+    {
+      "id": "ERR_FLAT_CATEGORY_PRICE",
+      "severity": "high",
+      "description": "سعر واحد لكل فئة بغض النظر عن تفاصيل البند",
+      "solution": "تحليل الوصف لتعديل السعر حسب نوع البند الفعلي",
+      "examples": [
+        "كل بنود 'عزل ومعالجات' = 180 ر.س — بينما المدى الفعلي 40-4000 ر.س"
+      ]
+    },
+    {
+      "id": "ERR_WRONG_CATEGORY",
+      "severity": "high",
+      "description": "بنود مصنفة في فئات خاطئة بالكامل",
+      "affectedItems": 8,
+      "solution": "مراجعة يدوية أو إضافة negative keywords لمنع التصنيف الخاطئ"
+    }
+  ],
+  "pricingLessons": [
+    {
+      "lesson": "مشاريع صيانة المدارس الحكومية تتراوح بين 3-6 مليون/مدرسة",
+      "confidence": 0.85
+    },
+    {
+      "lesson": "أعمال المعالجات الإنشائية (صدأ، شروخ، فواصل) تشكل 20-30% من تكلفة الصيانة",
+      "confidence": 0.80
+    },
+    {
+      "lesson": "الدهانات تشكل حجم كبير من الكميات لكن قيمة صغيرة (20-35 ر.س/م2)",
+      "confidence": 0.90
+    },
+    {
+      "lesson": "بنود المظلات والسواتر تحتاج موافقة الدفاع المدني",
+      "confidence": 0.95
+    },
+    {
+      "lesson": "معالجة رشح الأسقف بند مركب (6 طبقات عمل) — سعره 180-350 ر.س/م2 وليس سعر تكييف",
+      "confidence": 0.90
+    }
+  ],
+  "categoryBenchmarks": {
+    "earthworks": { "avgPricePerUnit": 35, "unit": "م3" },
+    "concrete_reinforced": { "avgPricePerUnit": 1400, "unit": "م3" },
+    "concrete_plain_10cm": { "avgPricePerUnit": 85, "unit": "م2" },
+    "structural_repair": { "avgPricePerUnit": 180, "unit": "varies" },
+    "metalworks": { "avgPricePerUnit": 550, "unit": "varies" },
+    "flooring_porcelain": { "avgPricePerUnit": 115, "unit": "م2" },
+    "flooring_interlock": { "avgPricePerUnit": 82, "unit": "م2" },
+    "painting_plastic": { "avgPricePerUnit": 28, "unit": "م2" },
+    "shades_metal": { "avgPricePerUnit": 265, "unit": "م2" },
+    "aluminum_windows": { "avgPricePerUnit": 375, "unit": "م2" },
+    "masonry_block": { "avgPricePerUnit": 75, "unit": "م2" },
+    "waterproofing_bitumen": { "avgPricePerUnit": 40, "unit": "م2" }
+  }
+}

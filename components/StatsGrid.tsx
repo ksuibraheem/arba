@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calculator, Wallet, TrendingUp, CircleDollarSign, Box, Users } from 'lucide-react';
+import { Calculator, Wallet, TrendingUp, CircleDollarSign, Box, Users, Ruler, BarChart3, Percent, Layers } from 'lucide-react';
 import { Language } from '../types';
 import { TRANSLATIONS } from '../constants';
 import { formatCurrency, formatNumber } from '../utils/formatting';
@@ -12,16 +12,24 @@ interface StatsGridProps {
     totalConcreteVolume: number;
     totalLaborCost: number;
     totalMaterialCost: number;
+    buildArea: number;
     language: Language;
 }
 
 const StatsGrid: React.FC<StatsGridProps> = ({
     totalDirect, totalOverhead, totalProfit, finalPrice,
     totalConcreteVolume, totalLaborCost, totalMaterialCost,
-    language
+    buildArea, language
 }) => {
     const t = (key: string) => TRANSLATIONS[key]?.[language] || key;
     const isRtl = language === 'ar';
+    const isAr = language === 'ar';
+
+    // Derived calculations
+    const pricePerSqm = buildArea > 0 ? finalPrice / buildArea : 0;
+    const materialRatio = totalDirect > 0 ? (totalMaterialCost / totalDirect) * 100 : 0;
+    const laborRatio = totalDirect > 0 ? (totalLaborCost / totalDirect) * 100 : 0;
+    const costPerConcrete = totalConcreteVolume > 0 ? totalDirect / totalConcreteVolume : 0;
 
     return (
         <>
@@ -108,9 +116,77 @@ const StatsGrid: React.FC<StatsGridProps> = ({
                     </div>
                 </div>
             </div>
+
+            {/* Row 3: Advanced Metrics */}
+            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 ${isRtl ? '' : 'flex-row-reverse'}`} dir={isRtl ? 'rtl' : 'ltr'}>
+                {/* Price per m² */}
+                <div className="bg-gradient-to-br from-violet-50/80 to-violet-100/50 rounded-2xl p-5 border border-violet-100/80 flex items-center justify-between transition-all hover:shadow-md hover:border-violet-200">
+                    <div>
+                        <h4 className="text-violet-600/80 text-xs font-bold uppercase tracking-wider mb-2">
+                            {isAr ? 'سعر المتر المربع' : 'Price / m²'}
+                        </h4>
+                        <span className="text-2xl font-black text-violet-950">
+                            {formatNumber(pricePerSqm, 0, language)}
+                            <span className="text-sm font-medium text-violet-700 mr-1 ml-1">{isAr ? 'ر.س/م²' : 'SAR/m²'}</span>
+                        </span>
+                    </div>
+                    <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center">
+                        <Ruler className="w-6 h-6 text-violet-400" />
+                    </div>
+                </div>
+
+                {/* Material Ratio */}
+                <div className="bg-gradient-to-br from-teal-50/80 to-teal-100/50 rounded-2xl p-5 border border-teal-100/80 flex items-center justify-between transition-all hover:shadow-md hover:border-teal-200">
+                    <div>
+                        <h4 className="text-teal-600/80 text-xs font-bold uppercase tracking-wider mb-2">
+                            {isAr ? 'نسبة المواد' : 'Material Ratio'}
+                        </h4>
+                        <span className="text-2xl font-black text-teal-950">
+                            {formatNumber(materialRatio, 1, language)}
+                            <span className="text-sm font-medium text-teal-700 mr-1 ml-1">%</span>
+                        </span>
+                    </div>
+                    <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center">
+                        <BarChart3 className="w-6 h-6 text-teal-400" />
+                    </div>
+                </div>
+
+                {/* Labor Ratio */}
+                <div className="bg-gradient-to-br from-pink-50/80 to-pink-100/50 rounded-2xl p-5 border border-pink-100/80 flex items-center justify-between transition-all hover:shadow-md hover:border-pink-200">
+                    <div>
+                        <h4 className="text-pink-600/80 text-xs font-bold uppercase tracking-wider mb-2">
+                            {isAr ? 'نسبة العمالة' : 'Labor Ratio'}
+                        </h4>
+                        <span className="text-2xl font-black text-pink-950">
+                            {formatNumber(laborRatio, 1, language)}
+                            <span className="text-sm font-medium text-pink-700 mr-1 ml-1">%</span>
+                        </span>
+                    </div>
+                    <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center">
+                        <Percent className="w-6 h-6 text-pink-400" />
+                    </div>
+                </div>
+
+                {/* Cost per m³ Concrete */}
+                <div className="bg-gradient-to-br from-slate-50/80 to-slate-100/50 rounded-2xl p-5 border border-slate-200/80 flex items-center justify-between transition-all hover:shadow-md hover:border-slate-300">
+                    <div>
+                        <h4 className="text-slate-600/80 text-xs font-bold uppercase tracking-wider mb-2">
+                            {isAr ? 'تكلفة م³ خرسانة' : 'Cost / m³ Concrete'}
+                        </h4>
+                        <span className="text-2xl font-black text-slate-950">
+                            {formatNumber(costPerConcrete, 0, language)}
+                            <span className="text-sm font-medium text-slate-700 mr-1 ml-1">{isAr ? 'ر.س/م³' : 'SAR/m³'}</span>
+                        </span>
+                    </div>
+                    <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center">
+                        <Layers className="w-6 h-6 text-slate-400" />
+                    </div>
+                </div>
+            </div>
         </>
     );
 };
 
 export default StatsGrid;
+
 

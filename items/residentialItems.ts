@@ -9,13 +9,13 @@ import {
     SUPPLIERS_ELECTRICAL, SUPPLIERS_FIRE_SAFETY, SUPPLIERS_ELEVATORS,
     SUPPLIERS_PLUMBING, SUPPLIERS_SANITARY, SUPPLIERS_SMART_SECURITY,
     SUPPLIERS_PAINT, SUPPLIERS_DOORS, SUPPLIERS_STEEL,
-    SUPPLIERS_INSULATION
+    SUPPLIERS_INSULATION, SUPPLIERS_GENERATORS, SUPPLIERS_TANKS, SUPPLIERS_NETWORKING
 } from './suppliers';
 
 export const RESIDENTIAL_ITEMS: BaseItem[] = [
     // ================= RB01. الشقق السكنية =================
-    { id: "RB01.01", category: "architecture", type: "residential_building", name: { ar: "تشطيب شقة سكنية (2 غرفة نوم)", en: "2-Bedroom Apartment Finishing", fr: "Finition Appartement 2 Chambres", zh: "两居室公寓装修" }, unit: "شقة", qty: 8, baseMaterial: 25000, baseLabor: 10000, waste: 0.05, suppliers: SUPPLIERS_TILES, sbc: "SBC 201-Apt2", soilFactor: false, dependency: 'build_area' },
-    { id: "RB01.02", category: "architecture", type: "residential_building", name: { ar: "تشطيب شقة سكنية (3 غرف نوم)", en: "3-Bedroom Apartment Finishing", fr: "Finition Appartement 3 Chambres", zh: "三居室公寓装修" }, unit: "شقة", qty: 4, baseMaterial: 32000, baseLabor: 12000, waste: 0.05, suppliers: SUPPLIERS_TILES, sbc: "SBC 201-Apt3", soilFactor: false, dependency: 'build_area' },
+    { id: "RB01.01", category: "architecture", type: "residential_building", name: { ar: "تشطيب شقة سكنية (2 غرفة نوم)", en: "2-Bedroom Apartment Finishing", fr: "Finition Appartement 2 Chambres", zh: "两居室公寓装修" }, unit: "شقة", qty: 8, baseMaterial: 25000, baseLabor: 10000, waste: 0.05, suppliers: SUPPLIERS_TILES, sbc: "SBC 201-Apt2", soilFactor: false, dependency: 'fixed' }, // v2.0: fix dependency (شقة = fixed)
+    { id: "RB01.02", category: "architecture", type: "residential_building", name: { ar: "تشطيب شقة سكنية (3 غرف نوم)", en: "3-Bedroom Apartment Finishing", fr: "Finition Appartement 3 Chambres", zh: "三居室公寓装修" }, unit: "شقة", qty: 4, baseMaterial: 32000, baseLabor: 12000, waste: 0.05, suppliers: SUPPLIERS_TILES, sbc: "SBC 201-Apt3", soilFactor: false, dependency: 'fixed' }, // v2.0: fix dependency
     { id: "RB01.03", category: "architecture", type: "residential_building", name: { ar: "مطابخ شقق (ألمنيوم/خشب)", en: "Apartment Kitchens", fr: "Cuisines Appartements", zh: "公寓厨房" }, unit: "عدد", qty: 12, baseMaterial: 5000, baseLabor: 1200, waste: 0, suppliers: SUPPLIERS_TILES, sbc: "SBC-AptKit", soilFactor: false, dependency: 'fixed' },
 
     // ================= RB02. المساحات المشتركة =================
@@ -24,7 +24,7 @@ export const RESIDENTIAL_ITEMS: BaseItem[] = [
     { id: "RB02.03", category: "architecture", type: "residential_building", name: { ar: "صناديق بريد مقيمين", en: "Resident Mailboxes", fr: "Boîtes aux Lettres Résidents", zh: "住户信箱" }, unit: "مجموعة", qty: 1, baseMaterial: 2000, baseLabor: 300, waste: 0, suppliers: SUPPLIERS_STEEL, sbc: "SBC-Mailbox", soilFactor: false, dependency: 'fixed' },
 
     // ================= RB03. المصعد والسلالم =================
-    { id: "RB03.01", category: "mep_elec", type: "residential_building", name: { ar: "مصعد سكني (6 أشخاص / 5 وقفات)", en: "Residential Elevator (6 Person / 5 Stops)", fr: "Ascenseur Résidentiel (6 Pers / 5 Niveaux)", zh: "住宅电梯(6人/5停靠)" }, unit: "عدد", qty: 1, baseMaterial: 100000, baseLabor: 18000, waste: 0, suppliers: SUPPLIERS_ELEVATORS, sbc: "SBC-ResElev", soilFactor: false, dependency: 'fixed' },
+    { id: "RB03.01", category: "mep_elec", type: "residential_building", name: { ar: "مصعد سكني (6 أشخاص / 5 وقفات)", en: "Residential Elevator (6 Person / 5 Stops)", fr: "Ascenseur Résidentiel (6 Pers / 5 Niveaux)", zh: "住宅电梯(6人/5停靠)" }, unit: "عدد", qty: 1, baseMaterial: 120000, baseLabor: 20000, waste: 0, suppliers: SUPPLIERS_ELEVATORS, sbc: "SBC-ResElev", soilFactor: false, dependency: 'fixed' }, // v2.0: سعر سوق 2026
 
     // ================= RB04. المواقف =================
     { id: "RB04.01", category: "structure", type: "residential_building", name: { ar: "مواقف سيارات أرضية (كل شقة موقفين)", en: "Ground Parking (2 Spots per Apt)", fr: "Parking Sol (2 Places/Appt)", zh: "地面停车场(每户2位)" }, unit: "م2", qty: 300, baseMaterial: 50, baseLabor: 25, waste: 0.05, suppliers: SUPPLIERS_CONCRETE, sbc: "SBC 304-GParking", soilFactor: false, dependency: 'land_area' },
@@ -45,4 +45,22 @@ export const RESIDENTIAL_ITEMS: BaseItem[] = [
     // ================= RB07. غرفة قمامة وخدمات =================
     { id: "RB07.01", category: "architecture", type: "residential_building", name: { ar: "غرفة قمامة مركزية + حاويات", en: "Central Trash Room + Bins", fr: "Local Poubelles + Conteneurs", zh: "中央垃圾房+垃圾桶" }, unit: "مجموعة", qty: 1, baseMaterial: 3000, baseLabor: 1000, waste: 0, suppliers: SUPPLIERS_CONCRETE, sbc: "SBC-Trash", soilFactor: false, dependency: 'fixed' },
     { id: "RB07.02", category: "architecture", type: "residential_building", name: { ar: "غرفة حارس (بوابة)", en: "Guard Room (Gate)", fr: "Loge Gardien", zh: "门卫室" }, unit: "م2", qty: 10, baseMaterial: 450, baseLabor: 200, waste: 0.05, suppliers: SUPPLIERS_CONCRETE, sbc: "SBC 304-Grd", soilFactor: false, dependency: 'fixed' },
+
+    // ================= RB08. السستم الكهربائي =================
+    { id: "RB08.01", category: "mep_elec", type: "residential_building", name: { ar: "محول كهرباء مشترك", en: "Shared Power Transformer", fr: "Transformateur Commun", zh: "共用变压器" }, unit: "عدد", qty: 1, baseMaterial: 80000, baseLabor: 12000, waste: 0, suppliers: SUPPLIERS_ELECTRICAL, sbc: "SBC 401-ResTrf", soilFactor: false, dependency: 'fixed' },
+    { id: "RB08.02", category: "mep_elec", type: "residential_building", name: { ar: "مولد كهرباء احتياطي (مشترك)", en: "Shared Backup Generator", fr: "Groupe Électrogène Commun", zh: "共用备用发电机" }, unit: "عدد", qty: 1, baseMaterial: 60000, baseLabor: 8000, waste: 0, suppliers: SUPPLIERS_GENERATORS, sbc: "SBC 401-ResGen", soilFactor: false, dependency: 'fixed' },
+    { id: "RB08.03", category: "mep_elec", type: "residential_building", name: { ar: "ATS تحويل أوتوماتيكي", en: "Automatic Transfer Switch", fr: "Inverseur Automatique", zh: "自动转换开关" }, unit: "مجموعة", qty: 1, baseMaterial: 20000, baseLabor: 5000, waste: 0, suppliers: SUPPLIERS_ELECTRICAL, sbc: "SBC 401-ResATS", soilFactor: false, dependency: 'fixed' },
+    { id: "RB08.04", category: "mep_elec", type: "residential_building", name: { ar: "بسبار / كابل رئيسي", en: "Busbar / Main Rising Cable", fr: "Canalisation Montante", zh: "母线槽/主干电缆" }, unit: "م.ط", qty: 20, baseMaterial: 800, baseLabor: 250, waste: 0.03, suppliers: SUPPLIERS_ELECTRICAL, sbc: "SBC 401-ResBus", soilFactor: false, dependency: 'build_area' },
+    { id: "RB08.05", category: "mep_elec", type: "residential_building", name: { ar: "لوحات طوابق كهرباء", en: "Floor Distribution Boards", fr: "Tableaux d'Étage", zh: "楼层配电柜" }, unit: "عدد", qty: 5, baseMaterial: 3000, baseLabor: 800, waste: 0, suppliers: SUPPLIERS_ELECTRICAL, sbc: "SBC 401-ResDB", soilFactor: false, dependency: 'build_area' },
+
+    // ================= RB09. عزل + سباكة متقدمة =================
+    { id: "RB09.01", category: "insulation", type: "residential_building", name: { ar: "عزل حراري جدران خارجية", en: "External Wall Thermal Insulation", fr: "Isolation Thermique Murs", zh: "外墙保温" }, unit: "م²", qty: 800, baseMaterial: 25, baseLabor: 15, waste: 0.05, suppliers: SUPPLIERS_INSULATION, sbc: "SBC 601-ResIns", soilFactor: false, dependency: 'build_area' },
+    { id: "RB09.02", category: "insulation", type: "residential_building", name: { ar: "عزل صوتي بين الشقق", en: "Acoustic Insulation Between Units", fr: "Isolation Acoustique Entre Logements", zh: "单元间隔音" }, unit: "م²", qty: 200, baseMaterial: 40, baseLabor: 20, waste: 0.05, suppliers: SUPPLIERS_INSULATION, sbc: "SBC 602-ResAcou", soilFactor: false, dependency: 'build_area' },
+    { id: "RB09.03", category: "mep_plumb", type: "residential_building", name: { ar: "خزان أرضي خرساني", en: "Underground Concrete Tank", fr: "Réservoir Souterrain", zh: "地下混凝土水箱" }, unit: "مجموعة", qty: 1, baseMaterial: 15000, baseLabor: 5000, waste: 0, suppliers: SUPPLIERS_TANKS, sbc: "SBC 701-ResTank", soilFactor: true, dependency: 'fixed' },
+    { id: "RB09.04", category: "mep_plumb", type: "residential_building", name: { ar: "نظام صرف أمطار", en: "Storm Water Drainage", fr: "Réseau Eaux Pluviales", zh: "雨水排水" }, unit: "مجموعة", qty: 1, baseMaterial: 8000, baseLabor: 3000, waste: 0, suppliers: SUPPLIERS_PLUMBING, sbc: "SBC 701-ResStrm", soilFactor: false, dependency: 'land_area' },
+
+    // ================= RB10. تيار خفيف سكني =================
+    { id: "RB10.01", category: "mep_elec", type: "residential_building", name: { ar: "شبكة فايبر للشقق (FTTH)", en: "Fiber to Home (FTTH) Network", fr: "Réseau FTTH", zh: "光纤入户(FTTH)" }, unit: "شقة", qty: 12, baseMaterial: 1500, baseLabor: 400, waste: 0, suppliers: SUPPLIERS_NETWORKING, sbc: "SBC 401-FTTH", soilFactor: false, dependency: 'fixed' },
+    { id: "RB10.02", category: "mep_elec", type: "residential_building", name: { ar: "SMATV نظام تلفزيون مركزي", en: "SMATV Central TV System", fr: "Système TV Centralisé", zh: "中央电视系统" }, unit: "مجموعة", qty: 1, baseMaterial: 8000, baseLabor: 2000, waste: 0, suppliers: SUPPLIERS_SMART_SECURITY, sbc: "SBC 401-ResSMATV", soilFactor: false, dependency: 'fixed' },
+    { id: "RB10.03", category: "mep_elec", type: "residential_building", name: { ar: "نظام PA طوارئ (أدراج + ممرات)", en: "Emergency PA System (Stairs + Corridors)", fr: "Système PA Urgence", zh: "应急广播系统" }, unit: "مجموعة", qty: 1, baseMaterial: 8000, baseLabor: 2000, waste: 0, suppliers: SUPPLIERS_SMART_SECURITY, sbc: "SBC 401-ResPA", soilFactor: false, dependency: 'fixed' },
 ];

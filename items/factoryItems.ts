@@ -9,7 +9,8 @@ import {
     SUPPLIERS_FACADES, SUPPLIERS_ELECTRICAL, SUPPLIERS_FIRE_SAFETY,
     SUPPLIERS_PLUMBING, SUPPLIERS_INSULATION, SUPPLIERS_PAINT,
     SUPPLIERS_DOORS, SUPPLIERS_HEAVY_EQUIPMENT, SUPPLIERS_SMART_SECURITY,
-    SUPPLIERS_TILES, SUPPLIERS_SANITARY
+    SUPPLIERS_TILES, SUPPLIERS_SANITARY, SUPPLIERS_BMS_ELV,
+    SUPPLIERS_GENERATORS, SUPPLIERS_TANKS
 } from './suppliers';
 
 export const FACTORY_ITEMS: BaseItem[] = [
@@ -57,4 +58,14 @@ export const FACTORY_ITEMS: BaseItem[] = [
     { id: "F08.02", category: "mep_plumb", type: "factory", name: { ar: "شبكة تصريف صناعي (مواد كيميائية)", en: "Industrial Drainage (Chemical-Resistant)", fr: "Drainage Industriel (Anti-Chimique)", zh: "工业排水(耐化学)" }, unit: "م.ط", qty: 100, baseMaterial: 200, baseLabor: 80, waste: 0.05, suppliers: SUPPLIERS_PLUMBING, sbc: "SBC 701-IndDrn", soilFactor: false, dependency: 'build_area' },
     { id: "F08.03", category: "architecture", type: "factory", name: { ar: "أرفف تخزين صناعية (Racking System)", en: "Industrial Racking System", fr: "Système de Rayonnage Industriel", zh: "工业货架系统" }, unit: "مجموعة", qty: 1, baseMaterial: 40000, baseLabor: 8000, waste: 0, suppliers: SUPPLIERS_STEEL, sbc: "SBC-Rack", soilFactor: false, dependency: 'fixed' },
     { id: "F08.04", category: "architecture", type: "factory", name: { ar: "ميزان بسكول (30 طن)", en: "Weighbridge (30 Ton)", fr: "Pont-Bascule (30 Tonnes)", zh: "地磅(30吨)" }, unit: "عدد", qty: 1, baseMaterial: 50000, baseLabor: 10000, waste: 0, suppliers: SUPPLIERS_HEAVY_EQUIPMENT, sbc: "SBC-Scale", soilFactor: false, dependency: 'fixed' },
+
+    // ================= F09. السستم التشغيلي الصناعي =================
+    { id: "F09.01", category: "mep_elec", type: "factory", name: { ar: "ATS تحويل أوتوماتيكي", en: "Automatic Transfer Switch", fr: "Inverseur Automatique", zh: "自动转换开关" }, unit: "مجموعة", qty: 1, baseMaterial: 40000, baseLabor: 10000, waste: 0, suppliers: SUPPLIERS_ELECTRICAL, sbc: "SBC 401-IndATS", soilFactor: false, dependency: 'fixed' },
+    { id: "F09.02", category: "mep_elec", type: "factory", name: { ar: "نظام PFC تصحيح عامل القدرة", en: "Power Factor Correction", fr: "Compensation Facteur de Puissance", zh: "功率因数补偿" }, unit: "مجموعة", qty: 1, baseMaterial: 30000, baseLabor: 8000, waste: 0, suppliers: SUPPLIERS_ELECTRICAL, sbc: "SBC 401-IndPFC", soilFactor: false, dependency: 'fixed' },
+    { id: "F09.03", category: "mep_elec", type: "factory", name: { ar: "بسبار صناعي", en: "Industrial Busbar", fr: "Canalisation Industrielle", zh: "工业母线槽" }, unit: "م.ط", qty: 30, baseMaterial: 1500, baseLabor: 400, waste: 0.03, suppliers: SUPPLIERS_ELECTRICAL, sbc: "SBC 401-IndBus", soilFactor: false, dependency: 'build_area' },
+    { id: "F09.04", category: "mep_hvac", type: "factory", name: { ar: "شفاطات صناعية + تهوية", en: "Industrial Exhaust + Ventilation", fr: "Extraction + Ventilation Industrielle", zh: "工业排风+通风" }, unit: "مجموعة", qty: 1, baseMaterial: 40000, baseLabor: 10000, waste: 0, suppliers: SUPPLIERS_HVAC, sbc: "SBC 501-IndVent", soilFactor: false, dependency: 'fixed' },
+    { id: "F09.05", category: "mep_elec", type: "factory", name: { ar: "نظام SCADA/BMS صناعي", en: "Industrial SCADA/BMS System", fr: "Système SCADA/GTB Industriel", zh: "工业SCADA/BMS系统" }, unit: "مجموعة", qty: 1, baseMaterial: 80000, baseLabor: 20000, waste: 0, suppliers: SUPPLIERS_BMS_ELV, sbc: "SBC 501-IndSCADA", soilFactor: false, dependency: 'fixed' },
+    { id: "F09.06", category: "mep_elec", type: "factory", name: { ar: "CCTV صناعي (15 كاميرا)", en: "Industrial CCTV (15 Cameras)", fr: "CCTV Industriel", zh: "工业监控(15摄像头)" }, unit: "مجموعة", qty: 1, baseMaterial: 15000, baseLabor: 4000, waste: 0, suppliers: SUPPLIERS_SMART_SECURITY, sbc: "SBC 401-IndCCTV", soilFactor: false, dependency: 'fixed' },
+    { id: "F09.07", category: "mep_elec", type: "factory", name: { ar: "Access Control صناعي + حضور", en: "Industrial Access + Attendance", fr: "Contrôle Accès + Pointage", zh: "门禁+考勤" }, unit: "مجموعة", qty: 1, baseMaterial: 15000, baseLabor: 4000, waste: 0, suppliers: SUPPLIERS_SMART_SECURITY, sbc: "SBC 401-IndAC", soilFactor: false, dependency: 'fixed' },
+    { id: "F09.08", category: "mep_plumb", type: "factory", name: { ar: "خزان مياه أرضي", en: "Underground Water Tank", fr: "Réservoir Souterrain", zh: "地下水箱" }, unit: "مجموعة", qty: 1, baseMaterial: 15000, baseLabor: 5000, waste: 0, suppliers: SUPPLIERS_TANKS, sbc: "SBC 701-IndTank", soilFactor: true, dependency: 'fixed' },
 ];

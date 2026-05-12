@@ -94,6 +94,9 @@ async function loadBackgroundData(): Promise<void> {
         { collection: 'supplier_reviews', localKey: 'arba_supplier_reviews' },
         { collection: 'chart_of_accounts', localKey: 'arba_chart_of_accounts' },
         { collection: 'journal_entries', localKey: 'arba_journal_entries' },
+        // Sovereign v8.0: Temporal Audit System
+        { collection: 'price_time_series', localKey: '_arba_price_time_series' },
+        { collection: 'usage_metering', localKey: '_arba_usage_metering' },
     ];
 
     for (const { collection, localKey } of collections) {

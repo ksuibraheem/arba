@@ -1,0 +1,2554 @@
+[
+  {
+    "sheet": "2-SITE ",
+    "desc": "Mat Foundations",
+    "qty": 715,
+    "unit": "m3",
+    "rate": 24.5,
+    "amount": 17517.5
+  },
+  {
+    "sheet": "2-SITE ",
+    "desc": "Isolated Footings",
+    "qty": 470,
+    "unit": "m3",
+    "rate": 30.6,
+    "amount": 14382
+  },
+  {
+    "sheet": "2-SITE ",
+    "desc": "Grade Beams",
+    "qty": 83,
+    "unit": "m3",
+    "rate": 36.7,
+    "amount": 3046.1000000000004
+  },
+  {
+    "sheet": "2-SITE ",
+    "desc": "Compacted replacement granual material fill",
+    "qty": 1321,
+    "unit": "m3",
+    "rate": 24.5,
+    "amount": 32364.5
+  },
+  {
+    "sheet": "3-Concrete",
+    "desc": "Under mat foundations, 75 mm thick",
+    "qty": 30,
+    "unit": "m3",
+    "rate": 336.6,
+    "amount": 10098
+  },
+  {
+    "sheet": "3-Concrete",
+    "desc": "Under isolated footings, 75 mm thick",
+    "qty": 35,
+    "unit": "m3",
+    "rate": 336.6,
+    "amount": 11781
+  },
+  {
+    "sheet": "3-Concrete",
+    "desc": "Under grade beams, 50 mm thick",
+    "qty": 7,
+    "unit": "m3",
+    "rate": 367.2,
+    "amount": 2570.4
+  },
+  {
+    "sheet": "3-Concrete",
+    "desc": "Slab on grade including channels, pits for buildings without transformer unit",
+    "qty": 1084,
+    "unit": "m3",
+    "rate": 85.7,
+    "amount": 92898.8
+  },
+  {
+    "sheet": "3-Concrete",
+    "desc": "Isolated Footings",
+    "qty": 175,
+    "unit": "m3",
+    "rate": 918,
+    "amount": 160650
+  },
+  {
+    "sheet": "3-Concrete",
+    "desc": "Grade Beams",
+    "qty": 73,
+    "unit": "m3",
+    "rate": 979.2,
+    "amount": 71481.6
+  },
+  {
+    "sheet": "3-Concrete",
+    "desc": "Mat foundations",
+    "qty": 175,
+    "unit": "m3",
+    "rate": 979.2,
+    "amount": 171360
+  },
+  {
+    "sheet": "3-Concrete",
+    "desc": "Water tank walls",
+    "qty": 55,
+    "unit": "m3",
+    "rate": 1101.6,
+    "amount": 60587.99999999999
+  },
+  {
+    "sheet": "3-Concrete",
+    "desc": "Water tank top slab",
+    "qty": 53,
+    "unit": "m3",
+    "rate": 1101.6,
+    "amount": 58384.799999999996
+  },
+  {
+    "sheet": "3-Concrete",
+    "desc": "Slabs",
+    "qty": 686,
+    "unit": "m3",
+    "rate": 1003.7,
+    "amount": 688538.2000000001
+  },
+  {
+    "sheet": "3-Concrete",
+    "desc": "Filler block slabs",
+    "qty": 2415,
+    "unit": "m2",
+    "rate": 281.5,
+    "amount": 679822.5
+  },
+  {
+    "sheet": "3-Concrete",
+    "desc": "Drop beams",
+    "qty": 183,
+    "unit": "m3",
+    "rate": 1101.6,
+    "amount": 201592.8
+  },
+  {
+    "sheet": "3-Concrete",
+    "desc": "Columns",
+    "qty": 250,
+    "unit": "m3",
+    "rate": 1224,
+    "amount": 306000
+  },
+  {
+    "sheet": "3-Concrete",
+    "desc": "Cores",
+    "qty": 60,
+    "unit": "m3",
+    "rate": 1224,
+    "amount": 73440
+  },
+  {
+    "sheet": "3-Concrete",
+    "desc": "Stairs",
+    "qty": 29,
+    "unit": "m3",
+    "rate": 1224,
+    "amount": 35496
+  },
+  {
+    "sheet": "3-Concrete",
+    "desc": "Water tank walls",
+    "qty": 90,
+    "unit": "m",
+    "rate": 61.2,
+    "amount": 5508
+  },
+  {
+    "sheet": "3-Concrete",
+    "desc": "60mm thick capping of dimensions 700x1750 mm, divided into panels per architectural details",
+    "qty": 4,
+    "unit": "Nr",
+    "rate": 244.8,
+    "amount": 979.2
+  },
+  {
+    "sheet": "3-Concrete",
+    "desc": "60mm thick capping of dimensions 850x1000 mm, divided into panels per architectural details",
+    "qty": 4,
+    "unit": "Nr",
+    "rate": 244.8,
+    "amount": 979.2
+  },
+  {
+    "sheet": "3-Concrete",
+    "desc": "60mm thick capping of dimensions 750x850 mm, divided into panels per architectural details",
+    "qty": 4,
+    "unit": "Nr",
+    "rate": 244.8,
+    "amount": 979.2
+  },
+  {
+    "sheet": "3-Concrete",
+    "desc": "60mm thick capping of dimensions 950x850 mm, divided into panels per architectural details",
+    "qty": 4,
+    "unit": "Nr",
+    "rate": 244.8,
+    "amount": 979.2
+  },
+  {
+    "sheet": "3-Concrete",
+    "desc": "60mm thick capping of dimensions 950x1000 mm, divided into panels per architectural details",
+    "qty": 4,
+    "unit": "Nr",
+    "rate": 244.8,
+    "amount": 979.2
+  },
+  {
+    "sheet": "3-Concrete",
+    "desc": "Under slab on grade",
+    "qty": 1084,
+    "unit": "m2",
+    "rate": 6.1,
+    "amount": 6612.4
+  },
+  {
+    "sheet": "3-Concrete",
+    "desc": "Roofs",
+    "qty": 1306,
+    "unit": "m2",
+    "rate": 24.5,
+    "amount": 31997
+  },
+  {
+    "sheet": "3-Concrete",
+    "desc": "Exposed balconies",
+    "qty": 30,
+    "unit": "m2",
+    "rate": 24.5,
+    "amount": 735
+  },
+  {
+    "sheet": "3-Concrete",
+    "desc": "Floors",
+    "qty": 22,
+    "unit": "m2",
+    "rate": 24.5,
+    "amount": 539
+  },
+  {
+    "sheet": "4-Masonry",
+    "desc": "Walls; 100 thick",
+    "qty": 120,
+    "unit": "m2",
+    "rate": 38,
+    "amount": 4560
+  },
+  {
+    "sheet": "4-Masonry",
+    "desc": "Walls; 150 thick",
+    "qty": 493,
+    "unit": "m2",
+    "rate": 42,
+    "amount": 20706
+  },
+  {
+    "sheet": "4-Masonry",
+    "desc": "Walls; 200 thick",
+    "qty": 1843,
+    "unit": "m2",
+    "rate": 48,
+    "amount": 88464
+  },
+  {
+    "sheet": "4-Masonry",
+    "desc": "Walls; 200 thick; to external walls",
+    "qty": 400,
+    "unit": "m2",
+    "rate": 65,
+    "amount": 26000
+  },
+  {
+    "sheet": "4-Masonry",
+    "desc": "Walls; 100 thick",
+    "qty": 21,
+    "unit": "m2",
+    "rate": 38,
+    "amount": 798
+  },
+  {
+    "sheet": "4-Masonry",
+    "desc": "Walls; 150 thick",
+    "qty": 203,
+    "unit": "m2",
+    "rate": 44,
+    "amount": 8932
+  },
+  {
+    "sheet": "4-Masonry",
+    "desc": "Walls; 200 thick",
+    "qty": 500,
+    "unit": "m2",
+    "rate": 51,
+    "amount": 25500
+  },
+  {
+    "sheet": "4-Masonry",
+    "desc": "Walls; 200 thick; to external walls",
+    "qty": 131,
+    "unit": "m2",
+    "rate": 55,
+    "amount": 7205
+  },
+  {
+    "sheet": "4-Masonry",
+    "desc": "Base, external, 300 high",
+    "qty": 4,
+    "unit": "m",
+    "rate": 130,
+    "amount": 520
+  },
+  {
+    "sheet": "4-Masonry",
+    "desc": "Base, external, 450 high",
+    "qty": 80,
+    "unit": "m",
+    "rate": 175,
+    "amount": 14000
+  },
+  {
+    "sheet": "4-Masonry",
+    "desc": "Soffits at top of columns; as Drg. A/013 and A/015",
+    "qty": 54,
+    "unit": "m2",
+    "rate": 300,
+    "amount": 16200
+  },
+  {
+    "sheet": "4-Masonry",
+    "desc": "Isolated columns; with base and head, 3890 high overall; as Drg. A/010",
+    "qty": 8,
+    "unit": "Nr",
+    "rate": 2150,
+    "amount": 17200
+  },
+  {
+    "sheet": "5-Metals",
+    "desc": "3200 effective height",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 550,
+    "amount": 550
+  },
+  {
+    "sheet": "5-Metals",
+    "desc": "Floors; size 600 x 600",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 500,
+    "amount": 500
+  },
+  {
+    "sheet": "5-Metals",
+    "desc": "Floors; size 800 x 800",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 1000,
+    "amount": 1000
+  },
+  {
+    "sheet": "5-Metals",
+    "desc": "Type A, 10000 long; 2360 high",
+    "qty": 5,
+    "unit": "Nr",
+    "rate": 5500,
+    "amount": 27500
+  },
+  {
+    "sheet": "5-Metals",
+    "desc": "Type B",
+    "qty": 5,
+    "unit": "m",
+    "rate": 240,
+    "amount": 1200
+  },
+  {
+    "sheet": "5-Metals",
+    "desc": "1045 high",
+    "qty": 12,
+    "unit": "m",
+    "rate": 500,
+    "amount": 6000
+  },
+  {
+    "sheet": "5-Metals",
+    "desc": "1045 high; raking",
+    "qty": 50,
+    "unit": "m",
+    "rate": 550,
+    "amount": 27500
+  },
+  {
+    "sheet": "5-Metals",
+    "desc": "850 high",
+    "qty": 134,
+    "unit": "m",
+    "rate": 500,
+    "amount": 67000
+  },
+  {
+    "sheet": "5-Metals",
+    "desc": "Entrance ramp; 900 high; raking",
+    "qty": 7,
+    "unit": "m",
+    "rate": 500,
+    "amount": 3500
+  },
+  {
+    "sheet": "5-Metals",
+    "desc": "Roofs; including flashing",
+    "qty": 1,
+    "unit": "Item",
+    "rate": 2500,
+    "amount": 2500
+  },
+  {
+    "sheet": "7-Thermal",
+    "desc": "Isolated Foundations",
+    "qty": 600,
+    "unit": "m2",
+    "rate": 8,
+    "amount": 4800
+  },
+  {
+    "sheet": "7-Thermal",
+    "desc": "Columns and Cores",
+    "qty": 218,
+    "unit": "m2",
+    "rate": 8,
+    "amount": 1744
+  },
+  {
+    "sheet": "7-Thermal",
+    "desc": "Grad Beams",
+    "qty": 551,
+    "unit": "m2",
+    "rate": 8,
+    "amount": 4408
+  },
+  {
+    "sheet": "7-Thermal",
+    "desc": "Bottom of Water tank mat foundation",
+    "qty": 291,
+    "unit": "m2",
+    "rate": 22,
+    "amount": 6402
+  },
+  {
+    "sheet": "7-Thermal",
+    "desc": "Vertical sides of Water tank mat foundation and walls of tank",
+    "qty": 252,
+    "unit": "m2",
+    "rate": 22,
+    "amount": 5544
+  },
+  {
+    "sheet": "7-Thermal",
+    "desc": "Wet areas",
+    "qty": 820,
+    "unit": "m2",
+    "rate": 22,
+    "amount": 18040
+  },
+  {
+    "sheet": "7-Thermal",
+    "desc": "Terraces",
+    "qty": 30,
+    "unit": "m2",
+    "rate": 22,
+    "amount": 660
+  },
+  {
+    "sheet": "7-Thermal",
+    "desc": "Walls of tank and columns inside tank",
+    "qty": 230,
+    "unit": "m2",
+    "rate": 20,
+    "amount": 4600
+  },
+  {
+    "sheet": "7-Thermal",
+    "desc": "Floor of tank",
+    "qty": 188,
+    "unit": "m2",
+    "rate": 20,
+    "amount": 3760
+  },
+  {
+    "sheet": "7-Thermal",
+    "desc": "Slab of tank",
+    "qty": 188,
+    "unit": "m2",
+    "rate": 20,
+    "amount": 3760
+  },
+  {
+    "sheet": "7-Thermal",
+    "desc": "Roofs",
+    "qty": 1306,
+    "unit": "m2",
+    "rate": 20,
+    "amount": 26120
+  },
+  {
+    "sheet": "7-Thermal",
+    "desc": "Skirtings; 450 girth approximate",
+    "qty": 669,
+    "unit": "m",
+    "rate": 12,
+    "amount": 8028
+  },
+  {
+    "sheet": "7-Thermal",
+    "desc": "Roofs",
+    "qty": 1306,
+    "unit": "m2",
+    "rate": 3,
+    "amount": 3918
+  },
+  {
+    "sheet": "7-Thermal",
+    "desc": "Roofs",
+    "qty": 129,
+    "unit": "m2",
+    "rate": 12,
+    "amount": 1548
+  },
+  {
+    "sheet": "7-Thermal",
+    "desc": "Roofs; 50 thick",
+    "qty": 1306,
+    "unit": "m2",
+    "rate": 21,
+    "amount": 27426
+  },
+  {
+    "sheet": "7-Thermal",
+    "desc": "Roofs; 50 thick",
+    "qty": 1280,
+    "unit": "m2",
+    "rate": 8,
+    "amount": 10240
+  },
+  {
+    "sheet": "7-Thermal",
+    "desc": "Roofs; 100 thick",
+    "qty": 1,
+    "unit": "m2",
+    "rate": 20,
+    "amount": 20
+  },
+  {
+    "sheet": "7-Thermal",
+    "desc": "Pressure plate",
+    "qty": 646,
+    "unit": "m",
+    "rate": 10,
+    "amount": 6460
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type D10",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 1100,
+    "amount": 1100
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type D12",
+    "qty": 2,
+    "unit": "Nr",
+    "rate": 2100,
+    "amount": 4200
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type D11",
+    "qty": 3,
+    "unit": "Nr",
+    "rate": 1100,
+    "amount": 3300
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type D9",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 1700,
+    "amount": 1700
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type W5",
+    "qty": 19,
+    "unit": "Nr",
+    "rate": 1350,
+    "amount": 25650
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type W6; with side fixed panels",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 4800,
+    "amount": 4800
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type W7",
+    "qty": 8,
+    "unit": "Nr",
+    "rate": 1350,
+    "amount": 10800
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type W8",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 1750,
+    "amount": 1750
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type D1",
+    "qty": 161,
+    "unit": "Nr",
+    "rate": 800,
+    "amount": 128800
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type D4",
+    "qty": 24,
+    "unit": "Nr",
+    "rate": 800,
+    "amount": 19200
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type D6",
+    "qty": 7,
+    "unit": "Nr",
+    "rate": 800,
+    "amount": 5600
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type D2; with vision panel",
+    "qty": 99,
+    "unit": "Nr",
+    "rate": 920,
+    "amount": 91080
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type D3",
+    "qty": 25,
+    "unit": "Nr",
+    "rate": 1250,
+    "amount": 31250
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type D5",
+    "qty": 9,
+    "unit": "Nr",
+    "rate": 1700,
+    "amount": 15300
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type 600 x 1550",
+    "qty": 9,
+    "unit": "Nr",
+    "rate": 430,
+    "amount": 3870
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Rolling shutters",
+    "qty": 125,
+    "unit": "m2",
+    "rate": 650,
+    "amount": 81250
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type W1",
+    "qty": 48,
+    "unit": "Nr",
+    "rate": 300,
+    "amount": 14400
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type W1A",
+    "qty": 40,
+    "unit": "Nr",
+    "rate": 400,
+    "amount": 16000
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type W2; pivot",
+    "qty": 99,
+    "unit": "Nr",
+    "rate": 250,
+    "amount": 24750
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type W3; sliding",
+    "qty": 82,
+    "unit": "Nr",
+    "rate": 580,
+    "amount": 47560
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type W4; sliding",
+    "qty": 10,
+    "unit": "Nr",
+    "rate": 830,
+    "amount": 8300
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type HW1",
+    "qty": 192,
+    "unit": "Nr",
+    "rate": 150,
+    "amount": 28800
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type HW2",
+    "qty": 99,
+    "unit": "Nr",
+    "rate": 150,
+    "amount": 14850
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type HW3, fire rated",
+    "qty": 25,
+    "unit": "Nr",
+    "rate": 280,
+    "amount": 7000
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type HW4, fire rated",
+    "qty": 9,
+    "unit": "Nr",
+    "rate": 400,
+    "amount": 3600
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type HW6",
+    "qty": 2,
+    "unit": "Nr",
+    "rate": 150,
+    "amount": 300
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type HW6, fire rated",
+    "qty": 3,
+    "unit": "Nr",
+    "rate": 200,
+    "amount": 600
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type HW8",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 180,
+    "amount": 180
+  },
+  {
+    "sheet": "8-Doors",
+    "desc": "Type HW9",
+    "qty": 2,
+    "unit": "Nr",
+    "rate": 2000,
+    "amount": 4000
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Drop side surfaces; decorative",
+    "qty": 21,
+    "unit": "m2",
+    "rate": 18,
+    "amount": 378
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Drop side surfaces; decorative, curved",
+    "qty": 53,
+    "unit": "m2",
+    "rate": 18,
+    "amount": 954
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Walls, 15 thick",
+    "qty": 9200,
+    "unit": "m2",
+    "rate": 18,
+    "amount": 165600
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Walls; 20 thick; scratched; external",
+    "qty": 3660,
+    "unit": "m2",
+    "rate": 22,
+    "amount": 80520
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Walls; 20 thick; scratched and decorative, external",
+    "qty": 406,
+    "unit": "m2",
+    "rate": 22,
+    "amount": 8932
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Ceilings, 15 thick",
+    "qty": 3354,
+    "unit": "m2",
+    "rate": 18,
+    "amount": 60372
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Ceilings, 15 thick, sloping",
+    "qty": 57,
+    "unit": "m2",
+    "rate": 18,
+    "amount": 1026
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Soffits, 20 thick; smooth",
+    "qty": 116,
+    "unit": "m2",
+    "rate": 18,
+    "amount": 2088
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Isolated beams; 20 thick, decorative",
+    "qty": 47,
+    "unit": "m2",
+    "rate": 20,
+    "amount": 940
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Isolated columns, 15 thick",
+    "qty": 18,
+    "unit": "m2",
+    "rate": 20,
+    "amount": 360
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Isolated columns; 20 thick, decorative",
+    "qty": 14,
+    "unit": "m2",
+    "rate": 20,
+    "amount": 280
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Opening surrounding and projections; 20 thick; external",
+    "qty": 147,
+    "unit": "m2",
+    "rate": 22,
+    "amount": 3234
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Cornices; 300 overall width; scratched; as Drg A/024; detail 7; external",
+    "qty": 150,
+    "unit": "m",
+    "rate": 20,
+    "amount": 3000
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Floors",
+    "qty": 2420,
+    "unit": "m2",
+    "rate": 70,
+    "amount": 169400
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Skirting; 80 high",
+    "qty": 2660,
+    "unit": "m",
+    "rate": 12,
+    "amount": 31920
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Floors",
+    "qty": 656,
+    "unit": "m2",
+    "rate": 50,
+    "amount": 32800
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Base",
+    "qty": 215,
+    "unit": "m",
+    "rate": 12,
+    "amount": 2580
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Walls",
+    "qty": 2569,
+    "unit": "m2",
+    "rate": 65,
+    "amount": 166985
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Floors",
+    "qty": 26,
+    "unit": "m2",
+    "rate": 45,
+    "amount": 1170
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Roofs",
+    "qty": 26,
+    "unit": "m2",
+    "rate": 50,
+    "amount": 1300
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Skirtings; 80 high",
+    "qty": 54,
+    "unit": "m",
+    "rate": 12,
+    "amount": 648
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Skirtings at roof",
+    "qty": 23,
+    "unit": "m",
+    "rate": 12,
+    "amount": 276
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Ceilings; 600 x 600",
+    "qty": 141,
+    "unit": "m2",
+    "rate": 75,
+    "amount": 10575
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Floors",
+    "qty": 332,
+    "unit": "m2",
+    "rate": 180,
+    "amount": 59760
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Ramps",
+    "qty": 35,
+    "unit": "m2",
+    "rate": 190,
+    "amount": 6650
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Treads; at entrance",
+    "qty": 62,
+    "unit": "m",
+    "rate": 22,
+    "amount": 1364
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Treads of stairs",
+    "qty": 177,
+    "unit": "m",
+    "rate": 110,
+    "amount": 19470
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Risers",
+    "qty": 244,
+    "unit": "m",
+    "rate": 50,
+    "amount": 12200
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Skirtings; 80 high",
+    "qty": 284,
+    "unit": "m",
+    "rate": 25,
+    "amount": 7100
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Strings",
+    "qty": 50,
+    "unit": "m",
+    "rate": 50,
+    "amount": 2500
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Saddle, type A",
+    "qty": 125,
+    "unit": "m",
+    "rate": 100,
+    "amount": 12500
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Saddle, type C",
+    "qty": 1,
+    "unit": "m",
+    "rate": 150,
+    "amount": 150
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Walls",
+    "qty": 216,
+    "unit": "m2",
+    "rate": 230,
+    "amount": 49680
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "Isolated columns; curved",
+    "qty": 16,
+    "unit": "m2",
+    "rate": 350,
+    "amount": 5600
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "General surfaces",
+    "qty": 12439,
+    "unit": "m2",
+    "rate": 16,
+    "amount": 199024
+  },
+  {
+    "sheet": "9-Finishes",
+    "desc": "General surfaces",
+    "qty": 1970,
+    "unit": "m2",
+    "rate": 18,
+    "amount": 35460
+  },
+  {
+    "sheet": "10-Specialities",
+    "desc": "Size 2400 x 1000",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 1300,
+    "amount": 1300
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "Main fire alarm cabinet (MFAC)",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 5400,
+    "amount": 5400
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "Manual fire alarm station",
+    "qty": 20,
+    "unit": "Nr",
+    "rate": 110,
+    "amount": 2200
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "Optical smoke detector",
+    "qty": 50,
+    "unit": "Nr",
+    "rate": 300,
+    "amount": 15000
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "Optical smoke detector with sounder base",
+    "qty": 26,
+    "unit": "Nr",
+    "rate": 380,
+    "amount": 9880
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "Heat detector",
+    "qty": 2,
+    "unit": "Nr",
+    "rate": 250,
+    "amount": 500
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "Alarm bell",
+    "qty": 15,
+    "unit": "Nr",
+    "rate": 180,
+    "amount": 2700
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "Horn type H1",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 200,
+    "amount": 200
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "End-of-line device",
+    "qty": 20,
+    "unit": "Nr",
+    "rate": 320,
+    "amount": 6400
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "Set of spare parts, tools and instruments",
+    "qty": 1,
+    "unit": "Item",
+    "rate": 2500,
+    "amount": 2500
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "25 dn",
+    "qty": 41,
+    "unit": "m",
+    "rate": 10,
+    "amount": 410
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "50 dn",
+    "qty": 35,
+    "unit": "m",
+    "rate": 30,
+    "amount": 1050
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "65 dn",
+    "qty": 84,
+    "unit": "m",
+    "rate": 45,
+    "amount": 3780
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "80 dn",
+    "qty": 151,
+    "unit": "m",
+    "rate": 60,
+    "amount": 9060
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "100 dn",
+    "qty": 60,
+    "unit": "m",
+    "rate": 80,
+    "amount": 4800
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "125 dn",
+    "qty": 12,
+    "unit": "m",
+    "rate": 130,
+    "amount": 1560
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "150 dn",
+    "qty": 58,
+    "unit": "m",
+    "rate": 170,
+    "amount": 9860
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "Gate valves, 150 dn",
+    "qty": 2,
+    "unit": "Nr",
+    "rate": 4200,
+    "amount": 8400
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "Drain valves, 75 dn",
+    "qty": 2,
+    "unit": "Nr",
+    "rate": 3000,
+    "amount": 6000
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "Drain valves, 110 dn",
+    "qty": 2,
+    "unit": "Nr",
+    "rate": 3400,
+    "amount": 6800
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "Test and drain valves, 150 dn",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 4200,
+    "amount": 4200
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "Check Valve, 150 dn",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 4200,
+    "amount": 4200
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "Zone Valve, 125 dn",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 3800,
+    "amount": 3800
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "Type FHCN",
+    "qty": 9,
+    "unit": "Nr",
+    "rate": 300,
+    "amount": 2700
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "Siamese 150 dn",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 500,
+    "amount": 500
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "Pressure gages",
+    "qty": 1,
+    "unit": "Item",
+    "rate": 300,
+    "amount": 300
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "Type FHC-1",
+    "qty": 14,
+    "unit": "Nr",
+    "rate": 1600,
+    "amount": 22400
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "PENDENT SP-2",
+    "qty": 10,
+    "unit": "Nr",
+    "rate": 36,
+    "amount": 360
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "Type FE-1",
+    "qty": 19,
+    "unit": "Nr",
+    "rate": 110,
+    "amount": 2090
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "Type FE-2",
+    "qty": 3,
+    "unit": "Nr",
+    "rate": 230,
+    "amount": 690
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "Type FP-1",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 69000,
+    "amount": 69000
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "Type FP-2",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 188000,
+    "amount": 188000
+  },
+  {
+    "sheet": "13-Fire fighting",
+    "desc": "Type JP-1",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 14700,
+    "amount": 14700
+  },
+  {
+    "sheet": "14-Conv",
+    "desc": "Reference; E1, 450 kg. 1 m/s",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 120000,
+    "amount": 120000
+  },
+  {
+    "sheet": "14-Conv",
+    "desc": "Reference; E2,  450 kg. 1 m/s",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 115000,
+    "amount": 115000
+  },
+  {
+    "sheet": "14-Conv",
+    "desc": "Reference; E3, 450 kg. 1 m/s",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 115000,
+    "amount": 115000
+  },
+  {
+    "sheet": "14-Conv",
+    "desc": "Reference; E4,  450 kg. 1 m/s",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 115000,
+    "amount": 115000
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "15 dn",
+    "qty": 750,
+    "unit": "m",
+    "rate": 12,
+    "amount": 9000
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "20 dn",
+    "qty": 185,
+    "unit": "m",
+    "rate": 15,
+    "amount": 2775
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "25 dn",
+    "qty": 270,
+    "unit": "m",
+    "rate": 20,
+    "amount": 5400
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "32 dn",
+    "qty": 500,
+    "unit": "m",
+    "rate": 23,
+    "amount": 11500
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "40 dn",
+    "qty": 20,
+    "unit": "m",
+    "rate": 26,
+    "amount": 520
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "50 dn",
+    "qty": 55,
+    "unit": "m",
+    "rate": 30,
+    "amount": 1650
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "65 dn",
+    "qty": 110,
+    "unit": "m",
+    "rate": 35,
+    "amount": 3850
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "80 dn",
+    "qty": 120,
+    "unit": "m",
+    "rate": 50,
+    "amount": 6000
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "110 dn",
+    "qty": 35,
+    "unit": "m",
+    "rate": 75,
+    "amount": 2625
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "15 dn",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 150,
+    "amount": 150
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "25 dn",
+    "qty": 50,
+    "unit": "Nr",
+    "rate": 250,
+    "amount": 12500
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "32 dn",
+    "qty": 59,
+    "unit": "Nr",
+    "rate": 300,
+    "amount": 17700
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "80 dn",
+    "qty": 3,
+    "unit": "Nr",
+    "rate": 1800,
+    "amount": 5400
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "100 dn",
+    "qty": 3,
+    "unit": "Nr",
+    "rate": 2500,
+    "amount": 7500
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "25 dn",
+    "qty": 12,
+    "unit": "Nr",
+    "rate": 250,
+    "amount": 3000
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "15 dn",
+    "qty": 425,
+    "unit": "m",
+    "rate": 15,
+    "amount": 6375
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "20 dn",
+    "qty": 310,
+    "unit": "m",
+    "rate": 20,
+    "amount": 6200
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "50 dn",
+    "qty": 16,
+    "unit": "m",
+    "rate": 30,
+    "amount": 480
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "82 dn",
+    "qty": 82,
+    "unit": "m",
+    "rate": 40,
+    "amount": 3280
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "110 dn",
+    "qty": 158,
+    "unit": "m",
+    "rate": 50,
+    "amount": 7900
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "125 dn",
+    "qty": 35,
+    "unit": "m",
+    "rate": 60,
+    "amount": 2100
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "200 dn",
+    "qty": 23,
+    "unit": "m",
+    "rate": 80,
+    "amount": 1840
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "50 dn",
+    "qty": 597,
+    "unit": "m",
+    "rate": 30,
+    "amount": 17910
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "82 dn",
+    "qty": 164,
+    "unit": "m",
+    "rate": 40,
+    "amount": 6560
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "110 dn",
+    "qty": 207,
+    "unit": "m",
+    "rate": 60,
+    "amount": 12420
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "50 dn",
+    "qty": 38,
+    "unit": "m",
+    "rate": 30,
+    "amount": 1140
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "65 dn",
+    "qty": 58,
+    "unit": "m",
+    "rate": 35,
+    "amount": 2030
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "82 dn",
+    "qty": 13,
+    "unit": "m",
+    "rate": 40,
+    "amount": 520
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "110 dn",
+    "qty": 14,
+    "unit": "m",
+    "rate": 50,
+    "amount": 700
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "125 dn",
+    "qty": 18,
+    "unit": "m",
+    "rate": 70,
+    "amount": 1260
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "160 dn",
+    "qty": 22,
+    "unit": "m",
+    "rate": 75,
+    "amount": 1650
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "200 dn",
+    "qty": 30,
+    "unit": "m",
+    "rate": 80,
+    "amount": 2400
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "50 dn",
+    "qty": 62,
+    "unit": "m",
+    "rate": 30,
+    "amount": 1860
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "82 dn",
+    "qty": 39,
+    "unit": "m",
+    "rate": 40,
+    "amount": 1560
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "110 dn",
+    "qty": 96,
+    "unit": "m",
+    "rate": 50,
+    "amount": 4800
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "Type RD-1, 50 dn",
+    "qty": 21,
+    "unit": "Nr",
+    "rate": 200,
+    "amount": 4200
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "Type RD-1, 82 dn",
+    "qty": 8,
+    "unit": "Nr",
+    "rate": 220,
+    "amount": 1760
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "Type RD-1, 110 dn",
+    "qty": 5,
+    "unit": "Nr",
+    "rate": 230,
+    "amount": 1150
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "Type FD-1, 82 dn",
+    "qty": 131,
+    "unit": "Nr",
+    "rate": 320,
+    "amount": 41920
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "Type FCO; 50 dn",
+    "qty": 2,
+    "unit": "Nr",
+    "rate": 300,
+    "amount": 600
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "Type FCO; 80 dn",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 320,
+    "amount": 320
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "Type FCO; 110 dn",
+    "qty": 9,
+    "unit": "Nr",
+    "rate": 330,
+    "amount": 2970
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "Type FCO; 125 dn",
+    "qty": 1,
+    "unit": "",
+    "rate": 350,
+    "amount": 350
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "Type FCO; 150 dn",
+    "qty": 1,
+    "unit": "",
+    "rate": 400,
+    "amount": 400
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "Type FCO; 200 dn",
+    "qty": 1,
+    "unit": "",
+    "rate": 450,
+    "amount": 450
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "Type RVC; 82 dn",
+    "qty": 24,
+    "unit": "Nr",
+    "rate": 150,
+    "amount": 3600
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "Type RVC; 110 dn",
+    "qty": 20,
+    "unit": "Nr",
+    "rate": 160,
+    "amount": 3200
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "Type AV; 20 dn",
+    "qty": 12,
+    "unit": "Nr",
+    "rate": 80,
+    "amount": 960
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "IC",
+    "qty": 4,
+    "unit": "Nr",
+    "rate": 150,
+    "amount": 600
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "Galley Trap",
+    "qty": 2,
+    "unit": "Nr",
+    "rate": 200,
+    "amount": 400
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "Valve box with water meter, 50 dn",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 500,
+    "amount": 500
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "EWC-1",
+    "qty": 99,
+    "unit": "Nr",
+    "rate": 580,
+    "amount": 57420
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "LAV-1",
+    "qty": 99,
+    "unit": "Nr",
+    "rate": 720,
+    "amount": 71280
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "BD-1",
+    "qty": 24,
+    "unit": "Nr",
+    "rate": 750,
+    "amount": 18000
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "Type SHH-1",
+    "qty": 25,
+    "unit": "Nr",
+    "rate": 180,
+    "amount": 4500
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "Type BT-1",
+    "qty": 49,
+    "unit": "Nr",
+    "rate": 550,
+    "amount": 26950
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "Hose bib",
+    "qty": 4,
+    "unit": "Nr",
+    "rate": 200,
+    "amount": 800
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "Type PP-1",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 18000,
+    "amount": 18000
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "Type PP-2",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 4800,
+    "amount": 4800
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "Type PP-3, duplex type",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 36500,
+    "amount": 36500
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "FRP storage tank 15 m3 capacity",
+    "qty": 2,
+    "unit": "Nr",
+    "rate": 9350,
+    "amount": 18700
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "EWH-1",
+    "qty": 25,
+    "unit": "Nr",
+    "rate": 360,
+    "amount": 9000
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "EWH-2",
+    "qty": 73,
+    "unit": "Nr",
+    "rate": 450,
+    "amount": 32850
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "RAC-1 ( two units are provisional for elevator machine room subject to manufacturer requirments.)",
+    "qty": 3,
+    "unit": "Nr",
+    "rate": 1500,
+    "amount": 4500
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "SRAC-1 ( provisional unit for elevator control room).",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 3500,
+    "amount": 3500
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "Type EF-1",
+    "qty": 65,
+    "unit": "Nr",
+    "rate": 200,
+    "amount": 13000
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "Type EF-2",
+    "qty": 75,
+    "unit": "Nr",
+    "rate": 200,
+    "amount": 15000
+  },
+  {
+    "sheet": "15-MECH",
+    "desc": "Type EF-3",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 500,
+    "amount": 500
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Distribution panelboards, panelboards, lighting installations and wiring accessories",
+    "qty": 1,
+    "unit": "Item",
+    "rate": 30000,
+    "amount": 30000
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Mechanical plant rooms and fixed machinery",
+    "qty": 1,
+    "unit": "Item",
+    "rate": 20000,
+    "amount": 20000
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "4C, 16 mm2",
+    "qty": 5,
+    "unit": "m",
+    "rate": 40,
+    "amount": 200
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "4C, 35 mm2",
+    "qty": 1340,
+    "unit": "m",
+    "rate": 70,
+    "amount": 93800
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "4C, 95 mm2",
+    "qty": 30,
+    "unit": "m",
+    "rate": 210,
+    "amount": 6300
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "4C, 150 mm2",
+    "qty": 15,
+    "unit": "m",
+    "rate": 315,
+    "amount": 4725
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "4C, 300 mm2",
+    "qty": 10,
+    "unit": "m",
+    "rate": 630,
+    "amount": 6300
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "1C, 16 mm2",
+    "qty": 1345,
+    "unit": "m",
+    "rate": 9,
+    "amount": 12105
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "1C, 50 mm2",
+    "qty": 30,
+    "unit": "m",
+    "rate": 25,
+    "amount": 750
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "1C, 70 mm2",
+    "qty": 15,
+    "unit": "m",
+    "rate": 40,
+    "amount": 600
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "1C, 150 mm2",
+    "qty": 10,
+    "unit": "m",
+    "rate": 70,
+    "amount": 700
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Pair telephone cable",
+    "qty": 2100,
+    "unit": "m",
+    "rate": 1,
+    "amount": 2100
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "100 mm dn",
+    "qty": 30,
+    "unit": "mt",
+    "rate": 12,
+    "amount": 360
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "50 mm dn",
+    "qty": 85,
+    "unit": "mt",
+    "rate": 8,
+    "amount": 680
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "38 mm dn",
+    "qty": 1300,
+    "unit": "mt",
+    "rate": 5,
+    "amount": 6500
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "25 mm dn",
+    "qty": 32,
+    "unit": "mt",
+    "rate": 4,
+    "amount": 128
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "T.V riser distribution draw box, surface galvanized steel",
+    "qty": 8,
+    "unit": "Nr",
+    "rate": 400,
+    "amount": 3200
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "T.V distribution box, recessed PVC",
+    "qty": 29,
+    "unit": "Nr",
+    "rate": 100,
+    "amount": 2900
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "150 mm wide",
+    "qty": 190,
+    "unit": "m",
+    "rate": 65,
+    "amount": 12350
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "300 mm wide",
+    "qty": 80,
+    "unit": "m",
+    "rate": 100,
+    "amount": 8000
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "600 mm wide",
+    "qty": 30,
+    "unit": "m",
+    "rate": 150,
+    "amount": 4500
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "900 mm wide",
+    "qty": 12,
+    "unit": "m",
+    "rate": 200,
+    "amount": 2400
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "300 mm wide",
+    "qty": 25,
+    "unit": "mt",
+    "rate": 150,
+    "amount": 3750
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Lighting Outlet",
+    "qty": 360,
+    "unit": "Nr",
+    "rate": 40,
+    "amount": 14400
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Electric outlet for fan",
+    "qty": 132,
+    "unit": "Nr",
+    "rate": 45,
+    "amount": 5940
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Electric outlet for water heater",
+    "qty": 100,
+    "unit": "Nr",
+    "rate": 60,
+    "amount": 6000
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Electric outlet for A/C units",
+    "qty": 190,
+    "unit": "Nr",
+    "rate": 95,
+    "amount": 18050
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "General lighting switch, One way, one gang switch (S1)",
+    "qty": 225,
+    "unit": "Nr",
+    "rate": 14,
+    "amount": 3150
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "General lighting switch, One way, two gang switch  (S1)",
+    "qty": 215,
+    "unit": "Nr",
+    "rate": 16,
+    "amount": 3440
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Push button switch (S2)",
+    "qty": 9,
+    "unit": "Nr",
+    "rate": 15,
+    "amount": 135
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Staircase time lag switch",
+    "qty": 2,
+    "unit": "Nr",
+    "rate": 250,
+    "amount": 500
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "One way, one gang switch weatherproof switch (S15)",
+    "qty": 2,
+    "unit": "Nr",
+    "rate": 90,
+    "amount": 180
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "One way, two gang switch weatherproof switch (S15)",
+    "qty": 7,
+    "unit": "Nr",
+    "rate": 100,
+    "amount": 700
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Double pole switch (S20), 20A",
+    "qty": 100,
+    "unit": "Nr",
+    "rate": 17,
+    "amount": 1700
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Double pole switch (S20), 32 A.",
+    "qty": 178,
+    "unit": "Nr",
+    "rate": 25,
+    "amount": 4450
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Double pole switch (S20), 45A.",
+    "qty": 12,
+    "unit": "Nr",
+    "rate": 25,
+    "amount": 300
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "15 A, single, type R01",
+    "qty": 410,
+    "unit": "Nr",
+    "rate": 10,
+    "amount": 4100
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "15 A, duplex, type R01",
+    "qty": 165,
+    "unit": "Nr",
+    "rate": 18,
+    "amount": 2970
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "13 A, single, type R02",
+    "qty": 220,
+    "unit": "Nr",
+    "rate": 10,
+    "amount": 2200
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "32 A, power socket, weatherproof, type R45",
+    "qty": 54,
+    "unit": "Nr",
+    "rate": 31,
+    "amount": 1674
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "15 A, single, weatherproof, type R05",
+    "qty": 7,
+    "unit": "Nr",
+    "rate": 150,
+    "amount": 1050
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "13 A, single, weatherproof, type R15",
+    "qty": 4,
+    "unit": "Nr",
+    "rate": 150,
+    "amount": 600
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "45 A, cooker control unit",
+    "qty": 25,
+    "unit": "Nr",
+    "rate": 40,
+    "amount": 1000
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Door bell",
+    "qty": 25,
+    "unit": "Nr",
+    "rate": 60,
+    "amount": 1500
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Door bell push-button",
+    "qty": 25,
+    "unit": "Nr",
+    "rate": 14,
+    "amount": 350
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Telephone outlet",
+    "qty": 140,
+    "unit": "Nr",
+    "rate": 32,
+    "amount": 4480
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Telephone distribution frame (TDF),100 pairs",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 2000,
+    "amount": 2000
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Telephone distribution box (TDB),5 pairs",
+    "qty": 30,
+    "unit": "Nr",
+    "rate": 200,
+    "amount": 6000
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "TV outlet",
+    "qty": 51,
+    "unit": "Nr",
+    "rate": 22,
+    "amount": 1122
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "disconnect switch 4P, 32 A,weatherproof",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 400,
+    "amount": 400
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "disconnect switch 4P, 63 A,weatherproof",
+    "qty": 4,
+    "unit": "Nr",
+    "rate": 500,
+    "amount": 2000
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "disconnect switch 4P, 100 A",
+    "qty": 2,
+    "unit": "Nr",
+    "rate": 650,
+    "amount": 1300
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "disconnect switch 4P, 250 A",
+    "qty": 2,
+    "unit": "Nr",
+    "rate": 1250,
+    "amount": 2500
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "disconnect switch 4P, 400 A, weatherproof",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 1700,
+    "amount": 1700
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "disconnect switch 2P, 16 A",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 120,
+    "amount": 120
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "DP-S-R6",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 7500,
+    "amount": 7500
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "LP-R6-G",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 1500,
+    "amount": 1500
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "LP-R6-TA",
+    "qty": 12,
+    "unit": "Nr",
+    "rate": 1500,
+    "amount": 18000
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "LP-R6-TB",
+    "qty": 12,
+    "unit": "Nr",
+    "rate": 1500,
+    "amount": 18000
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "LP-R6-RX",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 1500,
+    "amount": 1500
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "LP-R6-EL1",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 1200,
+    "amount": 1200
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "LP-R6-EL2",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 1200,
+    "amount": 1200
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Motor central panel (MCP-U/G)",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 20000,
+    "amount": 20000
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Type F1",
+    "qty": 50,
+    "unit": "Nr",
+    "rate": 100,
+    "amount": 5000
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Type F2",
+    "qty": 29,
+    "unit": "Nr",
+    "rate": 260,
+    "amount": 7540
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Type F3",
+    "qty": 6,
+    "unit": "Nr",
+    "rate": 320,
+    "amount": 1920
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Type F3 with back up battery",
+    "qty": 3,
+    "unit": "Nr",
+    "rate": 630,
+    "amount": 1890
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Type F4",
+    "qty": 20,
+    "unit": "Nr",
+    "rate": 320,
+    "amount": 6400
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Type F4 with back up battery",
+    "qty": 21,
+    "unit": "Nr",
+    "rate": 630,
+    "amount": 13230
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Type C1",
+    "qty": 50,
+    "unit": "Nr",
+    "rate": 340,
+    "amount": 17000
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Type C2",
+    "qty": 100,
+    "unit": "Nr",
+    "rate": 240,
+    "amount": 24000
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Type C12",
+    "qty": 20,
+    "unit": "Nr",
+    "rate": 950,
+    "amount": 19000
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Type U",
+    "qty": 20,
+    "unit": "Nr",
+    "rate": 330,
+    "amount": 6600
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Type E",
+    "qty": 18,
+    "unit": "Nr",
+    "rate": 430,
+    "amount": 7740
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Type EX",
+    "qty": 10,
+    "unit": "Nr",
+    "rate": 490,
+    "amount": 4900
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Type E1",
+    "qty": 4,
+    "unit": "Nr",
+    "rate": 1120,
+    "amount": 4480
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Master station with capacity for 30 slave connection with power supply and door release",
+    "qty": 1,
+    "unit": "Nr",
+    "rate": 3000,
+    "amount": 3000
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Slave station",
+    "qty": 26,
+    "unit": "Nr",
+    "rate": 100,
+    "amount": 2600
+  },
+  {
+    "sheet": "16 Electrical",
+    "desc": "Set of spare parts",
+    "qty": 1,
+    "unit": "Item",
+    "rate": 500,
+    "amount": 500
+  },
+  {
+    "sheet": "10-Special",
+    "desc": "Size 1400 x 800",
+    "qty": 48,
+    "unit": "Nr",
+    "rate": 750,
+    "amount": 36000
+  }
+]

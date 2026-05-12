@@ -80,7 +80,7 @@ class FirebaseService {
             if (docSnap.exists()) {
                 return {
                     connected: true,
-                    projectId: 'arba-d6baf',
+                    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'unknown',
                     timestamp: new Date()
                 };
             } else {
@@ -90,7 +90,7 @@ class FirebaseService {
             console.error('Firebase connection test failed:', error);
             return {
                 connected: false,
-                projectId: 'arba-d6baf',
+                projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'unknown',
                 timestamp: new Date(),
                 error: error.message || 'Unknown error'
             };

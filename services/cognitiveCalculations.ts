@@ -296,6 +296,38 @@ export const DEFAULT_REBAR_SPEC: RebarSpec = {
   minCover_exposed_mm: 50,
 };
 
+// =================== v9.0 Price Intelligence Types ===================
+
+/** موقع العمل — يحدد الحاجة للمعدات */
+export type ElevationZone = 'underground' | 'ground' | 'elevated' | 'roof' | 'external';
+
+/** نطاق البند — توريد أم تنفيذ */
+export type ItemScope = 'supply_only' | 'supply_install' | 'labor_only' | 'turnkey';
+
+/** مكوّن سعر واحد — لتفكيك الأسعار */
+export interface PriceComponent {
+  label: Record<Language, string>;
+  unitCost: number;        // ريال/وحدة
+  percentage: number;      // النسبة من الإجمالي
+  type: 'material' | 'labor' | 'equipment' | 'consumable';
+}
+
+/** تعريف نطاق البند */
+export interface ScopeTag {
+  scope: ItemScope;
+  includes: string[];      // ['خرسانة', 'حديد', 'شدة', 'صب']
+  excludes: string[];      // ['معدات ثقيلة']
+  label: Record<Language, string>;
+}
+
+/** معدة مطلوبة */
+export interface EquipmentRequirement {
+  name: Record<Language, string>;
+  type: 'scaffolding' | 'crane' | 'manlift' | 'pump' | 'boom_truck' | 'forklift' | 'asphalt_paver';
+  costPerUnit: number;     // ريال/م² أو ريال/م³
+  reason: string;
+}
+
 // =================== Output Types — أنواع المخرجات ===================
 
 /** بند كمية واحد ناتج من المحرك */
@@ -309,6 +341,11 @@ export interface CognitiveOutputItem {
   grossQty: number;        // الكمية الإجمالية (صافي + هدر)
   procurementQty: number;  // كمية الشراء (ceil لأقرب وحدة تعبئة)
   notes?: string;          // ملاحظات (معامل الانتفاش، سبب الكمية)
+  // === v9.0 Price Intelligence ===
+  elevationZone?: ElevationZone;           // موقع العمل
+  scopeTag?: ScopeTag;                      // نطاق البند (توريد/تنفيذ)
+  priceBreakdown?: PriceComponent[];        // تفكيك السعر
+  equipmentNeeded?: EquipmentRequirement[]; // المعدات المطلوبة
 }
 
 /** ملخص المخرجات الكاملة — v7.0 مع بنود SBC الإلزامية */
@@ -337,6 +374,10 @@ export interface CognitiveEngineOutput {
   safety: CognitiveOutputItem[];         // سلامة الموقع
   summerAdditives: CognitiveOutputItem[];// إضافات الصيف SBC 304
   mep: CognitiveOutputItem[];            // MEP Atomic QS
+  // === v8.0 بنود جديدة — سد الفجوات الإنشائية ===
+  dropBeams: CognitiveOutputItem[];      // كمرات ساقطة G1
+  stairs: CognitiveOutputItem[];         // درج مسلح G3
+  externalWorks: CognitiveOutputItem[];  // أعمال خارجية G10
   // ملخص البيانات الرقمي
   summary: {
     totalConcreteM3: number;
@@ -355,6 +396,10 @@ export interface CognitiveEngineOutput {
     totalSummerExtraCost: number;
     lapLengthMultiplier: number;
     concreteGrade: string;
+    // v8.0 additions
+    totalDropBeamConcreteM3: number;
+    totalStairsConcreteM3: number;
+    totalFormworkPropsCount: number;
   };
 }
 
@@ -386,12 +431,18 @@ export function runCognitiveEngine(
   const summerItems = calculateSummerAdditives(blueprint);
   const mepItems = calculateMEP(blueprint);
 
+  // === v8.0 New Calculations — Round 1 ===
+  const dropBeamItems = calculateDropBeams(blueprint);
+  const stairsItems = calculateStairs(blueprint);
+  const externalWorksItems = calculateExternalWorks(blueprint);
+
   // Summary aggregation
   const allItems = [
     ...excavationItems, ...substructureItems, ...superstructureItems,
     ...masonryItems, ...consumableItems, ...finishItems, ...facadeItems, ...doorsAndWindowsItems,
     ...insulationItems, ...waterproofingItems, ...fireProtectionItems,
     ...testingItems, ...safetyItems, ...summerItems, ...mepItems,
+    ...dropBeamItems, ...stairsItems, ...externalWorksItems,
   ];
 
   const totalConcreteM3 = allItems
@@ -432,22 +483,30 @@ export function runCognitiveEngine(
   const lapMultiplier = blueprint.rebarSpec?.lapLengthMultiplier || DEFAULT_REBAR_SPEC.lapLengthMultiplier;
   const concreteGrade = `C${blueprint.concreteSpec?.fcRating || 30}`;
 
+  // v8.0 summary fields
+  const totalDropBeamConcreteM3 = dropBeamItems.filter(i => i.unit === 'م3').reduce((s, i) => s + i.grossQty, 0);
+  const totalStairsConcreteM3 = stairsItems.filter(i => i.unit === 'م3').reduce((s, i) => s + i.grossQty, 0);
+  const totalFormworkPropsCount = Math.ceil(totalFormworkM2 / 1.0); // 1 prop per m²
+
   return {
-    excavation: excavationItems,
-    substructure: substructureItems,
-    superstructure: superstructureItems,
-    masonry: masonryItems,
-    consumables: consumableItems,
-    finishes: finishItems,
-    facades: facadeItems,
-    doorsAndWindows: doorsAndWindowsItems,
-    insulation: insulationItems,
-    waterproofing: waterproofingItems,
-    fireProtection: fireProtectionItems,
-    testing: testingItems,
-    safety: safetyItems,
-    summerAdditives: summerItems,
-    mep: mepItems,
+    excavation: enrichAllItems(excavationItems),
+    substructure: enrichAllItems(substructureItems),
+    superstructure: enrichAllItems(superstructureItems),
+    masonry: enrichAllItems(masonryItems),
+    consumables: enrichAllItems(consumableItems),
+    finishes: enrichAllItems(finishItems),
+    facades: enrichAllItems(facadeItems),
+    doorsAndWindows: enrichAllItems(doorsAndWindowsItems),
+    insulation: enrichAllItems(insulationItems),
+    waterproofing: enrichAllItems(waterproofingItems),
+    fireProtection: enrichAllItems(fireProtectionItems),
+    testing: enrichAllItems(testingItems),
+    safety: enrichAllItems(safetyItems),
+    summerAdditives: enrichAllItems(summerItems),
+    mep: enrichAllItems(mepItems),
+    dropBeams: enrichAllItems(dropBeamItems),
+    stairs: enrichAllItems(stairsItems),
+    externalWorks: enrichAllItems(externalWorksItems),
     summary: {
       totalConcreteM3: round2(totalConcreteM3),
       totalSteelTons: round2(totalSteelTons),
@@ -464,6 +523,9 @@ export function runCognitiveEngine(
       totalSummerExtraCost: round2(totalSummerExtraCost),
       lapLengthMultiplier: lapMultiplier,
       concreteGrade,
+      totalDropBeamConcreteM3: round2(totalDropBeamConcreteM3),
+      totalStairsConcreteM3: round2(totalStairsConcreteM3),
+      totalFormworkPropsCount: Math.ceil(totalFormworkPropsCount),
     },
   };
 }
@@ -817,6 +879,22 @@ function calculateSuperstructure(bp: BlueprintConfig): CognitiveOutputItem[] {
         procurementQty: Math.ceil(hordiBlocksCount * (1 + HORDI_CONSTANTS.waste_factor)),
         notes: `مساحة السقف ${floor.area}م² × ${HORDI_CONSTANTS.blocks_per_m2} بلوكة/م² (خصم ${HORDI_CONSTANTS.solid_area_deduction * 100}% أجزاء صلبة)`,
       });
+
+      // === G12: حديد هوردي تفصيلي (أعصاب + كانات) ===
+      const ribSpacing = 0.50; // تباعد الأعصاب 50سم
+      const ribCount = Math.ceil(Math.sqrt(floor.area) / ribSpacing);
+      const ribLength = Math.sqrt(floor.area); // متوسط طول العصب
+      // حديد رئيسي: 2Ø12 لكل عصب
+      const ribMainBarWeight = ribCount * 2 * ribLength * (12 * 12 / 162); // D²/162 كجم/م
+      // كانات: Ø8 كل 20سم
+      const stirrupsPerRib = Math.ceil(ribLength / 0.20) + 1;
+      const stirrupPerimeter = 2 * (0.10 + 0.25) + 0.20; // 2(عرض + عمق) + hooks
+      const stirrupWeight = ribCount * stirrupsPerRib * stirrupPerimeter * (8 * 8 / 162);
+      const hordiDetailedSteelKg = ribMainBarWeight + stirrupWeight;
+      // G11: lap length ذكي — أعصاب = 40Ø (Class A)
+      const lapFactor = 40; // أعصاب هوردي Class A = 40Ø
+      const lapAdditionKg = hordiDetailedSteelKg * 0.08; // ~8% زيادة بسبب التراكب
+      totalSlabSteel += (hordiDetailedSteelKg + lapAdditionKg);
     }
 
     // Columns for this floor — use actual column dimensions from blueprint
@@ -848,16 +926,46 @@ function calculateSuperstructure(bp: BlueprintConfig): CognitiveOutputItem[] {
     notes: `أسقف: ${round2(totalSlabSteel)}كجم | أعمدة: ${round2(totalColumnSteel)}كجم`,
   });
 
+  // === G2: Enhanced Formwork — شدة شاملة (بليوت + جكات + عروق + تقوية) ===
+  const plywoodSheets = Math.ceil((totalFormwork * (1 + WASTE_FACTORS.plywood_formwork)) / FORMWORK.plywood_area_m2 / FORMWORK.reuse_cycles);
   items.push({
     id: 'formwork_super',
     category: 'superstructure',
-    name: { ar: 'شدة خشبية عظم', en: 'Superstructure Formwork', fr: 'Coffrage structure', zh: '上部结构模板' },
+    name: { ar: 'شدة خشبية عظم (ألواح بليوت)', en: 'Superstructure Formwork (Plywood)', fr: 'Coffrage structure', zh: '上部结构模板' },
     unit: 'م2',
     netQty: round2(totalFormwork),
     wastePercent: WASTE_FACTORS.plywood_formwork * 100,
     grossQty: round2(totalFormwork * (1 + WASTE_FACTORS.plywood_formwork)),
-    procurementQty: Math.ceil((totalFormwork * (1 + WASTE_FACTORS.plywood_formwork)) / FORMWORK.plywood_area_m2 / FORMWORK.reuse_cycles),
-    notes: `ألواح بليوت (${FORMWORK.reuse_cycles} مرات استخدام)`,
+    procurementQty: plywoodSheets,
+    notes: `${plywoodSheets} لوح بليوت (${FORMWORK.plywood_area_m2}م²/لوح × ${FORMWORK.reuse_cycles} مرات استخدام)`,
+  });
+
+  // G2: جكات (Props / Shores) — 1 جك لكل 1.0م² سقف
+  const propsCount = Math.ceil(totalFormwork / 1.0);
+  items.push({
+    id: 'formwork_props',
+    category: 'superstructure',
+    name: { ar: 'جكات شدة (Props/Shores)', en: 'Formwork Props / Shores', fr: 'Étais', zh: '模板支撑杆' },
+    unit: 'حبة',
+    netQty: propsCount,
+    wastePercent: 0,
+    grossQty: propsCount,
+    procurementQty: propsCount,
+    notes: `جك لكل 1.0م² سقف — إيجار أو شراء — ارتفاع متوسط ${round2(bp.floors.reduce((s, f) => s + f.height, 0) / bp.floors.length)}م`,
+  });
+
+  // G2: عروق خشبية (Runners / Bearers) — 1 عرق لكل 0.5م.ط محيط
+  const runnersLength = totalFormwork * 2; // ~2 م.ط لكل م² سقف (عروق رئيسية + ثانوية)
+  items.push({
+    id: 'formwork_runners',
+    category: 'superstructure',
+    name: { ar: 'عروق خشبية (Runners)', en: 'Timber Runners / Bearers', fr: 'Bastaings', zh: '木方' },
+    unit: 'م.ط',
+    netQty: round2(runnersLength),
+    wastePercent: 10,
+    grossQty: round2(runnersLength * 1.10),
+    procurementQty: round2(runnersLength * 1.10),
+    notes: `عروق 10×10سم — 2 م.ط لكل م² سقف (رئيسية + ثانوية) — SBC 304 فك الشدة بعد 21 يوم`,
   });
 
   return items;
@@ -1166,6 +1274,41 @@ function calculateFinishes(bp: BlueprintConfig): CognitiveOutputItem[] {
     });
   }
 
+  // === G4: كورنيش جبس سقف — محيط الغرف ===
+  if (bp.roomFinishes && bp.roomFinishes.length > 0) {
+    const cornicePerimeter = bp.roomFinishes.reduce((s, r) => s + (r.length + r.width) * 2, 0);
+    if (cornicePerimeter > 0) {
+      items.push({
+        id: 'finish_gypsum_cornice',
+        category: 'finishes',
+        name: { ar: 'كورنيش جبس سقف (محيط الغرف)', en: 'Gypsum Ceiling Cornice', fr: 'Corniche plâtre', zh: '石膏角线' },
+        unit: 'م.ط',
+        netQty: round2(cornicePerimeter),
+        wastePercent: 10,
+        grossQty: round2(cornicePerimeter * 1.10),
+        procurementQty: round2(cornicePerimeter * 1.10),
+        notes: `كورنيش 10×10سم — ${bp.roomFinishes.length} غرفة`,
+      });
+    }
+  }
+
+  // === G15: ميول أسطح (Screed) ===
+  const screedArea = getBuildableArea(bp);
+  if (screedArea > 0) {
+    const screedVol = screedArea * 0.05;
+    items.push({
+      id: 'finish_roof_screed',
+      category: 'finishes',
+      name: { ar: 'ميول أسطح (خرسانة رغوية)', en: 'Roof Screed / Slope', fr: 'Forme de pente', zh: '屋面找坡层' },
+      unit: 'م3',
+      netQty: round2(screedVol),
+      wastePercent: 10,
+      grossQty: round2(screedVol * 1.10),
+      procurementQty: round2(screedVol * 1.10),
+      notes: `SBC 601 — متوسط 5سم — ${round2(screedArea)}م² — قبل العزل المائي`,
+    });
+  }
+
   return items;
 }
 
@@ -1218,32 +1361,69 @@ function calculateDoorsAndWindows(bp: BlueprintConfig): CognitiveOutputItem[] {
   // 10% of internal walls are doors (wood carpentry mostly)
   const woodArea = totalIntWallArea * 0.10;
 
-  if (aluminumArea > 0) {
-    items.push({
-      id: 'doors_windows_aluminum',
-      category: 'doorsAndWindows',
-      name: { ar: 'أعمال الألمنيوم (نوافذ خارجية)', en: 'Aluminum Windows', fr: 'Fenêtres en aluminium', zh: '铝合金窗' },
-      unit: 'م2',
-      netQty: round2(aluminumArea),
-      wastePercent: 0,
-      grossQty: round2(aluminumArea),
-      procurementQty: round2(aluminumArea),
-      notes: `بناءً على 15% نسبة فتحات من الجدران الخارجية`,
-    });
-  }
+  // === G5: حساب ذكي للأبواب والنوافذ من roomFinishes ===
+  if (bp.roomFinishes && bp.roomFinishes.length > 0) {
+    // كل غرفة = باب واحد على الأقل
+    const doorCount = bp.roomFinishes.length;
+    // النوافذ: كل غرفة غير حمام/ممر/مخزن = نافذة واحدة على الأقل
+    const windowRooms = bp.roomFinishes.filter(r => !['bathroom', 'corridor', 'storage'].includes(r.roomType));
+    const windowCount = windowRooms.length;
+    const avgDoorArea = 2.10 * 0.90; // باب 210×90سم
+    const avgWindowArea = 1.50 * 1.20; // نافذة 150×120سم
 
-  if (woodArea > 0) {
     items.push({
-      id: 'doors_windows_wood',
+      id: 'doors_wood_smart',
       category: 'doorsAndWindows',
-      name: { ar: 'أعمال النجارة (أبواب خشبية داخلية)', en: 'Wooden Doors', fr: 'Portes en bois', zh: '木门' },
-      unit: 'م2',
-      netQty: round2(woodArea),
+      name: { ar: `أبواب خشب داخلية (${doorCount} باب)`, en: `Interior Wooden Doors (${doorCount})`, fr: 'Portes intérieures', zh: '室内木门' },
+      unit: 'باب',
+      netQty: doorCount,
       wastePercent: 0,
-      grossQty: round2(woodArea),
-      procurementQty: round2(woodArea),
-      notes: `بناءً على 10% نسبة فتحات من الجدران الداخلية`,
+      grossQty: doorCount,
+      procurementQty: doorCount,
+      notes: `${doorCount} غرفة × باب واحد — 210×90سم — شامل الحلق + الكوالين`,
     });
+
+    if (windowCount > 0) {
+      items.push({
+        id: 'windows_alum_smart',
+        category: 'doorsAndWindows',
+        name: { ar: `نوافذ ألمنيوم (${windowCount} نافذة)`, en: `Aluminum Windows (${windowCount})`, fr: 'Fenêtres aluminium', zh: '铝合金窗' },
+        unit: 'نافذة',
+        netQty: windowCount,
+        wastePercent: 0,
+        grossQty: windowCount,
+        procurementQty: windowCount,
+        notes: `${windowCount} غرفة × نافذة — 150×120سم متوسط — زجاج مزدوج`,
+      });
+    }
+  } else {
+    // Fallback: الطريقة القديمة بالنسب
+    if (aluminumArea > 0) {
+      items.push({
+        id: 'doors_windows_aluminum',
+        category: 'doorsAndWindows',
+        name: { ar: 'أعمال الألمنيوم (نوافذ خارجية)', en: 'Aluminum Windows', fr: 'Fenêtres en aluminium', zh: '铝合金窗' },
+        unit: 'م2',
+        netQty: round2(aluminumArea),
+        wastePercent: 0,
+        grossQty: round2(aluminumArea),
+        procurementQty: round2(aluminumArea),
+        notes: `بناءً على 15% نسبة فتحات من الجدران الخارجية`,
+      });
+    }
+    if (woodArea > 0) {
+      items.push({
+        id: 'doors_windows_wood',
+        category: 'doorsAndWindows',
+        name: { ar: 'أعمال النجارة (أبواب خشبية داخلية)', en: 'Wooden Doors', fr: 'Portes en bois', zh: '木门' },
+        unit: 'م2',
+        netQty: round2(woodArea),
+        wastePercent: 0,
+        grossQty: round2(woodArea),
+        procurementQty: round2(woodArea),
+        notes: `بناءً على 10% نسبة فتحات من الجدران الداخلية`,
+      });
+    }
   }
 
   return items;
@@ -1724,6 +1904,50 @@ function calculateMEP(bp: BlueprintConfig): CognitiveOutputItem[] {
       procurementQty: Math.ceil(bp.floors.length),
       notes: `${socketCircuits} دوائر أفياش + ${lightCircuits} إنارة + ${totalACPoints} تكييف + 4 خاصة`,
     });
+
+    // === G6: MDB رئيسية + محول (للمشاريع التجارية) ===
+    const totalLoadW = (totalSockets * 200) + (totalLights * 100) + (totalACPoints * 3500);
+    const totalLoadKVA = round2(totalLoadW / 1000 * 0.8); // demand factor 0.8
+    if (totalLoadKVA > 50) {
+      // محول — مشاريع > 50 KVA
+      const transformerSize = totalLoadKVA <= 100 ? 100 : totalLoadKVA <= 250 ? 250 : totalLoadKVA <= 500 ? 500 : 1000;
+      items.push({
+        id: 'mep_elec_transformer',
+        category: 'mep',
+        name: { ar: `محول كهرباء ${transformerSize} KVA`, en: `Electrical Transformer ${transformerSize} KVA`, fr: `Transformateur ${transformerSize} KVA`, zh: `变压器 ${transformerSize}KVA` },
+        unit: 'عدد',
+        netQty: 1,
+        wastePercent: 0,
+        grossQty: 1,
+        procurementQty: 1,
+        notes: `SEC — حمل إجمالي ${totalLoadKVA} KVA — محول ${transformerSize} KVA`,
+      });
+    }
+    items.push({
+      id: 'mep_elec_mdb',
+      category: 'mep',
+      name: { ar: `لوحة رئيسية MDB (${round2(totalLoadKVA)} KVA)`, en: `Main Distribution Board (${round2(totalLoadKVA)} KVA)`, fr: 'Tableau général', zh: '总配电柜' },
+      unit: 'لوحة',
+      netQty: 1,
+      wastePercent: 0,
+      grossQty: 1,
+      procurementQty: 1,
+      notes: `SBC 401 — حمل ${round2(totalLoadKVA)} KVA — قاطع رئيسي ${bp.mepConfig.electrical.mainBreakerAmps}A`,
+    });
+
+    // === G14: نظام تأريض كهربائي — SBC 401 إلزامي ===
+    const earthElectrodes = Math.max(2, Math.ceil(totalFloorArea / 200)); // قضيب لكل 200م²
+    items.push({
+      id: 'mep_elec_earthing',
+      category: 'mep',
+      name: { ar: 'نظام تأريض كهربائي (أقطاب + كابل نحاس)', en: 'Earthing System (Electrodes + Copper Cable)', fr: 'Mise à la terre', zh: '接地系统' },
+      unit: 'مجموعة',
+      netQty: 1,
+      wastePercent: 0,
+      grossQty: 1,
+      procurementQty: 1,
+      notes: `SBC 401 إلزامي — ${earthElectrodes} قضيب نحاسي Ø16mm × 3م + كابل 35mm² — مقاومة ≤ 5Ω`,
+    });
   }
 
   // --- Plumbing (SBC 1102 — دليل المقاولين) ---
@@ -1867,6 +2091,322 @@ function calculateMEP(bp: BlueprintConfig): CognitiveOutputItem[] {
     });
   }
 
+  // === G13: صناديق تفتيش صرف — SBC 1102 ===
+  if (bp.mepConfig.plumbing) {
+    const wetRoomsForMH = bp.roomFinishes?.filter(r => ['bathroom', 'kitchen'].includes(r.roomType)) || [];
+    const totalWetAreaMH = wetRoomsForMH.reduce((s, r) => s + r.length * r.width, 0);
+    const drainLengthMH = totalWetAreaMH * 0.9;
+    const manholeCount = Math.max(2, Math.ceil(drainLengthMH / 15));
+    items.push({
+      id: 'mep_plumb_manholes',
+      category: 'mep',
+      name: { ar: `صناديق تفتيش صرف (${manholeCount} صندوق)`, en: `Drainage Manholes (${manholeCount})`, fr: 'Regards de visite', zh: '检查井' },
+      unit: 'صندوق',
+      netQty: manholeCount,
+      wastePercent: 0,
+      grossQty: manholeCount,
+      procurementQty: manholeCount,
+      notes: `SBC 1102 — صندوق تفتيش كل 15م.ط صرف — 60×60سم خرساني أو PVC`,
+    });
+  }
+
+  // === G7: Dynamic Cable Sizing — كابل رئيسي ديناميكي ===
+  if (bp.mepConfig.electrical) {
+    const roomLoadW = bp.roomFinishes
+      ? bp.roomFinishes.reduce((s, r) => {
+          const area = r.length * r.width;
+          const roomLoad = ['bathroom', 'corridor', 'storage'].includes(r.roomType) ? area * 15 : area * 50;
+          return s + roomLoad;
+        }, 0)
+      : totalFloorArea * 35;
+    const totalAmps = round2(roomLoadW / 220);
+    const mainCableSize = totalAmps <= 63 ? '10mm²' : totalAmps <= 100 ? '16mm²' : totalAmps <= 160 ? '35mm²' : totalAmps <= 250 ? '70mm²' : '95mm²';
+    const mainCableLength = Math.ceil(Math.sqrt(totalFloorArea) * 2);
+
+    items.push({
+      id: 'mep_elec_main_cable',
+      category: 'mep',
+      name: { ar: `كابل رئيسي ${mainCableSize} (MDB → DB)`, en: `Main Feeder Cable ${mainCableSize}`, fr: 'Câble principal', zh: '主馈电缆' },
+      unit: 'م.ط',
+      netQty: mainCableLength,
+      wastePercent: 10,
+      grossQty: Math.ceil(mainCableLength * 1.10),
+      procurementQty: Math.ceil(mainCableLength * 1.10),
+      notes: `SBC 401 — حمل ${round2(roomLoadW/1000)}KW / ${totalAmps}A — مقاس ${mainCableSize} — voltage drop ≤ 3%`,
+    });
+  }
+
+  return items;
+}
+
+// =================== v8.0 SECTION G1: Drop Beams — كمرات ساقطة ===================
+
+function calculateDropBeams(bp: BlueprintConfig): CognitiveOutputItem[] {
+  const items: CognitiveOutputItem[] = [];
+  if (bp.floors.length === 0) return items;
+
+  let totalBeamConcreteVol = 0;
+  let totalBeamSteelKg = 0;
+  let totalBeamFormworkM2 = 0;
+
+  bp.floors.forEach((floor, idx) => {
+    // عدد الكمرات = عدد الأعمدة × 1.5 (كمرة بين كل عمودين تقريباً + كمرات إضافية)
+    const colCount = floor.columnsCount || Math.ceil(floor.area / 16);
+    const beamCount = Math.ceil(colCount * 1.5);
+
+    // أبعاد الكمرة الساقطة: عرض 30سم × عمق 60سم (اسفل السقف)
+    // الامتداد المتوسط = sqrt(مساحة الدور / عدد الكمرات)
+    const avgSpan = Math.max(3, Math.min(8, Math.sqrt(floor.area / Math.max(1, beamCount)) * 1.2));
+    const beamW = 0.30; // عرض 30 سم
+    const beamDropD = 0.40; // عمق ساقط تحت السقف 40 سم (إجمالي مع السقف = 60 سم)
+
+    // حجم خرسانة الكمرات
+    const beamVol = beamCount * beamW * beamDropD * avgSpan;
+    totalBeamConcreteVol += beamVol;
+
+    // حديد الكمرات: نسبة تسليح 180 كجم/م³ (أعلى من الأسقف لأنها تتحمل أحمال مركزة)
+    const beamSteel = beamVol * 180;
+    totalBeamSteelKg += beamSteel;
+
+    // شدة الكمرات: جانبين + قاع
+    const beamFormwork = beamCount * ((beamDropD * 2) + beamW) * avgSpan;
+    totalBeamFormworkM2 += beamFormwork;
+  });
+
+  if (totalBeamConcreteVol > 0) {
+    items.push(makeConcreteItem('super_drop_beams', 'خرسانة كمرات ساقطة', 'Drop Beams Concrete', totalBeamConcreteVol, 5));
+
+    const beamSteelTons = totalBeamSteelKg / 1000;
+    items.push({
+      id: 'super_drop_beams_steel',
+      category: 'superstructure',
+      name: { ar: 'حديد تسليح كمرات ساقطة', en: 'Drop Beams Rebar', fr: 'Armatures poutres', zh: '梁钢筋' },
+      unit: 'طن',
+      netQty: round2(beamSteelTons),
+      wastePercent: WASTE_FACTORS.steel * 100,
+      grossQty: round2(beamSteelTons * (1 + WASTE_FACTORS.steel)),
+      procurementQty: round2(beamSteelTons * (1 + WASTE_FACTORS.steel)),
+      notes: `نسبة تسليح 180 كجم/م³ — حديد رئيسي 4Ø16 + كانات Ø8@15سم — ACI 318`,
+    });
+
+    items.push({
+      id: 'formwork_drop_beams',
+      category: 'superstructure',
+      name: { ar: 'شدة كمرات ساقطة', en: 'Drop Beams Formwork', fr: 'Coffrage poutres', zh: '梁模板' },
+      unit: 'م2',
+      netQty: round2(totalBeamFormworkM2),
+      wastePercent: WASTE_FACTORS.plywood_formwork * 100,
+      grossQty: round2(totalBeamFormworkM2 * (1 + WASTE_FACTORS.plywood_formwork)),
+      procurementQty: Math.ceil((totalBeamFormworkM2 * (1 + WASTE_FACTORS.plywood_formwork)) / FORMWORK.plywood_area_m2 / FORMWORK.reuse_cycles),
+      notes: `شدة جانبين + قاع — ${bp.floors.length} أدوار`,
+    });
+  }
+
+  return items;
+}
+
+// =================== v8.0 SECTION G3: Stairs — درج مسلح ===================
+
+function calculateStairs(bp: BlueprintConfig): CognitiveOutputItem[] {
+  const items: CognitiveOutputItem[] = [];
+  const floorsCount = bp.floors.length;
+  if (floorsCount <= 1) return items; // دور واحد لا يحتاج درج
+
+  // عدد أجنحة الدرج = (عدد الأدوار - 1) × 2 (جناحين لكل دور)
+  const flightsCount = (floorsCount - 1) * 2;
+  const stairsCount = Math.max(1, Math.ceil(bp.floors[0]?.area / 300)); // درج لكل 300م²
+
+  // أبعاد جناح الدرج القياسي
+  const flightWidth = 1.20;       // عرض 1.20م (SBC minimum)
+  const flightRun = 2.80;         // طول الجناح الأفقي
+  const flightSlope = Math.sqrt(flightRun * flightRun + (bp.floors[0]?.height || 3.2) / 2 * (bp.floors[0]?.height || 3.2) / 2);
+  const waistThickness = 0.18;    // سماكة البطنة 18 سم
+  const landingLength = 1.50;     // طول البسطة
+  const landingWidth = flightWidth * 2 + 0.20; // عرض البسطة
+
+  // حساب خرسانة الدرج
+  // بطنة الجناح + درجات (steps)
+  const stepHeight = 0.17;        // ارتفاع الدرجة 17 سم
+  const stepNose = 0.30;          // عرض القائمة 30 سم
+  const stepsPerFlight = Math.ceil((bp.floors[0]?.height || 3.2) / 2 / stepHeight);
+  const stepVolPerFlight = stepsPerFlight * (0.5 * stepHeight * stepNose * flightWidth); // مثلث
+  const waistVolPerFlight = flightSlope * flightWidth * waistThickness;
+  const landingVol = landingLength * landingWidth * 0.20; // بسطة 20 سم
+
+  const totalConcretePerStair = (waistVolPerFlight + stepVolPerFlight + landingVol) * flightsCount;
+  const totalStairsConcrete = totalConcretePerStair * stairsCount;
+
+  items.push({
+    id: 'stairs_concrete',
+    category: 'superstructure',
+    name: { ar: `خرسانة درج مسلح (${stairsCount} درج × ${flightsCount} جناح)`, en: `Stair Concrete (${stairsCount} stairs × ${flightsCount} flights)`, fr: 'Béton escalier', zh: '楼梯混凝土' },
+    unit: 'م3',
+    netQty: round2(totalStairsConcrete),
+    wastePercent: 5,
+    grossQty: round2(totalStairsConcrete * 1.05),
+    procurementQty: round2(totalStairsConcrete * 1.05),
+    notes: `${stepsPerFlight} درجة/جناح (${stepHeight * 100}سم × ${stepNose * 100}سم) — بطنة ${waistThickness * 100}سم — SBC 304`,
+  });
+
+  // حديد الدرج: 200 كجم/م³ (أعلى من الأسقف — الدرج عنصر مقاوم للزلازل)
+  const stairsSteelTons = (totalStairsConcrete * 200) / 1000;
+  items.push({
+    id: 'stairs_steel',
+    category: 'superstructure',
+    name: { ar: 'حديد تسليح درج', en: 'Stair Rebar', fr: 'Armatures escalier', zh: '楼梯钢筋' },
+    unit: 'طن',
+    netQty: round2(stairsSteelTons),
+    wastePercent: WASTE_FACTORS.steel * 100,
+    grossQty: round2(stairsSteelTons * (1 + WASTE_FACTORS.steel)),
+    procurementQty: round2(stairsSteelTons * (1 + WASTE_FACTORS.steel)),
+    notes: `200 كجم/م³ — رئيسي Ø14@15 + توزيع Ø10@20 — ACI 318`,
+  });
+
+  // شدة الدرج
+  const stairsFormwork = (flightSlope * flightWidth + landingLength * landingWidth) * flightsCount * stairsCount;
+  items.push({
+    id: 'formwork_stairs',
+    category: 'superstructure',
+    name: { ar: 'شدة درج', en: 'Stair Formwork', fr: 'Coffrage escalier', zh: '楼梯模板' },
+    unit: 'م2',
+    netQty: round2(stairsFormwork),
+    wastePercent: 10,
+    grossQty: round2(stairsFormwork * 1.10),
+    procurementQty: Math.ceil((stairsFormwork * 1.10) / FORMWORK.plywood_area_m2 / FORMWORK.reuse_cycles),
+    notes: `بطنة + بسطات + جوانب — ${flightsCount} جناح × ${stairsCount} درج`,
+  });
+
+  // درابزين (handrail) — عنصر سلامة إلزامي SBC
+  const handrailLength = (flightSlope + landingLength) * flightsCount * stairsCount;
+  items.push({
+    id: 'stairs_handrail',
+    category: 'superstructure',
+    name: { ar: 'درابزين درج (حديد)', en: 'Stair Handrail (Steel)', fr: 'Garde-corps escalier', zh: '楼梯扶手' },
+    unit: 'م.ط',
+    netQty: round2(handrailLength),
+    wastePercent: 5,
+    grossQty: round2(handrailLength * 1.05),
+    procurementQty: round2(handrailLength * 1.05),
+    notes: `SBC — ارتفاع 90سم أدنى — حديد ملحوم + دهان`,
+  });
+
+  return items;
+}
+
+// =================== v8.0 SECTION G10: External Works — أعمال خارجية ===================
+
+function calculateExternalWorks(bp: BlueprintConfig): CognitiveOutputItem[] {
+  const items: CognitiveOutputItem[] = [];
+
+  const plotPerimeter = (bp.plotWidth + bp.plotLength) * 2;
+  const plotArea = bp.plotWidth * bp.plotLength;
+  const buildableArea = getBuildableArea(bp);
+  const openArea = Math.max(0, plotArea - buildableArea);
+
+  // === 1. سور خارجي (Boundary Wall) ===
+  if (plotPerimeter > 0) {
+    const wallHeight = 3.0; // ارتفاع سور 3م قياسي
+    const wallLength = plotPerimeter;
+    // خرسانة أعمدة وميدات السور
+    const fencePostSpacing = 3.0; // عمود كل 3م
+    const postCount = Math.ceil(wallLength / fencePostSpacing);
+    const postVolume = postCount * 0.25 * 0.25 * wallHeight;
+    const tieBeamVol = (wallLength * 0.20 * 0.30) * 2; // ميدة علوية + سفلية
+    const fenceConcreteVol = postVolume + tieBeamVol;
+
+    items.push({
+      id: 'ext_boundary_wall_concrete',
+      category: 'external_works',
+      name: { ar: 'خرسانة سور خارجي (أعمدة + ميدات)', en: 'Boundary Wall Concrete', fr: 'Béton clôture', zh: '围墙混凝土' },
+      unit: 'م3',
+      netQty: round2(fenceConcreteVol),
+      wastePercent: 5,
+      grossQty: round2(fenceConcreteVol * 1.05),
+      procurementQty: round2(fenceConcreteVol * 1.05),
+      notes: `${postCount} عمود × 25×25سم + ميدات 20×30سم — محيط ${round2(wallLength)}م`,
+    });
+
+    // بلك السور: 20سم
+    const fenceWallArea = wallLength * wallHeight;
+    const fenceBlocks = Math.ceil(fenceWallArea * 12.5 * 1.07);
+    items.push({
+      id: 'ext_boundary_wall_blocks',
+      category: 'external_works',
+      name: { ar: `بلك سور خارجي 20سم (${round2(fenceWallArea)}م²)`, en: 'Boundary Wall Blocks 20cm', fr: 'Blocs clôture', zh: '围墙砌块' },
+      unit: 'حبة',
+      netQty: fenceBlocks,
+      wastePercent: 7,
+      grossQty: Math.ceil(fenceBlocks * 1.07),
+      procurementQty: Math.ceil(fenceBlocks * 1.07),
+      notes: `${round2(fenceWallArea)}م² × 12.5 بلوكة/م² — ارتفاع ${wallHeight}م`,
+    });
+  }
+
+  // === 2. مظلات سيارات (Car Shades) ===
+  if (openArea > 30) {
+    const parkingSpaces = Math.max(1, Math.floor(openArea / 25)); // 25م² لكل موقف
+    const shadeArea = parkingSpaces * 15; // 15م² مظلة لكل موقف
+    items.push({
+      id: 'ext_car_shades',
+      category: 'external_works',
+      name: { ar: `مظلات سيارات (${parkingSpaces} موقف)`, en: `Car Shades (${parkingSpaces} spaces)`, fr: 'Ombrières parking', zh: '车棚' },
+      unit: 'م2',
+      netQty: round2(shadeArea),
+      wastePercent: 0,
+      grossQty: round2(shadeArea),
+      procurementQty: round2(shadeArea),
+      notes: `${parkingSpaces} موقف × 15م²/موقف — PVC أو حديد`,
+    });
+  }
+
+  // === 3. إنترلوك / بلاط خارجي ===
+  if (openArea > 10) {
+    const pavingArea = openArea * 0.60; // 60% من المساحة المفتوحة
+    items.push({
+      id: 'ext_interlocking',
+      category: 'external_works',
+      name: { ar: 'بلاط إنترلوك خارجي', en: 'Interlocking Pavers', fr: 'Pavés autobloquants', zh: '联锁铺路砖' },
+      unit: 'م2',
+      netQty: round2(pavingArea),
+      wastePercent: 8,
+      grossQty: round2(pavingArea * 1.08),
+      procurementQty: round2(pavingArea * 1.08),
+      notes: `60% من المساحة المفتوحة (${round2(openArea)}م²) — سماكة 6سم + رمل`,
+    });
+  }
+
+  // === 4. تنسيق حدائق ===
+  if (openArea > 20) {
+    const landscapeArea = openArea * 0.25; // 25% من المساحة المفتوحة
+    items.push({
+      id: 'ext_landscaping',
+      category: 'external_works',
+      name: { ar: 'تنسيق حدائق (عشب + أشجار)', en: 'Landscaping (Grass + Trees)', fr: 'Aménagement paysager', zh: '园林绿化' },
+      unit: 'م2',
+      netQty: round2(landscapeArea),
+      wastePercent: 0,
+      grossQty: round2(landscapeArea),
+      procurementQty: round2(landscapeArea),
+      notes: `25% من المساحة المفتوحة — عشب صناعي أو طبيعي + أشجار`,
+    });
+  }
+
+  // === 5. إنارة خارجية ===
+  if (plotPerimeter > 0) {
+    const lightPoles = Math.max(2, Math.ceil(plotPerimeter / 10)); // عمود كل 10م
+    items.push({
+      id: 'ext_lighting',
+      category: 'external_works',
+      name: { ar: `أعمدة إنارة خارجية (${lightPoles} عمود)`, en: `External Lighting Poles (${lightPoles})`, fr: 'Éclairage extérieur', zh: '室外照明' },
+      unit: 'عمود',
+      netQty: lightPoles,
+      wastePercent: 0,
+      grossQty: lightPoles,
+      procurementQty: lightPoles,
+      notes: `عمود LED كل 10م — ارتفاع 4م — مع كابل أرضي`,
+    });
+  }
+
   return items;
 }
 
@@ -1919,4 +2459,145 @@ function getFacadeFinishName(t: FacadeFinishType): Record<Language, string> {
     plaster_paint: { ar: 'لياسة ودهان', en: 'Plaster & Paint', fr: 'Enduit et peinture', zh: '抹灰涂料' },
   };
   return map[t] || { ar: t, en: t, fr: t, zh: t };
+}
+
+// =================== v9.0 Price Intelligence Helpers ===================
+
+/** جدول تفكيك أسعار الخرسانة لكل عنصر إنشائي */
+const CONCRETE_BREAKDOWN: Record<string, { concrete: number; steelKg: number; formwork: number; pump: number; labor: number; consumables: number }> = {
+  blinding:   { concrete: 250, steelKg: 0,   formwork: 0,   pump: 30, labor: 50,  consumables: 0 },
+  footing:    { concrete: 265, steelKg: 100, formwork: 75,  pump: 40, labor: 120, consumables: 18 },
+  raft:       { concrete: 265, steelKg: 112, formwork: 45,  pump: 40, labor: 100, consumables: 15 },
+  column:     { concrete: 265, steelKg: 230, formwork: 125, pump: 45, labor: 180, consumables: 24 },
+  neck:       { concrete: 265, steelKg: 230, formwork: 125, pump: 45, labor: 200, consumables: 24 },
+  beam:       { concrete: 265, steelKg: 180, formwork: 125, pump: 45, labor: 150, consumables: 20 },
+  slab:       { concrete: 265, steelKg: 120, formwork: 100, pump: 45, labor: 130, consumables: 18 },
+  sog:        { concrete: 265, steelKg: 90,  formwork: 0,   pump: 40, labor: 100, consumables: 15 },
+  wall:       { concrete: 265, steelKg: 140, formwork: 100, pump: 45, labor: 200, consumables: 22 },
+  stair:      { concrete: 265, steelKg: 200, formwork: 75,  pump: 45, labor: 150, consumables: 20 },
+  dropbeam:   { concrete: 265, steelKg: 160, formwork: 125, pump: 45, labor: 150, consumables: 20 },
+};
+
+/** سعر الكيلو حديد (ر.س) */
+const STEEL_PRICE_PER_KG = 3.2;
+
+/** بناء تفكيك سعر الخرسانة */
+function buildConcreteBreakdown(elementType: string): PriceComponent[] {
+  const bd = CONCRETE_BREAKDOWN[elementType];
+  if (!bd) return [];
+  const steelCost = round2(bd.steelKg * STEEL_PRICE_PER_KG);
+  const total = bd.concrete + steelCost + bd.formwork + bd.pump + bd.labor + bd.consumables;
+  return [
+    { label: { ar: 'خرسانة جاهزة', en: 'Ready-mix Concrete', fr: 'Béton prêt', zh: '商品混凝土' }, unitCost: bd.concrete, percentage: round2((bd.concrete / total) * 100), type: 'material' },
+    ...(steelCost > 0 ? [{ label: { ar: `حديد تسليح (${bd.steelKg} كجم/م³)`, en: `Rebar (${bd.steelKg} kg/m³)`, fr: `Armature (${bd.steelKg} kg/m³)`, zh: `钢筋 (${bd.steelKg} kg/m³)` }, unitCost: steelCost, percentage: round2((steelCost / total) * 100), type: 'material' as const }] : []),
+    ...(bd.formwork > 0 ? [{ label: { ar: 'شدة خشبية', en: 'Formwork', fr: 'Coffrage', zh: '模板' }, unitCost: bd.formwork, percentage: round2((bd.formwork / total) * 100), type: 'material' as const }] : []),
+    { label: { ar: 'صب ومضخة', en: 'Pouring & Pump', fr: 'Coulage et pompe', zh: '浇筑和泵' }, unitCost: bd.pump, percentage: round2((bd.pump / total) * 100), type: 'equipment' },
+    { label: { ar: 'أجور عمالة', en: 'Labor', fr: 'Main-d\'oeuvre', zh: '人工' }, unitCost: bd.labor, percentage: round2((bd.labor / total) * 100), type: 'labor' },
+    ...(bd.consumables > 0 ? [{ label: { ar: 'مستهلكات', en: 'Consumables', fr: 'Consommables', zh: '耗材' }, unitCost: bd.consumables, percentage: round2((bd.consumables / total) * 100), type: 'consumable' as const }] : []),
+  ];
+}
+
+/** كشف المعدات المطلوبة */
+function detectEquipment(zone: ElevationZone, category: string, itemId: string): EquipmentRequirement[] {
+  const equip: EquipmentRequirement[] = [];
+  if (zone === 'elevated' && (category === 'superstructure' || category === 'facades')) {
+    equip.push({ name: { ar: 'رافعة برجية', en: 'Tower Crane', fr: 'Grue à tour', zh: '塔吊' }, type: 'crane', costPerUnit: 25, reason: 'نقل المواد للأدوار العليا' });
+  }
+  if (zone === 'roof' || (category === 'finishes' && (itemId.includes('ceiling') || itemId.includes('gypsum')))) {
+    equip.push({ name: { ar: 'سقالة داخلية', en: 'Internal Scaffolding', fr: 'Échafaudage intérieur', zh: '内部脚手架' }, type: 'scaffolding', costPerUnit: 10, reason: 'العمل فوق الرأس (أسقف)' });
+  }
+  if (zone === 'external' && category === 'facades') {
+    equip.push({ name: { ar: 'مانليفت / سقالة خارجية', en: 'Manlift / External Scaffolding', fr: 'Nacelle élévatrice', zh: '升降平台' }, type: 'manlift', costPerUnit: 20, reason: 'العمل على ارتفاع خارجي' });
+  }
+  return equip;
+}
+
+/** بناء نطاق البند */
+function buildScopeTag(category: string, itemId: string): ScopeTag {
+  // Concrete items are always turnkey (includes everything)
+  if (category === 'substructure' || category === 'superstructure' || category === 'dropBeams' || category === 'stairs') {
+    return {
+      scope: 'turnkey',
+      includes: ['خرسانة', 'حديد', 'شدة خشبية', 'صب ومضخة', 'عمالة'],
+      excludes: [],
+      label: { ar: 'توريد وتنفيذ (شامل)', en: 'Supply & Install (Turnkey)', fr: 'Fourniture & Installation', zh: '包工包料' },
+    };
+  }
+  if (category === 'finishes' || category === 'facades' || category === 'masonry' || category === 'insulation' || category === 'waterproofing') {
+    return {
+      scope: 'supply_install',
+      includes: ['مواد', 'مصنعية'],
+      excludes: [],
+      label: { ar: 'توريد وتنفيذ', en: 'Supply & Install', fr: 'Fourniture & Installation', zh: '包工包料' },
+    };
+  }
+  if (category === 'consumables') {
+    return {
+      scope: 'supply_only',
+      includes: ['مواد خام'],
+      excludes: ['مصنعية'],
+      label: { ar: 'توريد فقط', en: 'Supply Only', fr: 'Fourniture uniquement', zh: '仅供应' },
+    };
+  }
+  return {
+    scope: 'supply_install',
+    includes: ['مواد', 'مصنعية'],
+    excludes: [],
+    label: { ar: 'توريد وتنفيذ', en: 'Supply & Install', fr: 'Fourniture & Installation', zh: '包工包料' },
+  };
+}
+
+/** تحديد موقع العمل بناءً على القسم والطابق */
+function getElevationZone(category: string, itemId: string): ElevationZone {
+  if (category === 'excavation' || category === 'substructure') return 'underground';
+  if (category === 'externalWorks' || category === 'external_works') return 'external';
+  if (category === 'facades') return 'external';
+  if (itemId.includes('ceiling') || itemId.includes('gypsum') || itemId.includes('roof')) return 'roof';
+  if (category === 'superstructure' || category === 'dropBeams') return 'elevated';
+  return 'ground';
+}
+
+/** إثراء جميع البنود بالبيانات الذكية (v9.0) */
+export function enrichAllItems(items: CognitiveOutputItem[]): CognitiveOutputItem[] {
+  return items.map(item => {
+    const zone = getElevationZone(item.category, item.id);
+    const scope = buildScopeTag(item.category, item.id);
+    const equip = detectEquipment(zone, item.category, item.id);
+
+    // Build price breakdown for concrete items
+    let breakdown: PriceComponent[] | undefined;
+    if (item.category === 'substructure' || item.category === 'superstructure' || item.category === 'dropBeams' || item.category === 'stairs') {
+      // Determine concrete element type from item ID
+      let elementType = 'slab'; // default
+      if (item.id.includes('blinding') || item.id.includes('lean')) elementType = 'blinding';
+      else if (item.id.includes('footing') || item.id.includes('foot')) elementType = 'footing';
+      else if (item.id.includes('raft') || item.id.includes('mat')) elementType = 'raft';
+      else if (item.id.includes('column') || item.id.includes('col')) elementType = 'column';
+      else if (item.id.includes('neck')) elementType = 'neck';
+      else if (item.id.includes('beam') || item.id.includes('girder')) elementType = 'beam';
+      else if (item.id.includes('wall') || item.id.includes('shear')) elementType = 'wall';
+      else if (item.id.includes('stair') || item.id.includes('ramp')) elementType = 'stair';
+      else if (item.id.includes('sog') || item.id.includes('ground_slab')) elementType = 'sog';
+      else if (item.id.includes('dropbeam')) elementType = 'dropbeam';
+
+      if (item.unit === 'م3') {
+        breakdown = buildConcreteBreakdown(elementType);
+        // Update scope to include specific details
+        if (breakdown.length > 0) {
+          const steelComp = breakdown.find(b => b.label.ar.includes('حديد'));
+          if (steelComp) {
+            scope.includes = ['خرسانة C30', steelComp.label.ar, 'شدة خشبية', 'صب ومضخة', 'عمالة'];
+          }
+        }
+      }
+    }
+
+    return {
+      ...item,
+      elevationZone: zone,
+      scopeTag: scope,
+      priceBreakdown: breakdown,
+      equipmentNeeded: equip.length > 0 ? equip : undefined,
+    };
+  });
 }

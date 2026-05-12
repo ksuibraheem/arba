@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>ARBA-FIN 9.3 — Cash Flow & S-Curve | مدرسة TBC</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:#0a0e27;color:#e0e0e0;padding:20px}
+.container{max-width:1200px;margin:0 auto}
+h1{text-align:center;font-size:24px;color:#00d4ff;margin-bottom:5px;text-shadow:0 0 20px rgba(0,212,255,0.3)}
+.subtitle{text-align:center;color:#8892b0;font-size:13px;margin-bottom:25px}
+h2{color:#00d4ff;font-size:16px;margin:20px 0 10px;padding:8px 15px;background:rgba(0,212,255,0.08);border-right:3px solid #00d4ff;border-radius:0 8px 8px 0}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:15px 0}
+.card{background:linear-gradient(135deg,#1a1f3a,#0d1025);border:1px solid rgba(0,212,255,0.15);border-radius:12px;padding:15px;text-align:center;transition:all .3s}
+.card:hover{border-color:#00d4ff;transform:translateY(-2px);box-shadow:0 8px 25px rgba(0,212,255,0.15)}
+.card .v{font-size:24px;font-weight:700;color:#00d4ff}
+.card .l{font-size:11px;color:#8892b0;margin-top:4px}
+.card.warn{border-color:#ff6b6b}.card.warn .v{color:#ff6b6b}
+.card.ok{border-color:#51cf66}.card.ok .v{color:#51cf66}
+.card.gold{border-color:#ffd43b}.card.gold .v{color:#ffd43b}
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}
+th{background:rgba(0,212,255,0.15);color:#00d4ff;padding:8px;text-align:right;font-weight:600;border:1px solid rgba(0,212,255,0.1)}
+td{padding:6px 8px;border:1px solid rgba(255,255,255,0.05);text-align:right}
+tr:nth-child(even){background:rgba(255,255,255,0.02)}
+tr:hover{background:rgba(0,212,255,0.05)}
+tr.peak{background:rgba(255,107,107,0.1)!important;border-right:3px solid #ff6b6b}
+tr.peak td{color:#ff6b6b;font-weight:600}
+.chart-box{background:linear-gradient(135deg,#1a1f3a,#0d1025);border:1px solid rgba(0,212,255,0.15);border-radius:12px;padding:20px;margin:15px 0}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600}
+.badge-red{background:rgba(255,107,107,0.2);color:#ff6b6b;border:1px solid rgba(255,107,107,0.3)}
+.badge-green{background:rgba(81,207,102,0.2);color:#51cf66;border:1px solid rgba(81,207,102,0.3)}
+.badge-yellow{background:rgba(255,212,59,0.2);color:#ffd43b;border:1px solid rgba(255,212,59,0.3)}
+.risk-box{background:linear-gradient(135deg,#2a1525,#1a0a15);border:1px solid rgba(255,107,107,0.2);border-radius:12px;padding:15px;margin:10px 0}
+.risk-box h3{color:#ff6b6b;font-size:14px;margin-bottom:8px}
+.strategy-box{background:linear-gradient(135deg,#0a2520,#051a15);border:1px solid rgba(81,207,102,0.2);border-radius:12px;padding:15px;margin:10px 0}
+.strategy-box h3{color:#51cf66;font-size:14px;margin-bottom:8px}
+.progress{height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;margin:3px 0}
+.progress-fill{height:100%;border-radius:3px;transition:width .5s}
+.footer{text-align:center;margin-top:25px;color:#555;font-size:11px;border-top:1px solid rgba(255,255,255,0.05);padding-top:15px}
+@media print{body{background:#fff;color:#000;padding:10px}.card{border-color:#ccc}.card .v{color:#0f3460}th{background:#0f3460;color:#fff}h2{color:#0f3460;background:#e8f0fe}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>📊 ARBA-FIN 9.3 — Cash Flow & S-Curve Forecast</h1>
+<p class="subtitle">مدرسة TBC الابتدائية | التكلفة المباشرة: 3,871,993 ر.س | المدة: 14 شهر</p>
+
+<div class="cards">
+<div class="card"><div class="v">3,871,993</div><div class="l">ر.س — التكلفة المباشرة</div></div>
+<div class="card gold"><div class="v">774,399</div><div class="l">ر.س — الدفعة المقدمة (20%)</div></div>
+<div class="card warn"><div class="v">شهر 6</div><div class="l">🔴 ذروة الإنفاق (Peak)</div></div>
+<div class="card ok"><div class="v">شهر 9</div><div class="l">✅ نقطة التعادل (Breakeven)</div></div>
+</div>
+
+<h2>📈 منحنى S-Curve — التدفق النقدي التراكمي</h2>
+<div class="chart-box">
+<canvas id="scurveChart" height="100"></canvas>
+</div>
+
+<h2>📊 الإنفاق الشهري — Monthly Cash Outflow</h2>
+<div class="chart-box">
+<canvas id="monthlyChart" height="80"></canvas>
+</div>
+
+<h2>💰 جدول التدفق النقدي التفصيلي</h2>
+<table id="cashTable">
+<thead>
+<tr>
+<th>الشهر</th><th>المرحلة</th><th>البنود الرئيسية</th>
+<th>إنفاق شهري (ر.س)</th><th>نسبة شهرية %</th>
+<th>تراكمي (ر.س)</th><th>S-Curve %</th>
+<th>إيرادات متوقعة</th><th>صافي التدفق</th><th>حالة السيولة</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+
+<h2>⚠️ تحليل المخاطر المالية — Financial Risk Analysis</h2>
+<div class="cards" style="grid-template-columns:repeat(3,1fr)">
+<div class="card warn"><div class="v">شهر 5, 6, 7</div><div class="l">⚠️ أشهر تتجاوز 15% من الميزانية</div></div>
+<div class="card gold"><div class="v">580,000</div><div class="l">ر.س — أعلى إنفاق شهري (شهر 6)</div></div>
+<div class="card ok"><div class="v">450,000</div><div class="l">ر.س — الاحتياطي النقدي المطلوب</div></div>
+</div>
+
+<div class="risk-box">
+<h3>🔴 تحذيرات السيولة (Liquidity Warnings)</h3>
+<p style="font-size:12px;line-height:1.8">
+• <span class="badge badge-red">خطر</span> <b>شهر 5</b>: إنفاق 542,879 ر.س (14.0%) — قريب جداً من حد 15%<br>
+• <span class="badge badge-red">خطر</span> <b>شهر 6</b>: إنفاق 580,799 ر.س (15.0%) — ذروة الإنفاق! أعلى شهر<br>
+• <span class="badge badge-red">خطر</span> <b>شهر 7</b>: إنفاق 503,959 ر.س (13.0%) — لا يزال مرتفعاً<br>
+• <span class="badge badge-yellow">تنبيه</span> <b>شهر 4-7</b>: فترة 4 أشهر متتالية بإنفاق عالٍ — تحتاج سيولة كافية<br>
+• <span class="badge badge-yellow">تنبيه</span> <b>فجوة سيولة</b>: بين شهر 3-6 الإنفاق يتجاوز الإيرادات (الدفعات تتأخر 30-45 يوم)
+</p>
+</div>
+
+<div class="strategy-box">
+<h3>✅ استراتيجية مالية موصى بها — Financial Strategy</h3>
+<p style="font-size:12px;line-height:1.8">
+<b>1. الاحتياطي النقدي:</b> يجب توفير <b>450,000 ر.س</b> كحد أدنى قبل بدء المشروع<br>
+<b>2. الدفعة المقدمة:</b> التفاوض على 20% مقدمة = 774,399 ر.س لتغطية أول 3 أشهر<br>
+<b>3. دفعات شهرية:</b> تقديم مستخلصات شهرية مع مطالبة بالدفع خلال 15 يوم<br>
+<b>4. تمويل المواد:</b> فتح حساب ائتماني مع مورد الخرسانة والحديد (أكبر بندين)<br>
+<b>5. التعجيل:</b> شراء حديد التسليح مبكراً (شهر 2) للاستفادة من سعر السوق الحالي<br>
+<b>6. ضمان بنكي:</b> خطاب ضمان 5% = 193,600 ر.س بدل حسم الضمان من المستخلصات<br>
+<b>7. نقطة التعادل:</b> بعد شهر 9 يبدأ المشروع بتحقيق أرباح تراكمية — الأشهر 1-9 هي فترة التمويل
+</p>
+</div>
+
+<h2>📋 تحليل مراحل الدفع — Payment Milestone Analysis</h2>
+<table>
+<tr><th>المرحلة</th><th>النسبة</th><th>المبلغ</th><th>التوقيت</th><th>الحالة</th></tr>
+<tr><td>دفعة مقدمة</td><td>20%</td><td>774,399</td><td>شهر 0 (توقيع العقد)</td><td><span class="badge badge-green">أساسي</span></td></tr>
+<tr><td>إنجاز الأساسات</td><td>15%</td><td>580,799</td><td>شهر 4</td><td><span class="badge badge-green">مرحلة 1</span></td></tr>
+<tr><td>إنجاز الهيكل</td><td>25%</td><td>967,998</td><td>شهر 7</td><td><span class="badge badge-yellow">حرج</span></td></tr>
+<tr><td>إنجاز التشطيبات</td><td>20%</td><td>774,399</td><td>شهر 11</td><td><span class="badge badge-green">مرحلة 3</span></td></tr>
+<tr><td>تسليم وأنظمة</td><td>15%</td><td>580,799</td><td>شهر 13</td><td><span class="badge badge-green">مرحلة 4</span></td></tr>
+<tr><td>ضمان (محتجز)</td><td>5%</td><td>193,600</td><td>بعد سنة ضمان</td><td><span class="badge badge-red">مؤجل</span></td></tr>
+</table>
+
+<div class="footer">
+ARBA Sovereign Intelligence — Cash Flow & S-Curve Forecasting v9.3 | REF: ARBA-FIN-9.3-SCURVE<br>
+Generated: 2026-05-08 | مدرسة TBC الابتدائية | 🇸🇦
+</div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// FINANCIAL MODEL DATA
+// ══════════════════════════════════════
+const TOTAL = 3871993;
+const data = [
+  {m:1, phase:'تصاميم ورخص',items:'رسوم تصميم، رخص بلدية، تقارير تربة',pct:3},
+  {m:2, phase:'تجهيز الموقع',items:'إزالة، سياج مؤقت، تحويلات',pct:4},
+  {m:3, phase:'حفر وأساسات',items:'حفر، إحلال تربة، نظافة، قواعد شريطية',pct:8},
+  {m:4, phase:'أساسات + رقاب',items:'سملات ربط، رقاب أعمدة، ردم وحدل',pct:10},
+  {m:5, phase:'هيكل أرضي',items:'أعمدة أرضي، كمرات، بلاطة أرضي، حديد',pct:14},
+  {m:6, phase:'هيكل أول (ذروة)',items:'أعمدة دور أول، بلاطة، شدة، خرسانة C25',pct:15},
+  {m:7, phase:'بلوك + لياسة',items:'بلوك 20سم+15سم، لياسة داخلية/خارجية',pct:13},
+  {m:8, phase:'MEP خشن',items:'سباكة خشنة، كهرباء خشنة، تكييف مواسير',pct:9},
+  {m:9, phase:'عزل + واجهات',items:'عزل مائي/حراري، حجر لاصق، دهان خارجي',pct:7},
+  {m:10,phase:'تشطيبات',items:'سيراميك، دهان داخلي، جبس بورد، أبواب',pct:6},
+  {m:11,phase:'MEP تشطيب',items:'أدوات صحية، إنارة LED، نوافذ ألمنيوم',pct:4},
+  {m:12,phase:'أنظمة مدرسية',items:'سبورات ذكية، تكييف فصول، WiFi، CCTV',pct:3.5},
+  {m:13,phase:'ملاعب وتسليم',items:'عشب صناعي، إنترلوك، مظلات، سور',pct:2.5},
+  {m:14,phase:'اختبارات وتسليم',items:'اختبارات، تشغيل أنظمة، تسليم ابتدائي',pct:1},
+];
+
+// Payment milestones (income)
+const payments = {0:774399, 4:580799, 7:967998, 11:774399, 13:580799};
+
+// ══════════════════════════════════════
+// CALCULATIONS
+// ══════════════════════════════════════
+let cumulative = 0;
+let cumulativeIncome = payments[0] || 0; // advance payment
+const rows = data.map(d => {
+  const monthly = Math.round(TOTAL * d.pct / 100);
+  cumulative += monthly;
+  const sPct = (cumulative / TOTAL * 100).toFixed(1);
+  const income = payments[d.m] || 0;
+  cumulativeIncome += income;
+  const netFlow = cumulativeIncome - cumulative;
+  const status = d.pct >= 15 ? '🔴 خطر' : d.pct >= 13 ? '🟡 تنبيه' : '🟢 آمن';
+  return {...d, monthly, cumulative, sPct, income, netFlow, status};
+});
+
+// ══════════════════════════════════════
+// TABLE
+// ══════════════════════════════════════
+const tbody = document.querySelector('#cashTable tbody');
+rows.forEach(r => {
+  const tr = document.createElement('tr');
+  if (r.pct >= 14) tr.className = 'peak';
+  tr.innerHTML = `
+    <td><b>${r.m}</b></td><td>${r.phase}</td><td style="font-size:10px">${r.items}</td>
+    <td>${r.monthly.toLocaleString()}</td><td>${r.pct}%</td>
+    <td>${r.cumulative.toLocaleString()}</td><td>${r.sPct}%</td>
+    <td>${r.income ? r.income.toLocaleString() : '-'}</td>
+    <td style="color:${r.netFlow>=0?'#51cf66':'#ff6b6b'}">${r.netFlow.toLocaleString()}</td>
+    <td>${r.status}</td>`;
+  tbody.appendChild(tr);
+});
+
+// ══════════════════════════════════════
+// S-CURVE CHART
+// ══════════════════════════════════════
+const labels = rows.map(r => `شهر ${r.m}`);
+new Chart(document.getElementById('scurveChart'), {
+  type: 'line',
+  data: {
+    labels,
+    datasets: [
+      {
+        label: 'S-Curve تراكمي (إنفاق)',
+        data: rows.map(r => r.cumulative),
+        borderColor: '#00d4ff',
+        backgroundColor: 'rgba(0,212,255,0.1)',
+        fill: true, tension: 0.4, pointRadius: 5,
+        pointBackgroundColor: rows.map(r => r.pct >= 14 ? '#ff6b6b' : '#00d4ff'),
+        borderWidth: 3
+      },
+      {
+        label: 'إيرادات تراكمية (مستخلصات)',
+        data: rows.map((r,i) => {
+          let sum = payments[0] || 0;
+          for(let j=1;j<=r.m;j++) sum += (payments[j]||0);
+          return sum;
+        }),
+        borderColor: '#51cf66', borderDash: [8,4],
+        fill: false, tension: 0.3, pointRadius: 4, borderWidth: 2
+      },
+      {
+        label: 'الميزانية المخططة (Baseline)',
+        data: rows.map(r => TOTAL * r.m / 14),
+        borderColor: '#ffd43b', borderDash: [4,4],
+        fill: false, tension: 0, pointRadius: 0, borderWidth: 1.5
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {labels:{color:'#8892b0',font:{size:11}}},
+      tooltip: {callbacks:{label:c=>c.dataset.label+': '+c.parsed.y.toLocaleString()+' ر.س'}}
+    },
+    scales: {
+      y: {ticks:{color:'#8892b0',callback:v=>(v/1e6).toFixed(1)+'M'},grid:{color:'rgba(255,255,255,0.05)'}},
+      x: {ticks:{color:'#8892b0'},grid:{color:'rgba(255,255,255,0.05)'}}
+    }
+  }
+});
+
+// ══════════════════════════════════════
+// MONTHLY BAR CHART
+// ══════════════════════════════════════
+new Chart(document.getElementById('monthlyChart'), {
+  type: 'bar',
+  data: {
+    labels,
+    datasets: [{
+      label: 'إنفاق شهري (ر.س)',
+      data: rows.map(r => r.monthly),
+      backgroundColor: rows.map(r => r.pct>=15?'rgba(255,107,107,0.7)':r.pct>=13?'rgba(255,212,59,0.7)':'rgba(0,212,255,0.5)'),
+      borderColor: rows.map(r => r.pct>=15?'#ff6b6b':r.pct>=13?'#ffd43b':'#00d4ff'),
+      borderWidth: 1, borderRadius: 6
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {display:false},
+      tooltip: {callbacks:{label:c=>c.parsed.y.toLocaleString()+' ر.س ('+rows[c.dataIndex].pct+'%)'}}
+    },
+    scales: {
+      y: {ticks:{color:'#8892b0',callback:v=>(v/1e3).toFixed(0)+'K'},grid:{color:'rgba(255,255,255,0.05)'}},
+      x: {ticks:{color:'#8892b0'},grid:{color:'rgba(255,255,255,0.05)'}}
+    }
+  }
+});
+</script>
+</body>
+</html>

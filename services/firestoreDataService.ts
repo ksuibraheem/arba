@@ -134,6 +134,10 @@ const ALLOWED_TOP_LEVEL = new Set([
     'auth_users', 'external_suppliers', 'external_prices',
     'supplier_storage', 'data_correction_requests', 'supplier_notifs',
     'company_settings', 'company_employees',
+    // Sovereign v8.0: Temporal Audit System
+    'price_time_series', 'usage_metering', 'audit_trail',
+    // Sovereign v8.1: Internal Governance
+    'internal_metadata', 'sweep_history',
 ]);
 
 function resolveCollectionPath(collectionName: string): string {

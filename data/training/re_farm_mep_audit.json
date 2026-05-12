@@ -1,0 +1,1393 @@
+{
+  "project": "R.E Farm",
+  "bua": 6975.87,
+  "total": 3159765.000000004,
+  "items": [
+    {
+      "no": "A",
+      "desc": "Supply, installation, testing and commissioning of Lavatories wall hung units (L",
+      "unit": "No.",
+      "qty": 46,
+      "boqPrice": 1123.0434782608697,
+      "marketAvg": 1100,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "D",
+      "desc": "Supply, installation, testing and commissioning of Western Water Closet  with  a",
+      "unit": "No.",
+      "qty": 20,
+      "boqPrice": 1223.4782608695655,
+      "marketAvg": 1200,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "E",
+      "desc": "Supply, installation, testing and commissioning of Hand Spray for water closet a",
+      "unit": "No.",
+      "qty": 20,
+      "boqPrice": 228.2608695652174,
+      "marketAvg": 1200,
+      "status": "🟡 أقل بكثير"
+    },
+    {
+      "no": "A",
+      "desc": "Supply, installation, testing and commissioning of Kitchen Sinks including Flexi",
+      "unit": "No.",
+      "qty": 4,
+      "boqPrice": 840.0000000000001,
+      "marketAvg": 850,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "B",
+      "desc": "Supply, installation, testing and commissioning of Ablution faucet (AF) includin",
+      "unit": "No.",
+      "qty": 3,
+      "boqPrice": 576.1304347826087,
+      "marketAvg": 580,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "D",
+      "desc": "Supply, installation, testing and commissioning of Shower head with floors drain",
+      "unit": "No.",
+      "qty": 9,
+      "boqPrice": 880.1739130434784,
+      "marketAvg": 880,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "A",
+      "desc": "20 mm dia",
+      "unit": "m",
+      "qty": 132,
+      "boqPrice": 27.39130434782609,
+      "marketAvg": 27,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "B",
+      "desc": "25 mm dia",
+      "unit": "m",
+      "qty": 55,
+      "boqPrice": 31.95652173913044,
+      "marketAvg": 32,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "C",
+      "desc": "32 mm dia",
+      "unit": "m",
+      "qty": 89,
+      "boqPrice": 38.34782608695653,
+      "marketAvg": 38,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "D",
+      "desc": "40 mm dia",
+      "unit": "m",
+      "qty": 71,
+      "boqPrice": 44.73913043478261,
+      "marketAvg": 45,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "E",
+      "desc": "50 mm dia",
+      "unit": "m",
+      "qty": 67,
+      "boqPrice": 59.34782608695653,
+      "marketAvg": 58,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "F",
+      "desc": "63 mm dia",
+      "unit": "m",
+      "qty": 88,
+      "boqPrice": 78.5217391304348,
+      "marketAvg": 78,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "G",
+      "desc": "75 mm dia",
+      "unit": "m",
+      "qty": 58,
+      "boqPrice": 122.34782608695654,
+      "marketAvg": 120,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "H",
+      "desc": "110 mm dia",
+      "unit": "m",
+      "qty": 12,
+      "boqPrice": 143.34782608695653,
+      "marketAvg": 145,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "A",
+      "desc": "20 mm dia",
+      "unit": "m",
+      "qty": 438,
+      "boqPrice": 27.39130434782609,
+      "marketAvg": 27,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "B",
+      "desc": "25 mm dia",
+      "unit": "m",
+      "qty": 122,
+      "boqPrice": 31.95652173913044,
+      "marketAvg": 32,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "C",
+      "desc": "32 mm dia",
+      "unit": "m",
+      "qty": 113,
+      "boqPrice": 38.34782608695653,
+      "marketAvg": 38,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "D",
+      "desc": "40 mm dia",
+      "unit": "m",
+      "qty": 148,
+      "boqPrice": 44.73913043478261,
+      "marketAvg": 45,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "E",
+      "desc": "50 mm dia",
+      "unit": "m",
+      "qty": 65,
+      "boqPrice": 59.34782608695653,
+      "marketAvg": 58,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "F",
+      "desc": "63 mm dia",
+      "unit": "m",
+      "qty": 80,
+      "boqPrice": 78.5217391304348,
+      "marketAvg": 78,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "A",
+      "desc": "80 mm dia",
+      "unit": "No.",
+      "qty": 58,
+      "boqPrice": 78.5217391304348,
+      "marketAvg": 78,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "D",
+      "desc": "100 mm dia",
+      "unit": "No.",
+      "qty": 12,
+      "boqPrice": 100.43478260869566,
+      "marketAvg": 200,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "F",
+      "desc": "100 mm dia",
+      "unit": "No.",
+      "qty": 10,
+      "boqPrice": 443.7391304347826,
+      "marketAvg": 200,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "B",
+      "desc": "100 mm dia",
+      "unit": "No.",
+      "qty": 4,
+      "boqPrice": 443.7391304347826,
+      "marketAvg": 200,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "C",
+      "desc": "Supply, installation, testing and commissioning of Trench Drain 30 cm width and ",
+      "unit": "m",
+      "qty": 1,
+      "boqPrice": 1134.9130434782612,
+      "marketAvg": 1100,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "A",
+      "desc": "50 mm dia",
+      "unit": "No.",
+      "qty": 7,
+      "boqPrice": 241.0434782608696,
+      "marketAvg": 58,
+      "status": "🔴 مبالغة"
+    },
+    {
+      "no": "B",
+      "desc": "A duplex RO Water Booster Pumps  each of 60 GPM @ 4 BAR Head (1 Working & 1 Stan",
+      "unit": "Item",
+      "qty": 1,
+      "boqPrice": 26900.086956521744,
+      "marketAvg": 27000,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "A",
+      "desc": "Duplex Hot Water Circulating Pumps (HWCP-01) each of 8 GPM @\r\n1.5 BAR Head, 5 hp",
+      "unit": "Item",
+      "qty": 1,
+      "boqPrice": 12999.000000000002,
+      "marketAvg": 13000,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "A",
+      "desc": "3/8\"",
+      "unit": "m",
+      "qty": 510,
+      "boqPrice": 45.652173913043484,
+      "marketAvg": 45,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "B",
+      "desc": "1/2\"",
+      "unit": "m",
+      "qty": 205,
+      "boqPrice": 50.21739130434783,
+      "marketAvg": 50,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "C",
+      "desc": "5/8\"",
+      "unit": "m",
+      "qty": 471,
+      "boqPrice": 68.47826086956522,
+      "marketAvg": 68,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "D",
+      "desc": "3/4\"",
+      "unit": "m",
+      "qty": 342,
+      "boqPrice": 73.04347826086958,
+      "marketAvg": 73,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "E",
+      "desc": "1/4\"",
+      "unit": "m",
+      "qty": 7,
+      "boqPrice": 41.08695652173913,
+      "marketAvg": 40,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "F",
+      "desc": "7/8\"",
+      "unit": "m",
+      "qty": 142,
+      "boqPrice": 75.78260869565219,
+      "marketAvg": 76,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "G",
+      "desc": "1 1/8\"",
+      "unit": "m",
+      "qty": 302,
+      "boqPrice": 175.30434782608697,
+      "marketAvg": 175,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "H",
+      "desc": "1 3/8\"",
+      "unit": "m",
+      "qty": 122,
+      "boqPrice": 205.43478260869568,
+      "marketAvg": 205,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "I",
+      "desc": "1 5/8\"",
+      "unit": "m",
+      "qty": 211,
+      "boqPrice": 217.30434782608697,
+      "marketAvg": 218,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "A",
+      "desc": "EF-01",
+      "unit": "No.",
+      "qty": 1,
+      "boqPrice": 4806.260869565218,
+      "marketAvg": 3500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "B",
+      "desc": "EF-02",
+      "unit": "No.",
+      "qty": 1,
+      "boqPrice": 5098.434782608696,
+      "marketAvg": 3500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "C",
+      "desc": "EF-03",
+      "unit": "No.",
+      "qty": 1,
+      "boqPrice": 4956,
+      "marketAvg": 3500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "D",
+      "desc": "EF-04",
+      "unit": "No.",
+      "qty": 1,
+      "boqPrice": 2313.652173913044,
+      "marketAvg": 3500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "E",
+      "desc": "EF-05",
+      "unit": "No.",
+      "qty": 1,
+      "boqPrice": 2313.652173913044,
+      "marketAvg": 3500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "F",
+      "desc": "EF-06",
+      "unit": "No.",
+      "qty": 1,
+      "boqPrice": 2313.652173913044,
+      "marketAvg": 3500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "G",
+      "desc": "EF-07",
+      "unit": "No.",
+      "qty": 1,
+      "boqPrice": 2313.652173913044,
+      "marketAvg": 3500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "H",
+      "desc": "EF-08",
+      "unit": "No.",
+      "qty": 1,
+      "boqPrice": 2313.652173913044,
+      "marketAvg": 3500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "I",
+      "desc": "EF-09",
+      "unit": "No.",
+      "qty": 1,
+      "boqPrice": 2313.652173913044,
+      "marketAvg": 3500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "J",
+      "desc": "FAF-01",
+      "unit": "No.",
+      "qty": 1,
+      "boqPrice": 5978.608695652174,
+      "marketAvg": 5500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "A",
+      "desc": "SUPPLY & RETURN AIR DUCT",
+      "unit": "M²",
+      "qty": 1053,
+      "boqPrice": 144.2608695652174,
+      "marketAvg": 140,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "B",
+      "desc": "EXHAUST AIR DUCT",
+      "unit": "M2",
+      "qty": 483,
+      "boqPrice": 144.2608695652174,
+      "marketAvg": 140,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "C",
+      "desc": "FRESH AIR DUCT",
+      "unit": "M2",
+      "qty": 350,
+      "boqPrice": 144.2608695652174,
+      "marketAvg": 140,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "A",
+      "desc": "(SD-04)",
+      "unit": "No.",
+      "qty": 10,
+      "boqPrice": 319.5652173913044,
+      "marketAvg": 300,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "B",
+      "desc": "(RD-04)",
+      "unit": "No.",
+      "qty": 10,
+      "boqPrice": 200.8695652173913,
+      "marketAvg": 200,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "C",
+      "desc": "(SLD-03)",
+      "unit": "No.",
+      "qty": 198,
+      "boqPrice": 410.86956521739137,
+      "marketAvg": 420,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "D",
+      "desc": "(RLD-03)",
+      "unit": "No.",
+      "qty": 197,
+      "boqPrice": 392.60869565217394,
+      "marketAvg": 400,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "E",
+      "desc": "(SLD-04)",
+      "unit": "No.",
+      "qty": 122,
+      "boqPrice": 465.65217391304355,
+      "marketAvg": 420,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "F",
+      "desc": "(RLD-04)",
+      "unit": "No.",
+      "qty": 122,
+      "boqPrice": 443.7391304347826,
+      "marketAvg": 400,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "G",
+      "desc": "(ELD-03)",
+      "unit": "No.",
+      "qty": 7,
+      "boqPrice": 339.6521739130435,
+      "marketAvg": 330,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "H",
+      "desc": "(SAG)",
+      "unit": "No.",
+      "qty": 4,
+      "boqPrice": 292.1739130434783,
+      "marketAvg": 290,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "I",
+      "desc": "(RAG)",
+      "unit": "No.",
+      "qty": 4,
+      "boqPrice": 173.47826086956525,
+      "marketAvg": 175,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "A",
+      "desc": "(DV-01)",
+      "unit": "No.",
+      "qty": 30,
+      "boqPrice": 130.56521739130437,
+      "marketAvg": 130,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.1.1",
+      "desc": "MDB",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 77608.69565217392,
+      "marketAvg": 55000,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.1.2",
+      "desc": "SMDB 1",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 56608.69565217392,
+      "marketAvg": 35000,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.1.3",
+      "desc": "DP MAIDS RM",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 6981.13043478261,
+      "marketAvg": 5500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.1.4",
+      "desc": "DP BASE 1",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 7763.608695652174,
+      "marketAvg": 5500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.1.5",
+      "desc": "SMDB MECH B",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 6254.347826086957,
+      "marketAvg": 35000,
+      "status": "🟡 أقل بكثير"
+    },
+    {
+      "no": "16.1.6",
+      "desc": "SMDB MECH R",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 57978.26086956522,
+      "marketAvg": 35000,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.1.7",
+      "desc": "DP BEDROOM 1",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 6981.13043478261,
+      "marketAvg": 5500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.1.8",
+      "desc": "DP BEDROOM 2",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 3195.652173913044,
+      "marketAvg": 5500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.1.9",
+      "desc": "DP GYM",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 6981.13043478261,
+      "marketAvg": 5500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.1.10",
+      "desc": "DP SAUNA STEAM",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 6981.13043478261,
+      "marketAvg": 250,
+      "status": "🔴 مبالغة"
+    },
+    {
+      "no": "16.1.11",
+      "desc": "DP BEDROOM 3",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 3195.652173913044,
+      "marketAvg": 5500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.1.12",
+      "desc": "DP BEDROOM 4",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 3195.652173913044,
+      "marketAvg": 5500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.1.13",
+      "desc": "DP DINE 1",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 3880.4347826086964,
+      "marketAvg": 5500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.1.14",
+      "desc": "DP GND",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 6981.13043478261,
+      "marketAvg": 5500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.1.15",
+      "desc": "DP DINE 2",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 3195.652173913044,
+      "marketAvg": 5500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.1.16",
+      "desc": "DP DINE 3",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 6981.13043478261,
+      "marketAvg": 5500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.1.17",
+      "desc": "DP BOWLING",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 6981.13043478261,
+      "marketAvg": 5500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.1.18",
+      "desc": "DP CINEMA",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 6981.13043478261,
+      "marketAvg": 5500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.1.19",
+      "desc": "DP KITCHEN",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 6981.13043478261,
+      "marketAvg": 5500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.1.20",
+      "desc": "DP LAUNDRY",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 6981.13043478261,
+      "marketAvg": 5500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.1.21",
+      "desc": "DP EXT A",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 4839.130434782609,
+      "marketAvg": 5500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.1.22",
+      "desc": "DP EXT B",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 4839.130434782609,
+      "marketAvg": 5500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.2.1",
+      "desc": "1-PH 20A,230V,60HZ,IP67 for FAF/EXF",
+      "unit": "NO.",
+      "qty": 6,
+      "boqPrice": 593.4782608695652,
+      "marketAvg": 550,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.2.2",
+      "desc": "1-PH 20A,230V,60HZ,IP54 for VRV IDU",
+      "unit": "NO.",
+      "qty": 58,
+      "boqPrice": 593.4782608695652,
+      "marketAvg": 550,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.3.1",
+      "desc": "3-PH 30A,400V,60HZ,NEMA-3R for Elevator",
+      "unit": "NO.",
+      "qty": 6,
+      "boqPrice": 897.5217391304349,
+      "marketAvg": 900,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.3.2",
+      "desc": "3-PH 60A,400V,60HZ,NEMA-4X SS, 3P+N+E, for VRV ODU",
+      "unit": "NO.",
+      "qty": 20,
+      "boqPrice": 2328.260869565218,
+      "marketAvg": 2300,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.3.3",
+      "desc": "1-PH 30A,230V,60HZ for Sauna Steam",
+      "unit": "NO.",
+      "qty": 4,
+      "boqPrice": 246.5217391304348,
+      "marketAvg": 450,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.3.4",
+      "desc": "1-PH 30A,230V,60HZ,NEMA-3R for pumps",
+      "unit": "NO.",
+      "qty": 4,
+      "boqPrice": 684.7826086956524,
+      "marketAvg": 680,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.3.5",
+      "desc": "3-PH 60A,400V,60HZ for EWH",
+      "unit": "NO.",
+      "qty": 2,
+      "boqPrice": 1232.608695652174,
+      "marketAvg": 2300,
+      "status": "🟡 أقل"
+    },
+    {
+      "no": "16.3.1",
+      "desc": "(4CX400)mm2+240Gr mm2 (CU./XLPE/PVC)",
+      "unit": "M",
+      "qty": 40,
+      "boqPrice": 1214.3478260869567,
+      "marketAvg": 0,
+      "status": "unmatched"
+    },
+    {
+      "no": "16.3.2",
+      "desc": "(4CX185)mm2+95Gr mm2 (CU./XLPE/PVC)",
+      "unit": "M",
+      "qty": 300,
+      "boqPrice": 575.2173913043479,
+      "marketAvg": 0,
+      "status": "unmatched"
+    },
+    {
+      "no": "16.3.3",
+      "desc": "(4X150)mm2+95Gr mm2 (CU./XLPE/PVC)",
+      "unit": "M",
+      "qty": 784,
+      "boqPrice": 486.65217391304355,
+      "marketAvg": 0,
+      "status": "unmatched"
+    },
+    {
+      "no": "16.3.4",
+      "desc": "(4X120)mm2+70Gr mm2 (CU./XLPE/PVC)",
+      "unit": "M",
+      "qty": 350,
+      "boqPrice": 474.78260869565224,
+      "marketAvg": 0,
+      "status": "unmatched"
+    },
+    {
+      "no": "16.3.5",
+      "desc": "(4X95)mm2+50Gr mm2 (CU./XLPE/PVC)",
+      "unit": "M",
+      "qty": 490,
+      "boqPrice": 320.4782608695653,
+      "marketAvg": 0,
+      "status": "unmatched"
+    },
+    {
+      "no": "16.3.6",
+      "desc": "(4X70)mm2+35Gr mm2 (CU./XLPE/PVC)",
+      "unit": "M",
+      "qty": 440,
+      "boqPrice": 214.56521739130437,
+      "marketAvg": 0,
+      "status": "unmatched"
+    },
+    {
+      "no": "16.3.7",
+      "desc": "(4X50)mm2+25Gr mm2 (CU./XLPE/PVC)",
+      "unit": "M",
+      "qty": 110,
+      "boqPrice": 117.78260869565219,
+      "marketAvg": 0,
+      "status": "unmatched"
+    },
+    {
+      "no": "16.3.8",
+      "desc": "(4X25)mm2+16Gr mm2 (CU./XLPE/PVC)",
+      "unit": "M",
+      "qty": 15,
+      "boqPrice": 79.43478260869566,
+      "marketAvg": 0,
+      "status": "unmatched"
+    },
+    {
+      "no": "16.3.9",
+      "desc": "(4X16)mm2+10Gr mm2 (CU./XLPE/PVC)",
+      "unit": "M",
+      "qty": 815,
+      "boqPrice": 54.78260869565218,
+      "marketAvg": 0,
+      "status": "unmatched"
+    },
+    {
+      "no": "16.3.10",
+      "desc": "(4X10)mm2+10Gr mm2 (CU./XLPE/PVC)",
+      "unit": "M",
+      "qty": 930,
+      "boqPrice": 41.08695652173913,
+      "marketAvg": 0,
+      "status": "unmatched"
+    },
+    {
+      "no": "16.3.11",
+      "desc": "(4X6)mm2+6Gr mm2 (CU./XLPE/PVC)",
+      "unit": "M",
+      "qty": 375,
+      "boqPrice": 35.60869565217392,
+      "marketAvg": 0,
+      "status": "unmatched"
+    },
+    {
+      "no": "16.3.12",
+      "desc": "(3X6)mm2+6Gr mm2 (CU./XLPE/PVC/SWA)",
+      "unit": "M",
+      "qty": 500,
+      "boqPrice": 27.39130434782609,
+      "marketAvg": 0,
+      "status": "unmatched"
+    },
+    {
+      "no": "16.4.1",
+      "desc": "100mm*50mm*1.5mm Thickness",
+      "unit": "M",
+      "qty": 125,
+      "boqPrice": 73.04347826086958,
+      "marketAvg": 70,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.4.2",
+      "desc": "150mm*50mm*1.5mm Thickness",
+      "unit": "M",
+      "qty": 30,
+      "boqPrice": 73.04347826086958,
+      "marketAvg": 75,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.4.3",
+      "desc": "200mm*50mm*1.5mm Thickness",
+      "unit": "M",
+      "qty": 46,
+      "boqPrice": 82.17391304347827,
+      "marketAvg": 80,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.4.4",
+      "desc": "300mm*50mm*1.5mm Thickness",
+      "unit": "M",
+      "qty": 50,
+      "boqPrice": 86.73913043478262,
+      "marketAvg": 85,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.4.5",
+      "desc": "450mm*50mm*1.5mm Thickness",
+      "unit": "M",
+      "qty": 28,
+      "boqPrice": 127.82608695652176,
+      "marketAvg": 120,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.4.6",
+      "desc": "600mm*50mm*1.5mm Thickness",
+      "unit": "M",
+      "qty": 55,
+      "boqPrice": 147,
+      "marketAvg": 145,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.5.1",
+      "desc": "One way, one gang switch 10A.",
+      "unit": "NO.",
+      "qty": 38,
+      "boqPrice": 173.47826086956525,
+      "marketAvg": 170,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.5.2",
+      "desc": "One way, two gang switch 10A.",
+      "unit": "NO.",
+      "qty": 20,
+      "boqPrice": 197.21739130434784,
+      "marketAvg": 170,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.5.3",
+      "desc": "Two way, one gang switch 10A.",
+      "unit": "NO",
+      "qty": 4,
+      "boqPrice": 177.13043478260872,
+      "marketAvg": 170,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.5.4",
+      "desc": "Two way, Two gang switch 10A.",
+      "unit": "NO",
+      "qty": 12,
+      "boqPrice": 193.56521739130437,
+      "marketAvg": 170,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.6.1",
+      "desc": "Single normal socket 13A, 230V, 2P+E",
+      "unit": "NO.",
+      "qty": 25,
+      "boqPrice": 182.60869565217394,
+      "marketAvg": 190,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.6.2",
+      "desc": "Single normal socket 13A, 230V, 2P+E,  IP=67",
+      "unit": "NO.",
+      "qty": 31,
+      "boqPrice": 226.43478260869568,
+      "marketAvg": 190,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.6.3",
+      "desc": "Single normal socket 13A, 230V, 2P+E ceiling",
+      "unit": "NO.",
+      "qty": 17,
+      "boqPrice": 182.60869565217394,
+      "marketAvg": 190,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.6.4",
+      "desc": "Double normal socket 13A, 230V, 2P+E",
+      "unit": "NO.",
+      "qty": 62,
+      "boqPrice": 204.5217391304348,
+      "marketAvg": 190,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.6.5",
+      "desc": "Double normal socket 13A, 230V, 2P+E, floor",
+      "unit": "NO.",
+      "qty": 5,
+      "boqPrice": 204.5217391304348,
+      "marketAvg": 190,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.6.6",
+      "desc": "Shaver socket",
+      "unit": "NO.",
+      "qty": 4,
+      "boqPrice": 337.82608695652175,
+      "marketAvg": 320,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.7.1",
+      "desc": "TYPE-L1",
+      "unit": "NO.",
+      "qty": 356,
+      "boqPrice": 255.65217391304353,
+      "marketAvg": 255,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.7.2",
+      "desc": "TYPE-L1E",
+      "unit": "NO.",
+      "qty": 134,
+      "boqPrice": 552.3913043478261,
+      "marketAvg": 550,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.7.3",
+      "desc": "TYPE-L3",
+      "unit": "NO.",
+      "qty": 38,
+      "boqPrice": 255.65217391304353,
+      "marketAvg": 255,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.7.4",
+      "desc": "TYPE-L4",
+      "unit": "NO.",
+      "qty": 27,
+      "boqPrice": 255.65217391304353,
+      "marketAvg": 255,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.7.5",
+      "desc": "TYPE-L4E",
+      "unit": "NO.",
+      "qty": 14,
+      "boqPrice": 552.3913043478261,
+      "marketAvg": 550,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.7.6",
+      "desc": "TYPE-F",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 255.65217391304353,
+      "marketAvg": 255,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.7.7",
+      "desc": "TYPE-L7",
+      "unit": "NO.",
+      "qty": 27,
+      "boqPrice": 255.65217391304353,
+      "marketAvg": 255,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.7.8",
+      "desc": "TYPE-L8",
+      "unit": "NO.",
+      "qty": 2,
+      "boqPrice": 255.65217391304353,
+      "marketAvg": 255,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.7.9",
+      "desc": "TYPE-L8E",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 552.3913043478261,
+      "marketAvg": 550,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.7.10",
+      "desc": "TYPE-L9",
+      "unit": "NO.",
+      "qty": 23,
+      "boqPrice": 255.65217391304353,
+      "marketAvg": 255,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.7.11",
+      "desc": "TYPE-L10",
+      "unit": "NO.",
+      "qty": 5,
+      "boqPrice": 255.65217391304353,
+      "marketAvg": 255,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.7.12",
+      "desc": "TYPE-L10E",
+      "unit": "NO.",
+      "qty": 5,
+      "boqPrice": 552.3913043478261,
+      "marketAvg": 550,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.7.13",
+      "desc": "TYPE-LA",
+      "unit": "NO.",
+      "qty": 9,
+      "boqPrice": 187.17391304347828,
+      "marketAvg": 185,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.7.14",
+      "desc": "TYPE-LB",
+      "unit": "NO.",
+      "qty": 170,
+      "boqPrice": 187.17391304347828,
+      "marketAvg": 185,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.7.15",
+      "desc": "TYPE-LE",
+      "unit": "NO.",
+      "qty": 34,
+      "boqPrice": 187.17391304347828,
+      "marketAvg": 185,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.7.16",
+      "desc": "TYPE-LG",
+      "unit": "NO.",
+      "qty": 114,
+      "boqPrice": 187.17391304347828,
+      "marketAvg": 185,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.7.17",
+      "desc": "LED STRIP",
+      "unit": "Rm.",
+      "qty": 803,
+      "boqPrice": 77.60869565217392,
+      "marketAvg": 75,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.7.18",
+      "desc": "CHANDELIER",
+      "unit": "NO.",
+      "qty": 2,
+      "boqPrice": 2487.130434782609,
+      "marketAvg": 2500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.8.1",
+      "desc": "Supply and install of earthling rod 20mm diameter, 3 meter long including excava",
+      "unit": "LS",
+      "qty": 1,
+      "boqPrice": 0,
+      "marketAvg": 3500,
+      "status": "🔴 سعر صفر"
+    },
+    {
+      "no": "16.9.1.1",
+      "desc": "Fiber optic cable multimode (MM)-multicore 2 core cable between STC and IDT with",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 31.95652173913044,
+      "marketAvg": 32,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.9.1.2",
+      "desc": "IDT loaded",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 0,
+      "marketAvg": 1000,
+      "status": "🔴 سعر صفر"
+    },
+    {
+      "no": "16.9.1.3",
+      "desc": "RJ 45 IP outlet",
+      "unit": "NO.",
+      "qty": 28,
+      "boqPrice": 579.7826086956522,
+      "marketAvg": 500,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.12.1",
+      "desc": "Public address rack",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 43826.08695652175,
+      "marketAvg": 43000,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.12.2",
+      "desc": "Ceiling mounted speaker 6watt",
+      "unit": "NO.",
+      "qty": 23,
+      "boqPrice": 342.3913043478262,
+      "marketAvg": 340,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.12.3",
+      "desc": "Desk microphone",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 228.2608695652174,
+      "marketAvg": 230,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.9.4.1",
+      "desc": "Supply, install and test Outdoor IP bullet camara (3MP) (Weather proof ) ZERO LU",
+      "unit": "NO.",
+      "qty": 8,
+      "boqPrice": 958.6956521739131,
+      "marketAvg": 950,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.9.4.2",
+      "desc": "supply, install and test Indoor dome camara (3MP) (Cieling mounted ) ZERO LUX ,5",
+      "unit": "NO.",
+      "qty": 9,
+      "boqPrice": 652.8260869565217,
+      "marketAvg": 650,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.9.4.3",
+      "desc": "supply, install and test NVR unit (20 camera) .the item includes Keyboard Contro",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 35152.17391304349,
+      "marketAvg": 35000,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.9.4.4",
+      "desc": "STORAGE UNIT FOR 90 DAYS",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 3195.652173913044,
+      "marketAvg": 3200,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.9.4.5",
+      "desc": "supply, install and test (WORK STATION ) and one seat licence & Mapping software",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 9586.956521739132,
+      "marketAvg": 6500,
+      "status": "🟠 أعلى"
+    },
+    {
+      "no": "16.9.4.6",
+      "desc": "Security LED screens, 32 inch (High Definitions) for 24/7 Hours use.",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 593.4782608695652,
+      "marketAvg": 600,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.10.1",
+      "desc": "FACP-2 LOOP",
+      "unit": "NO.",
+      "qty": 1,
+      "boqPrice": 15978.26086956522,
+      "marketAvg": 16000,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.10.2",
+      "desc": "Addressable smoke detector (Optical type)",
+      "unit": "NO.",
+      "qty": 61,
+      "boqPrice": 301.304347826087,
+      "marketAvg": 300,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.10.3",
+      "desc": "Addressable heat detector",
+      "unit": "NO.",
+      "qty": 3,
+      "boqPrice": 301.304347826087,
+      "marketAvg": 300,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.10.4",
+      "desc": "Addressable manual station.",
+      "unit": "NO.",
+      "qty": 12,
+      "boqPrice": 301.304347826087,
+      "marketAvg": 300,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.10.5",
+      "desc": "Addressable sounder",
+      "unit": "NO.",
+      "qty": 12,
+      "boqPrice": 340.56521739130443,
+      "marketAvg": 330,
+      "status": "🟢 متوازن"
+    },
+    {
+      "no": "16.10.6",
+      "desc": "Addressable monitor module",
+      "unit": "NO.",
+      "qty": 4,
+      "boqPrice": 171.6521739130435,
+      "marketAvg": 170,
+      "status": "🟢 متوازن"
+    }
+  ]
+}

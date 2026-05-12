@@ -170,6 +170,7 @@ export interface Employee {
     role: EmployeeRole;
     employeeNumber: string;
     password: string;
+    passwordHash?: string;
     isActive: boolean;
     createdAt?: string;
     emergencyContact?: string;

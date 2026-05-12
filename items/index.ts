@@ -28,6 +28,9 @@ export { WAREHOUSE_ITEMS } from './warehouseItems';
 export { GOVERNMENT_ITEMS } from './governmentItems';
 export { CLINIC_ITEMS } from './clinicItems';
 
+// Operating Systems Base Items (السستم التشغيلي)
+export { SYSTEMS_BASE_ITEMS } from './systemsBaseItems';
+
 import { BaseItem } from '../types';
 import { VILLA_ITEMS } from './villaItems';
 import { REST_HOUSE_ITEMS } from './restHouseItems';
@@ -47,14 +50,16 @@ import { CAR_WASH_ITEMS } from './carWashItems';
 import { WAREHOUSE_ITEMS } from './warehouseItems';
 import { GOVERNMENT_ITEMS } from './governmentItems';
 import { CLINIC_ITEMS } from './clinicItems';
+import { SYSTEMS_BASE_ITEMS } from './systemsBaseItems';
 
 /**
  * All project-specific items merged into a single array.
  * These are ADDITIONAL items beyond the base ITEMS_DATABASE in constants.ts.
  * The base ITEMS_DATABASE contains items with type: 'all' that apply to every project.
- * Total: ~18 project types
+ * Total: ~18 project types + Systems Base Items
  */
 export const ALL_PROJECT_SPECIFIC_ITEMS: BaseItem[] = [
+    ...SYSTEMS_BASE_ITEMS,
     ...VILLA_ITEMS,
     ...REST_HOUSE_ITEMS,
     ...TOWER_ITEMS,
@@ -74,3 +79,4 @@ export const ALL_PROJECT_SPECIFIC_ITEMS: BaseItem[] = [
     ...GOVERNMENT_ITEMS,
     ...CLINIC_ITEMS,
 ];
+

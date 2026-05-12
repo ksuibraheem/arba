@@ -1,0 +1,80 @@
+﻿[36mvite v6.4.1 [32mbuilding for production...[36m[39m
+transforming...
+[32mظ£ô[39m 2209 modules transformed.
+rendering chunks...
+node.exe : [33m[plugin vite:reporter] 
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([33m[plugin vite:reporter] :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(!) C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own 
+program/pro-pricing-platform/node_modules/firebase/auth/dist/esm/index.esm.js is dynamically imported by 
+C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/App.tsx but also statically imported by 
+C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/firebase/authService.ts, 
+C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/firebase/config.ts, dynamic import will 
+not move module into another chunk.
+[39m
+[33m[plugin vite:reporter] 
+(!) C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/services/firestoreDataService.ts is 
+dynamically imported by C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own 
+program/pro-pricing-platform/services/firebaseService.ts but also statically imported by 
+C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/components/connect/CompanySettings.tsx, 
+C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/services/accountingService.ts, 
+C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/services/authService.ts, 
+C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/services/chartOfAccountsService.ts, 
+C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/services/connectService.ts, 
+C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/services/dataCorrectionService.ts, 
+C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/services/discountRequestService.ts, 
+C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/services/externalSupplierService.ts, 
+C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/services/firestoreInitializer.ts, 
+C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/services/invoiceEditRequestService.ts, 
+C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/services/notificationService.ts, 
+C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/services/registrationService.ts, 
+C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/services/supplierReviewService.ts, 
+C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/services/supplierService.ts, 
+C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/services/supplierStorageService.ts, 
+C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/services/supportTicketService.ts, 
+C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/services/temporalAuditService.ts, dynamic 
+import will not move module into another chunk.
+[39m
+[33m[plugin vite:reporter] 
+(!) C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/firebase/authService.ts is 
+dynamically imported by C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/App.tsx, 
+C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/App.tsx, C:/Users/ksuib/Desktop/Ibrahim 
+AL-duaydi/My own program/pro-pricing-platform/App.tsx but also statically imported by C:/Users/ksuib/Desktop/Ibrahim 
+AL-duaydi/My own program/pro-pricing-platform/App.tsx, C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own 
+program/pro-pricing-platform/contexts/AuthContext.tsx, C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own 
+program/pro-pricing-platform/pages/PasswordResetPage.tsx, C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own 
+program/pro-pricing-platform/pages/VerificationPage.tsx, dynamic import will not move module into another chunk.
+[39m
+[33m[plugin vite:reporter] 
+(!) C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/services/authService.ts is 
+dynamically imported by C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own 
+program/pro-pricing-platform/firebase/authService.ts but also statically imported by C:/Users/ksuib/Desktop/Ibrahim 
+AL-duaydi/My own program/pro-pricing-platform/App.tsx, C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own 
+program/pro-pricing-platform/contexts/AuthContext.tsx, dynamic import will not move module into another chunk.
+[39m
+[33m[plugin vite:reporter] 
+(!) C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/src/services/paymentService.ts is 
+dynamically imported by C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own program/pro-pricing-platform/App.tsx but also 
+statically imported by C:/Users/ksuib/Desktop/Ibrahim AL-duaydi/My own 
+program/pro-pricing-platform/pages/PaymentPage.tsx, dynamic import will not move module into another chunk.
+[39m
+computing gzip size...
+[2mdist/[22m[32mindex.html                          [39m[1m[2m    1.78 kB[22m[1m[22m[2m ظ¤é gzip:   0.86 kB[22m
+[2mdist/[22m[35massets/index-lVgstKrJ.css           [39m[1m[2m  259.03 kB[22m[1m[22m[2m ظ¤é gzip:  29.70 kB[22m
+[2mdist/[22m[36massets/purify.es-C_uT9hQ1.js        [39m[1m[2m   21.98 kB[22m[1m[22m[2m ظ¤é gzip:   8.74 kB[22m
+[2mdist/[22m[36massets/index.es-CVT2WSXH.js         [39m[1m[2m  159.35 kB[22m[1m[22m[2m ظ¤é gzip:  53.40 kB[22m
+[2mdist/[22m[36massets/html2canvas.esm-QH1iLAAe.js  [39m[1m[2m  202.38 kB[22m[1m[22m[2m ظ¤é gzip:  48.04 kB[22m
+[2mdist/[22m[36massets/amiriBase64-DkUwgS9K.js      [39m[1m[2m  401.53 kB[22m[1m[22m[2m ظ¤é gzip: 167.53 kB[22m
+[2mdist/[22m[36massets/BOQUploader-C9DhaK24.js      [39m[1m[2m  471.53 kB[22m[1m[22m[2m ظ¤é gzip: 153.82 kB[22m
+[2mdist/[22m[36massets/index-CvC4sz58.js            [39m[1m[33m3,745.57 kB[39m[22m[2m ظ¤é gzip: 927.44 kB[22m
+[33m
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: 
+https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+[32mظ£ô built in 14.93s[39m

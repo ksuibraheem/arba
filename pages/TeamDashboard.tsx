@@ -140,7 +140,7 @@ const TeamDashboard: React.FC<TeamDashboardProps> = ({ language, member, onLogou
     const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files) return;
-        Array.from(files).forEach(file => {
+        Array.from(files).forEach((file: File) => {
             const reader = new FileReader();
             reader.onload = (ev) => {
                 const now = new Date();

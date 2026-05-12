@@ -12,10 +12,30 @@ dist
 dist-ssr
 *.local
 
-# ⚠️ Environment variables - NEVER commit
+# ⚠️ SOVEREIGN v8.0 — SECRET PROTECTION
+# Environment variables - NEVER commit
 .env
 .env.*
+.env.local
+.env.development
+.env.production
+.env.staging
 !.env.example
+
+# Firebase credentials & service accounts
+**/serviceAccountKey.json
+**/firebase-adminsdk*.json
+**/firebase-debug.log
+**/firebase-debug.*.log
+.firebaserc
+
+# API Keys & Secrets (catch-all patterns)
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+.secrets/
 
 # Editor directories and files
 .vscode/*
@@ -27,3 +47,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# OS files
+Thumbs.db
+Desktop.ini
+.Spotlight-V100
+.Trashes
+
+# Build artifacts
+*.tsbuildinfo

@@ -31,7 +31,7 @@ const VerificationPage: React.FC<VerificationPageProps> = ({
     const [successMessage, setSuccessMessage] = useState('');
     const [resendCooldown, setResendCooldown] = useState(0);
 
-    const t = (key: string) => PAGE_TRANSLATIONS[key]?.[language] || key;
+    const t = (key: string, fallback?: string) => PAGE_TRANSLATIONS[key]?.[language] || fallback || key;
 
     // Resend cooldown timer
     useEffect(() => {

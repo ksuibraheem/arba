@@ -1,0 +1,90 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "notes": "معاملات تعديل إقليمية بناءً على فروقات أسعار الخرسانة الجاهزة + تكاليف الشحن",
+    "baseLine": "riyadh",
+    "lastSync": "2026-05-10T14:50:50.921Z"
+  },
+  "regions": {
+    "riyadh": {
+      "factor": 1,
+      "nameAr": "الرياض"
+    },
+    "jeddah": {
+      "factor": 1.02,
+      "nameAr": "جدة"
+    },
+    "dammam": {
+      "factor": 0.98,
+      "nameAr": "الدمام"
+    },
+    "makkah": {
+      "factor": 1.06,
+      "nameAr": "مكة المكرمة"
+    },
+    "madinah": {
+      "factor": 1.04,
+      "nameAr": "المدينة المنورة"
+    },
+    "abha": {
+      "factor": 1.1,
+      "nameAr": "أبها"
+    },
+    "tabuk": {
+      "factor": 1.12,
+      "nameAr": "تبوك"
+    },
+    "qassim": {
+      "factor": 0.96,
+      "nameAr": "القصيم"
+    },
+    "hail": {
+      "factor": 1.05,
+      "nameAr": "حائل"
+    },
+    "jazan": {
+      "factor": 1.12,
+      "nameAr": "جيزان"
+    },
+    "najran": {
+      "factor": 1.1,
+      "nameAr": "نجران"
+    },
+    "baha": {
+      "factor": 1.11,
+      "nameAr": "الباحة"
+    },
+    "jouf": {
+      "factor": 1.14,
+      "nameAr": "الجوف"
+    },
+    "northern_borders": {
+      "factor": 1.15,
+      "nameAr": "الحدود الشمالية (عرعر)"
+    },
+    "khobar": {
+      "factor": 0.98,
+      "nameAr": "الخبر"
+    },
+    "yanbu": {
+      "factor": 1.04,
+      "nameAr": "ينبع"
+    },
+    "taif": {
+      "factor": 1.07,
+      "nameAr": "الطائف"
+    },
+    "khamis_mushait": {
+      "factor": 1.1,
+      "nameAr": "خميس مشيط"
+    },
+    "ahsa": {
+      "factor": 0.99,
+      "nameAr": "الأحساء"
+    },
+    "hafr_albatin": {
+      "factor": 1.13,
+      "nameAr": "حفر الباطن"
+    }
+  }
+}

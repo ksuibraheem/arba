@@ -8,7 +8,8 @@ import {
     SUPPLIERS_CONCRETE, SUPPLIERS_STEEL, SUPPLIERS_HVAC,
     SUPPLIERS_ELECTRICAL, SUPPLIERS_FIRE_SAFETY, SUPPLIERS_FACADES,
     SUPPLIERS_PLUMBING, SUPPLIERS_LANDSCAPING, SUPPLIERS_TILES,
-    SUPPLIERS_SANITARY, SUPPLIERS_SMART_SECURITY, SUPPLIERS_PAINT
+    SUPPLIERS_SANITARY, SUPPLIERS_SMART_SECURITY, SUPPLIERS_PAINT,
+    SUPPLIERS_FURNITURE
 } from './suppliers';
 
 export const SPORTS_ITEMS: BaseItem[] = [
@@ -22,7 +23,7 @@ export const SPORTS_ITEMS: BaseItem[] = [
 
     // ================= SP02. المدرجات والمقاعد =================
     { id: "SP02.01", category: "structure", type: "sports_complex", name: { ar: "مدرجات خرسانية (1000 مقعد)", en: "Concrete Grandstands (1000 Seats)", fr: "Tribunes Béton (1000 Places)", zh: "混凝土看台(1000座)" }, unit: "مقعد", qty: 1000, baseMaterial: 800, baseLabor: 300, waste: 0.05, suppliers: SUPPLIERS_CONCRETE, sbc: "SBC 304-Stand", soilFactor: false, dependency: 'fixed' },
-    { id: "SP02.02", category: "architecture", type: "sports_complex", name: { ar: "مقاعد بلاستيكية (Spectator Seats)", en: "Plastic Spectator Seats", fr: "Sièges Spectateurs Plastique", zh: "塑料观众座椅" }, unit: "عدد", qty: 1000, baseMaterial: 120, baseLabor: 20, waste: 0.02, suppliers: SUPPLIERS_STEEL, sbc: "SBC-Seats", soilFactor: false, dependency: 'fixed' },
+    { id: "SP02.02", category: "architecture", type: "sports_complex", name: { ar: "مقاعد بلاستيكية (Spectator Seats)", en: "Plastic Spectator Seats", fr: "Sièges Spectateurs Plastique", zh: "塑料观众座椅" }, unit: "عدد", qty: 1000, baseMaterial: 120, baseLabor: 20, waste: 0.02, suppliers: SUPPLIERS_FURNITURE, sbc: "SBC-Seats", soilFactor: false, dependency: 'fixed' },
     { id: "SP02.03", category: "architecture", type: "sports_complex", name: { ar: "مظلات مدرجات (شد إنشائي)", en: "Grandstand Canopy (Tensile Structure)", fr: "Auvent Tribunes (Structure Tendue)", zh: "看台遮阳篷(张拉结构)" }, unit: "م2", qty: 500, baseMaterial: 350, baseLabor: 150, waste: 0.05, suppliers: SUPPLIERS_STEEL, sbc: "SBC-SCan", soilFactor: false, dependency: 'fixed' },
 
     // ================= SP03. الإنارة الرياضية =================

@@ -377,6 +377,45 @@ service cloud.firestore {
       allow read, write: if isAuth();
     }
 
+    // =================== SOVEREIGN v8.0: Temporal Audit System ===================
+    
+    // Price Time Series — append-only historical price tracking
+    match /price_time_series/{entryId} {
+      allow read: if isAuth() && (isAdmin() || isEngineer());
+      allow create: if isAuth();
+      allow update, delete: if false; // Immutable — price history cannot be altered
+    }
+
+    // Usage Metering — API/token consumption tracking
+    match /usage_metering/{entryId} {
+      allow read: if isAuth() && (isOwner(resource.data.userId) || isAdmin());
+      allow create: if isAuth();
+      allow update, delete: if false; // Immutable
+    }
+
+    // Audit Trail — immutable change log
+    match /audit_trail/{entryId} {
+      allow read: if isAdmin();
+      allow create: if isAuth();
+      allow update, delete: if false; // Immutable — compliance requirement
+    }
+
+    // =================== SOVEREIGN v8.1: Internal Governance ===================
+
+    // Internal Metadata — brain-only data, NEVER exposed to client UI
+    match /internal_metadata/{itemId} {
+      allow read: if isAdmin(); // Only admins/system can read
+      allow create, update: if isAuth(); // System stamps metadata on calculations
+      allow delete: if false; // Metadata is preserved for historical analysis
+    }
+
+    // Sweep History — supplier audit cycle results (append-only)
+    match /sweep_history/{sweepId} {
+      allow read: if isAuth() && isAdmin();
+      allow create: if isAuth();
+      allow update, delete: if false; // Immutable audit record
+    }
+
     // =================== DEFAULT: DENY ALL ===================
     // Any collection not explicitly matched is denied
     match /{document=**} {

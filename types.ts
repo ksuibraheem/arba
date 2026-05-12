@@ -531,6 +531,7 @@ export interface CustomParams {
   waterTableDepth?: number;
 
   manualPrice?: number;
+  customPrice?: number;    // Alias for manualPrice — used by temporal audit
   manualQty?: number;      // Allow user to override calculated quantity
 }
 
@@ -564,8 +565,8 @@ export interface DimensionConfig {
 
 export interface BaseItem {
   id: string;
-  category: 'site' | 'structure' | 'architecture' | 'mep_elec' | 'mep_plumb' | 'mep_hvac' | 'insulation' | 'safety' | 'gov_fees' | 'production' | 'manpower' | 'custom' | 'landscaping' | 'furniture' | 'elevator' | 'fire_protection' | 'smart_systems' | 'renewable_energy' | 'demolition' | 'temporary_works' | 'testing' | 'external_works';
-  type: 'all' | ProjectType;
+  category: 'site' | 'structure' | 'architecture' | 'mep_elec' | 'mep_plumb' | 'mep_hvac' | 'insulation' | 'safety' | 'gov_fees' | 'production' | 'manpower' | 'custom' | 'landscaping' | 'furniture' | 'elevator' | 'fire_protection' | 'smart_systems' | 'renewable_energy' | 'demolition' | 'temporary_works' | 'testing' | 'external_works' | 'fire_advanced' | 'elec_advanced' | 'hvac_central';
+  type: 'all' | 'commercial' | ProjectType;
   name: Record<Language, string>; // Changed to support multiple languages
   unit: string;
   qty: number;
@@ -614,7 +615,24 @@ export interface CalculatedItem extends BaseItem {
   // === v8.5 Brain Insights ===
   profitStatus?: 'balanced' | 'exaggerated' | 'loss';  // تحليل هامش الربح
   brainWarnings?: string[];                             // تنبيهات الدماغ الذكي
+
+  // === v9.0 Price Intelligence ===
+  scopeLabel?: string;               // "توريد وتنفيذ (شامل: خرسانة+حديد+شدة+صب)"
+  priceBreakdownDisplay?: string;    // "خرسانة 265 + حديد 736 + شدة 125 + صب 45 + عمالة 180"
+  equipmentDisplay?: string;         // "سقالة داخلية (10 ر.س/م²)"
+  equipmentCost?: number;            // تكلفة المعدات المضافة للسعر
+  elevationZone?: string;            // "underground" | "ground" | "elevated" | "roof" | "external"
+
+  // === v8.2 Compatibility — used by goldenOutputService & ItemProfitabilityChart ===
+  totalMaterialCost?: number;        // إجمالي تكلفة المواد
+  totalLaborCost?: number;           // إجمالي تكلفة العمالة
+  descriptionAr?: string;            // وصف البند بالعربي
+  descriptionEn?: string;            // وصف البند بالإنجليزي
+  quantity?: number;                 // الكمية (alias for qty from BaseItem)
 }
+
+/** Alias for ItemProfitabilityChart compatibility */
+export type ProcessedItem = CalculatedItem;
 
 export interface AppState {
   language: Language;

@@ -46,7 +46,7 @@ const SPELLING_CORRECTIONS: Record<string, string> = {
   // لياسة
   'لياسه': 'لياسة', 'ليسه': 'لياسة', 'لياسات': 'لياسة',
   // سيراميك
-  'سراميك': 'سيراميك', 'سرميك': 'سيراميك', 'سراميك': 'سيراميك',
+  'سراميك': 'سيراميك', 'سرميك': 'سيراميك',
   // حديد
   'حدبد': 'حديد', 'حداد': 'حديد',
   // دهان
@@ -76,10 +76,20 @@ export function correctSpelling(text: string): string {
   if (!text) return text;
   let result = text;
   for (const [wrong, correct] of Object.entries(SPELLING_CORRECTIONS)) {
-    const regex = new RegExp(`\\b${wrong}\\b`, 'gi');
-    result = result.replace(regex, correct);
+    // \b doesn't work with Arabic Unicode — use space/start/end boundaries
+    const regex = new RegExp(`(?:^|\\s)${wrong}(?:\\s|$)`, 'gi');
+    result = result.replace(regex, (match) => {
+      // Preserve surrounding whitespace
+      const leading = match.startsWith(' ') ? ' ' : '';
+      const trailing = match.endsWith(' ') ? ' ' : '';
+      return leading + correct + trailing;
+    });
   }
-  return result;
+  // Also try exact full match (single word input)
+  if (SPELLING_CORRECTIONS[result.trim()]) {
+    result = SPELLING_CORRECTIONS[result.trim()];
+  }
+  return result.trim();
 }
 
 // =================== 2. المعالج الدلالي (Semantic Mapper) ===================
@@ -181,10 +191,15 @@ export function normalizeUnit(rawUnit: string, category: string): string {
   if (!rawUnit) return rawUnit;
   const cleaned = rawUnit.trim();
 
-  // تصحيحات شائعة
+  // 1. استنتاج من السياق أولاً — لأن "متر" و "م" تعني أشياء مختلفة حسب الفئة
+  if (cleaned === 'متر' || cleaned === 'م') {
+    if (category === 'structure') return 'م3';
+    if (category === 'masonry' || category === 'finishes') return 'م2';
+    return 'م.ط'; // default fallback
+  }
+
+  // 2. تصحيحات شائعة (وحدات واضحة لا تحتاج سياق)
   const UNIT_CORRECTIONS: Record<string, string> = {
-    'متر':    'م.ط',
-    'م':      'م.ط',
     'م٢':     'م2',
     'م٣':     'م3',
     'متر مربع': 'م2',
@@ -199,12 +214,6 @@ export function normalizeUnit(rawUnit: string, category: string): string {
 
   if (UNIT_CORRECTIONS[cleaned]) {
     return UNIT_CORRECTIONS[cleaned];
-  }
-
-  // استنتاج الوحدة من الفئة إذا كانت مبهمة تماماً (مثال: "متر" في بند خرسانة → م3)
-  if (cleaned === 'م.ط' || cleaned === 'متر' || cleaned === 'م') {
-    if (category === 'structure') return 'م3';
-    if (category === 'masonry' || category === 'finishes') return 'م2';
   }
 
   return cleaned;

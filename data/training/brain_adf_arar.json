@@ -1,0 +1,74 @@
+{
+  "projectId": "sow-adf-arar",
+  "projectType": "governmental_administrative",
+  "scope": "construction_and_finishing",
+  "source": "ADF-Arar-2026-5-10",
+  "trainedAt": "2026-05-10T12:45:00+03:00",
+  "errorPatterns": [
+    {
+      "id": "ERR_CATEGORY_CONTAMINATION",
+      "severity": "critical",
+      "description": "تسرب أسعار بنود العظم الإنشائية إلى بنود التشطيبات المعمارية بسبب تشابه الكلمات",
+      "solution": "يجب تقييد الكلمات المفتاحية الإنشائية (مثل: قواعد، رقاب، أعمدة، هوردي) بالفئة الأم 'انشائي'. إذا كانت الفئة 'تشطيبات' أو 'معماري'، يتم تطبيق أسعار المتر المربع المخفضة.",
+      "examples": [
+        "أعمال بلوك داخلي 20 سم ← تم تسعيرها كخرسانة مسلحة بـ 880 ر.س بسبب كلمة 'بناء'"
+      ]
+    },
+    {
+      "id": "ERR_UNIT_BLINDNESS",
+      "severity": "critical",
+      "description": "تطبيق تسعيرة مقطوعة أو بالعدد لبند يقاس بالمتر المربع أو الطولي",
+      "solution": "تفعيل جدار حماية (Firewall) لوحدات القياس. لا يمكن تطبيق سعر > 2000 ريال على بند يقاس بالمتر المربع.",
+      "examples": [
+        "بند الحصى (م2) ← أخذ سعر المولد الاحتياطي 180,000 ر.س",
+        "سلم بحاري (م.ط) ← أخذ سعر سلم معماري كامل بـ 3,000 ر.س/م.ط"
+      ]
+    },
+    {
+      "id": "ERR_KEYWORD_COLLISION",
+      "severity": "high",
+      "description": "تصادم الأولويات في الكلمات المفتاحية مما يؤدي إلى تصنيف مضحك",
+      "solution": "تطبيق نظام أوزان (Keyword Weighting) أو ترتيب صارم. الكلمة الأساسية (مثل 'سخان') يجب أن تتغلب على الأرقام (مثل '50')",
+      "examples": [
+        "سخان مياه 50 لتر ← تم تصنيفه كماسورة بقطر 50 ملم وتلقت سعر 40 ر.س!"
+      ]
+    },
+    {
+      "id": "ERR_FALLBACK_RATE_ABUSE",
+      "severity": "medium",
+      "description": "الاعتماد المفرط على السعر الافتراضي (Fallback rate = 200) للبنود غير المفهومة",
+      "solution": "في حال فشل التصنيف، يجب ربط السعر الافتراضي بمتوسط أسعار 'القسم' نفسه، وليس سعراً ثابتاً لكل المشروع.",
+      "examples": [
+        "دهان الأسقف أخذ سعر 200 ر.س/م2 بينما سعره الفعلي 30 ر.س/م2"
+      ]
+    }
+  ],
+  "pricingLessons": [
+    {
+      "lesson": "مباني الدوائر الحكومية في المناطق الشمالية (عرعر) تتراوح تكلفتها بين 1,800 إلى 2,200 ريال للمتر المربع",
+      "confidence": 0.95
+    },
+    {
+      "lesson": "أعمال الكهرباء والميكانيك (MEP) في المباني الإدارية الحكومية تمثل 15-20% من التكلفة الإجمالية",
+      "confidence": 0.85
+    },
+    {
+      "lesson": "السلم البحاري المجلفن سعره 400-500 ريال/م.ط، بينما سلم الستانلس ستيل للخزانات 800-1000 ريال/م.ط",
+      "confidence": 0.90
+    },
+    {
+      "lesson": "أسعار الدكت (مجاري الهواء) تتراوح بين 180-250 ريال للمتر الطولي، ولا يمكن أن تتجاوز ذلك",
+      "confidence": 0.98
+    }
+  ],
+  "categoryBenchmarks": {
+    "structural_concrete_m3": { "avgPricePerUnit": 1100, "unit": "م3" },
+    "finishing_block_m2": { "avgPricePerUnit": 70, "unit": "م2" },
+    "finishing_paint_m2": { "avgPricePerUnit": 35, "unit": "م2" },
+    "finishing_porcelain_m2": { "avgPricePerUnit": 110, "unit": "م2" },
+    "mep_water_heater_50L": { "avgPricePerUnit": 450, "unit": "عدد" },
+    "mep_water_heater_100L": { "avgPricePerUnit": 750, "unit": "عدد" },
+    "fire_alarm_system_ea": { "avgPricePerUnit": 8000, "unit": "نظام" },
+    "curtain_wall_m2": { "avgPricePerUnit": 900, "unit": "م2" }
+  }
+}

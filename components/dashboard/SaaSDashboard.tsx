@@ -20,9 +20,11 @@ import * as projectService from '../../services/projectService';
 import * as clientService from '../../services/clientService';
 import * as rbacService from '../../services/rbacService';
 
+const LazyBOQUploader = React.lazy(() => import('../BOQUploader'));
+
 // =================== TYPES ===================
 
-type DashboardSection = 'overview' | 'projects' | 'clients' | 'security' | 'rates';
+type DashboardSection = 'overview' | 'projects' | 'clients' | 'security' | 'rates' | 'boq-engine';
 
 interface SaaSDashboardProps {
     userId: string;
@@ -41,6 +43,7 @@ const NAV_ITEMS: { id: DashboardSection; icon: string; label: { ar: string; en: 
     { id: 'clients', icon: '👥', label: { ar: 'العملاء', en: 'Clients' } },
     { id: 'security', icon: '🔒', label: { ar: 'الأمان', en: 'Security' } },
     { id: 'rates', icon: '📖', label: { ar: 'مكتبة الأسعار', en: 'Rate Library' } },
+    { id: 'boq-engine', icon: '📊', label: { ar: 'محرك BOQ', en: 'BOQ Engine' } },
 ];
 
 // =================== COMPONENT ===================
@@ -276,6 +279,12 @@ const SaaSDashboard: React.FC<SaaSDashboardProps> = ({
                 );
             case 'rates':
                 return <RateLibrary language={language} />;
+            case 'boq-engine':
+                return (
+                    <React.Suspense fallback={<div className="text-center py-20 text-slate-400">⏳ {isAr ? 'جاري تحميل محرك BOQ...' : 'Loading BOQ Engine...'}</div>}>
+                        <LazyBOQUploader />
+                    </React.Suspense>
+                );
             default:
                 return null;
         }

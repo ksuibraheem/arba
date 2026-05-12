@@ -306,3 +306,52 @@ export const SUPPLIERS_SAFETY_SIGNS: SupplierOption[] = [
     { id: 'sup_sign_local', name: { ar: 'مصنع لوحات محلي', en: 'Local Sign Factory', fr: 'Usine Panneaux Locale', zh: '本地标识厂' }, tier: 'budget', priceMultiplier: 0.6, origin: 'Saudi' },
 ];
 
+// ====================== أنظمة إدارة المبنى والتيار الخفيف (BMS/ELV) ======================
+// ملاحظة: سيمنز أقوى للمستشفيات (معايير طبية)، جونسون كنترولز للمولات والفنادق، شنايدر للأبراج التجارية
+export const SUPPLIERS_BMS_ELV: SupplierOption[] = [
+    { id: 'sup_bms_siemens', name: { ar: 'سيمنز BT', en: 'Siemens Building Technologies', fr: 'Siemens BT', zh: '西门子楼宇科技' }, tier: 'premium', priceMultiplier: 1.4, origin: 'Germany' },
+    { id: 'sup_bms_honeywell', name: { ar: 'هانيويل BA', en: 'Honeywell Building Automation', fr: 'Honeywell BA', zh: '霍尼韦尔楼宇自动化' }, tier: 'premium', priceMultiplier: 1.35, origin: 'USA' },
+    { id: 'sup_bms_jci', name: { ar: 'جونسون كنترولز', en: 'Johnson Controls', fr: 'Johnson Controls', zh: '江森自控' }, tier: 'premium', priceMultiplier: 1.3, origin: 'USA' },
+    { id: 'sup_bms_schneider', name: { ar: 'شنايدر EcoStruxure', en: 'Schneider EcoStruxure', fr: 'Schneider EcoStruxure', zh: '施耐德EcoStruxure' }, tier: 'premium', priceMultiplier: 1.25, origin: 'France' },
+    { id: 'sup_bms_delta', name: { ar: 'دلتا كنترولز', en: 'Delta Controls', fr: 'Delta Controls', zh: 'Delta控制' }, tier: 'standard', priceMultiplier: 1.1, origin: 'Canada' },
+];
+
+// ====================== شبكات البيانات والاتصالات ======================
+// ملاحظة: CommScope+Aruba للمستشفيات (معايير طبية)، Cisco Meraki للفنادق، Ruckus للمولات والمدارس
+export const SUPPLIERS_NETWORKING: SupplierOption[] = [
+    { id: 'sup_net_commscope', name: { ar: 'كومسكوب', en: 'CommScope', fr: 'CommScope', zh: 'CommScope' }, tier: 'premium', priceMultiplier: 1.3, origin: 'USA' },
+    { id: 'sup_net_panduit', name: { ar: 'بانديوت', en: 'Panduit', fr: 'Panduit', zh: 'Panduit' }, tier: 'premium', priceMultiplier: 1.25, origin: 'USA' },
+    { id: 'sup_net_nexans', name: { ar: 'نيكسانز', en: 'Nexans', fr: 'Nexans', zh: 'Nexans' }, tier: 'standard', priceMultiplier: 1.1, origin: 'France' },
+    { id: 'sup_net_rm', name: { ar: 'آر أند إم', en: 'R&M', fr: 'R&M', zh: 'R&M' }, tier: 'standard', priceMultiplier: 1.05, origin: 'Switzerland' },
+    { id: 'sup_net_cisco', name: { ar: 'سيسكو ميراكي', en: 'Cisco Meraki', fr: 'Cisco Meraki', zh: 'Cisco Meraki' }, tier: 'premium', priceMultiplier: 1.5, origin: 'USA' },
+    { id: 'sup_net_ruckus', name: { ar: 'روكوس', en: 'Ruckus/CommScope', fr: 'Ruckus', zh: 'Ruckus' }, tier: 'standard', priceMultiplier: 1.2, origin: 'USA' },
+    { id: 'sup_net_aruba', name: { ar: 'أروبا HPE', en: 'Aruba (HPE)', fr: 'Aruba (HPE)', zh: 'Aruba(HPE)' }, tier: 'premium', priceMultiplier: 1.35, origin: 'USA' },
+];
+
+// ====================== الغازات الطبية (مستشفيات فقط) ======================
+// تحذير: هذه الموردين متخصصة بالمستشفيات والمنشآت الطبية فقط ولا تصلح لأي مشروع آخر
+export const SUPPLIERS_MEDICAL_GAS: SupplierOption[] = [
+    { id: 'sup_mgas_beacon', name: { ar: 'بيكون ميداس (أطلس كوبكو)', en: 'BeaconMedaes (Atlas Copco)', fr: 'BeaconMedaes', zh: 'BeaconMedaes' }, tier: 'premium', priceMultiplier: 1.4, origin: 'USA' },
+    { id: 'sup_mgas_amico', name: { ar: 'أميكو', en: 'Amico Medical', fr: 'Amico Médical', zh: 'Amico医疗' }, tier: 'premium', priceMultiplier: 1.3, origin: 'Canada' },
+    { id: 'sup_mgas_mim', name: { ar: 'MIM ميديكال', en: 'MIM Medical', fr: 'MIM Médical', zh: 'MIM医疗' }, tier: 'standard', priceMultiplier: 1.1, origin: 'Saudi' },
+    { id: 'sup_mgas_drager', name: { ar: 'دراجر', en: 'Dräger', fr: 'Dräger', zh: 'Dräger' }, tier: 'premium', priceMultiplier: 1.5, origin: 'Germany' },
+];
+
+// ====================== أنظمة الوقود (محطات وقود فقط) ======================
+// تحذير: هذه الموردين متخصصة بمحطات الوقود فقط
+export const SUPPLIERS_FUEL_SYSTEMS: SupplierOption[] = [
+    { id: 'sup_fuel_wayne', name: { ar: 'واين/دوفر', en: 'Wayne/Dover', fr: 'Wayne/Dover', zh: 'Wayne/Dover' }, tier: 'premium', priceMultiplier: 1.3, origin: 'USA' },
+    { id: 'sup_fuel_gilbarco', name: { ar: 'جلباركو فيدر روت', en: 'Gilbarco Veeder-Root', fr: 'Gilbarco', zh: 'Gilbarco' }, tier: 'premium', priceMultiplier: 1.35, origin: 'USA' },
+    { id: 'sup_fuel_tokheim', name: { ar: 'توكهايم', en: 'Tokheim', fr: 'Tokheim', zh: 'Tokheim' }, tier: 'standard', priceMultiplier: 1.1, origin: 'France' },
+    { id: 'sup_fuel_franklin', name: { ar: 'فرانكلين فيولنج', en: 'Franklin Fueling', fr: 'Franklin Fueling', zh: 'Franklin' }, tier: 'standard', priceMultiplier: 1.05, origin: 'USA' },
+];
+
+// ====================== معدات مغاسل السيارات (مغسلة فقط) ======================
+// تحذير: هذه الموردين متخصصة بمغاسل السيارات فقط
+export const SUPPLIERS_CAR_WASH: SupplierOption[] = [
+    { id: 'sup_cw_washtec', name: { ar: 'واش تك', en: 'WashTec', fr: 'WashTec', zh: 'WashTec' }, tier: 'premium', priceMultiplier: 1.4, origin: 'Germany' },
+    { id: 'sup_cw_istobal', name: { ar: 'إستوبال', en: 'Istobal', fr: 'Istobal', zh: 'Istobal' }, tier: 'standard', priceMultiplier: 1.1, origin: 'Spain' },
+    { id: 'sup_cw_christ', name: { ar: 'كريست', en: 'CHRIST', fr: 'CHRIST', zh: 'CHRIST' }, tier: 'premium', priceMultiplier: 1.3, origin: 'Germany' },
+    { id: 'sup_cw_local', name: { ar: 'مصنع محلي', en: 'Local Manufacturer', fr: 'Fabricant Local', zh: '本地制造商' }, tier: 'budget', priceMultiplier: 0.7, origin: 'China' },
+];
+

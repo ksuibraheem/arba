@@ -16,6 +16,7 @@
  */
 
 import { AppState, Language, CalculatedItem, BaseItem } from '../types';
+import { blueprintIntelligence, PredictionResult, CostEstimate } from './blueprintIntelligence';
 import {
     contextualMemoryService,
     calculateConfidence,
@@ -43,6 +44,7 @@ import {
 export interface InsightReport {
     // The Golden Sentence
     goldenSentence: Record<Language, string>;
+    financialAnalysisText: Record<Language, string>;
 
     // Source data
     confidence: number;
@@ -60,6 +62,10 @@ export interface InsightReport {
     isRemoteLocation: boolean;
     hasDeviations: boolean;
     criticalDeviations: number;
+
+    // Blueprint Intelligence (v9.0)
+    blueprintPrediction?: PredictionResult | null;
+    costEstimate?: CostEstimate | null;
 
     // Timestamp
     generatedAt: Date;
@@ -103,6 +109,50 @@ export function generateInsightReport(
     const seasonalAdjustment = getSeasonalAdjustments(state.location);
     const distanceFactor = getDistanceFactor(state.location);
 
+    // --- Layer 5: Financial Insight ---
+    const totalCost = calculatedItems.reduce((acc, item) => acc + (item.totalMaterialCost || 0) + (item.totalLaborCost || 0), 0);
+    const totalPrice = calculatedItems.reduce((acc, item) => acc + (item.totalLinePrice || 0), 0);
+    const totalProfit = totalPrice - totalCost;
+    const margin = totalPrice > 0 ? (totalProfit / totalPrice) * 100 : 0;
+    
+    // Find highest and lowest margin items
+    let highestMarginItem = calculatedItems[0];
+    let lowestMarginItem = calculatedItems[0];
+    
+    calculatedItems.forEach(item => {
+        const cost = (item.totalMaterialCost || 0) + (item.totalLaborCost || 0);
+        const price = item.totalLinePrice || 0;
+        const profit = price - cost;
+        const itemMargin = price > 0 ? (profit / price) * 100 : 0;
+        
+        if (highestMarginItem) {
+            const hCost = (highestMarginItem.totalMaterialCost || 0) + (highestMarginItem.totalLaborCost || 0);
+            const hPrice = highestMarginItem.totalLinePrice || 0;
+            const hMargin = hPrice > 0 ? ((hPrice - hCost) / hPrice) * 100 : 0;
+            if (itemMargin > hMargin) highestMarginItem = item;
+        } else { highestMarginItem = item; }
+        
+        if (lowestMarginItem) {
+            const lCost = (lowestMarginItem.totalMaterialCost || 0) + (lowestMarginItem.totalLaborCost || 0);
+            const lPrice = lowestMarginItem.totalLinePrice || 0;
+            const lMargin = lPrice > 0 ? ((lPrice - lCost) / lPrice) * 100 : 0;
+            if (itemMargin < lMargin && itemMargin > 0) lowestMarginItem = item;
+        } else { lowestMarginItem = item; }
+    });
+
+    const financialAnalysisText = {
+        ar: `بناءً على التحليل العميق: الهامش الربحي الإجمالي للمشروع هو ${margin.toFixed(1)}%. 
+البند الأعلى ربحية هو "${highestMarginItem?.descriptionAr || 'غير محدد'}"، 
+بينما البند الأقل ربحية (أو الأكثر خطورة) هو "${lowestMarginItem?.descriptionAr || 'غير محدد'}". 
+يرجى مراجعة تكاليف البند الأخير أو التفاوض مع الموردين لتحسين الربحية.`,
+        en: `Based on deep analysis: The overall profit margin is ${margin.toFixed(1)}%. 
+The most profitable item is "${highestMarginItem?.descriptionEn || 'Unknown'}", 
+while the lowest margin (high risk) item is "${lowestMarginItem?.descriptionEn || 'Unknown'}". 
+Consider reviewing costs for the latter to improve profitability.`,
+        fr: `Marge bénéficiaire: ${margin.toFixed(1)}%. Consultez l'article le moins rentable.`,
+        zh: `利润率: ${margin.toFixed(1)}%. 检查利润最低的项目.`
+    };
+
     // --- Layer 6: Build Golden Sentence ---
     const goldenSentence = buildGoldenSentence(
         baselineComparison,
@@ -113,8 +163,21 @@ export function generateInsightReport(
         state
     );
 
+    // --- Layer 7: Blueprint Intelligence ---
+    let blueprintPrediction: PredictionResult | null = null;
+    let costEstimate: CostEstimate | null = null;
+    try {
+        blueprintPrediction = blueprintIntelligence.predict({
+            projectType: state.projectType,
+            plotArea: state.landArea || 300,
+            floorsCount: state.floors || 2,
+        });
+        costEstimate = blueprintPrediction?.costEstimate || null;
+    } catch { /* silent — brain layer is optional */ }
+
     return {
         goldenSentence,
+        financialAnalysisText,
         confidence: baselineComparison?.confidence || 0,
         baselineComparison,
         scarcityAlerts,
@@ -126,6 +189,8 @@ export function generateInsightReport(
         isRemoteLocation: distanceFactor.isRemote,
         hasDeviations: deviationAlerts.length > 0,
         criticalDeviations: deviationAlerts.filter(d => d.severity === 'critical').length,
+        blueprintPrediction,
+        costEstimate,
         generatedAt: new Date(),
     };
 }

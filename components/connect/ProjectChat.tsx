@@ -125,7 +125,7 @@ const ProjectChat: React.FC<ProjectChatProps> = ({ language, userId, userName, c
         setIsUploading(true);
 
         const newFiles: typeof pendingFiles = [];
-        const fileArray: File[] = Array.from(files);
+        const fileArray: File[] = Array.from(files) as File[];
         for (const file of fileArray) {
             const type = getFileType(file.name);
             let dataUrl: string;

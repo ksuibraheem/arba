@@ -4,6 +4,10 @@ import { AppState, CalculatedItem, Language } from '../types';
 import { formatCurrency, formatNumber, numberToArabicWords } from '../utils/formatting';
 import { COMPANY_INFO } from '../companyData';
 import { generatePricingPDF, downloadPDF, PDFExportConfig } from '../services/pdfExportService';
+import TenderAnalysisModal from './TenderAnalysisModal';
+import { BrainCircuit, Instagram } from 'lucide-react';
+import { generatePriceComparisonCard, downloadSocialCard } from '../services/socialCardGenerator';
+import { temporalAuditService } from '../services/temporalAuditService';
 
 interface PriceQuoteProps {
     state: AppState;
@@ -37,6 +41,7 @@ const PriceQuote: React.FC<PriceQuoteProps> = ({
     const [showSettings, setShowSettings] = useState(false);
     const [showPrintMenu, setShowPrintMenu] = useState(false);
     const [pdfLoading, setPdfLoading] = useState(false);
+    const [showTenderAnalysis, setShowTenderAnalysis] = useState(false);
 
     // بيانات الشركة المسجلة (يتم جلبها من localStorage أو السياق)
     const getLoggedInCompany = () => {
@@ -145,18 +150,46 @@ const PriceQuote: React.FC<PriceQuoteProps> = ({
 
     const projectTypeLabels: Record<string, { ar: string; en: string }> = {
         villa: { ar: 'فيلا سكنية', en: 'Residential Villa' },
-        building: { ar: 'عمارة سكنية', en: 'Residential Building' },
-        commercial: { ar: 'مبنى تجاري', en: 'Commercial Building' },
-        warehouse: { ar: 'مستودع', en: 'Warehouse' }
+        tower: { ar: 'برج / مركز تجاري', en: 'Tower / Commercial Center' },
+        rest_house: { ar: 'استراحة / شاليه', en: 'Rest House / Chalet' },
+        factory: { ar: 'مصنع', en: 'Factory' },
+        school: { ar: 'مدرسة', en: 'School' },
+        hospital: { ar: 'مستشفى', en: 'Hospital' },
+        mosque: { ar: 'مسجد', en: 'Mosque' },
+        hotel: { ar: 'فندق', en: 'Hotel' },
+        residential_building: { ar: 'عمارة سكنية', en: 'Residential Building' },
+        sports_complex: { ar: 'مجمع رياضي', en: 'Sports Complex' },
+        farm: { ar: 'مزرعة', en: 'Farm' },
+        gas_station: { ar: 'محطة وقود', en: 'Gas Station' },
+        mall: { ar: 'مركز تسوق', en: 'Shopping Mall' },
+        restaurant: { ar: 'مطعم', en: 'Restaurant' },
+        car_wash: { ar: 'مغسلة سيارات', en: 'Car Wash' },
+        warehouse: { ar: 'مستودع', en: 'Warehouse' },
+        government: { ar: 'مبنى حكومي', en: 'Government Building' },
+        clinic: { ar: 'عيادة', en: 'Clinic' },
     };
 
     const categoryLabels: Record<string, { ar: string; en: string }> = {
         sitework: { ar: 'أعمال الموقع', en: 'Site Work' },
+        site: { ar: 'أعمال الموقع', en: 'Site Work' },
         structure: { ar: 'الهيكل الإنشائي', en: 'Structure' },
         finishing: { ar: 'التشطيبات', en: 'Finishing' },
-        mep: { ar: 'الكهرباء والسباكة', en: 'MEP' },
+        architecture: { ar: 'الأعمال المعمارية', en: 'Architecture' },
+        mep: { ar: 'الكهروميكانيكية', en: 'MEP' },
+        mep_elec: { ar: 'الكهرباء', en: 'Electrical' },
+        mep_plumb: { ar: 'السباكة', en: 'Plumbing' },
+        mep_hvac: { ar: 'التكييف', en: 'HVAC' },
+        insulation: { ar: 'العزل', en: 'Insulation' },
+        safety: { ar: 'السلامة', en: 'Safety' },
+        elevator: { ar: 'المصاعد', en: 'Elevators' },
+        fire_protection: { ar: 'إطفاء الحريق', en: 'Fire Protection' },
+        landscaping: { ar: 'الحدائق', en: 'Landscaping' },
+        furniture: { ar: 'الأثاث', en: 'Furniture' },
         external: { ar: 'الأعمال الخارجية', en: 'External Works' },
-        general: { ar: 'عام', en: 'General' }
+        general: { ar: 'عام', en: 'General' },
+        custom: { ar: 'مخصص', en: 'Custom' },
+        gov_fees: { ar: 'رسوم حكومية', en: 'Gov Fees' },
+        production: { ar: 'إنتاج', en: 'Production' },
     };
 
     const handlePrint = (printType: 'arba' | 'company') => {
@@ -618,6 +651,43 @@ const PriceQuote: React.FC<PriceQuoteProps> = ({
                             <Settings2 className="w-4 h-4" />
                             {getLabel('settings')}
                         </button>
+                        {/* Tender AI Analysis Button */}
+                        <button
+                            onClick={() => {
+                                setShowTenderAnalysis(true);
+                                temporalAuditService.recordAudit({
+                                    userId: 'current',
+                                    action: 'open_tender_analysis',
+                                    resourceType: 'tender',
+                                });
+                            }}
+                            className="flex items-center gap-2 px-3 py-2 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-lg transition-colors font-bold"
+                        >
+                            <BrainCircuit className="w-4 h-4" />
+                            {language === 'ar' ? 'تحليل المناقصة الذكي' : 'AI Tender Analysis'}
+                        </button>
+                        {/* 📸 Social Card Export Button */}
+                        <button
+                            onClick={() => {
+                                const cardDataUrl = generatePriceComparisonCard({
+                                    ourPrice: totals.finalPrice,
+                                    marketAvg: state.buildArea > 0 ? 1850 : 0,
+                                    projectType: state.projectType,
+                                    buildArea: state.buildArea,
+                                    language,
+                                });
+                                downloadSocialCard(cardDataUrl, 'arba_pricing_card');
+                                temporalAuditService.recordAudit({
+                                    userId: 'current',
+                                    action: 'export_social_card',
+                                    resourceType: 'social_card',
+                                });
+                            }}
+                            className="flex items-center gap-2 px-3 py-2 bg-pink-100 hover:bg-pink-200 text-pink-700 rounded-lg transition-colors"
+                        >
+                            <Instagram className="w-4 h-4" />
+                            {language === 'ar' ? 'بطاقة اجتماعية' : 'Social Card'}
+                        </button>
                         {/* Export Excel */}
                         <button
                             onClick={handleExportExcel}
@@ -769,6 +839,62 @@ const PriceQuote: React.FC<PriceQuoteProps> = ({
                             </div>
                         </div>
                     )}
+
+                    {/* Executive Summary */}
+                    <div className="mb-8">
+                        <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <div className="w-1 h-6 bg-emerald-500 rounded"></div>
+                            {isRtl ? 'الملخص التنفيذي' : 'Executive Summary'}
+                        </h3>
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+                            {[
+                                { label: isRtl ? 'التكلفة المباشرة' : 'Direct Cost', value: totals.totalDirect, color: 'from-blue-500 to-blue-600' },
+                                { label: isRtl ? 'المصاريف' : 'Overhead', value: totals.totalOverhead, color: 'from-orange-500 to-orange-600' },
+                                { label: isRtl ? 'الربح' : 'Profit', value: totals.totalProfit, color: 'from-emerald-500 to-emerald-600' },
+                                { label: isRtl ? 'سعر م²' : 'Price/m²', value: totalBuildArea > 0 ? totals.finalPrice / totalBuildArea : 0, color: 'from-violet-500 to-violet-600' },
+                                { label: isRtl ? 'الإجمالي' : 'Total', value: totals.finalPrice, color: 'from-slate-800 to-slate-900' },
+                            ].map((metric, i) => (
+                                <div key={i} className={`bg-gradient-to-br ${metric.color} rounded-xl p-3 text-white`}>
+                                    <div className="text-[10px] uppercase tracking-wider opacity-80 mb-1">{metric.label}</div>
+                                    <div className="text-lg font-bold">{formatCurrency(metric.value, language)}</div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Section Summary Mini-Table */}
+                        <div className="bg-slate-50 rounded-xl p-4">
+                            <div className="text-xs font-bold text-slate-500 uppercase mb-2">
+                                {isRtl ? 'توزيع التكاليف حسب القسم' : 'Cost by Section'}
+                            </div>
+                            <div className="space-y-1.5">
+                                {(() => {
+                                    const sectionTotals: Record<string, number> = {};
+                                    activeItems.forEach(item => {
+                                        const cat = item.category || 'general';
+                                        sectionTotals[cat] = (sectionTotals[cat] || 0) + item.totalLinePrice;
+                                    });
+                                    const grandTotal = Object.values(sectionTotals).reduce((s, v) => s + v, 0);
+                                    return Object.entries(sectionTotals)
+                                        .sort((a, b) => b[1] - a[1])
+                                        .slice(0, 8)
+                                        .map(([cat, cost]) => {
+                                            const pct = grandTotal > 0 ? (cost / grandTotal) * 100 : 0;
+                                            const label = categoryLabels[cat]?.[language] || cat;
+                                            return (
+                                                <div key={cat} className="flex items-center gap-2">
+                                                    <span className="text-xs text-slate-600 w-24 truncate">{label}</span>
+                                                    <div className="flex-1 h-2 bg-slate-200 rounded-full overflow-hidden">
+                                                        <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${pct}%` }} />
+                                                    </div>
+                                                    <span className="text-xs text-slate-500 w-10 text-right">{pct.toFixed(0)}%</span>
+                                                    <span className="text-xs font-bold text-slate-700 w-28 text-right">{formatCurrency(cost, language)}</span>
+                                                </div>
+                                            );
+                                        });
+                                })()}
+                            </div>
+                        </div>
+                    </div>
 
                     {/* Project Information */}
                     <div className="mb-8">
@@ -1031,6 +1157,14 @@ const PriceQuote: React.FC<PriceQuoteProps> = ({
                     }
                 }
             `}</style>
+            
+            <TenderAnalysisModal
+                isOpen={showTenderAnalysis}
+                onClose={() => setShowTenderAnalysis(false)}
+                ourPrice={totals.finalPrice}
+                calculatedItems={calculatedItems}
+                language={language}
+            />
         </div>
     );
 };

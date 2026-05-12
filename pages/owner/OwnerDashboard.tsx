@@ -117,7 +117,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
         }
     });
 
-    const t = (key: string) => PAGE_TRANSLATIONS[key]?.[language] || key;
+    const t = (key: string, fallback?: string) => PAGE_TRANSLATIONS[key]?.[language] || (language === 'en' && fallback ? fallback : key);
 
     const getStatusColor = (status: string) => {
         switch (status) {

@@ -22,6 +22,7 @@ import { registrationService, RegistrationRequest, USER_TYPE_TRANSLATIONS, REGIS
 import { supportTicketService, SupportTicket, Attachment } from '../../services/supportTicketService';
 import { notificationService, AppNotification, NOTIFICATION_TYPE_TRANSLATIONS } from '../../services/notificationService';
 import { Language } from '../../types';
+import BrainSummaryCard from '../../components/BrainSummaryCard';
 import {
     getAllTestPermissions,
     setEmployeeTestPermissions,
@@ -743,6 +744,12 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
                                 </div>
                             </div>
                         </div>
+
+                        {/* ---- 🧠 Brain Analytics (Manager Only) ---- */}
+                        <BrainSummaryCard
+                            language={language}
+                            onNavigateToDeveloperBrain={() => onNavigate('developer-brain')}
+                        />
 
                         {/* ---- Section Title ---- */}
                         <div className="flex items-center gap-3">
