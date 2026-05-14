@@ -464,6 +464,73 @@ const RULES: ClassificationRule[] = [
   // Misc
   { id: 'sealant', keywords: ['سيليكون'], negKw: [], category: 'finishes', priority: 55 },
   { id: 'sealant', keywords: ['sealant'], negKw: [], category: 'finishes', priority: 53 },
+
+  // ═══════════════════════════════════════════════════════════════════
+  // V9.0 — MAINTENANCE & RENOVATION RULES (50 قاعدة جديدة)
+  // ═══════════════════════════════════════════════════════════════════
+
+  // ═══ إزالة وفك (Removal/Demolition) ═══
+  { id: 'remove_tiles', keywords: ['إزالة', 'بلاط'], negKw: [], category: 'finishes', priority: 72 },
+  { id: 'remove_tiles', keywords: ['فك', 'بلاط'], negKw: [], category: 'finishes', priority: 72 },
+  { id: 'remove_tiles', keywords: ['remove', 'tiles'], negKw: [], category: 'finishes', priority: 70 },
+  { id: 'remove_paint', keywords: ['إزالة', 'دهان'], negKw: [], category: 'finishes', priority: 70 },
+  { id: 'remove_paint', keywords: ['scraping', 'paint'], negKw: [], category: 'finishes', priority: 68 },
+  { id: 'remove_plaster', keywords: ['إزالة', 'لياسة'], negKw: [], category: 'finishes', priority: 70 },
+  { id: 'remove_plaster', keywords: ['remove', 'plaster'], negKw: [], category: 'finishes', priority: 68 },
+  { id: 'remove_ceiling', keywords: ['إزالة', 'سقف'], negKw: [], category: 'finishes', priority: 68 },
+  { id: 'remove_ceiling', keywords: ['remove', 'ceiling'], negKw: [], category: 'finishes', priority: 66 },
+  { id: 'remove_door', keywords: ['إزالة', 'باب'], negKw: [], category: 'doors', priority: 68 },
+  { id: 'remove_door', keywords: ['remove', 'door'], negKw: [], category: 'doors', priority: 66 },
+  { id: 'remove_window', keywords: ['إزالة', 'شباك'], negKw: [], category: 'windows', priority: 68 },
+  { id: 'remove_window', keywords: ['remove', 'window'], negKw: [], category: 'windows', priority: 66 },
+  { id: 'remove_sanitary', keywords: ['إزالة', 'أدوات صحية'], negKw: [], category: 'plumbing', priority: 66 },
+
+  // ═══ ترميم وإصلاح (Repair/Rehabilitation) ═══
+  { id: 'repair_concrete', keywords: ['ترميم', 'خرسانة'], negKw: [], category: 'concrete', priority: 74 },
+  { id: 'repair_concrete', keywords: ['repair', 'concrete'], negKw: [], category: 'concrete', priority: 72 },
+  { id: 'repair_crack', keywords: ['معالجة', 'شروخ'], negKw: [], category: 'concrete', priority: 72 },
+  { id: 'repair_crack', keywords: ['crack', 'repair'], negKw: [], category: 'concrete', priority: 70 },
+  { id: 'repair_plaster', keywords: ['ترميم', 'لياسة'], negKw: [], category: 'finishes', priority: 70 },
+  { id: 'repair_plaster', keywords: ['patch', 'plaster'], negKw: [], category: 'finishes', priority: 68 },
+  { id: 'repair_wp', keywords: ['إصلاح', 'عزل'], negKw: [], category: 'finishes', priority: 70 },
+  { id: 'repair_wp', keywords: ['repair', 'waterproof'], negKw: [], category: 'finishes', priority: 68 },
+  { id: 'repair_pipe', keywords: ['إصلاح', 'مواسير'], negKw: [], category: 'plumbing', priority: 68 },
+  { id: 'repair_pipe', keywords: ['repair', 'pipe'], negKw: [], category: 'plumbing', priority: 66 },
+  { id: 'repair_elec', keywords: ['إصلاح', 'كهرب'], negKw: [], category: 'electrical', priority: 66 },
+
+  // ═══ تجديد (Renovation) ═══
+  { id: 'reno_floor', keywords: ['تجديد', 'أرضيات'], negKw: [], category: 'finishes', priority: 72 },
+  { id: 'reno_floor', keywords: ['renovate', 'floor'], negKw: [], category: 'finishes', priority: 70 },
+  { id: 'reno_bathroom', keywords: ['تجديد', 'حمام'], negKw: [], category: 'finishes', priority: 72 },
+  { id: 'reno_bathroom', keywords: ['renovate', 'bathroom'], negKw: [], category: 'finishes', priority: 70 },
+  { id: 'reno_kitchen', keywords: ['تجديد', 'مطبخ'], negKw: [], category: 'finishes', priority: 72 },
+  { id: 'reno_facade', keywords: ['تجديد', 'واجهة'], negKw: [], category: 'finishes', priority: 72 },
+  { id: 'reno_facade', keywords: ['facade', 'renovation'], negKw: [], category: 'finishes', priority: 70 },
+
+  // ═══ تقوية إنشائية (Structural Strengthening) ═══
+  { id: 'strengthen_carbon', keywords: ['تقوية', 'كربون'], negKw: [], category: 'concrete', priority: 76 },
+  { id: 'strengthen_carbon', keywords: ['carbon', 'fiber', 'strengthening'], negKw: [], category: 'concrete', priority: 74 },
+  { id: 'strengthen_frp', keywords: ['frp'], negKw: [], category: 'concrete', priority: 72 },
+  { id: 'strengthen_jacketing', keywords: ['تكثيف', 'عمود'], negKw: [], category: 'concrete', priority: 74 },
+  { id: 'strengthen_jacketing', keywords: ['column', 'jacketing'], negKw: [], category: 'concrete', priority: 72 },
+  { id: 'strengthen_epoxy_inject', keywords: ['حقن', 'إيبوكسي'], negKw: [], category: 'concrete', priority: 74 },
+  { id: 'strengthen_epoxy_inject', keywords: ['epoxy', 'injection'], negKw: [], category: 'concrete', priority: 72 },
+
+  // ═══ تنظيف وغسيل (Cleaning) ═══
+  { id: 'cleaning_facade', keywords: ['غسيل', 'واجهة'], negKw: [], category: 'external', priority: 55 },
+  { id: 'cleaning_facade', keywords: ['facade', 'cleaning'], negKw: [], category: 'external', priority: 53 },
+  { id: 'cleaning_tank', keywords: ['تنظيف', 'خزان'], negKw: [], category: 'plumbing', priority: 55 },
+  { id: 'cleaning_general', keywords: ['تنظيف', 'عام'], negKw: [], category: 'external', priority: 50 },
+  { id: 'cleaning_general', keywords: ['general', 'cleaning'], negKw: [], category: 'external', priority: 48 },
+
+  // ═══ فحص واختبار (Testing/Inspection) ═══
+  { id: 'test_concrete', keywords: ['فحص', 'خرسانة'], negKw: [], category: 'concrete', priority: 60 },
+  { id: 'test_concrete', keywords: ['concrete', 'test'], negKw: [], category: 'concrete', priority: 58 },
+  { id: 'test_soil', keywords: ['فحص', 'تربة'], negKw: [], category: 'earthworks', priority: 60 },
+  { id: 'test_soil', keywords: ['soil', 'test'], negKw: [], category: 'earthworks', priority: 58 },
+  { id: 'test_load', keywords: ['اختبار', 'تحميل'], negKw: [], category: 'concrete', priority: 62 },
+  { id: 'test_load', keywords: ['load', 'test'], negKw: [], category: 'concrete', priority: 60 },
+
 ].sort((a, b) => b.priority - a.priority);
 
 /**

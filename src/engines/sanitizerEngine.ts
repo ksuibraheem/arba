@@ -1,5 +1,5 @@
 /**
- * ARBA Engine V8.1 — Sanitizer Engine (Browser-Compatible TypeScript)
+ * ARBA Engine V9.0 — Sanitizer Engine (Browser-Compatible TypeScript)
  * محرك التنظيف والتجميد
  * 
  * Responsibilities:
@@ -9,6 +9,8 @@
  * 4. Expand common BOQ abbreviations
  * 5. Fix common Arabic typos
  */
+
+import { normalizeToCanonical } from './multilingualDictionary';
 
 const ABBREVIATIONS: Record<string, string> = {
   'ت.و.ت': 'توريد وتركيب',
@@ -110,18 +112,16 @@ export function sanitizeItem(originalText: string): SanitizedResult {
   sanitizedText = tokenizeDimensions(sanitizedText);
   sanitizedText = sanitizedText.replace(/\r?\n/g, ' ').replace(/\s+/g, ' ').trim();
 
-  // V8.3: Multilingual normalization (lazy import to avoid circular deps)
+  // V9: Multilingual normalization (static import instead of require)
   let canonical: string | undefined;
   let detectedLang: string | undefined;
   try {
-    // Dynamic require to keep backward compat
-    const { normalizeToCanonical } = require('./multilingualDictionary');
     const result = normalizeToCanonical(frozenText);
     if (result.replacements > 0) {
       canonical = result.normalized;
       detectedLang = result.detectedLang;
     }
-  } catch { /* multilingualDictionary not available — backward compat */ }
+  } catch { /* multilingual not available */ }
 
   return { frozen: frozenText, sanitized: sanitizedText, canonical, detectedLang };
 }

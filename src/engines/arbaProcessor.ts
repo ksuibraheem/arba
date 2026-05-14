@@ -1,14 +1,19 @@
 /**
- * ARBA V8.2 — Main Processor (Browser-Compatible)
+ * ARBA V9.0 — Main Processor (Browser-Compatible)
  * المعالج الرئيسي — يربط كل المحركات في pipeline واحد
- * Excel → Sanitizer → Classifier → 3-Tier Pricer → Sanity Check → Results
+ * V9 Fixes: إصلاح الربح المزدوج + كشف التكرار + الوعي السياقي + Pre-Flight
+ * Excel → PreFlight → Dedup → Sanitizer → Classifier → 3-Tier Pricer → Sanity Check → Results
  */
 
 import { sanitizeItem } from './sanitizerEngine';
 import { classifyItem, type ClassificationResult } from './classificationEngine';
 import { BENCHMARK_RATES, LOCATION_MULTIPLIERS, CATEGORY_LABELS, getEffectiveRate } from './benchmarkData';
 import { auditScope, extractFeatures, type ScopeAuditResult, type DimensionExtraction } from './scopeAuditor';
+import { detectDuplicates, countDuplicates } from './deduplicationLayer';
+import { calculateConfidence, averageConfidence, type ConfidenceScore } from './confidenceScoring';
+import { runPreFlightAudit, type PreFlightResult } from './preFlightAudit';
 import { commodityEngine } from '../../services/commodityIntelligenceEngine';
+import { contextualMemoryService } from '../../services/contextualMemoryService';
 import * as XLSX from 'xlsx';
 
 // ═══════════════════════════════════════════════════
@@ -23,6 +28,10 @@ export interface RawBOQItem {
   originalRate: number;
   originalAmount: number;
   sheetName?: string;
+  // V9: Contextual fields for deduplication cross-reference
+  rowIndex?: number;
+  surroundingRows?: string[];
+  divisionHeader?: string;
 }
 
 export interface ProcessedItem extends RawBOQItem {
@@ -39,11 +48,16 @@ export interface ProcessedItem extends RawBOQItem {
   // Sanity check
   sanityFlag: 'ok' | 'warning' | 'critical';
   sanityNote: string;
+  // V9: Duplicate detection
+  isDuplicate: boolean;
+  duplicateNote: string;
   // Scope Audit (V8.2)
   scopeAudit?: ScopeAuditResult;
   extractedFeatures?: DimensionExtraction;
   // Commodity Risk (V8.3)
   commodityRiskFactor?: number;
+  // V9: Confidence Score
+  confidence: ConfidenceScore;
   // Display
   categoryIcon: string;
   categoryLabel: string;
@@ -64,11 +78,14 @@ export interface ProcessingResult {
     tier3Count: number;  // unpriced
     warningCount: number;
     criticalCount: number;
+    duplicateCount: number; // V9
     categoryBreakdown: Record<string, { count: number; total: number }>;
   };
   region: string;
   regionMultiplier: number;
   commodityRiskApplied: boolean;
+  preFlight: PreFlightResult;  // V9
+  avgConfidence: number;       // V9
   processedAt: string;
 }
 
@@ -131,8 +148,19 @@ export function readExcelFile(data: ArrayBuffer): RawBOQItem[] {
     const rows = XLSX.utils.sheet_to_json<unknown[]>(wb.Sheets[sheetName], { header: 1 });
     const { headerIdx, colMap } = findHeaderRow(rows as unknown[][]);
 
+    // V9: Track current division header for contextual dedup
+    let currentDivision = '';
+
     for (let i = headerIdx + 1; i < rows.length; i++) {
       const row = rows[i] as unknown[];
+      
+      // V9: Detect division headers (e.g. "DIV No. 9 : FINISHES")
+      const firstCell = String(row?.[0] || '').trim();
+      if (/^DIV|DIVISION/i.test(firstCell)) {
+        currentDivision = firstCell.substring(0, 50);
+        continue;
+      }
+
       if (!isDataRow(row, colMap.desc)) continue;
 
       const desc = String(row[colMap.desc] || '').trim();
@@ -143,6 +171,16 @@ export function readExcelFile(data: ArrayBuffer): RawBOQItem[] {
 
       if (qty <= 0) continue;
 
+      // V9: Capture surrounding rows (2 before + 2 after) for contextual verification
+      const surroundingRows: string[] = [];
+      for (let offset = -2; offset <= 2; offset++) {
+        if (offset === 0) continue; // Skip the item itself
+        const nearRow = rows[i + offset] as unknown[] | undefined;
+        if (nearRow) {
+          surroundingRows.push(String(nearRow[colMap.desc] || '').trim().substring(0, 30));
+        }
+      }
+
       items.push({
         seq: seq++,
         description: desc,
@@ -151,6 +189,9 @@ export function readExcelFile(data: ArrayBuffer): RawBOQItem[] {
         originalRate: rate,
         originalAmount: amount,
         sheetName,
+        rowIndex: i,
+        surroundingRows,
+        divisionHeader: currentDivision,
       });
     }
   }
@@ -211,10 +252,9 @@ export function processItems(
   const regionInfo = LOCATION_MULTIPLIERS[region] || LOCATION_MULTIPLIERS.riyadh;
   const multiplier = regionInfo.factor;
 
-  // V8.3 Fix #3: Read contextual memory baseline for this region
+  // V9: Read contextual memory baseline for this region
   let baselineCostPerSqm = 0;
   try {
-    const { contextualMemoryService } = require('../../services/contextualMemoryService');
     const baseline = contextualMemoryService.getBaseline('villa', region);
     if (baseline && baseline.confidence >= 0.5) {
       baselineCostPerSqm = baseline.avgCostPerSqm;
@@ -254,9 +294,15 @@ export function processItems(
       commodityEngine.initialize();
       commodityRiskFactor = commodityEngine.getCategoryRiskFactor(classification.category);
     } catch { /* non-blocking */ }
-
+    // V9 Fix #1: Check if benchmark rate already includes profit (priceType)
+    const rateInfo = classification.ruleId ? BENCHMARK_RATES[classification.ruleId] : null;
+    const isGrossRate = rateInfo?.priceType === 'gross';
+    
     const costTotal = Math.round(costRate * commodityRiskFactor * raw.qty);
-    const sellRate = Math.round(costRate * commodityRiskFactor * (1 + profitMargin));
+    // ⚠️ V9: إذا السعر المرجعي شامل ربح (gross)، لا تضيف ربح مرة ثانية!
+    const sellRate = isGrossRate
+      ? Math.round(costRate * commodityRiskFactor) // الربح مدفون أصلاً
+      : Math.round(costRate * commodityRiskFactor * (1 + profitMargin)); // أضف الربح مرة واحدة
     const sellTotal = Math.round(sellRate * raw.qty);
     const profit = sellTotal - costTotal;
 
@@ -279,9 +325,19 @@ export function processItems(
       profit,
       sanityFlag: 'ok',
       sanityNote: '',
+      isDuplicate: false, // V9: will be set after dedup pass
+      duplicateNote: '',
       scopeAudit: scopeResult.status !== 'APPROVED' ? scopeResult : undefined,
       extractedFeatures: features.dimensions.length > 0 || features.materials.length > 0 ? features : undefined,
       commodityRiskFactor: commodityRiskFactor !== 1.0 ? Math.round(commodityRiskFactor * 1000) / 1000 : undefined,
+      // V9: Confidence Score
+      confidence: calculateConfidence({
+        pricingTier,
+        classificationMatched: classification.matched,
+        ruleId: classification.ruleId,
+        priority: classification.priority,
+        commodityRiskFactor,
+      }),
       categoryIcon: catInfo.icon,
       categoryLabel: catInfo.ar,
     };
@@ -294,18 +350,44 @@ export function processItems(
     return processed;
   });
 
-  // Stats
+  // V9 Step 6: Deduplication Pass
+  const dupResults = detectDuplicates(rawItems);
+  let duplicateCount = 0;
+  dupResults.forEach((dupResult, idx) => {
+    if (dupResult.isDuplicate && items[idx]) {
+      items[idx].isDuplicate = true;
+      items[idx].duplicateNote = dupResult.note;
+      items[idx].sanityFlag = 'critical';
+      items[idx].sanityNote = `⚠️ تكرار: ${dupResult.note}`;
+      // Zero out duplicate costs so they don't inflate totals
+      items[idx].costTotal = 0;
+      items[idx].sellTotal = 0;
+      items[idx].profit = 0;
+      duplicateCount++;
+    }
+  });
+
+  // Stats (excluding duplicates from totals)
   const classified = items.filter(i => i.classification.matched).length;
   const totalCost = items.reduce((s, i) => s + i.costTotal, 0);
   const totalSell = items.reduce((s, i) => s + i.sellTotal, 0);
 
   const categoryBreakdown: Record<string, { count: number; total: number }> = {};
   items.forEach(i => {
+    if (i.isDuplicate) return; // Don't count duplicates in breakdown
     const cat = i.classification.category;
     if (!categoryBreakdown[cat]) categoryBreakdown[cat] = { count: 0, total: 0 };
     categoryBreakdown[cat].count++;
     categoryBreakdown[cat].total += i.sellTotal;
   });
+
+  // V9 Pre-Flight Log
+  console.log(`🛫 Pre-Flight Report:`);
+  console.log(`   📊 Total items: ${items.length}`);
+  console.log(`   🔴 Duplicates found: ${duplicateCount}`);
+  console.log(`   ✅ Net items: ${items.length - duplicateCount}`);
+  console.log(`   💰 Cost: ${totalCost.toLocaleString()} | Sell: ${totalSell.toLocaleString()}`);
+  console.log(`   📈 Actual profit: ${totalCost > 0 ? ((totalSell - totalCost) / totalCost * 100).toFixed(1) : 0}%`);
 
   return {
     items,
@@ -322,11 +404,14 @@ export function processItems(
       tier3Count: items.filter(i => i.pricingTier === 'unpriced').length,
       warningCount: items.filter(i => i.sanityFlag === 'warning').length,
       criticalCount: items.filter(i => i.sanityFlag === 'critical').length,
+      duplicateCount,
       categoryBreakdown,
     },
     region: regionInfo.nameAr,
     regionMultiplier: multiplier,
     commodityRiskApplied: items.some(i => i.commodityRiskFactor !== undefined),
+    preFlight: runPreFlightAudit(rawItems),
+    avgConfidence: averageConfidence(items.map(i => i.confidence)).avgScore,
     processedAt: new Date().toISOString(),
   };
 }
