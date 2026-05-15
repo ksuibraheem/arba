@@ -255,7 +255,7 @@ export function processItems(
   // V9: Read contextual memory baseline for this region
   let baselineCostPerSqm = 0;
   try {
-    const baseline = contextualMemoryService.getBaseline('villa', region);
+    const baseline = contextualMemoryService.getBaseline('villa', region as any);
     if (baseline && baseline.confidence >= 0.5) {
       baselineCostPerSqm = baseline.avgCostPerSqm;
       console.log(`🧠 Contextual baseline: ${baselineCostPerSqm} SAR/m² (confidence: ${(baseline.confidence * 100).toFixed(0)}%, samples: ${baseline.sampleSize})`);

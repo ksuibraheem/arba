@@ -7,6 +7,7 @@
  */
 
 import { StandardWeight, collectiveBrainService } from './collectiveBrainService';
+import megaTrainingData from '../data/training/brain_mega_training.json';
 
 // =================== Types ===================
 
@@ -482,8 +483,7 @@ export function initializeBrain(): TrainedBrainData | null {
 
   // 2. Load from embedded mega training data
   try {
-    const megaData = require('../data/training/brain_mega_training.json');
-    const result = brainDataLoader.loadFromMegaTraining(megaData);
+    const result = brainDataLoader.loadFromMegaTraining(megaTrainingData as any);
     brainDataLoader.feedCollectiveBrain();
     return result;
   } catch (e) {

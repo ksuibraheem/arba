@@ -409,7 +409,6 @@ export function generateDynamicBOQ(state: AppState): CalculationResult {
     // =================== v9.0 Brain Insights: Training Data Validation ===================
     // Check against benchmarks from brain_mega_training.json (5,121 items)
     try {
-      const { brainDataLoader } = require('./brainDataLoader');
       if (brainDataLoader.isLoaded()) {
         const category = cogItem.category || '';
         const validation = brainDataLoader.validatePrice(category, directUnitCost);

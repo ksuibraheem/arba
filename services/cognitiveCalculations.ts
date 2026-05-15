@@ -39,6 +39,7 @@ import {
   SummerConcretingConfig,
   CementType,
 } from '../types';
+import { learningFeedbackService } from './learningFeedbackService';
 
 // =================== SBC 301/304 Constants — كود البناء السعودي ===================
 
@@ -162,8 +163,7 @@ const WASTE_FACTORS_BASELINE = {
  */
 export const WASTE_FACTORS = (() => {
   try {
-    // Lazy import to avoid circular dependency
-    const { learningFeedbackService } = require('./learningFeedbackService');
+    // Use statically imported learningFeedbackService
     // Try to get learned weights (null if no data)
     // This will be populated when projects are closed and invoices are compared
     const learnedWeight = learningFeedbackService?.getLearnedWeight?.('commercial', 'riyadh');

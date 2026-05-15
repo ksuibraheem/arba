@@ -1133,13 +1133,15 @@ const App: React.FC = () => {
 
     // =================== 📈 Brain Layer: Commodity Intelligence (V8.3) ===================
     React.useEffect(() => {
+        (async () => {
         try {
-            const { commodityEngine } = require('./services/commodityIntelligenceEngine');
+            const { commodityEngine } = await import('./services/commodityIntelligenceEngine');
             const status = commodityEngine.initialize();
             const alerts = commodityEngine.getAlerts();
             const critical = alerts.filter((a: any) => a.severity === 'critical');
             console.log(`📈 Commodity Engine: ${status.commodities} commodities | ${status.historyDays} days | ${alerts.length} alerts (${critical.length} critical)`);
         } catch { /* silent — commodity engine is non-blocking */ }
+        })();
     }, []); // Run once on mount
 
     // =================== 🧠 Brain Layer: Collective Learning (Silent) ===================
