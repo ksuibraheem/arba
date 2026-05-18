@@ -250,7 +250,7 @@ const BOQUploader: React.FC<BOQUploaderProps> = ({ language = 'ar' }) => {
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 text-xs font-medium mb-4">
               <Zap className="w-3.5 h-3.5" />
-              ARBA V8.2 — {getRuleCount()}+ {t('قاعدة تصنيف', 'classification rules')}
+              ARBA V10.0 — {getRuleCount()}+ {t('قاعدة تصنيف', 'classification rules')}
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
               {t('محرك التسعير الذكي', 'Smart Pricing Engine')}
@@ -495,6 +495,104 @@ const BOQUploader: React.FC<BOQUploaderProps> = ({ language = 'ar' }) => {
             </div>
           );
         })()}
+
+        {/* ═══ V10.0: BRAIN INTELLIGENCE PANEL ═══ */}
+        {(result.missingItems || result.anomalies || result.compliance || result.regulatoryAddons) && (
+          <div className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-4 space-y-4">
+            <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
+              🧠 {t('ذكاء الدماغ V10', 'Brain Intelligence V10')}
+              <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full">v{result.brainVersion}</span>
+            </h3>
+
+            {/* Score Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {/* SBC Compliance */}
+              {result.compliance && (
+                <div className={`p-3 rounded-xl border ${result.compliance.complianceScore >= 80 ? 'bg-emerald-500/10 border-emerald-500/20' : result.compliance.complianceScore >= 60 ? 'bg-amber-500/10 border-amber-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+                  <p className="text-[10px] text-slate-400">{t('امتثال SBC', 'SBC Compliance')}</p>
+                  <p className={`text-xl font-bold ${result.compliance.complianceScore >= 80 ? 'text-emerald-400' : result.compliance.complianceScore >= 60 ? 'text-amber-400' : 'text-red-400'}`}>
+                    {result.compliance.complianceScore}%
+                  </p>
+                  <p className="text-[10px] text-slate-500">{result.compliance.passed} {t('ناجح', 'passed')} / {result.compliance.failed} {t('فاشل', 'failed')}</p>
+                </div>
+              )}
+
+              {/* Missing Items */}
+              {result.missingItems && (
+                <div className={`p-3 rounded-xl border ${result.missingItems.totalGaps === 0 ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-amber-500/10 border-amber-500/20'}`}>
+                  <p className="text-[10px] text-slate-400">{t('بنود ناقصة', 'Missing Items')}</p>
+                  <p className={`text-xl font-bold ${result.missingItems.totalGaps === 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                    {result.missingItems.totalGaps}
+                  </p>
+                  <p className="text-[10px] text-slate-500">{result.missingItems.criticalGaps} {t('حرج', 'critical')}</p>
+                </div>
+              )}
+
+              {/* Anomalies */}
+              {result.anomalies && (
+                <div className={`p-3 rounded-xl border ${result.anomalies.totalAlerts === 0 ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+                  <p className="text-[10px] text-slate-400">{t('تنبيهات تلاعب', 'Anomaly Alerts')}</p>
+                  <p className={`text-xl font-bold ${result.anomalies.totalAlerts === 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {result.anomalies.totalAlerts}
+                  </p>
+                  <p className="text-[10px] text-slate-500">{result.anomalies.criticalAlerts} {t('حرج', 'critical')}</p>
+                </div>
+              )}
+
+              {/* Regulatory Add-ons */}
+              {result.regulatoryAddons && (
+                <div className="p-3 rounded-xl border bg-violet-500/10 border-violet-500/20">
+                  <p className="text-[10px] text-slate-400">{t('بنود تنظيمية', 'Regulatory')}</p>
+                  <p className="text-xl font-bold text-violet-400">
+                    {result.regulatoryAddons.additionalItems.length}
+                  </p>
+                  <p className="text-[10px] text-slate-500">{result.regulatoryAddons.totalAddonCost.toLocaleString()} {t('ريال', 'SAR')}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Missing Items Details */}
+            {result.missingItems && result.missingItems.gaps.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-bold text-amber-300">{t('البنود الناقصة المكتشفة:', 'Detected Missing Items:')}</p>
+                {result.missingItems.gaps.slice(0, 5).map((gap, i) => (
+                  <div key={i} className={`text-[10px] p-2 rounded-lg border flex items-start gap-2 ${gap.severity === 'critical' ? 'bg-red-500/5 border-red-500/15 text-red-200' : 'bg-amber-500/5 border-amber-500/15 text-amber-200'}`}>
+                    <span>{gap.severity === 'critical' ? '🔴' : '🟡'}</span>
+                    <span>{gap.missingItemAr} — {gap.reason}</span>
+                  </div>
+                ))}
+                {result.missingItems.gaps.length > 5 && (
+                  <p className="text-[10px] text-slate-500">+{result.missingItems.gaps.length - 5} {t('بنود أخرى', 'more items')}</p>
+                )}
+              </div>
+            )}
+
+            {/* Anomaly Details */}
+            {result.anomalies && result.anomalies.alerts.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-bold text-red-300">{t('تنبيهات التلاعب:', 'Anomaly Alerts:')}</p>
+                {result.anomalies.alerts.slice(0, 5).map((alert, i) => (
+                  <div key={i} className="text-[10px] p-2 rounded-lg border bg-red-500/5 border-red-500/15 text-red-200 flex items-start gap-2">
+                    <span>⚠️</span>
+                    <span>{alert.messageAr}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Compliance Notes */}
+            {result.regulatoryAddons && result.regulatoryAddons.complianceNotes.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-[10px] font-bold text-violet-300">{t('ملاحظات تنظيمية:', 'Regulatory Notes:')}</p>
+                {result.regulatoryAddons.complianceNotes.map((note, i) => (
+                  <p key={i} className="text-[10px] text-slate-400 flex items-center gap-1.5">
+                    <span>📋</span> {note}
+                  </p>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ═══ CATEGORY BREAKDOWN ═══ */}
         <div className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-4">

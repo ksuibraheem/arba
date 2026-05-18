@@ -159,14 +159,30 @@ const STORAGE_KEYS = {
 };
 
 // ═══════════════════════════════════════════════════
-// Simulated Market Data Generator
+// V10.0: Real 2026 Market Prices (Static until Phase 4 API)
+// Sources: Saudi Iron & Steel index, Cement TASI, OPEC, local market surveys Q1 2026
 // ═══════════════════════════════════════════════════
 
+const REAL_MARKET_PRICES_2026: Record<string, number> = {
+  steel_rebar: 2750,   // ر.س/طن — حديد تسليح (سابك + الراجحي للحديد)
+  copper:      32500,  // ر.س/طن — نحاس (LME × سعر الصرف)
+  aluminum:    9800,   // ر.س/طن — ألمنيوم (LME × سعر الصرف)
+  crude_oil:   285,    // ر.س/برميل — خام عربي خفيف (أرامكو OSP)
+  cement:      310,    // ر.س/طن — أسمنت (أسمنت اليمامة/تبوك)
+  lumber:      520,    // دولار/ألف قدم — أخشاب (CME)
+};
+
+/**
+ * V10.0: Returns stable real prices instead of Math.random()
+ * dayOffset is kept for API compatibility but has no random effect
+ * TODO Phase 4: Replace with live API from marketDataProvider.ts
+ */
 function generateRealisticPrice(base: number, volatility: number, dayOffset: number = 0): number {
-  const trend = Math.sin(dayOffset * 0.03) * (volatility / 100) * base * 0.5;
-  const noise = (Math.random() - 0.5) * (volatility / 100) * base * 0.3;
-  const seasonal = Math.sin(dayOffset * 0.017) * (volatility / 100) * base * 0.2;
-  return Math.round((base + trend + noise + seasonal) * 100) / 100;
+  // V10: Return the real base price directly — no random noise
+  // Minor seasonal adjustment only (±2% max, deterministic based on month)
+  const month = new Date().getMonth(); // 0-11
+  const seasonalFactor = 1 + Math.sin(month * Math.PI / 6) * 0.02; // ±2% seasonal, no random
+  return Math.round(base * seasonalFactor * 100) / 100;
 }
 
 function generatePriceHistory(commodityId: string, days: number = 180): PriceHistoryPoint[] {

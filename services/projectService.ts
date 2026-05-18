@@ -37,6 +37,7 @@ export async function createProject(data: Partial<ArbaProject>): Promise<string>
         latestQuoteId: undefined,
         quoteCount: 0,
         stateSnapshot: data.stateSnapshot,
+        isEditable: data.isEditable ?? true,     // V10: editable by default
         createdAt: serverTimestamp() as unknown as Timestamp,
         updatedAt: serverTimestamp() as unknown as Timestamp,
     };

@@ -695,11 +695,13 @@ export const createTapCharge = onCall({
         throw new HttpsError('unauthenticated', 'يجب تسجيل الدخول / Authentication required');
     }
 
-    const { amount, currency, userName, userEmail, paymentId, redirectUrl } = request.data;
+    const { amount, currency, userName, userEmail, paymentId, redirectUrl, plan } = request.data;
 
     if (!amount || !paymentId || !redirectUrl) {
         throw new HttpsError('invalid-argument', 'amount, paymentId, and redirectUrl are required');
     }
+
+    const selectedPlan = plan || 'professional';
 
     // Get Tap secret key from Firebase environment config
     const tapSecretKey = process.env.TAP_SECRET_KEY || '';
@@ -719,11 +721,11 @@ export const createTapCharge = onCall({
                 customer_initiated: true,
                 threeDSecure: true,
                 save_card: false,
-                description: 'Arba Pricing - Professional Plan Subscription',
+                description: `Arba Pricing - ${selectedPlan.charAt(0).toUpperCase() + selectedPlan.slice(1)} Plan Subscription`,
                 metadata: {
                     arba_payment_id: paymentId,
                     arba_user_id: request.auth.uid,
-                    arba_plan: 'professional'
+                    arba_plan: selectedPlan
                 },
                 receipt: { email: true, sms: false },
                 customer: {
@@ -849,3 +851,532 @@ export const scheduledSessionCleanup = onSchedule({
     const cleaned = await cleanupExpiredSessions();
     console.log(`Session cleanup: removed ${cleaned} expired sessions`);
 });
+
+// =================== V10.0: Brain Scheduled Functions ===================
+
+/**
+ * V10.0 — Brain Heartbeat: Check brain health every hour
+ * نبض الدماغ — يفحص حالة كل المكونات كل ساعة
+ */
+export const brainHeartbeat = onSchedule({
+    schedule: 'every 1 hours',
+    region: 'us-central1',
+}, async () => {
+    const db = admin.firestore();
+    
+    try {
+        // 1. Check brain_data collections health
+        const brainDataRef = db.collection('brain_data');
+        const snapshot = await brainDataRef.listDocuments();
+        const activeUsers = snapshot.length;
+
+        // 2. Check last sync time for each user
+        let staleUsers = 0;
+        const now = Date.now();
+        for (const userDoc of snapshot.slice(0, 50)) { // Check first 50 users
+            const keysRef = userDoc.collection('keys');
+            const latestKey = await keysRef.orderBy('updatedAt', 'desc').limit(1).get();
+            if (!latestKey.empty) {
+                const lastUpdate = latestKey.docs[0].data().updatedAt?.toDate?.();
+                if (lastUpdate && (now - lastUpdate.getTime()) > 24 * 60 * 60 * 1000) {
+                    staleUsers++;
+                }
+            }
+        }
+
+        // 3. Write health status
+        await db.doc('brain_health/global').set({
+            status: staleUsers > activeUsers * 0.5 ? 'needs_attention' : 'healthy',
+            activeUsers,
+            staleUsers,
+            lastHeartbeat: admin.firestore.FieldValue.serverTimestamp(),
+            version: '10.0',
+        });
+
+        console.log(`🧠 Brain Heartbeat: ${activeUsers} users, ${staleUsers} stale`);
+    } catch (error) {
+        console.error('🧠 Brain Heartbeat error:', error);
+        await db.doc('brain_health/global').set({
+            status: 'error',
+            error: String(error),
+            lastHeartbeat: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+    }
+});
+
+/**
+ * V10.0 — Brain Daily Diagnostic: Full self-diagnostic at 3am
+ * التشخيص اليومي — فحص شامل كل يوم الساعة 3 صباحاً
+ */
+export const brainDailyDiagnostic = onSchedule({
+    schedule: 'every day 03:00',
+    region: 'us-central1',
+    timeZone: 'Asia/Riyadh',
+}, async () => {
+    const db = admin.firestore();
+    
+    try {
+        // 1. Analyze brain_patches for trends
+        const patchesSnap = await db.collection('brain_patches').orderBy('createdAt', 'desc').limit(100).get();
+        const recentPatches = patchesSnap.docs.map(d => d.data());
+        
+        const patchesBySource: Record<string, number> = {};
+        for (const p of recentPatches) {
+            patchesBySource[p.source || 'unknown'] = (patchesBySource[p.source || 'unknown'] || 0) + 1;
+        }
+
+        // 2. Check dev_suggestions status
+        const suggestionsSnap = await db.collection('brain_dev_suggestions')
+            .where('status', '==', 'pending').get();
+        const pendingSuggestions = suggestionsSnap.size;
+
+        // 3. Aggregate learning data from all users
+        const brainDataSnap = await db.collection('brain_data').listDocuments();
+        let totalLearningPoints = 0;
+        
+        for (const userDoc of brainDataSnap.slice(0, 20)) {
+            const learningDoc = await userDoc.collection('keys').doc('arba_learning_data').get();
+            if (learningDoc.exists) {
+                try {
+                    const data = JSON.parse(learningDoc.data()?.value || '[]');
+                    totalLearningPoints += data.length;
+                } catch { /* */ }
+            }
+        }
+
+        // 4. Save diagnostic report
+        const report = {
+            timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            version: '10.0',
+            totalPatches: recentPatches.length,
+            patchesBySource,
+            pendingSuggestions,
+            totalLearningPoints,
+            totalUsers: brainDataSnap.length,
+            overallHealth: totalLearningPoints > 0 ? 'improving' : 'needs_data',
+        };
+
+        await db.doc('brain_diagnostics/daily').set(report);
+        console.log(`🧠 Daily Diagnostic: ${totalLearningPoints} learning points, ${recentPatches.length} patches, ${pendingSuggestions} pending suggestions`);
+        
+    } catch (error) {
+        console.error('🧠 Daily Diagnostic error:', error);
+    }
+});
+
+/**
+ * V10.0 — Brain Weight Sync: Aggregate learning weights every 6 hours
+ * مزامنة الأوزان — تجميع أوزان التعلم من كل المستخدمين كل 6 ساعات
+ */
+export const brainWeightSync = onSchedule({
+    schedule: 'every 6 hours',
+    region: 'us-central1',
+}, async () => {
+    const db = admin.firestore();
+    
+    try {
+        // 1. Collect all user weights
+        const brainDataSnap = await db.collection('brain_data').listDocuments();
+        const allWeights: Record<string, number[]> = {};
+        
+        for (const userDoc of brainDataSnap) {
+            const weightsDoc = await userDoc.collection('keys').doc('arba_learning_weights').get();
+            if (weightsDoc.exists) {
+                try {
+                    const weights = JSON.parse(weightsDoc.data()?.value || '{}');
+                    for (const [key, value] of Object.entries(weights)) {
+                        if (!allWeights[key]) allWeights[key] = [];
+                        allWeights[key].push(Number(value) || 0);
+                    }
+                } catch { /* */ }
+            }
+        }
+
+        // 2. Calculate global average weights
+        const globalWeights: Record<string, number> = {};
+        for (const [key, values] of Object.entries(allWeights)) {
+            globalWeights[key] = Math.round(
+                (values.reduce((s, v) => s + v, 0) / values.length) * 100
+            ) / 100;
+        }
+
+        // 3. Save global weights
+        await db.doc('brain_weights/global').set({
+            weights: globalWeights,
+            contributingUsers: brainDataSnap.length,
+            totalKeys: Object.keys(globalWeights).length,
+            syncedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        console.log(`🧠 Weight Sync: ${Object.keys(globalWeights).length} weights from ${brainDataSnap.length} users`);
+        
+    } catch (error) {
+        console.error('🧠 Weight Sync error:', error);
+    }
+});
+
+// =================== V10.0: Subscription Lifecycle Management ===================
+
+import {
+    getExpiredSubscriptions,
+    getExpiringSubscriptions,
+    downgradeToFree,
+    extendSubscription,
+    sendExpiryWarning,
+    calculateRFQCommission,
+    recordRFQPayment,
+} from './subscriptionManager';
+
+/**
+ * V10.0 — Check Subscription Expiry (كل 6 ساعات)
+ * يفحص الاشتراكات المنتهية ويخفّض لباقة مجانية
+ * + يُنبه المستخدمين الذين ستنتهي اشتراكاتهم خلال 3 أيام
+ */
+export const checkSubscriptionExpiry = onSchedule({
+    schedule: 'every 6 hours',
+    region: 'us-central1',
+}, async () => {
+    console.log('🔄 Checking subscription expirations...');
+    
+    try {
+        // 1. معالجة الاشتراكات المنتهية فعلاً
+        const expired = await getExpiredSubscriptions();
+        let downgraded = 0;
+        
+        for (const sub of expired) {
+            const success = await downgradeToFree(sub.data.userId, sub.id);
+            if (success) downgraded++;
+        }
+        
+        // 2. تنبيه الاشتراكات القريبة من الانتهاء (3 أيام)
+        const expiring = await getExpiringSubscriptions(72);
+        let warned = 0;
+        
+        for (const sub of expiring) {
+            const expiresDate = sub.data.expiresAt.toDate();
+            const daysLeft = Math.ceil((expiresDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+            
+            // تنبيه فقط عند 3 أيام و 1 يوم
+            if (daysLeft === 3 || daysLeft === 1) {
+                await sendExpiryWarning(sub.data.userId, sub.data.plan, daysLeft);
+                warned++;
+            }
+        }
+        
+        console.log(`📊 Expiry check: ${expired.length} expired (${downgraded} downgraded), ${expiring.length} expiring soon (${warned} warned)`);
+        
+        // 3. سجل التقرير
+        await db.doc('subscription_reports/latest').set({
+            type: 'expiry_check',
+            expiredCount: expired.length,
+            downgradedCount: downgraded,
+            expiringCount: expiring.length,
+            warnedCount: warned,
+            checkedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        
+    } catch (error) {
+        console.error('❌ Subscription expiry check failed:', error);
+    }
+});
+
+/**
+ * V10.0 — Auto-Renewal Processor (كل يوم الساعة 2 صباحاً)
+ * يحاول تجديد الاشتراكات التي:
+ * - autoRenew: true
+ * - ستنتهي خلال 24 ساعة
+ * - لديها savedCardToken أو يُنشئ charge جديد
+ */
+export const processAutoRenewal = onSchedule({
+    schedule: 'every day 02:00',
+    region: 'us-central1',
+    timeZone: 'Asia/Riyadh',
+}, async () => {
+    console.log('🔄 Processing auto-renewals...');
+    
+    try {
+        // جلب الاشتراكات التي ستنتهي خلال 24 ساعة وفيها autoRenew
+        const expiring = await getExpiringSubscriptions(24);
+        const autoRenewable = expiring.filter(s => s.data.autoRenew === true);
+        
+        let renewed = 0;
+        let failed = 0;
+        
+        for (const sub of autoRenewable) {
+            try {
+                // محاولة التجديد عبر Tap (إذا فيه بطاقة محفوظة)
+                if (sub.data.savedCardToken) {
+                    // إنشاء charge بالبطاقة المحفوظة
+                    const tapSecretKey = process.env.TAP_SECRET_KEY || '';
+                    if (tapSecretKey) {
+                        const response = await fetch('https://api.tap.company/v2/charges', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${tapSecretKey}`,
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                amount: sub.data.amount,
+                                currency: sub.data.currency || 'SAR',
+                                customer_initiated: false,
+                                threeDSecure: false,
+                                save_card: false,
+                                description: `Arba Auto-Renewal - ${sub.data.plan}`,
+                                source: { id: sub.data.savedCardToken },
+                                metadata: {
+                                    arba_user_id: sub.data.userId,
+                                    arba_plan: sub.data.plan,
+                                    type: 'auto_renewal',
+                                },
+                            }),
+                        });
+                        
+                        const charge = await response.json();
+                        
+                        if (charge.status === 'CAPTURED') {
+                            await extendSubscription(sub.data.userId, sub.id, sub.data.billingCycle);
+                            
+                            // سجل الدفع
+                            await db.collection('payments').add({
+                                userId: sub.data.userId,
+                                gateway: 'tap',
+                                amount: sub.data.amount,
+                                currency: 'SAR',
+                                status: 'completed',
+                                type: 'auto_renewal',
+                                tapChargeId: charge.id,
+                                subscriptionId: sub.id,
+                                plan: sub.data.plan,
+                                createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                            });
+                            
+                            renewed++;
+                            continue;
+                        }
+                    }
+                }
+                
+                // فشل التجديد التلقائي — أخطر المستخدم
+                await db.collection('notifications').add({
+                    userId: sub.data.userId,
+                    type: 'renewal_failed',
+                    title: 'فشل التجديد التلقائي',
+                    message: 'لم نتمكن من تجديد اشتراكك تلقائياً. يرجى تحديث بيانات الدفع أو التجديد يدوياً.',
+                    read: false,
+                    actionUrl: '/pricing',
+                    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+                
+                // وضع علامة
+                await db.collection('subscriptions').doc(sub.id).update({
+                    renewalFailed: true,
+                    renewalFailedAt: admin.firestore.FieldValue.serverTimestamp(),
+                });
+                
+                failed++;
+            } catch (err) {
+                console.error(`Failed to renew subscription ${sub.id}:`, err);
+                failed++;
+            }
+        }
+        
+        console.log(`📊 Auto-renewal: ${autoRenewable.length} eligible, ${renewed} renewed, ${failed} failed`);
+        
+        await db.doc('subscription_reports/latest_renewal').set({
+            type: 'auto_renewal',
+            eligibleCount: autoRenewable.length,
+            renewedCount: renewed,
+            failedCount: failed,
+            processedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        
+    } catch (error) {
+        console.error('❌ Auto-renewal processing failed:', error);
+    }
+});
+
+/**
+ * V10.0 — Process RFQ Commission Payment (Callable)
+ * المورد يدفع العمولة → تُفتح بيانات العميل
+ * 
+ * Flow:
+ * 1. العميل ينشئ RFQ → المورد يستلم الطلب
+ * 2. المورد يضغط "دفع العمولة" → يُستدعى هذا الـ function
+ * 3. يُنشئ Tap charge بمبلغ العمولة
+ * 4. بعد الدفع → verifyRFQCommission يُفعّل الوصول
+ */
+export const processRFQCommission = onCall({
+    maxInstances: 10,
+    timeoutSeconds: 30,
+    memory: '256MiB',
+    region: 'us-central1',
+}, async (request) => {
+    if (!request.auth) {
+        throw new HttpsError('unauthenticated', 'يجب تسجيل الدخول');
+    }
+    
+    const { rfqId, orderTotal } = request.data;
+    
+    if (!rfqId || !orderTotal || orderTotal <= 0) {
+        throw new HttpsError('invalid-argument', 'rfqId و orderTotal مطلوبان');
+    }
+    
+    // 1. التحقق من أن المورد هو صاحب الطلب
+    const rfqDoc = await db.collection('supplierRFQs').doc(rfqId).get();
+    if (!rfqDoc.exists) {
+        throw new HttpsError('not-found', 'الطلب غير موجود');
+    }
+    
+    const rfq = rfqDoc.data()!;
+    if (rfq.supplierId !== request.auth.uid) {
+        throw new HttpsError('permission-denied', 'غير مصرح لك بدفع عمولة هذا الطلب');
+    }
+    
+    if (rfq.commissionPaid) {
+        throw new HttpsError('already-exists', 'تم دفع العمولة مسبقاً');
+    }
+    
+    // 2. حساب العمولة
+    const commission = calculateRFQCommission(orderTotal);
+    
+    // 3. إنشاء Tap charge
+    const tapSecretKey = process.env.TAP_SECRET_KEY || '';
+    const redirectUrl = `${process.env.APP_URL || 'https://arba-sys.com'}/?rfq_payment=true&rfq_id=${rfqId}`;
+    
+    try {
+        const response = await fetch('https://api.tap.company/v2/charges', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${tapSecretKey}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                amount: commission.totalCommission,
+                currency: 'SAR',
+                customer_initiated: true,
+                threeDSecure: true,
+                save_card: false,
+                description: `Arba RFQ Commission - Order ${rfqId}`,
+                metadata: {
+                    arba_rfq_id: rfqId,
+                    arba_supplier_id: request.auth.uid,
+                    type: 'rfq_commission',
+                    order_total: orderTotal,
+                    gateway_fee: commission.gatewayFee,
+                    fixed_fee: commission.fixedFee,
+                    arba_profit: commission.arbaProfit,
+                },
+                receipt: { email: true, sms: false },
+                source: { id: 'src_all' },
+                redirect: { url: redirectUrl },
+                post: { url: redirectUrl },
+            }),
+        });
+        
+        const data = await response.json();
+        
+        if (data.transaction && data.transaction.url) {
+            // سجل محاولة الدفع
+            await db.collection('supplierRFQs').doc(rfqId).update({
+                commissionAttemptedAt: admin.firestore.FieldValue.serverTimestamp(),
+                commissionTapChargeId: data.id,
+                commissionAmount: commission.totalCommission,
+            });
+            
+            return {
+                success: true,
+                paymentUrl: data.transaction.url,
+                chargeId: data.id,
+                commission,
+            };
+        }
+        
+        return {
+            success: false,
+            error: data.errors?.[0]?.description || 'خطأ في بوابة الدفع',
+            commission,
+        };
+        
+    } catch (error: any) {
+        console.error('RFQ commission payment error:', error);
+        throw new HttpsError('internal', `فشل إنشاء عملية الدفع: ${error.message}`);
+    }
+});
+
+/**
+ * V10.0 — Verify RFQ Commission Payment (Callable)
+ * بعد عودة المورد من صفحة الدفع — نتحقق ونفتح البيانات
+ */
+export const verifyRFQCommission = onCall({
+    maxInstances: 10,
+    timeoutSeconds: 30,
+    memory: '256MiB',
+    region: 'us-central1',
+}, async (request) => {
+    if (!request.auth) {
+        throw new HttpsError('unauthenticated', 'يجب تسجيل الدخول');
+    }
+    
+    const { rfqId, tapChargeId } = request.data;
+    
+    if (!rfqId || !tapChargeId) {
+        throw new HttpsError('invalid-argument', 'rfqId و tapChargeId مطلوبان');
+    }
+    
+    // 1. التحقق من الطلب
+    const rfqDoc = await db.collection('supplierRFQs').doc(rfqId).get();
+    if (!rfqDoc.exists) {
+        throw new HttpsError('not-found', 'الطلب غير موجود');
+    }
+    
+    const rfq = rfqDoc.data()!;
+    if (rfq.supplierId !== request.auth.uid) {
+        throw new HttpsError('permission-denied', 'غير مصرح');
+    }
+    
+    // 2. التحقق من Tap
+    const tapSecretKey = process.env.TAP_SECRET_KEY || '';
+    
+    try {
+        const response = await fetch(`https://api.tap.company/v2/charges/${tapChargeId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${tapSecretKey}`,
+                'Accept': 'application/json',
+            },
+        });
+        
+        const charge = await response.json();
+        
+        if (charge.status === 'CAPTURED') {
+            // الدفع ناجح — فتح البيانات + تسجيل محاسبي
+            const commission = calculateRFQCommission(rfq.orderTotal || charge.amount / 0.06);
+            
+            await recordRFQPayment(
+                rfqId,
+                rfq.supplierId,
+                rfq.clientId,
+                commission,
+                tapChargeId,
+            );
+            
+            return {
+                success: true,
+                status: 'paid',
+                message: 'تم دفع العمولة بنجاح. يمكنك الآن الوصول لبيانات العميل.',
+                commission,
+            };
+        }
+        
+        return {
+            success: false,
+            status: charge.status,
+            message: `حالة الدفع: ${charge.status}`,
+        };
+        
+    } catch (error: any) {
+        console.error('RFQ commission verification error:', error);
+        throw new HttpsError('internal', `فشل التحقق: ${error.message}`);
+    }
+});
+

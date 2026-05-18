@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { ChevronDown, ChevronUp, Box, UserCheck, ShieldCheck, FileText, Settings2, AlertTriangle, TrendingUp, Star, Check, Edit3, Bot, Loader2, Plus, Trash2, Anchor, Lock, Brain } from 'lucide-react';
 import { CalculatedItem, CustomParams, SupplierOption, Language, BaseItem, SectionDef } from '../types';
 import { TRANSLATIONS } from '../constants';
+import { brainTrainingPipeline } from '../services/brainTrainingPipeline';
 
 interface ItemTableProps {
     items: CalculatedItem[];
@@ -90,6 +91,20 @@ const ItemRow: React.FC<{
         const num = parseFloat(val);
         onParamChange(item.id, { manualPrice: isNaN(num) ? 0 : num });
         setAiFeedback(null);
+        // V10.0: Record override for brain training
+        if (!isNaN(num) && num > 0 && item.finalUnitPrice > 0) {
+            try {
+                brainTrainingPipeline.recordOverride({
+                    itemId: item.id,
+                    itemDescription: typeof item.displayName === 'string' ? item.displayName : item.id,
+                    category: item.category,
+                    predictedRate: item.finalUnitPrice,
+                    actualRate: num,
+                    projectType: 'general',
+                    region: 'riyadh',
+                });
+            } catch { /* non-blocking */ }
+        }
     };
 
     const handleManualQtyChange = (val: string) => {

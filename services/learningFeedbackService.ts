@@ -9,6 +9,7 @@
  */
 
 import { ProjectType, LocationType } from '../types';
+import { brainFirestoreSync } from './brainFirestoreSync';
 
 // =================== Types ===================
 
@@ -210,6 +211,8 @@ class LearningFeedbackService {
 
   private saveDataPoints(points: LearningDataPoint[]): void {
     localStorage.setItem(LEARNING_STORAGE_KEY, JSON.stringify(points));
+    // V10.0: Queue Firestore sync
+    try { brainFirestoreSync.queueSync(LEARNING_STORAGE_KEY, JSON.stringify(points)); } catch { /* */ }
   }
 
   private getWeights(): LearningWeight[] {
@@ -218,6 +221,8 @@ class LearningFeedbackService {
 
   private saveWeights(weights: LearningWeight[]): void {
     localStorage.setItem(WEIGHTS_STORAGE_KEY, JSON.stringify(weights));
+    // V10.0: Queue Firestore sync
+    try { brainFirestoreSync.queueSync(WEIGHTS_STORAGE_KEY, JSON.stringify(weights)); } catch { /* */ }
   }
 }
 

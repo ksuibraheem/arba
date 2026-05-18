@@ -18,6 +18,7 @@
  * الخصوصية: لا بيانات شخصية — فقط إحصائيات مجهولة
  */
 
+import { brainFirestoreSync } from './brainFirestoreSync';
 // =================== Types ===================
 
 export interface SessionRecord {
@@ -119,6 +120,8 @@ function safeGet<T>(key: string, fallback: T): T {
 function safeSet(key: string, value: any): void {
   try {
     localStorage.setItem(key, JSON.stringify(value));
+    // V10.0: Queue Firestore sync
+    try { brainFirestoreSync.queueSync(key, JSON.stringify(value)); } catch { /* */ }
   } catch {
     // Storage full — prune oldest entries
     try {

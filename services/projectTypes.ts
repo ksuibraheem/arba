@@ -35,6 +35,11 @@ export interface ArbaProject {
     // State Snapshot (full pricing session)
     stateSnapshot?: AppState;
 
+    // V10: Downgrade / Archival Support
+    isEditable: boolean;              // false = مشروع مؤرشف (لا يقبل التعديل بعد التخفيض)
+    archivedAt?: Timestamp | Date;    // تاريخ الأرشفة
+    archivedReason?: 'downgrade' | 'manual' | 'expired';
+
     // Metadata
     createdAt: Timestamp | Date;
     updatedAt: Timestamp | Date;
@@ -154,12 +159,10 @@ export interface PlanLimits {
     price: number;                // Monthly price SAR
 }
 
-/** Seat pricing and storage pricing — V2 */
+/** Seat pricing and storage pricing — V10 (unified, no legacy aliases) */
 export const PLAN_EMPLOYEE_LIMITS: Record<SubscriptionPlan, PlanLimits> = {
     free:         { maxEmployees: 1,  storageMB: 25,     maxProjects: 1,   price: 0 },
     starter:      { maxEmployees: 1,  storageMB: 200,    maxProjects: 5,   price: 149 },
-    basic:        { maxEmployees: 2,  storageMB: 200,    maxProjects: 5,   price: 149 },  // legacy alias
-    pro:          { maxEmployees: 4,  storageMB: 2048,   maxProjects: 15,  price: 399 },  // legacy alias
     professional: { maxEmployees: 4,  storageMB: 2048,   maxProjects: 15,  price: 399 },
     business:     { maxEmployees: 11, storageMB: 10240,  maxProjects: 50,  price: 999 },
     enterprise:   { maxEmployees: 26, storageMB: 51200,  maxProjects: -1,  price: 1999 },
@@ -294,7 +297,25 @@ export type ZoneType = 'A' | 'B';  // A = Employee Workspace, B = Client Portal
 // =================== SUBSCRIPTION ===================
 
 export type SubscriptionStatus = 'active' | 'trial' | 'pending_approval' | 'expired' | 'grace_period' | 'suspended';
-export type SubscriptionPlan = 'free' | 'starter' | 'basic' | 'pro' | 'professional' | 'business' | 'enterprise';
+export type SubscriptionPlan = 'free' | 'starter' | 'professional' | 'business' | 'enterprise';
+
+/** @deprecated Legacy plan aliases — use normalizePlanId() to convert */
+export type LegacyPlan = 'basic' | 'pro';
+
+/** Convert legacy plan IDs to V10 plan IDs. Use when reading from Firestore. */
+export function normalizePlanId(plan: string): SubscriptionPlan {
+    switch (plan) {
+        case 'basic': return 'starter';
+        case 'pro': return 'professional';
+        case 'free':
+        case 'starter':
+        case 'professional':
+        case 'business':
+        case 'enterprise':
+            return plan;
+        default: return 'free';
+    }
+}
 
 export interface ArbaSubscription {
     id: string;

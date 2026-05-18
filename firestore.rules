@@ -416,6 +416,53 @@ service cloud.firestore {
       allow update, delete: if false; // Immutable audit record
     }
 
+    // =================== V10.0: SUBSCRIPTION & RFQ SYSTEM ===================
+
+    // Upgrade History — immutable subscription change log
+    match /upgradeHistory/{historyId} {
+      allow read: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
+      allow create: if isAuth(); // System creates on plan change
+      allow update, delete: if false; // Immutable financial record
+    }
+
+    // Usage Tracking — per-user quotas and consumption
+    match /usageTracking/{userId} {
+      allow read: if isAuth() && (request.auth.uid == userId || isAdmin());
+      allow create: if isAuth() && request.auth.uid == userId;
+      allow update: if isAuth() && (request.auth.uid == userId || isAdmin());
+      allow delete: if false;
+    }
+
+    // RFQ Orders — supplier-client transactions
+    // 🔒 Suppliers see their orders, clients see their orders, nobody else
+    match /supplierRFQs/{rfqId} {
+      allow read: if isAuth() && (
+        resource.data.supplierId == request.auth.uid ||
+        resource.data.clientId == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isAuth(); // Any authenticated client can create RFQ
+      allow update: if isAuth() && (
+        resource.data.supplierId == request.auth.uid || // Supplier can accept/deliver
+        resource.data.clientId == request.auth.uid ||   // Client can complete/rate
+        isAdmin()
+      );
+      allow delete: if false; // Never delete transaction records
+    }
+
+    // Supplier Storage Purchases — immutable purchase records
+    match /supplierStoragePurchases/{purchaseId} {
+      allow read: if isAuth() && (
+        resource.data.supplierId == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isAuth();
+      allow update, delete: if false; // Immutable financial record
+    }
+
     // =================== DEFAULT: DENY ALL ===================
     // Any collection not explicitly matched is denied
     match /{document=**} {

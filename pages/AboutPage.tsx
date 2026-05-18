@@ -202,7 +202,7 @@ const AboutPage: React.FC<AboutPageProps> = ({ language, onNavigate }) => {
             {/* Footer */}
             <footer className="py-10 px-6 border-t border-slate-700/50">
                 <div className="max-w-7xl mx-auto text-center text-slate-400 text-sm">
-                    © 2025 {COMPANY_INFO.companyName[language]} - {COMPANY_INFO.systemName[language]}. {t('footer_rights')}
+                    © 2026 {COMPANY_INFO.companyName[language]} - {COMPANY_INFO.systemName[language]}. {t('footer_rights')}
                 </div>
             </footer>
         </div>

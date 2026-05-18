@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Brain, Activity, Users, FileText, Settings, AlertTriangle, Clock, RefreshCw } from 'lucide-react';
 import { Language } from '../../types';
 import { silentBrainTracker, BrainAnalytics } from '../../services/silentBrainTracker';
+import BrainDashboard from '../../components/dashboard/BrainDashboard';
 
 interface DeveloperBrainDashboardProps {
   language: Language;
@@ -189,6 +190,11 @@ const DeveloperBrainDashboard: React.FC<DeveloperBrainDashboardProps> = ({ langu
             </div>
 
           </div>
+        </div>
+
+        {/* V10.0: Brain Intelligence Dashboard */}
+        <div className="mt-6">
+          <BrainDashboard />
         </div>
 
       </div>

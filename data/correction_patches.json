@@ -1,0 +1,98 @@
+{
+  "version": "10.0.0",
+  "description": "ARBA V10 — Initial correction patches for known pricing errors",
+  "createdAt": "2026-05-16",
+  "patches": [
+    {
+      "id": "initial_patch_001",
+      "source": "human",
+      "field": "waste_factor",
+      "category": "concrete",
+      "oldValue": 0.05,
+      "newValue": 0.07,
+      "reason": "SBC 304 minimum concrete waste is 7%, not 5%",
+      "reasonAr": "الحد الأدنى لهدر الخرسانة حسب SBC 304 هو 7% وليس 5%",
+      "confidence": 0.95
+    },
+    {
+      "id": "initial_patch_002",
+      "source": "human",
+      "field": "waste_factor",
+      "category": "steel",
+      "oldValue": 0.03,
+      "newValue": 0.05,
+      "reason": "Steel rebar cutting waste is typically 5% (lap splices + overlap)",
+      "reasonAr": "هدر قص حديد التسليح عادة 5% (وصلات + تراكب)",
+      "confidence": 0.90
+    },
+    {
+      "id": "initial_patch_003",
+      "source": "human",
+      "field": "waste_factor",
+      "category": "blocks",
+      "oldValue": 0.03,
+      "newValue": 0.05,
+      "reason": "Block breakage during transport + cutting typically 5%",
+      "reasonAr": "كسر البلوك أثناء النقل + القص عادة 5%",
+      "confidence": 0.85
+    },
+    {
+      "id": "initial_patch_004",
+      "source": "human",
+      "field": "waste_factor",
+      "category": "tiles",
+      "oldValue": 0.05,
+      "newValue": 0.10,
+      "reason": "Tile cutting waste is 10% for diagonal/pattern laying",
+      "reasonAr": "هدر قص البلاط 10% للتركيب القطري/بنمط",
+      "confidence": 0.80
+    },
+    {
+      "id": "initial_patch_005",
+      "source": "human",
+      "field": "waste_factor",
+      "category": "paint",
+      "oldValue": 0.05,
+      "newValue": 0.08,
+      "reason": "Paint waste includes overspray + touch-ups, typically 8%",
+      "reasonAr": "هدر الدهان يشمل الرش الزائد + التصحيحات، عادة 8%",
+      "confidence": 0.85
+    },
+    {
+      "id": "initial_patch_006",
+      "source": "human",
+      "field": "price",
+      "category": "insulation",
+      "ruleId": "thermal_insulation_roof",
+      "oldValue": 50,
+      "newValue": 65,
+      "reason": "Roof insulation (50mm polystyrene + labor) updated to 2026 market rate",
+      "reasonAr": "عزل حراري أسقف (بوليسترين 50مم + عمالة) — تحديث سعر 2026",
+      "confidence": 0.85
+    },
+    {
+      "id": "initial_patch_007",
+      "source": "human",
+      "field": "price",
+      "category": "waterproofing",
+      "ruleId": "waterproofing_foundation",
+      "oldValue": 70,
+      "newValue": 85,
+      "reason": "Foundation waterproofing (membrane + protection layer) updated to 2026",
+      "reasonAr": "عزل مائي أساسات (رولات + طبقة حماية) — تحديث سعر 2026",
+      "confidence": 0.85
+    },
+    {
+      "id": "initial_patch_008",
+      "source": "compliance",
+      "field": "existence",
+      "category": "fire",
+      "ruleId": "fire_alarm_system",
+      "oldValue": null,
+      "newValue": "required",
+      "reason": "SBC 801 mandates fire alarm system in all buildings > 200m²",
+      "reasonAr": "SBC 801 يلزم نظام إنذار حريق في كل مبنى > 200م²",
+      "confidence": 0.95
+    }
+  ]
+}

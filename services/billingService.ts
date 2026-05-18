@@ -1,15 +1,16 @@
 /**
- * Billing Service — V2
+ * Billing Service — V10
  * خدمة الفوترة والاشتراكات
  * 
  * المسؤوليات:
  * - حساب الفاتورة الشهرية (اشتراك + إضافات)
- * - إدارة الترقية والتخفيض
+ * - إدارة الترقية والتخفيض مع حفظ البيانات
  * - حالة الاشتراك
  * - حساب المبالغ النسبية (prorated)
+ * - تسجيل قيود محاسبية تلقائية عند تغيير الباقة
  */
 
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import {
     SUBSCRIPTION_PLANS,
@@ -17,6 +18,7 @@ import {
     getPlanAnnualPrice,
     type SubscriptionPlan
 } from '../companyData';
+import { accountingService } from './accountingService';
 
 // ═══════════════════════════════════════════════════════════════
 // Types
@@ -305,6 +307,9 @@ class BillingService {
 
     /**
      * Update user's subscription plan in Firestore
+     * V10: Does NOT reset permanent assets (projects, storage).
+     * Only resets monthly counters (AI, BOQ, API, tender).
+     * Records upgrade history + accounting ledger entry.
      */
     async updateSubscription(
         userId: string,
@@ -315,6 +320,19 @@ class BillingService {
             const plan = SUBSCRIPTION_PLANS.find(p => p.id === newPlanId);
             if (!plan) return false;
 
+            // 1. Get current plan info
+            const userRef = doc(db, 'users', userId);
+            const userSnap = await getDoc(userRef);
+            const currentData = userSnap.exists() ? userSnap.data() : {};
+            const oldPlanId = currentData.plan || 'free';
+            const oldPlan = SUBSCRIPTION_PLANS.find(p => p.id === oldPlanId);
+
+            // 2. Determine upgrade or downgrade
+            const oldTier = PLAN_TIER_ORDER[oldPlanId] ?? 0;
+            const newTier = PLAN_TIER_ORDER[newPlanId] ?? 0;
+            const changeType: 'upgrade' | 'downgrade' | 'same' = 
+                newTier > oldTier ? 'upgrade' : newTier < oldTier ? 'downgrade' : 'same';
+
             const now = new Date();
             const end = new Date(now);
             if (billingCycle === 'annual') {
@@ -323,33 +341,104 @@ class BillingService {
                 end.setMonth(end.getMonth() + 1);
             }
 
-            const userRef = doc(db, 'users', userId);
+            // 3. Update user document — preserve permanent assets!
             await updateDoc(userRef, {
                 plan: newPlanId,
                 billingCycle,
+                previousPlan: oldPlanId,
+                planChangedAt: now.toISOString(),
+                planChangeType: changeType,
                 subscriptionStart: now.toISOString(),
                 subscriptionEnd: end.toISOString(),
-                // Reset usage on plan change
-                usedProjects: 0,
+                // ✅ Reset MONTHLY counters only (not permanent assets)
                 usedAIItems: 0,
                 usedBOQUploads: 0,
                 usedAPICalls: 0,
                 usedTenderReports: 0,
                 lastUsageReset: now.toISOString(),
+                // ❌ NOT resetting: usedProjects, usedStorageMB (permanent)
                 updatedAt: serverTimestamp()
             });
 
-            // Also update userRoles document
+            // 4. Update userRoles document
             const roleRef = doc(db, 'userRoles', userId);
-            await updateDoc(roleRef, {
-                plan: newPlanId,
-                updatedAt: serverTimestamp()
+            try {
+                await updateDoc(roleRef, {
+                    plan: newPlanId,
+                    updatedAt: serverTimestamp()
+                });
+            } catch { /* userRoles doc may not exist for all users */ }
+
+            // 5. Record upgrade history in Firestore
+            const newPrice = billingCycle === 'annual'
+                ? getPlanAnnualPrice(newPlanId).annual / 12
+                : plan.price;
+            const oldPrice = oldPlan
+                ? (billingCycle === 'annual' ? getPlanAnnualPrice(oldPlanId).annual / 12 : oldPlan.price)
+                : 0;
+
+            await addDoc(collection(db, 'upgradeHistory'), {
+                userId,
+                userName: currentData.displayName || currentData.name || '',
+                userEmail: currentData.email || '',
+                fromPlan: oldPlanId,
+                toPlan: newPlanId,
+                changeType,
+                billingCycle,
+                oldPrice,
+                newPrice,
+                priceDifference: newPrice - oldPrice,
+                timestamp: serverTimestamp(),
+                createdAt: now.toISOString()
             });
+
+            // 6. Record accounting ledger entry
+            try {
+                const transactionType = changeType === 'upgrade' 
+                    ? 'subscription_upgrade' 
+                    : changeType === 'downgrade' 
+                        ? 'subscription_downgrade' 
+                        : 'subscription_renewal';
+
+                if (newPrice > 0) {
+                    accountingService.addLedgerEntry({
+                        description: `${transactionType}: ${oldPlanId} → ${newPlanId} (${billingCycle})`,
+                        type: 'credit',
+                        amount: newPrice,
+                        reference: `plan_change_${userId}_${now.getTime()}`,
+                        category: 'Subscriptions',
+                        createdBy: 'System',
+                    });
+                }
+            } catch (accErr) {
+                console.warn('⚠️ Accounting entry failed (non-blocking):', accErr);
+            }
 
             return true;
         } catch (error) {
             console.error('❌ updateSubscription error:', error);
             return false;
+        }
+    }
+
+    /**
+     * Get upgrade/downgrade history for a user
+     */
+    async getUpgradeHistory(userId: string): Promise<Array<{
+        fromPlan: string;
+        toPlan: string;
+        changeType: string;
+        newPrice: number;
+        createdAt: string;
+    }>> {
+        try {
+            const { getDocs, query, where, orderBy, limit } = await import('firebase/firestore');
+            const histRef = collection(db, 'upgradeHistory');
+            const q = query(histRef, where('userId', '==', userId), orderBy('timestamp', 'desc'), limit(10));
+            const snap = await getDocs(q);
+            return snap.docs.map(d => d.data() as any);
+        } catch {
+            return [];
         }
     }
 

@@ -15,7 +15,7 @@ export type InvoiceStatus = 'draft' | 'pending' | 'paid' | 'overdue' | 'cancelle
 export type LedgerType = 'debit' | 'credit';
 
 // نوع الاشتراك
-export type SubscriptionPlan = 'free' | 'professional' | 'enterprise';
+export type SubscriptionPlan = 'free' | 'starter' | 'professional' | 'business' | 'enterprise';
 
 // حالة الاشتراك
 export type SubscriptionStatus = 'active' | 'expired' | 'cancelled' | 'pending' | 'pending_approval' | 'rejected';
@@ -69,6 +69,18 @@ export interface InvoiceItem {
     unitPrice: number;          // سعر الوحدة
     total: number;              // الإجمالي
 }
+// نوع العملية المالية — V10
+export type TransactionType = 
+    | 'subscription_new'       // اشتراك جديد
+    | 'subscription_upgrade'   // ترقية
+    | 'subscription_downgrade' // تخفيض
+    | 'subscription_renewal'   // تجديد
+    | 'storage_purchase'       // شراء مساحة (موردين)
+    | 'rfq_commission'         // عمولة RFQ (ربح آربا)
+    | 'rfq_gateway_fee'        // رسوم بوابة دفع RFQ
+    | 'rfq_fixed_fee'          // رسوم ثابتة RFQ
+    | 'supplier_invoice'       // فاتورة مورد عبر آربا
+    | 'manual';                // يدوي
 
 // قيد الحساب (دائن/مدين)
 export interface LedgerEntry {
@@ -82,6 +94,12 @@ export interface LedgerEntry {
     category: string;           // التصنيف
     createdBy: string;          // منشئ القيد
     createdAt: string;
+    // V10: Transaction metadata
+    transactionType?: TransactionType;  // نوع العملية
+    planFrom?: string;          // الباقة القديمة (عند تغيير الباقة)
+    planTo?: string;            // الباقة الجديدة
+    relatedUserId?: string;     // معرف المستخدم المرتبط
+    relatedOrderId?: string;    // معرف الطلب المرتبط (RFQ)
 }
 
 // الاشتراك
@@ -188,8 +206,10 @@ export const LEDGER_TYPE_TRANSLATIONS: Record<LedgerType, { ar: string; en: stri
 
 export const SUBSCRIPTION_PLAN_TRANSLATIONS: Record<SubscriptionPlan, { ar: string; en: string; price: number }> = {
     free: { ar: 'مجانية', en: 'Free', price: 0 },
-    professional: { ar: 'احترافية', en: 'Professional', price: 299 },
-    enterprise: { ar: 'مؤسسية', en: 'Enterprise', price: 999 }
+    starter: { ar: 'أساسية', en: 'Starter', price: 149 },
+    professional: { ar: 'احترافية', en: 'Professional', price: 399 },
+    business: { ar: 'أعمال', en: 'Business', price: 999 },
+    enterprise: { ar: 'مؤسسية', en: 'Enterprise', price: 1999 }
 };
 
 export const SUBSCRIPTION_STATUS_TRANSLATIONS: Record<SubscriptionStatus, { ar: string; en: string }> = {

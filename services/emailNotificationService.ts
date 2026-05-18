@@ -13,11 +13,12 @@ import emailjs from '@emailjs/browser';
 const EMAILJS_CONFIG = {
     serviceId: import.meta.env.VITE_EMAILJS_SERVICE_ID || 'service_arba_support',
     publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY || '',
+    // Single unified template — all notifications use the same template with dynamic {{message}}
     templates: {
         ticketCreated: import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'template_ticket_created',
-        ticketResponse: 'template_ticket_response',
-        ticketInquiry: 'template_ticket_inquiry',
-        ticketClosed: 'template_ticket_closed',
+        ticketResponse: import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'template_ticket_response',
+        ticketInquiry: import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'template_ticket_inquiry',
+        ticketClosed: import.meta.env.VITE_EMAILJS_TEMPLATE_ID || 'template_ticket_closed',
     }
 };
 

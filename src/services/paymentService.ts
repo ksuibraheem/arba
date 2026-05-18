@@ -133,7 +133,8 @@ export async function initiateElectronicPayment(request: PaymentRequest): Promis
         metadata: {
             userEmail: request.userEmail,
             userName: request.userName,
-            plan: request.plan
+            plan: request.plan,
+            billingCycle: request.billingCycle || 'monthly'
         }
     });
 
@@ -154,7 +155,9 @@ export async function initiateElectronicPayment(request: PaymentRequest): Promis
             userName: request.userName,
             userEmail: request.userEmail,
             paymentId,
-            redirectUrl
+            redirectUrl,
+            plan: request.plan,
+            billingCycle: request.billingCycle || 'monthly'
         });
 
         const data = result.data as any;
@@ -193,7 +196,7 @@ export async function initiateElectronicPayment(request: PaymentRequest): Promis
                 customer_initiated: true,
                 threeDSecure: true,
                 save_card: false,
-                description: 'Arba Pricing - Professional Plan Subscription',
+                description: `Arba Pricing - ${request.plan?.charAt(0).toUpperCase()}${request.plan?.slice(1)} Plan`,
                 metadata: {
                     arba_payment_id: paymentId,
                     arba_user_id: request.userId,
@@ -315,6 +318,7 @@ export async function submitBankTransfer(request: PaymentRequest): Promise<Payme
             userEmail: request.userEmail,
             userName: request.userName,
             plan: request.plan,
+            billingCycle: request.billingCycle || 'monthly',
             receiptFile: request.receiptFile || '',
             receiptFileName: request.receiptFileName || ''
         }
@@ -357,6 +361,7 @@ export async function activateSubscription(
     paymentId: string,
     billingCycle: 'monthly' | 'annual' = 'monthly'
 ): Promise<boolean> {
+    const startDate = new Date();
     const expiresAt = new Date();
     if (billingCycle === 'annual') {
         expiresAt.setFullYear(expiresAt.getFullYear() + 1);
@@ -368,6 +373,7 @@ export async function activateSubscription(
         ? (PLAN_ANNUAL_PRICES[plan] || 0)
         : (PLAN_PRICES[plan] || 0);
 
+    // 1. Firestore subscription record
     const subscriptionId = await createSubscription({
         userId,
         plan,
@@ -377,6 +383,57 @@ export async function activateSubscription(
         paymentId,
         expiresAt: Timestamp.fromDate(expiresAt)
     });
+
+    // 2. Record in accountingService (للمحاسب)
+    try {
+        const { accountingService } = await import('../../services/accountingService');
+        
+        // قراءة بيانات المستخدم من Firestore
+        let userName = '';
+        let userEmail = '';
+        let userType: 'individual' | 'company' | 'supplier' = 'individual';
+        try {
+            const { getUserData: fetchUser } = await import('../../firebase/authService');
+            const userData = await fetchUser(userId);
+            if (userData) {
+                userName = userData.name || '';
+                userEmail = userData.email || '';
+                userType = (userData.userType as any) || 'individual';
+            }
+        } catch { /* fallback to empty */ }
+
+        // تسجيل قيد الاشتراك في دفتر الأستاذ
+        accountingService.addLedgerEntry({
+            description: `اشتراك ${plan} — ${billingCycle === 'annual' ? 'سنوي' : 'شهري'} — من ${startDate.toISOString().split('T')[0]} إلى ${expiresAt.toISOString().split('T')[0]} — ${userName || userId}`,
+            type: 'credit',
+            amount: price,
+            reference: paymentId,
+            category: 'Subscriptions',
+            createdBy: 'System',
+            transactionType: 'subscription_new',
+            planTo: plan,
+            relatedUserId: userId,
+        });
+
+        // تسجيل في سجل الاشتراكات
+        accountingService.createSubscription({
+            userId,
+            userName,
+            userEmail,
+            userType,
+            plan: plan as any,
+            status: 'active',
+            startDate: startDate.toISOString().split('T')[0],
+            endDate: expiresAt.toISOString().split('T')[0],
+            amount: price,
+            autoRenew: billingCycle === 'annual' ? false : true,
+            approvalStatus: 'approved',
+            approvedBy: 'Auto-Activated',
+            approvedAt: new Date().toISOString(),
+        });
+    } catch (err) {
+        console.warn('⚠️ Accounting ledger entry failed (non-critical):', err);
+    }
 
     return subscriptionId !== null;
 }

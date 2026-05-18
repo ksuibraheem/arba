@@ -56,6 +56,8 @@ import {
     saveSupplierServices,
     initializeSupplierData
 } from '../../services/supplierStorageService';
+import { supplierStorageService as supplierStorageSvc, SUPPLIER_STORAGE_CONFIG } from '../../services/supplierStorageService';
+import SupplierOrdersPanel from '../../components/supplier/SupplierOrdersPanel';
 
 interface SupplierDashboardProps {
     language: Language;
@@ -114,7 +116,7 @@ interface QuoteRequest {
 const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavigate, onLogout, isTestMode = false, supplierId = 'demo_supplier' }) => {
     const isRtl = language === 'ar';
     const Arrow = isRtl ? ArrowRight : ArrowLeft;
-    const [activeTab, setActiveTab] = useState<'overview' | 'categories' | 'products' | 'sales' | 'rentals' | 'quotes' | 'analytics' | 'promotions' | 'services' | 'employees' | 'settings'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'categories' | 'products' | 'sales' | 'rentals' | 'quotes' | 'analytics' | 'promotions' | 'services' | 'employees' | 'subscription' | 'orders' | 'settings'>('overview');
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [showCreatePromotion, setShowCreatePromotion] = useState(false);
     const [selectedProductForPromo, setSelectedProductForPromo] = useState<Product | null>(null);
@@ -282,7 +284,9 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
         minDuration: { ar: 'أقل مدة', en: 'Min Duration' },
         availableForRent: { ar: 'متاح للتأجير', en: 'Available' },
         services: { ar: 'الخدمات', en: 'Services' },
-        employees: { ar: 'الموظفين', en: 'Employees' }
+        employees: { ar: 'الموظفين', en: 'Employees' },
+        subscription: { ar: 'اشتراكي', en: 'My Plan' },
+        orders: { ar: 'الطلبات الواردة', en: 'Incoming Orders' }
     };
 
     const getLabel = (key: keyof typeof TRANSLATIONS_DICT) => TRANSLATIONS_DICT[key][language];
@@ -371,7 +375,7 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
             <div className="max-w-7xl mx-auto px-6 py-8">
                 {/* Tabs */}
                 <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
-                    {(['overview', 'categories', 'sales', 'rentals', 'products', 'quotes', 'services', 'employees', 'analytics', 'promotions', 'settings'] as const).map((tab) => (
+                    {(['overview', 'categories', 'sales', 'rentals', 'products', 'quotes', 'orders', 'subscription', 'services', 'employees', 'analytics', 'promotions', 'settings'] as const).map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
@@ -1164,6 +1168,87 @@ const SupplierDashboard: React.FC<SupplierDashboardProps> = ({ language, onNavig
                         onUpdate={setEmployees}
                         readOnly={isTestMode}
                     />
+                )}
+
+                {/* Subscription Tab — V10 */}
+                {activeTab === 'subscription' && (
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                                <Package className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold text-white">{t('اشتراكي', 'My Plan')}</h2>
+                                <p className="text-slate-400 text-sm">{t('باقة المورد المجانية + مساحة إضافية', 'Free supplier plan + extra storage')}</p>
+                            </div>
+                        </div>
+
+                        {/* Current Usage */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-5 border border-emerald-500/20">
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className="text-slate-400 text-sm">{t('المساحة', 'Storage')}</span>
+                                    <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">{t('مجاني', 'Free')}</span>
+                                </div>
+                                <div className="text-2xl font-bold text-white mb-2">
+                                    0 / {SUPPLIER_STORAGE_CONFIG.freeStorageMB} MB
+                                </div>
+                                <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: '0%' }} />
+                                </div>
+                            </div>
+                            <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-5 border border-blue-500/20">
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className="text-slate-400 text-sm">{t('المنتجات', 'Products')}</span>
+                                    <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400">{SUPPLIER_STORAGE_CONFIG.freeProductLimit} {t('مجاني', 'free')}</span>
+                                </div>
+                                <div className="text-2xl font-bold text-white mb-2">
+                                    {products.length} / {SUPPLIER_STORAGE_CONFIG.freeProductLimit}
+                                </div>
+                                <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min(100, (products.length / SUPPLIER_STORAGE_CONFIG.freeProductLimit) * 100)}%` }} />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Storage Packages */}
+                        <div>
+                            <h3 className="text-lg font-bold text-white mb-4">{t('📦 باقات المساحة الإضافية', '📦 Extra Storage Packages')}</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                {SUPPLIER_STORAGE_CONFIG.packages.map((pkg, idx) => (
+                                    <div key={pkg.id} className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-5 border border-slate-700/50 hover:border-emerald-500/30 transition-all">
+                                        <div className="text-center mb-4">
+                                            <p className="text-3xl font-black text-white">{pkg.mb >= 1000 ? `${pkg.mb/1000} GB` : `${pkg.mb} MB`}</p>
+                                            <p className="text-slate-400 text-xs mt-1">+ {pkg.extraProducts} {t('منتج', 'products')}</p>
+                                        </div>
+                                        <div className="text-center mb-4">
+                                            <span className="text-2xl font-bold text-emerald-400">{pkg.price}</span>
+                                            <span className="text-slate-400 text-sm"> {t('ر.س/شهر', 'SAR/mo')}</span>
+                                        </div>
+                                        <button className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-sm hover:scale-[1.02] transition-all shadow-lg shadow-emerald-500/20">
+                                            {t('اشترِ الآن', 'Buy Now')}
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Orders Tab — V10 (RFQ) */}
+                {activeTab === 'orders' && (
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3 mb-2">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                                <ShoppingCart className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold text-white">{t('الطلبات الواردة', 'Incoming Orders')}</h2>
+                                <p className="text-slate-400 text-sm">{t('طلبات العملاء عبر آربا', 'Client requests via ARBA')}</p>
+                            </div>
+                        </div>
+                        <SupplierOrdersPanel supplierId={supplierId} language={language} />
+                    </div>
                 )}
             </div>
         </div>

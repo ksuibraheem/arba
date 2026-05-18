@@ -8,6 +8,7 @@ import TenderAnalysisModal from './TenderAnalysisModal';
 import { BrainCircuit, Instagram } from 'lucide-react';
 import { generatePriceComparisonCard, downloadSocialCard } from '../services/socialCardGenerator';
 import { temporalAuditService } from '../services/temporalAuditService';
+import { quoteSnapshotService } from '../services/quoteSnapshotService';
 
 interface PriceQuoteProps {
     state: AppState;
@@ -616,6 +617,31 @@ const PriceQuote: React.FC<PriceQuoteProps> = ({
 
             const blob = await generatePricingPDF(config);
             downloadPDF(blob, `Arba_Quote_${quoteNumber}.pdf`);
+
+            // حفظ لقطة من عرض السعر للمرجعية والمقارنة
+            try {
+                quoteSnapshotService.saveQuickSnapshot({
+                    quoteNumber,
+                    projectType: state.projectType,
+                    totalItems: activeItems.length,
+                    totalDirect: totals.totalDirect,
+                    totalOverhead: totals.totalOverhead,
+                    totalProfit: totals.totalProfit,
+                    finalPrice: totals.finalPrice,
+                    buildArea: totalBuildAreaPDF,
+                    pricePerM2: totalBuildAreaPDF > 0 ? Math.round(totals.finalPrice / totalBuildAreaPDF) : 0,
+                    items: activeItems.map(item => ({
+                        id: item.id,
+                        name: item.displayName,
+                        qty: item.qty,
+                        unit: item.unit,
+                        unitPrice: item.finalUnitPrice,
+                        total: item.totalLinePrice,
+                    })),
+                    generatedAt: new Date().toISOString(),
+                    userId,
+                });
+            } catch { /* snapshot is non-blocking */ }
         } catch (err: any) {
             console.error('PDF Export Error:', err);
             const errMsg = err?.message || String(err);

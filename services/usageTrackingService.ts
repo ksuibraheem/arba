@@ -227,18 +227,20 @@ class UsageTrackingService {
 
     /**
      * Reset monthly usage counters (call at start of billing cycle)
+     * V10: Only resets MONTHLY counters. Permanent assets (projects, storage) are NOT touched.
      */
     async resetMonthlyUsage(userId: string): Promise<boolean> {
         try {
             const userRef = doc(db, 'users', userId);
             await updateDoc(userRef, {
-                usedProjects: 0,
+                // ✅ Monthly counters — reset every billing cycle
                 usedAIItems: 0,
                 usedBOQUploads: 0,
                 usedAPICalls: 0,
                 usedTenderReports: 0,
                 lastUsageReset: new Date().toISOString(),
                 updatedAt: serverTimestamp()
+                // ❌ NOT resetting: usedProjects, usedStorageMB (permanent assets)
             });
             return true;
         } catch (error) {

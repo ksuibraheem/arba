@@ -250,6 +250,48 @@ class QuoteSnapshotService {
     if (snapshots.length > 100) snapshots = snapshots.slice(-100);
     localStorage.setItem(SNAPSHOTS_KEY, JSON.stringify(snapshots));
   }
+
+  // =================== Quick Snapshot (Lightweight) ===================
+
+  /**
+   * Save a lightweight snapshot without requiring CognitiveEngineOutput.
+   * Used by PriceQuote for quick quote history tracking.
+   * يحفظ لقطة مبسطة لتتبع تاريخ العروض
+   */
+  saveQuickSnapshot(data: {
+    quoteNumber: string;
+    projectType: string;
+    totalItems: number;
+    finalPrice: number;
+    buildArea: number;
+    pricePerM2: number;
+    items: Array<{ id: string; name: string; qty: number; unit: string; unitPrice: number; total: number }>;
+    generatedAt: string;
+    userId: string;
+    [key: string]: any;
+  }): void {
+    try {
+      const key = 'arba_quick_snapshots';
+      const existing = JSON.parse(localStorage.getItem(key) || '[]');
+      existing.push({
+        ...data,
+        id: `qsnap_${Date.now()}`,
+        savedAt: new Date().toISOString(),
+      });
+      // Keep last 50
+      if (existing.length > 50) existing.splice(0, existing.length - 50);
+      localStorage.setItem(key, JSON.stringify(existing));
+    } catch { /* non-critical */ }
+  }
+
+  /**
+   * Get all quick snapshots
+   */
+  getQuickSnapshots(): any[] {
+    try {
+      return JSON.parse(localStorage.getItem('arba_quick_snapshots') || '[]');
+    } catch { return []; }
+  }
 }
 
 export const quoteSnapshotService = new QuoteSnapshotService();

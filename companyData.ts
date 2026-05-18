@@ -332,24 +332,28 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
             ar: [
                 'مشروع واحد شهرياً',
                 'تسعير أساسي (فيلا فقط)',
+                'تنبيهات ألوان ذكية (أحمر/برتقالي/أخضر)',
                 'دعم بريد إلكتروني (72 ساعة)',
                 'مساحة تخزين 25 ميجا'
             ],
             en: [
                 '1 project per month',
                 'Basic pricing (villa only)',
+                'Smart color alerts (red/orange/green)',
                 'Email support (72h)',
                 '25 MB storage'
             ],
             fr: [
                 '1 projet par mois',
                 'Tarification de base (villa uniquement)',
+                'Alertes couleur intelligentes',
                 'Assistance e-mail (72h)',
                 'Stockage de 25 Mo'
             ],
             zh: [
                 '每月1个项目',
                 '基础定价（仅别墅）',
+                '智能颜色提醒',
                 '电子邮件支持（72小时）',
                 '25 MB 存储空间'
             ]
@@ -418,9 +422,10 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
                 'رفع 3 BOQ شهرياً',
                 'تصدير PDF و Excel',
                 'أسعار بورصة المواد',
+                'كشف بنود ناقصة — أساسي',
+                'فحص امتثال SBC أساسي',
                 'تقارير الدماغ الأساسية',
-                'مساحة تخزين 200 ميجا',
-                '39 ر.س لكل مشروع إضافي'
+                'مساحة تخزين 200 ميجا'
             ],
             en: [
                 '5 projects per month',
@@ -428,9 +433,10 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
                 '3 BOQ uploads per month',
                 'PDF & Excel export',
                 'Commodity prices',
+                'Basic missing item detection',
+                'Basic SBC compliance check',
                 'Basic brain reports',
-                '200 MB storage',
-                '39 SAR per extra project'
+                '200 MB storage'
             ],
             fr: [
                 '5 projets par mois',
@@ -438,9 +444,10 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
                 '3 téléversements BOQ par mois',
                 'Export PDF et Excel',
                 'Prix des matières premières',
+                'Détection d\'éléments manquants',
+                'Vérification conformité SBC',
                 'Rapports intelligence de base',
-                'Stockage de 200 Mo',
-                '39 SAR par projet supplémentaire'
+                'Stockage de 200 Mo'
             ],
             zh: [
                 '每月5个项目',
@@ -448,9 +455,10 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
                 '每月3次BOQ上传',
                 'PDF和Excel导出',
                 '商品价格',
+                '缺项检测 — 基础',
+                'SBC合规检查',
                 '基础智能报告',
-                '200 MB 存储空间',
-                '每个额外项目 39 SAR'
+                '200 MB 存储空间'
             ]
         },
         restrictions: {
@@ -518,10 +526,12 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
                 'رفع 10 BOQ شهرياً',
                 'تصدير PDF + شعار شركتك',
                 'بورصة مواد كاملة + تنبؤ 30 يوم',
-                'دماغ ذكي كامل + Deviation Alerts',
+                '🧠 كشف بنود ناقصة (17 قاعدة)',
+                '🔍 كشف تلاعب بالأسعار (12 قاعدة)',
+                '📋 فحص امتثال SBC كامل',
+                '⚠️ تنبيهات الانحراف الذكية',
                 '3 موظفين + لوحة تحكم الفريق',
                 'تقريرا مناقصة شهرياً',
-                'مساحة تخزين 2 جيجا',
                 'دعم واتساب (24 ساعة)'
             ],
             en: [
@@ -530,10 +540,12 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
                 '10 BOQ uploads per month',
                 'PDF export + your company logo',
                 'Full commodity exchange + 30-day forecast',
-                'Full brain engine + Deviation Alerts',
+                '🧠 Missing item detection (17 rules)',
+                '🔍 Price anomaly detection (12 rules)',
+                '📋 Full SBC compliance check',
+                '⚠️ Smart deviation alerts',
                 '3 employees + team dashboard',
                 '2 tender reports per month',
-                '2 GB storage',
                 'WhatsApp support (24h)'
             ],
             fr: [
@@ -542,10 +554,12 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
                 '10 téléversements BOQ par mois',
                 'Export PDF + logo entreprise',
                 'Bourse complète + prévision 30 jours',
-                'Intelligence complète + alertes de déviation',
+                '🧠 Détection éléments manquants (17 règles)',
+                '🔍 Détection anomalies de prix (12 règles)',
+                '📋 Conformité SBC complète',
+                '⚠️ Alertes de déviation intelligentes',
                 '3 employés + tableau de bord équipe',
                 '2 rapports d\'appel d\'offres par mois',
-                'Stockage de 2 Go',
                 'Assistance WhatsApp (24h)'
             ],
             zh: [
@@ -554,10 +568,12 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
                 '每月10次BOQ上传',
                 'PDF导出 + 公司标志',
                 '完整商品交易所 + 30天预测',
-                '完整智能引擎 + 偏差警报',
+                '🧠 缺项检测（17条规则）',
+                '🔍 价格异常检测（12条规则）',
+                '📋 完整SBC合规检查',
+                '⚠️ 智能偏差警报',
                 '3名员工 + 团队仪表板',
                 '每月2份招标报告',
-                '2 GB 存储空间',
                 'WhatsApp支持（24小时）'
             ]
         },
@@ -626,11 +642,13 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
                 'تصنيف AI متقدم+ (2,000 بند)',
                 'رفع BOQ غير محدود',
                 'بورصة كاملة + تنبيهات ذكية',
-                'دماغ ذكي كامل+ (Contextual Baselines)',
+                '🧠 ذكاء V10 كامل + 5 وكلاء ذكاء',
+                '👷 مهندس مناوب ذكي (Ghost Agent)',
+                '📋 ذكاء تنظيمي كامل (15 قاعدة SBC)',
+                '🎓 تدريب ذاتي مستمر',
+                '📊 لوحة مراقبة الدماغ',
                 '10 موظفين + صلاحيات متقدمة',
                 'API Access (1,000 call/شهر)',
-                '10 تقارير مناقصة شهرياً',
-                'مساحة تخزين 10 جيجا',
                 'دعم هاتفي (12 ساعة) + Onboarding'
             ],
             en: [
@@ -638,11 +656,13 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
                 'Advanced AI+ (2,000 items)',
                 'Unlimited BOQ uploads',
                 'Full commodity + smart alerts',
-                'Full brain+ (Contextual Baselines)',
+                '🧠 Full V10 Intelligence + 5 AI Agents',
+                '👷 Engineering Ghost Agent',
+                '📋 Full Regulatory Intelligence (15 SBC rules)',
+                '🎓 Continuous self-training',
+                '📊 Brain monitoring dashboard',
                 '10 employees + advanced roles',
                 'API Access (1,000 calls/month)',
-                '10 tender reports per month',
-                '10 GB storage',
                 'Phone support (12h) + Onboarding'
             ],
             fr: [
@@ -650,11 +670,13 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
                 'IA avancée+ (2 000 éléments)',
                 'Téléversements BOQ illimités',
                 'Bourse complète + alertes intelligentes',
-                'Intelligence complète+ (référentiels contextuels)',
+                '🧠 Intelligence V10 complète + 5 agents IA',
+                '👷 Agent Ingénieur Fantôme',
+                '📋 Intelligence réglementaire (15 règles SBC)',
+                '🎓 Auto-apprentissage continu',
+                '📊 Tableau de bord du cerveau',
                 '10 employés + rôles avancés',
                 'Accès API (1 000 appels/mois)',
-                '10 rapports d\'appel d\'offres par mois',
-                'Stockage de 10 Go',
                 'Assistance téléphonique (12h) + intégration'
             ],
             zh: [
@@ -662,11 +684,13 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
                 '高级AI+（2,000个项目）',
                 '无限BOQ上传',
                 '完整商品 + 智能警报',
-                '完整智能+（上下文基准）',
+                '🧠 完整V10智能 + 5个AI代理',
+                '👷 工程幽灵代理',
+                '📋 完整监管智能（15条SBC规则）',
+                '🎓 持续自我训练',
+                '📊 大脑监控仪表板',
                 '10名员工 + 高级角色',
                 'API访问（每月1,000次调用）',
-                '每月10份招标报告',
-                '10 GB 存储空间',
                 '电话支持（12小时）+ 入门培训'
             ]
         },
@@ -733,56 +757,60 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
                 'تصنيف AI غير محدود',
                 'رفع BOQ غير محدود',
                 'بورصة كاملة + تنبيهات + تقارير',
-                'دماغ ذكي كامل+ (Collective Brain)',
+                '🧠 ذكاء V10 الكامل + Collective Brain',
+                '☁️ مزامنة سحابية 24/7',
+                '🎓 تدريب ذاتي + تعلم من المشاريع السابقة',
+                '👷 مهندس مناوب + ذكاء تنظيمي شامل',
                 '25 موظف + صلاحيات مخصصة',
                 'API غير محدود + Webhook + ERP',
                 'تقارير مناقصة غير محدودة + مخصصة',
-                'مساحة تخزين 50 جيجا',
                 'مدير حساب مخصص + SLA 4 ساعات',
-                'تدريب الفريق + White-label',
-                'Onboarding مخصص (3 ساعات)'
+                'تدريب الفريق + White-label'
             ],
             en: [
                 'Unlimited projects',
                 'Unlimited AI classification',
                 'Unlimited BOQ uploads',
                 'Full commodity + alerts + reports',
-                'Full brain+ (Collective Brain)',
+                '🧠 Full V10 Intelligence + Collective Brain',
+                '☁️ Cloud sync 24/7',
+                '🎓 Self-training + project memory',
+                '👷 Ghost Agent + full regulatory intelligence',
                 '25 employees + custom roles',
                 'Unlimited API + Webhook + ERP',
                 'Unlimited tender reports + custom',
-                '50 GB storage',
                 'Dedicated account manager + 4h SLA',
-                'Team training + White-label',
-                'Custom onboarding (3 hours)'
+                'Team training + White-label'
             ],
             fr: [
                 'Projets illimités',
                 'Classification IA illimitée',
                 'Téléversements BOQ illimités',
                 'Bourse complète + alertes + rapports',
-                'Intelligence complète+ (cerveau collectif)',
+                '🧠 Intelligence V10 complète + Cerveau Collectif',
+                '☁️ Synchronisation cloud 24/7',
+                '🎓 Auto-apprentissage + mémoire de projets',
+                '👷 Agent Fantôme + intelligence réglementaire',
                 '25 employés + rôles personnalisés',
                 'API illimité + Webhook + ERP',
-                'Rapports d\'appel d\'offres illimités + personnalisés',
-                'Stockage de 50 Go',
+                'Rapports illimités + personnalisés',
                 'Gestionnaire de compte dédié + SLA 4h',
-                'Formation d\'équipe + marque blanche',
-                'Intégration personnalisée (3 heures)'
+                'Formation d\'équipe + marque blanche'
             ],
             zh: [
                 '无限项目',
                 '无限AI分类',
                 '无限BOQ上传',
                 '完整商品 + 警报 + 报告',
-                '完整智能+（集体大脑）',
+                '🧠 完整V10智能 + 集体大脑',
+                '☁️ 云同步24/7',
+                '🎓 自我训练 + 项目记忆',
+                '👷 幽灵代理 + 完整监管智能',
                 '25名员工 + 自定义角色',
                 '无限API + Webhook + ERP',
                 '无限招标报告 + 自定义',
-                '50 GB 存储空间',
                 '专属客户经理 + 4小时SLA',
-                '团队培训 + 白标',
-                '定制入门培训（3小时）'
+                '团队培训 + 白标'
             ]
         },
         restrictions: {
@@ -1334,11 +1362,10 @@ export const PAGE_TRANSLATIONS: Record<string, Record<string, string>> = {
     suppliers: { ar: 'موردين', en: 'Suppliers', fr: 'Fournisseurs', zh: '供应商' },
     project_team: { ar: 'فريق المشروع', en: 'Project Team', fr: 'Équipe de Projet', zh: '项目团队' },
 
-    // Landing page stats
-    stat_support: { ar: 'دعم متواصل', en: '24/7 Support', fr: 'Assistance 24/7', zh: '全天候支持' },
-    stat_accuracy: { ar: 'دقة التسعير', en: 'Pricing Accuracy', fr: 'Précision de Tarification', zh: '定价精度' },
-    stat_clients: { ar: 'عميل حالي', en: 'Active Clients', fr: 'Clients Actifs', zh: '活跃客户' },
-    stat_items: { ar: 'منتج وتسعيرة', en: 'Products & Prices', fr: 'Produits et Prix', zh: '产品和价格' },
+    stat_support: { ar: 'نوع مشروع مدعوم', en: 'Project Types Supported', fr: 'Types de Projets', zh: '支持的项目类型' },
+    stat_accuracy: { ar: 'دقة التسعير بالـ AI', en: 'AI Pricing Accuracy', fr: 'Précision IA', zh: 'AI定价精度' },
+    stat_clients: { ar: 'مشروع تم تسعيره', en: 'Projects Priced', fr: 'Projets Tarifés', zh: '已定价项目' },
+    stat_items: { ar: 'نموذج تدريب ذكي', en: 'AI Training Models', fr: 'Modèles d\'Entraînement IA', zh: 'AI训练模型' },
 
     // Contact section
     contact_phone: { ar: 'الهاتف', en: 'Phone', fr: 'Téléphone', zh: '电话' },

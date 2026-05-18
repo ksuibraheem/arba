@@ -104,28 +104,28 @@ export interface BrainPricingTier {
   featuresAr: string[];
 }
 
-/** تسعير ميزات الذكاء الاصطناعي المتقدم */
+/** تسعير ميزات الذكاء الاصطناعي المتقدم — V10 */
 export const BRAIN_PRICING_TIERS: BrainPricingTier[] = [
   {
     name: 'Brain Basic',
     nameAr: 'الدماغ الأساسي',
     monthlyPrice: 0,
-    features: ['Color-coded alerts (red/orange/green)', 'Basic profit margin check'],
-    featuresAr: ['تنبيهات ملونة (أحمر/برتقالي/أخضر)', 'فحص هامش الربح الأساسي'],
+    features: ['Color-coded alerts (red/orange/green)', 'Basic profit margin check', 'Villa pricing only'],
+    featuresAr: ['تنبيهات ملونة (أحمر/برتقالي/أخضر)', 'فحص هامش الربح الأساسي', 'تسعير الفلل فقط'],
   },
   {
     name: 'Brain Pro',
     nameAr: 'الدماغ الاحترافي',
-    monthlyPrice: 149,
-    features: ['All Basic features', 'AI-powered tender analysis', 'Supplier optimization recommendations', 'Quantity deviation alerts'],
-    featuresAr: ['كل ميزات الأساسي', 'تحليل مناقصات بالذكاء الاصطناعي', 'توصيات تحسين الموردين', 'تنبيهات انحراف الكميات'],
+    monthlyPrice: 399,
+    features: ['All Basic features', 'AI-powered tender analysis', 'Missing item detection (17 rules)', 'Anomaly detection (12 rules)', 'SBC compliance check', 'Deviation Alerts', 'Supplier optimization'],
+    featuresAr: ['كل ميزات الأساسي', 'تحليل مناقصات بالذكاء الاصطناعي', 'كشف البنود الناقصة (17 قاعدة)', 'كشف التلاعب بالأسعار (12 قاعدة)', 'فحص امتثال SBC', 'تنبيهات الانحراف', 'تحسين الموردين'],
   },
   {
     name: 'Brain Enterprise',
     nameAr: 'الدماغ المؤسسي',
-    monthlyPrice: 399,
-    features: ['All Pro features', 'Full AI report with recommendations', 'Predictive pricing', 'Custom learning from past projects'],
-    featuresAr: ['كل ميزات الاحترافي', 'تقرير كامل بالتوصيات', 'تسعير تنبؤي', 'تعلم مخصص من المشاريع السابقة'],
+    monthlyPrice: 999,
+    features: ['All Pro features', 'Full AI report with recommendations', 'Engineering Ghost Agent', 'Regulatory Intelligence (15 rules)', 'Predictive pricing', 'Self-training pipeline', 'Cloud sync 24/7', 'Collective Brain'],
+    featuresAr: ['كل ميزات الاحترافي', 'تقرير كامل بالتوصيات', 'مهندس مناوب ذكي', 'ذكاء تنظيمي (15 قاعدة)', 'تسعير تنبؤي', 'تدريب ذاتي مستمر', 'مزامنة سحابية 24/7', 'الدماغ الجماعي'],
   },
 ];
 

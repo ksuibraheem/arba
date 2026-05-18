@@ -36,7 +36,7 @@ export type PaymentVerificationStatus =
 export type PaymentMethod = 'bank_transfer' | 'mada' | 'credit_card' | 'stc_pay' | 'apple_pay';
 
 // نوع الخطة
-export type PlanType = 'free' | 'professional';
+export type PlanType = 'free' | 'starter' | 'professional' | 'business' | 'enterprise';
 
 // طلب التسجيل
 export interface RegistrationRequest {
@@ -156,9 +156,13 @@ export const PAYMENT_STATUS_TRANSLATIONS: Record<PaymentVerificationStatus, { ar
     request_new: { ar: 'طلب إيصال جديد', en: 'New Receipt Required' }
 };
 
-export const PLAN_PRICES: Record<PlanType, number> = {
+// ⚠️ مصدر مطابق لـ src/services/paymentService.ts — يجب تحديثهما معاً
+export const PLAN_PRICES: Record<string, number> = {
     free: 0,
-    professional: 299
+    starter: 149,
+    professional: 399,
+    business: 999,
+    enterprise: 1999
 };
 
 // ====================== خدمة التسجيل ======================
@@ -191,7 +195,7 @@ class RegistrationService {
                     businessType: 'تقنية معلومات',
                     crVerified: false,
                     plan: 'professional',
-                    amount: 299,
+                    amount: 399,
                     emailCode: '1234',
                     emailCodeExpiry: now.toISOString(),
                     emailVerified: true,

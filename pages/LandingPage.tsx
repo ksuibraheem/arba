@@ -190,10 +190,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                     {/* Stats */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-20">
                         {[
-                            { value: '500+', label: t('stat_items') },
-                            { value: '150+', label: t('stat_clients') },
-                            { value: '99%', label: t('stat_accuracy') },
-                            { value: '24/7', label: t('stat_support') }
+                            { value: '10K+', label: t('stat_items') },
+                            { value: '500+', label: t('stat_clients') },
+                            { value: '99.7%', label: t('stat_accuracy') },
+                            { value: '18+', label: t('stat_support') }
                         ].map((stat, index) => (
                             <div key={index} className="text-center p-6 bg-[#0E132B]/70 rounded-2xl border border-[#2B2D6E]/40 backdrop-blur-sm hover:border-green-500/20 transition-colors">
                                 <div className="text-3xl md:text-4xl font-extrabold text-green-400 mb-2">{stat.value}</div>
@@ -386,9 +386,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                         </div>
 
                         <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs sm:text-sm text-slate-400">
-                            <span>© 2025 {t('footer_rights')}</span>
-                            <a href="#" className="hover:text-white transition-colors">{t('footer_privacy')}</a>
-                            <a href="#" className="hover:text-white transition-colors">{t('footer_terms')}</a>
+                            <span>© 2026 {t('footer_rights')}</span>
+                            <button onClick={() => onNavigate('terms')} className="hover:text-white transition-colors">{t('footer_privacy')}</button>
+                            <button onClick={() => onNavigate('terms')} className="hover:text-white transition-colors">{t('footer_terms')}</button>
                         </div>
                     </div>
                 </div>

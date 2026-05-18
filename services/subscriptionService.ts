@@ -151,7 +151,7 @@ export function canAddProject(): LimitCheckResult {
                 ar: `وصلت للحد الأقصى (${planData.projectsIncluded} مشاريع). قم بالترقية لإضافة المزيد.`,
                 en: `Reached limit (${planData.projectsIncluded} projects). Upgrade to add more.`,
             },
-            upgradeRequired: 'pro',
+            upgradeRequired: 'professional',
             currentLimit: planData.projectsIncluded,
             currentUsage: currentState.projectsUsed,
         };
@@ -170,7 +170,7 @@ export function canAddEmployee(): LimitCheckResult {
                 ar: 'الباقة المجانية لا تدعم إضافة موظفين. يرجى الترقية.',
                 en: 'Free plan does not support employees. Please upgrade.',
             },
-            upgradeRequired: 'basic',
+            upgradeRequired: 'starter',
         };
     }
 
@@ -204,7 +204,7 @@ export function canUploadFile(fileSizeMB: number): LimitCheckResult {
                 ar: `تجاوزت حد التخزين (${maxMB} ميجا). قم بالترقية لمساحة أكبر.`,
                 en: `Storage limit exceeded (${maxMB} MB). Upgrade for more space.`,
             },
-            upgradeRequired: currentState.plan === 'free' ? 'basic' : 'pro',
+            upgradeRequired: currentState.plan === 'free' ? 'starter' : 'professional',
             currentLimit: maxMB,
             currentUsage: currentState.storageUsedMB,
         };
@@ -234,7 +234,7 @@ export function canAccessFeature(feature: 'ai_pricing' | 'download' | 'company_l
                 ar: 'هذه الميزة غير متاحة في باقتك الحالية. قم بالترقية.',
                 en: 'This feature is not available in your current plan. Please upgrade.',
             },
-            upgradeRequired: 'pro',
+            upgradeRequired: 'professional',
         };
     }
     return { allowed: true };
@@ -257,8 +257,8 @@ function notifyListeners() {
 
 // =================== Helpers ===================
 
-/** Map internal plan types to companyData plan IDs — V2 */
-function mapPlanId(plan: PlanType): string {
+/** Map internal plan types to companyData plan IDs — V10 */
+function mapPlanId(plan: PlanType | string): string {
     switch (plan) {
         case 'free': return 'free';
         case 'starter': return 'starter';

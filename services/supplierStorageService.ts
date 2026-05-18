@@ -1,283 +1,242 @@
 /**
- * خدمة تخزين بيانات الموردين
- * Supplier Storage Service - Manages supplier data persistence
- * 🔥 Synced with Firestore via firestoreDataService
+ * Supplier Storage Service — V10
+ * إدارة مساحة تخزين المورد
+ * 
+ * - المورد يحصل على مساحة مجانية محدودة
+ * - يستطيع شراء مساحة إضافية (29 ر.س / 100 MB)
+ * - هامش ربح آربا 75%
+ * - الحفظ عبر Firestore
  */
 
+import { doc, getDoc, updateDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
+import { db } from '../firebase/config';
+import { accountingService } from './accountingService';
 import { SupplierEmployee, SupplierServicesCatalog, createDefaultServicesCatalog } from './supplierManagementService';
-import { firestoreDataService } from './firestoreDataService';
 
-// =================== مفاتيح التخزين ===================
-const SUPPLIER_DATA_KEY = 'arba_supplier_data';
-const SUPPLIER_EMPLOYEES_KEY = 'arba_supplier_employees';
-const SUPPLIER_SERVICES_KEY = 'arba_supplier_services';
+// ═══════════════════════════════════════════════════════════════
+// Configuration
+// ═══════════════════════════════════════════════════════════════
 
-// =================== أنواع البيانات ===================
+export const SUPPLIER_STORAGE_CONFIG = {
+    freeStorageMB: 50,
+    freeProductLimit: 20,
+    packages: [
+        { id: 'pkg_100mb',  mb: 100,  price: 29,  arbaProfit: 21.75,  extraProducts: 50 },
+        { id: 'pkg_500mb',  mb: 500,  price: 119, arbaProfit: 89.25,  extraProducts: 200 },
+        { id: 'pkg_1000mb', mb: 1000, price: 199, arbaProfit: 149.25, extraProducts: 500 },
+    ],
+    billingType: 'monthly' as const,
+    arbaProfitPercent: 75,
+};
 
-export interface SupplierStorageData {
+// ═══════════════════════════════════════════════════════════════
+// Types
+// ═══════════════════════════════════════════════════════════════
+
+export interface SupplierStorageSummary {
     supplierId: string;
-    employees: SupplierEmployee[];
-    services: SupplierServicesCatalog;
-    lastUpdated: string;
+    totalStorageMB: number;
+    usedStorageMB: number;
+    freeStorageMB: number;
+    purchasedStorageMB: number;
+    totalProducts: number;
+    maxProducts: number;
+    percentageUsed: number;
+    purchases: StoragePurchase[];
 }
 
-// =================== تحميل من Firestore ===================
+export interface StoragePurchase {
+    id: string;
+    supplierId: string;
+    packageId: string;
+    storageMB: number;
+    extraProducts: number;
+    price: number;
+    arbaProfit: number;
+    purchasedAt: string;
+}
 
-let _loadedFromFS = false;
-export const loadSupplierStorageFromFirestore = async (): Promise<void> => {
-    if (_loadedFromFS) return;
-    try {
-        const items = await firestoreDataService.getCollection<SupplierStorageData & { id: string }>('supplier_storage', undefined, { localCacheKey: SUPPLIER_DATA_KEY + '_fs' });
-        if (items.length > 0) {
-            const map: Record<string, SupplierStorageData> = {};
-            for (const item of items) {
-                map[item.id] = { supplierId: item.supplierId || item.id, employees: item.employees || [], services: item.services || createDefaultServicesCatalog(), lastUpdated: item.lastUpdated || new Date().toISOString() };
+// ═══════════════════════════════════════════════════════════════
+// Service
+// ═══════════════════════════════════════════════════════════════
+
+class SupplierStorageService {
+
+    async getStorageSummary(supplierId: string): Promise<SupplierStorageSummary> {
+        try {
+            const supplierRef = doc(db, 'suppliers', supplierId);
+            const snap = await getDoc(supplierRef);
+
+            if (!snap.exists()) return this._defaultSummary(supplierId);
+
+            const data = snap.data();
+            const purchasedMB = data.purchasedStorageMB || 0;
+            const totalMB = SUPPLIER_STORAGE_CONFIG.freeStorageMB + purchasedMB;
+            const usedMB = data.usedStorageMB || 0;
+            const extraProducts = data.purchasedExtraProducts || 0;
+
+            return {
+                supplierId,
+                totalStorageMB: totalMB,
+                usedStorageMB: usedMB,
+                freeStorageMB: SUPPLIER_STORAGE_CONFIG.freeStorageMB,
+                purchasedStorageMB: purchasedMB,
+                totalProducts: data.totalProducts || 0,
+                maxProducts: SUPPLIER_STORAGE_CONFIG.freeProductLimit + extraProducts,
+                percentageUsed: totalMB > 0 ? Math.round((usedMB / totalMB) * 100) : 0,
+                purchases: data.storagePurchases || [],
+            };
+        } catch (error) {
+            console.error('❌ getStorageSummary error:', error);
+            return this._defaultSummary(supplierId);
+        }
+    }
+
+    async purchaseStorage(
+        supplierId: string,
+        packageIndex: number,
+        supplierName: string = ''
+    ): Promise<{ success: boolean; error?: string }> {
+        const pkg = SUPPLIER_STORAGE_CONFIG.packages[packageIndex];
+        if (!pkg) return { success: false, error: 'Invalid package' };
+
+        try {
+            const supplierRef = doc(db, 'suppliers', supplierId);
+            const snap = await getDoc(supplierRef);
+            const data = snap.exists() ? snap.data() : {};
+
+            const currentPurchasedMB = data.purchasedStorageMB || 0;
+            const currentExtraProducts = data.purchasedExtraProducts || 0;
+            const purchases: StoragePurchase[] = data.storagePurchases || [];
+
+            const purchase: StoragePurchase = {
+                id: crypto.randomUUID(),
+                supplierId,
+                packageId: pkg.id,
+                storageMB: pkg.mb,
+                extraProducts: pkg.extraProducts,
+                price: pkg.price,
+                arbaProfit: pkg.arbaProfit,
+                purchasedAt: new Date().toISOString(),
+            };
+
+            await updateDoc(supplierRef, {
+                purchasedStorageMB: currentPurchasedMB + pkg.mb,
+                purchasedExtraProducts: currentExtraProducts + pkg.extraProducts,
+                storagePurchases: [...purchases, purchase],
+                updatedAt: serverTimestamp(),
+            });
+
+            await addDoc(collection(db, 'supplierStoragePurchases'), {
+                ...purchase,
+                supplierName,
+                timestamp: serverTimestamp(),
+            });
+
+            try {
+                accountingService.addLedgerEntry({
+                    description: `Storage purchase: ${pkg.mb}MB by supplier ${supplierName || supplierId}`,
+                    type: 'credit',
+                    amount: pkg.price,
+                    reference: `storage_${purchase.id}`,
+                    category: 'Supplier Storage',
+                    createdBy: 'System',
+                });
+            } catch (accErr) {
+                console.warn('⚠️ Accounting entry failed:', accErr);
             }
-            // Merge with local
-            const local = getAllSuppliersData();
-            const merged = { ...map, ...local };
-            localStorage.setItem(SUPPLIER_DATA_KEY, JSON.stringify(merged));
+
+            return { success: true };
+        } catch (error) {
+            console.error('❌ purchaseStorage error:', error);
+            return { success: false, error: 'Purchase failed' };
         }
-        _loadedFromFS = true;
-    } catch { _loadedFromFS = true; }
-};
-
-// Auto-load
-loadSupplierStorageFromFirestore().catch(() => {});
-
-// =================== دوال التخزين العامة ===================
-
-/**
- * الحصول على جميع بيانات الموردين المخزنة
- */
-const getAllSuppliersData = (): Record<string, SupplierStorageData> => {
-    try {
-        const data = localStorage.getItem(SUPPLIER_DATA_KEY);
-        return data ? JSON.parse(data) : {};
-    } catch (error) {
-        console.error('خطأ في قراءة بيانات الموردين:', error);
-        return {};
-    }
-};
-
-/**
- * حفظ جميع بيانات الموردين
- */
-const saveAllSuppliersData = (data: Record<string, SupplierStorageData>): void => {
-    try {
-        localStorage.setItem(SUPPLIER_DATA_KEY, JSON.stringify(data));
-        // 🔥 Sync each supplier's data to Firestore
-        const items = Object.entries(data).map(([id, d]) => ({ id, data: { ...d } }));
-        firestoreDataService.batchWrite('supplier_storage', items).catch(() => {});
-    } catch (error) {
-        console.error('خطأ في حفظ بيانات الموردين:', error);
-    }
-};
-
-/**
- * الحصول على بيانات مورد معين
- */
-export const getSupplierData = (supplierId: string): SupplierStorageData | null => {
-    const allData = getAllSuppliersData();
-    return allData[supplierId] || null;
-};
-
-/**
- * إنشاء بيانات مورد جديد
- */
-export const initializeSupplierData = (supplierId: string): SupplierStorageData => {
-    const newData: SupplierStorageData = {
-        supplierId,
-        employees: [],
-        services: createDefaultServicesCatalog(),
-        lastUpdated: new Date().toISOString()
-    };
-
-    const allData = getAllSuppliersData();
-    allData[supplierId] = newData;
-    saveAllSuppliersData(allData);
-
-    return newData;
-};
-
-// =================== إدارة الموظفين ===================
-
-/**
- * الحصول على موظفي مورد معين
- */
-export const getSupplierEmployees = (supplierId: string): SupplierEmployee[] => {
-    const data = getSupplierData(supplierId);
-    return data?.employees || [];
-};
-
-/**
- * حفظ موظفي مورد
- */
-export const saveSupplierEmployees = (supplierId: string, employees: SupplierEmployee[]): void => {
-    const allData = getAllSuppliersData();
-
-    if (!allData[supplierId]) {
-        allData[supplierId] = initializeSupplierData(supplierId);
     }
 
-    allData[supplierId].employees = employees;
-    allData[supplierId].lastUpdated = new Date().toISOString();
-    saveAllSuppliersData(allData);
-
-};
-
-/**
- * إضافة موظف جديد
- */
-export const addSupplierEmployee = (supplierId: string, employee: SupplierEmployee): SupplierEmployee => {
-    const employees = getSupplierEmployees(supplierId);
-
-    // التأكد من عدم تكرار البريد الإلكتروني
-    const existingEmail = employees.find(e => e.email.toLowerCase() === employee.email.toLowerCase());
-    if (existingEmail) {
-        throw new Error('البريد الإلكتروني مسجل مسبقاً');
-    }
-
-    const newEmployee: SupplierEmployee = {
-        ...employee,
-        id: `emp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        createdAt: new Date().toISOString(),
-        status: 'pending'
-    };
-
-    employees.push(newEmployee);
-    saveSupplierEmployees(supplierId, employees);
-
-    return newEmployee;
-};
-
-/**
- * تحديث بيانات موظف
- */
-export const updateSupplierEmployee = (
-    supplierId: string,
-    employeeId: string,
-    updates: Partial<SupplierEmployee>
-): SupplierEmployee | null => {
-    const employees = getSupplierEmployees(supplierId);
-    const index = employees.findIndex(e => e.id === employeeId);
-
-    if (index === -1) {
-        console.error('الموظف غير موجود:', employeeId);
-        return null;
-    }
-
-    employees[index] = { ...employees[index], ...updates };
-    saveSupplierEmployees(supplierId, employees);
-
-    return employees[index];
-};
-
-/**
- * حذف موظف
- */
-export const deleteSupplierEmployee = (supplierId: string, employeeId: string): boolean => {
-    const employees = getSupplierEmployees(supplierId);
-    const filteredEmployees = employees.filter(e => e.id !== employeeId);
-
-    if (filteredEmployees.length === employees.length) {
-        console.error('الموظف غير موجود:', employeeId);
-        return false;
-    }
-
-    saveSupplierEmployees(supplierId, filteredEmployees);
-
-    return true;
-};
-
-/**
- * البحث عن موظف بالبريد
- */
-export const findEmployeeByEmail = (supplierId: string, email: string): SupplierEmployee | null => {
-    const employees = getSupplierEmployees(supplierId);
-    return employees.find(e => e.email.toLowerCase() === email.toLowerCase()) || null;
-};
-
-// =================== إدارة الخدمات ===================
-
-/**
- * الحصول على كتالوج خدمات المورد
- */
-export const getSupplierServices = (supplierId: string): SupplierServicesCatalog => {
-    const data = getSupplierData(supplierId);
-    return data?.services || createDefaultServicesCatalog();
-};
-
-/**
- * حفظ كتالوج خدمات المورد
- */
-export const saveSupplierServices = (supplierId: string, services: SupplierServicesCatalog): void => {
-    const allData = getAllSuppliersData();
-
-    if (!allData[supplierId]) {
-        allData[supplierId] = initializeSupplierData(supplierId);
-    }
-
-    allData[supplierId].services = services;
-    allData[supplierId].lastUpdated = new Date().toISOString();
-    saveAllSuppliersData(allData);
-
-};
-
-// =================== إحصائيات ===================
-
-/**
- * الحصول على إحصائيات المورد
- */
-export const getSupplierStats = (supplierId: string): {
-    totalEmployees: number;
-    activeEmployees: number;
-    pendingEmployees: number;
-    enabledServices: number;
-    totalServices: number;
-} => {
-    const employees = getSupplierEmployees(supplierId);
-    const services = getSupplierServices(supplierId);
-
-    // حساب الخدمات المفعلة
-    let enabledServices = 0;
-    let totalServices = 0;
-
-    Object.values(services).forEach(categoryServices => {
-        if (Array.isArray(categoryServices)) {
-            totalServices += categoryServices.length;
-            enabledServices += categoryServices.filter((s: any) => s.enabled).length;
+    async canAddProduct(supplierId: string): Promise<{ allowed: boolean; reason?: string }> {
+        const summary = await this.getStorageSummary(supplierId);
+        if (summary.totalProducts >= summary.maxProducts) {
+            return { allowed: false, reason: `وصلت للحد الأقصى (${summary.maxProducts} منتج). اشترِ مساحة إضافية.` };
         }
-    });
+        if (summary.percentageUsed >= 100) {
+            return { allowed: false, reason: 'المساحة ممتلئة. اشترِ مساحة إضافية.' };
+        }
+        return { allowed: true };
+    }
 
-    return {
-        totalEmployees: employees.length,
-        activeEmployees: employees.filter(e => e.status === 'active').length,
-        pendingEmployees: employees.filter(e => e.status === 'pending').length,
-        enabledServices,
-        totalServices
-    };
-};
+    async canUploadFile(supplierId: string, fileSizeMB: number): Promise<{ allowed: boolean; reason?: string }> {
+        const summary = await this.getStorageSummary(supplierId);
+        if (summary.usedStorageMB + fileSizeMB > summary.totalStorageMB) {
+            return { allowed: false, reason: `مساحة التخزين غير كافية. متاح: ${(summary.totalStorageMB - summary.usedStorageMB).toFixed(1)} MB` };
+        }
+        return { allowed: true };
+    }
 
-// =================== تصدير الخدمة ===================
+    private _defaultSummary(supplierId: string): SupplierStorageSummary {
+        return {
+            supplierId,
+            totalStorageMB: SUPPLIER_STORAGE_CONFIG.freeStorageMB,
+            usedStorageMB: 0,
+            freeStorageMB: SUPPLIER_STORAGE_CONFIG.freeStorageMB,
+            purchasedStorageMB: 0,
+            totalProducts: 0,
+            maxProducts: SUPPLIER_STORAGE_CONFIG.freeProductLimit,
+            percentageUsed: 0,
+            purchases: [],
+        };
+    }
+}
 
-export default {
-    // بيانات المورد
-    getSupplierData,
-    initializeSupplierData,
+export const supplierStorageService = new SupplierStorageService();
 
-    // الموظفين
-    getSupplierEmployees,
-    saveSupplierEmployees,
-    addSupplierEmployee,
-    updateSupplierEmployee,
-    deleteSupplierEmployee,
-    findEmployeeByEmail,
+// ═══════════════════════════════════════════════════════════════
+// Legacy Compatibility — localStorage-based functions
+// Used by SupplierDashboard for employees/services (V8 pattern)
+// ═══════════════════════════════════════════════════════════════
 
-    // الخدمات
-    getSupplierServices,
-    saveSupplierServices,
+const SUPPLIER_DATA_KEY = 'arba_supplier_data';
 
-    // الإحصائيات
-    getSupplierStats
-};
+function _getAll(): Record<string, any> {
+    try {
+        return JSON.parse(localStorage.getItem(SUPPLIER_DATA_KEY) || '{}');
+    } catch { return {}; }
+}
+
+export function initializeSupplierData(supplierId: string): void {
+    const all = _getAll();
+    if (!all[supplierId]) {
+        all[supplierId] = {
+            supplierId,
+            employees: [],
+            services: createDefaultServicesCatalog(),
+            lastUpdated: new Date().toISOString(),
+        };
+        localStorage.setItem(SUPPLIER_DATA_KEY, JSON.stringify(all));
+    }
+}
+
+export function getSupplierEmployees(supplierId: string): SupplierEmployee[] {
+    const all = _getAll();
+    return all[supplierId]?.employees || [];
+}
+
+export function saveSupplierEmployees(supplierId: string, employees: SupplierEmployee[]): void {
+    const all = _getAll();
+    if (!all[supplierId]) all[supplierId] = {};
+    all[supplierId].employees = employees;
+    all[supplierId].lastUpdated = new Date().toISOString();
+    localStorage.setItem(SUPPLIER_DATA_KEY, JSON.stringify(all));
+}
+
+export function getSupplierServices(supplierId: string): SupplierServicesCatalog {
+    const all = _getAll();
+    return all[supplierId]?.services || createDefaultServicesCatalog();
+}
+
+export function saveSupplierServices(supplierId: string, services: SupplierServicesCatalog): void {
+    const all = _getAll();
+    if (!all[supplierId]) all[supplierId] = {};
+    all[supplierId].services = services;
+    all[supplierId].lastUpdated = new Date().toISOString();
+    localStorage.setItem(SUPPLIER_DATA_KEY, JSON.stringify(all));
+}

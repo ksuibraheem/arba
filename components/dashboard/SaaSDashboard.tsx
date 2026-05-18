@@ -14,6 +14,7 @@ import SecurityAlerts from './SecurityAlerts';
 import RateLibrary from './RateLibrary';
 import UsageNudgeBanner from './UsageNudgeBanner';
 import UsageQuotaBar from './UsageQuotaBar';
+import SubscriptionPanel from './SubscriptionPanel';
 import {
     ArbaProject, ArbaClient, SecurityAlert as SecurityAlertType,
     DashboardStats, ProjectStatus, UserRole, generateId
@@ -21,12 +22,14 @@ import {
 import * as projectService from '../../services/projectService';
 import * as clientService from '../../services/clientService';
 import * as rbacService from '../../services/rbacService';
+import { optimizeProcurement } from '../../services/procurementOptimizer';
+import { laborOverheadEngine } from '../../services/laborOverheadEngine';
 
 const LazyBOQUploader = React.lazy(() => import('../BOQUploader'));
 
 // =================== TYPES ===================
 
-type DashboardSection = 'overview' | 'projects' | 'clients' | 'security' | 'rates' | 'boq-engine';
+type DashboardSection = 'overview' | 'projects' | 'clients' | 'security' | 'rates' | 'boq-engine' | 'subscription';
 
 interface SaaSDashboardProps {
     userId: string;
@@ -45,6 +48,7 @@ const NAV_ITEMS: { id: DashboardSection; icon: string; label: { ar: string; en: 
     { id: 'overview', icon: '📊', label: { ar: 'لوحة التحكم', en: 'Dashboard' } },
     { id: 'projects', icon: '📁', label: { ar: 'المشاريع', en: 'Projects' } },
     { id: 'clients', icon: '👥', label: { ar: 'العملاء', en: 'Clients' } },
+    { id: 'subscription', icon: '💎', label: { ar: 'الاشتراك', en: 'Subscription' } },
     { id: 'security', icon: '🔒', label: { ar: 'الأمان', en: 'Security' } },
     { id: 'rates', icon: '📖', label: { ar: 'مكتبة الأسعار', en: 'Rate Library' } },
     { id: 'boq-engine', icon: '📊', label: { ar: 'محرك BOQ', en: 'BOQ Engine' } },
@@ -249,6 +253,59 @@ const SaaSDashboard: React.FC<SaaSDashboardProps> = ({
                                 />
                             </div>
                         )}
+
+                        {/* أدوات الدماغ الذكية */}
+                        <div className="space-y-3">
+                            <h3 className="text-lg font-bold text-white">
+                                {isAr ? '🧠 أدوات ذكية' : '🧠 Smart Tools'}
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Procurement Optimizer */}
+                                <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-5 hover:border-blue-500/30 transition-all">
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 flex items-center justify-center">
+                                            <span className="text-xl">📦</span>
+                                        </div>
+                                        <div>
+                                            <h4 className="text-white font-bold text-sm">
+                                                {isAr ? 'محسّن المشتريات' : 'Procurement Optimizer'}
+                                            </h4>
+                                            <p className="text-slate-500 text-xs">
+                                                {isAr ? 'جدولة وتحسين طلبات المواد' : 'Schedule & optimize material orders'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <p className="text-slate-400 text-xs">
+                                        {isAr ? 'يحلل بيانات المشروع ويقترح أفضل توقيت للشراء وتجميع الطلبات لتخفيض التكلفة' : 'Analyzes project data and suggests optimal purchase timing and order bundling'}
+                                    </p>
+                                </div>
+
+                                {/* Labor Overhead Engine */}
+                                <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-5 hover:border-amber-500/30 transition-all">
+                                    <div className="flex items-center gap-3 mb-3">
+                                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center">
+                                            <span className="text-xl">👷</span>
+                                        </div>
+                                        <div>
+                                            <h4 className="text-white font-bold text-sm">
+                                                {isAr ? 'محرك العمالة والمصاريف' : 'Labor & Overhead Engine'}
+                                            </h4>
+                                            <p className="text-slate-500 text-xs">
+                                                {isAr ? 'حساب تكلفة العمالة والمصاريف الثابتة' : 'Calculate labor costs & fixed overhead'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <p className="text-slate-400 text-xs">
+                                        {(() => {
+                                            const estimate = laborOverheadEngine.quickEstimate(500, 12);
+                                            return isAr
+                                                ? `تقدير المصاريف: ${estimate.overhead.toLocaleString()} ر.س | ${estimate.percent}`
+                                                : `Estimate: ${estimate.overhead.toLocaleString()} SAR | ${estimate.percent}`;
+                                        })()}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 );
             case 'projects':
@@ -289,6 +346,15 @@ const SaaSDashboard: React.FC<SaaSDashboardProps> = ({
                 );
             case 'rates':
                 return <RateLibrary language={language} />;
+            case 'subscription':
+                return (
+                    <SubscriptionPanel
+                        userId={userId}
+                        userPlan={userPlan}
+                        language={language}
+                        onUpgrade={onUpgrade}
+                    />
+                );
             case 'boq-engine':
                 return (
                     <React.Suspense fallback={<div className="text-center py-20 text-slate-400">⏳ {isAr ? 'جاري تحميل محرك BOQ...' : 'Loading BOQ Engine...'}</div>}>

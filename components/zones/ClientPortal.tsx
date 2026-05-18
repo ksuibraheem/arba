@@ -20,6 +20,7 @@ import {
     sanitizeProjectsForClient, sanitizeQuoteForClient
 } from '../../services/clientDataFilter';
 import * as projectService from '../../services/projectService';
+import ClientRFQButton from '../ClientRFQButton';
 
 // =================== TYPES ===================
 
@@ -283,9 +284,21 @@ const ClientPortal: React.FC<ClientPortalProps> = ({ language, onLogout }) => {
                             <p className="text-slate-400 text-sm mb-4">
                                 {isAr ? 'تحميل PDF بعلامة أربا المائية' : 'Download Arba-watermarked PDF'}
                             </p>
-                            <button className="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold hover:shadow-lg hover:shadow-indigo-500/20 transition-all">
-                                {isAr ? '📥 تحميل عرض السعر' : '📥 Download Quote'}
-                            </button>
+                            <div className="flex items-center gap-3 justify-center flex-wrap">
+                                <button className="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold hover:shadow-lg hover:shadow-indigo-500/20 transition-all">
+                                    {isAr ? '📥 تحميل عرض السعر' : '📥 Download Quote'}
+                                </button>
+                                <ClientRFQButton
+                                    materialName={selectedProject?.name || ''}
+                                    quantity={1}
+                                    unit={isAr ? 'مشروع' : 'project'}
+                                    estimatedUnitPrice={selectedProject?.estimatedValue || 0}
+                                    language={language}
+                                    onRequestRFQ={(params) => {
+                                        console.log('RFQ requested:', params);
+                                    }}
+                                />
+                            </div>
                         </div>
                     )}
                 </>

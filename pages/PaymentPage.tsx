@@ -58,8 +58,9 @@ const PaymentPage: React.FC<PaymentPageProps> = ({
         return SUBSCRIPTION_PLANS.find(p => p.id === planId)?.price || 0;
     };
 
+    // الدفع السنوي = المبلغ الكامل (وليس مقسوم على 12)
     const selectedPlanPrice = selectedPlan
-        ? (billingCycle === 'annual' ? (PLAN_ANNUAL_PRICES[selectedPlan] || 0) / 12 : (PLAN_PRICES[selectedPlan] || 0))
+        ? (billingCycle === 'annual' ? (PLAN_ANNUAL_PRICES[selectedPlan] || 0) : (PLAN_PRICES[selectedPlan] || 0))
         : 0;
 
     const planIcons: Record<string, React.ReactNode> = {
@@ -122,7 +123,8 @@ const PaymentPage: React.FC<PaymentPageProps> = ({
                 userEmail,
                 userName,
                 amount: selectedPlanPrice,
-                plan: 'professional',
+                plan: selectedPlan,
+                billingCycle,
                 gateway: 'tap'
             });
 
@@ -154,7 +156,8 @@ const PaymentPage: React.FC<PaymentPageProps> = ({
                 userEmail,
                 userName,
                 amount: selectedPlanPrice,
-                plan: 'professional',
+                plan: selectedPlan,
+                billingCycle,
                 gateway: 'bank_transfer',
                 receiptFile,
                 receiptFileName
@@ -230,6 +233,27 @@ const PaymentPage: React.FC<PaymentPageProps> = ({
                 <div className="text-center mb-6 sm:mb-12">
                     <h1 className="text-2xl sm:text-4xl font-bold text-white mb-2 sm:mb-4">{t('payment_title')}</h1>
                     <p className="text-base sm:text-xl text-slate-300">{t('payment_subtitle')}</p>
+
+                    {/* Billing Cycle Toggle */}
+                    <div className="flex items-center justify-center gap-3 mt-6">
+                        <span className={`text-sm font-medium transition-colors ${billingCycle === 'monthly' ? 'text-white' : 'text-slate-500'}`}>
+                            {language === 'ar' ? 'شهري' : 'Monthly'}
+                        </span>
+                        <button
+                            onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'annual' : 'monthly')}
+                            className={`relative w-14 h-7 rounded-full transition-colors duration-300 ${billingCycle === 'annual' ? 'bg-green-500' : 'bg-[#2B2D6E]'}`}
+                        >
+                            <span className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform duration-300 ${billingCycle === 'annual' ? 'translate-x-7' : 'translate-x-0.5'}`} />
+                        </button>
+                        <span className={`text-sm font-medium transition-colors ${billingCycle === 'annual' ? 'text-white' : 'text-slate-500'}`}>
+                            {language === 'ar' ? 'سنوي' : 'Annual'}
+                        </span>
+                        {billingCycle === 'annual' && (
+                            <span className="bg-green-500/20 text-green-400 text-xs font-bold px-2 py-0.5 rounded-full">
+                                {language === 'ar' ? 'خصم 20%' : '20% OFF'}
+                            </span>
+                        )}
+                    </div>
                 </div>
 
                 {/* ═══════ Step 1: Plan Selection ═══════ */}
@@ -254,7 +278,14 @@ const PaymentPage: React.FC<PaymentPageProps> = ({
                                 </div>
                                 <h2 className="text-xl sm:text-2xl font-bold text-white mb-1 sm:mb-2">{plan.name[language]}</h2>
                                 <div className="flex items-baseline gap-1 mb-4 sm:mb-6">
-                                    <span className="text-3xl sm:text-4xl font-bold text-white">{plan.price}</span>
+                                    {billingCycle === 'annual' && plan.price > 0 ? (
+                                        <>
+                                            <span className="text-lg text-slate-500 line-through">{plan.price}</span>
+                                            <span className="text-3xl sm:text-4xl font-bold text-green-400">{getDisplayPrice(plan.id)}</span>
+                                        </>
+                                    ) : (
+                                        <span className="text-3xl sm:text-4xl font-bold text-white">{plan.price}</span>
+                                    )}
                                     <span className="text-sm sm:text-base text-slate-400">{t('ريال', 'SAR')} {t('payment_monthly_price')}</span>
                                 </div>
                                 <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-8">

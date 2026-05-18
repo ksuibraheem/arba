@@ -166,7 +166,7 @@ export const WASTE_FACTORS = (() => {
     // Use statically imported learningFeedbackService
     // Try to get learned weights (null if no data)
     // This will be populated when projects are closed and invoices are compared
-    const learnedWeight = learningFeedbackService?.getLearnedWeight?.('commercial', 'riyadh');
+    const learnedWeight = learningFeedbackService?.getLearnedWeight?.('commercial' as any, 'riyadh');
     if (learnedWeight && learnedWeight.sampleCount >= 3) {
       const adj = learnedWeight.learnedWasteAdjustments;
       return {

@@ -12,6 +12,7 @@
  */
 
 import { ProjectType, LocationType } from '../types';
+import { brainFirestoreSync } from './brainFirestoreSync';
 
 // =================== Types ===================
 
@@ -305,6 +306,8 @@ class CollectiveBrainService {
   private saveLocalInsights(insights: AnonymizedProjectInsight[]): void {
     if (insights.length > 500) insights = insights.slice(-500);
     localStorage.setItem(INSIGHTS_KEY, JSON.stringify(insights));
+    // V10.0: Queue Firestore sync
+    try { brainFirestoreSync.queueSync(INSIGHTS_KEY, JSON.stringify(insights)); } catch { /* non-blocking */ }
   }
 
   private getLocalWeights(): StandardWeight[] {
@@ -314,6 +317,8 @@ class CollectiveBrainService {
   private saveLocalWeights(weights: StandardWeight[]): void {
     localStorage.setItem(WEIGHTS_KEY, JSON.stringify(weights));
     localStorage.setItem(SYNC_TS_KEY, new Date().toISOString());
+    // V10.0: Queue Firestore sync
+    try { brainFirestoreSync.queueSync(WEIGHTS_KEY, JSON.stringify(weights)); } catch { /* non-blocking */ }
   }
 
   private getLastSyncTimestamp(): Date | null {

@@ -1,8 +1,9 @@
 /**
- * ARBA V9.0 — Main Processor (Browser-Compatible)
+ * ARBA V10.0 — Main Processor (Browser-Compatible)
  * المعالج الرئيسي — يربط كل المحركات في pipeline واحد
- * V9 Fixes: إصلاح الربح المزدوج + كشف التكرار + الوعي السياقي + Pre-Flight
- * Excel → PreFlight → Dedup → Sanitizer → Classifier → 3-Tier Pricer → Sanity Check → Results
+ * V9: إصلاح الربح المزدوج + كشف التكرار + الوعي السياقي + Pre-Flight
+ * V10: + كشف بنود ناقصة + كشف تلاعب + SBC + تبرير أسعار + Firestore sync
+ * Excel → PreFlight → Dedup → Sanitizer → Classifier → 3-Tier Pricer → Sanity → V10 Agents → Results
  */
 
 import { sanitizeItem } from './sanitizerEngine';
@@ -14,6 +15,13 @@ import { calculateConfidence, averageConfidence, type ConfidenceScore } from './
 import { runPreFlightAudit, type PreFlightResult } from './preFlightAudit';
 import { commodityEngine } from '../../services/commodityIntelligenceEngine';
 import { contextualMemoryService } from '../../services/contextualMemoryService';
+// V10.0: New Brain Engines
+import { missingItemDetector, type MissingItemReport } from '../../services/missingItemDetector';
+import { anomalyDetector, type AnomalyReport } from '../../services/anomalyDetector';
+import { brainComplianceChecker, type ComplianceReport } from '../../services/brainComplianceChecker';
+import { engineeringGhostAgent, type PriceJustification, type PatternAlert } from '../../services/engineeringGhostAgent';
+import { regulatoryIntelligenceEngine, type RegulatoryAddons } from '../../services/regulatoryIntelligenceEngine';
+import { brainTrainingPipeline } from '../../services/brainTrainingPipeline';
 import * as XLSX from 'xlsx';
 
 // ═══════════════════════════════════════════════════
@@ -87,6 +95,13 @@ export interface ProcessingResult {
   preFlight: PreFlightResult;  // V9
   avgConfidence: number;       // V9
   processedAt: string;
+  // V10.0: New Brain Intelligence
+  missingItems?: MissingItemReport;     // بنود ناقصة مكتشفة
+  anomalies?: AnomalyReport;           // تناقضات وتلاعب
+  compliance?: ComplianceReport;       // امتثال SBC
+  regulatoryAddons?: RegulatoryAddons; // بنود تنظيمية إضافية
+  patternAlerts?: PatternAlert[];      // أنماط مكتشفة
+  brainVersion: string;                // إصدار الدماغ
 }
 
 // ═══════════════════════════════════════════════════
@@ -288,12 +303,15 @@ export function processItems(
       pricingTier = 'unpriced';
     }
 
-    // Apply commodity risk factor (V8.3)
+    // V10.0: Commodity risk factor DISABLED until real market API is connected (Phase 4)
+    // Previous code used Math.random() simulated prices causing ±8% random price variation
+    // This will be re-enabled in Phase 4 with real market data from marketDataProvider.ts
     let commodityRiskFactor = 1.0;
-    try {
-      commodityEngine.initialize();
-      commodityRiskFactor = commodityEngine.getCategoryRiskFactor(classification.category);
-    } catch { /* non-blocking */ }
+    // TODO V10 Phase 4: Re-enable with real data
+    // try {
+    //   commodityEngine.initialize();
+    //   commodityRiskFactor = commodityEngine.getCategoryRiskFactor(classification.category);
+    // } catch { /* non-blocking */ }
     // V9 Fix #1: Check if benchmark rate already includes profit (priceType)
     const rateInfo = classification.ruleId ? BENCHMARK_RATES[classification.ruleId] : null;
     const isGrossRate = rateInfo?.priceType === 'gross';
@@ -389,6 +407,77 @@ export function processItems(
   console.log(`   💰 Cost: ${totalCost.toLocaleString()} | Sell: ${totalSell.toLocaleString()}`);
   console.log(`   📈 Actual profit: ${totalCost > 0 ? ((totalSell - totalCost) / totalCost * 100).toFixed(1) : 0}%`);
 
+  // ═══════════════════════════════════════════════════
+  // V10.0: Brain Intelligence Agents
+  // ═══════════════════════════════════════════════════
+
+  // Agent 1: Missing Item Detector (داخلي — العميل لا يُخبَر)
+  let missingItems: MissingItemReport | undefined;
+  try {
+    missingItems = missingItemDetector.detect(
+      items.map(i => ({ description: i.description, category: i.classification.category, qty: i.qty, unit: i.unit })),
+    );
+    if (missingItems.totalGaps > 0) {
+      console.log(`🔍 V10 Missing Items: ${missingItems.totalGaps} gaps detected (${missingItems.criticalGaps} critical)`);
+    }
+  } catch (e) { console.warn('V10 MissingItemDetector error:', e); }
+
+  // Agent 2: Anomaly Detector (كشف تلاعب)
+  let anomalies: AnomalyReport | undefined;
+  try {
+    anomalies = anomalyDetector.detect(
+      items.map(i => ({
+        description: i.description, category: i.classification.category,
+        qty: i.qty, unit: i.unit, costRate: i.costRate,
+        costTotal: i.costTotal, sellTotal: i.sellTotal,
+      })),
+      totalCost,
+    );
+    if (anomalies.totalAlerts > 0) {
+      console.log(`⚠️ V10 Anomalies: ${anomalies.totalAlerts} alerts (${anomalies.redFlags} red flags, risk: ${anomalies.riskScore}/100)`);
+    }
+  } catch (e) { console.warn('V10 AnomalyDetector error:', e); }
+
+  // Agent 3: SBC Compliance Checker
+  let compliance: ComplianceReport | undefined;
+  try {
+    compliance = brainComplianceChecker.check(
+      items.map(i => ({
+        description: i.description, category: i.classification.category,
+        qty: i.qty, unit: i.unit, costRate: i.costRate,
+      })),
+    );
+    console.log(`📋 V10 SBC Compliance: ${compliance.complianceScore}% (${compliance.failed} fails, ${compliance.warnings} warnings)`);
+  } catch (e) { console.warn('V10 ComplianceChecker error:', e); }
+
+  // Agent 4: Engineering Ghost Agent (تبرير أسعار + كشف أنماط)
+  let patternAlerts: PatternAlert[] = [];
+  try {
+    patternAlerts = engineeringGhostAgent.detectPatterns(
+      items.map(i => ({
+        description: i.description, category: i.classification.category,
+        costRate: i.costRate, costTotal: i.costTotal,
+      })),
+    );
+    if (patternAlerts.length > 0) {
+      console.log(`🔍 V10 Ghost Agent: ${patternAlerts.length} patterns detected`);
+    }
+  } catch (e) { console.warn('V10 GhostAgent error:', e); }
+
+  // Agent 5: Regulatory Intelligence (بنود تنظيمية)
+  let regulatoryAddons: RegulatoryAddons | undefined;
+  try {
+    regulatoryAddons = regulatoryIntelligenceEngine.calculateAddons({
+      projectType: 'residential_villa', // Default — will be passed from context
+      areaM2: items.reduce((s, i) => s + (i.unit === 'م٢' ? i.qty : 0), 0) || 500,
+      floors: 2,
+      region: region,
+    });
+    if (regulatoryAddons.additionalItems.length > 0) {
+      console.log(`🏢 V10 Regulatory: ${regulatoryAddons.additionalItems.length} add-ons (${regulatoryAddons.totalAddonCost.toLocaleString()} SAR)`);
+    }
+  } catch (e) { console.warn('V10 RegulatoryEngine error:', e); }
+
   return {
     items,
     stats: {
@@ -413,6 +502,13 @@ export function processItems(
     preFlight: runPreFlightAudit(rawItems),
     avgConfidence: averageConfidence(items.map(i => i.confidence)).avgScore,
     processedAt: new Date().toISOString(),
+    // V10.0: Brain Intelligence Results
+    missingItems,
+    anomalies,
+    compliance,
+    regulatoryAddons,
+    patternAlerts: patternAlerts.length > 0 ? patternAlerts : undefined,
+    brainVersion: '10.0',
   };
 }
 
@@ -462,6 +558,13 @@ export function exportToExcel(result: ProcessingResult): Blob {
     { البند: 'تحذيرات', القيمة: result.stats.warningCount },
     { البند: 'أخطاء حرجة', القيمة: result.stats.criticalCount },
     { البند: 'المنطقة', القيمة: result.region },
+    { البند: '--- V10 Brain ---', القيمة: '---' },
+    { البند: 'إصدار الدماغ', القيمة: result.brainVersion },
+    { البند: 'بنود ناقصة', القيمة: result.missingItems?.totalGaps || 0 },
+    { البند: 'تنبيهات تلاعب', القيمة: result.anomalies?.totalAlerts || 0 },
+    { البند: 'نسبة الامتثال SBC', القيمة: `${result.compliance?.complianceScore || '-'}%` },
+    { البند: 'بنود تنظيمية إضافية', القيمة: result.regulatoryAddons?.additionalItems.length || 0 },
+    { البند: 'تكلفة البنود التنظيمية', القيمة: result.regulatoryAddons?.totalAddonCost || 0 },
   ];
   const ws2 = XLSX.utils.json_to_sheet(summary);
   XLSX.utils.book_append_sheet(wb, ws2, 'ملخص مالي');

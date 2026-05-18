@@ -212,7 +212,7 @@ const TeamLoginPage: React.FC<TeamLoginPageProps> = ({ language, onNavigate, onT
 
                 {/* Footer */}
                 <p className="text-center text-slate-600 text-xs mt-6">
-                    © 2025 ARBA Developer — ARBA Pricing
+                    © 2026 ARBA Developer — ARBA Pricing
                 </p>
             </div>
         </div>

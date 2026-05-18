@@ -183,8 +183,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, on
         <div className="min-h-screen bg-gradient-to-br from-[#070914] via-[#0E132B] to-[#050711] flex items-center justify-center p-6" dir={isRtl ? 'rtl' : 'ltr'}>
             {/* Background Pattern */}
             <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute -top-1/2 -right-1/2 w-full h-full bg-gradient-to-br from-green-500/10 to-transparent rounded-full blur-3xl"></div>
-                <div className="absolute -bottom-1/2 -left-1/2 w-full h-full bg-gradient-to-tr from-indigo-500/10 to-transparent rounded-full blur-3xl"></div>
+                <div className="absolute -top-1/2 -right-1/2 w-full h-full bg-gradient-to-br from-green-500/10 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDuration: '8s' }}></div>
+                <div className="absolute -bottom-1/2 -left-1/2 w-full h-full bg-gradient-to-tr from-indigo-500/10 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDuration: '10s' }}></div>
+                <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-emerald-500/5 rounded-full blur-[100px] animate-pulse" style={{ animationDuration: '6s' }}></div>
             </div>
 
             <div className="relative w-full max-w-lg">
@@ -199,9 +200,17 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, on
 
                 {/* Login Card */}
                 <div className="bg-[#0B0F24]/80 backdrop-blur-xl rounded-3xl border border-[#2B2D6E]/40 p-8 shadow-2xl shadow-[#000000]/40">
-                    <div className="flex justify-center mb-8">
-                        <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-[#131A3B]/60 border border-[#2B2D6E]/50 shadow-lg shadow-green-500/10">
+                    {/* V10 Badge */}
+                    <div className="flex justify-center mb-2">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 rounded-full text-[10px] font-bold text-emerald-400 tracking-wider">
+                            <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+                            ARBA BRAIN V10.0 — AI-POWERED
+                        </span>
+                    </div>
+                    <div className="flex justify-center mb-6">
+                        <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-[#131A3B]/60 border border-[#2B2D6E]/50 shadow-lg shadow-green-500/10 relative">
                             <ArbaLogo size={60} animated />
+                            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-full flex items-center justify-center text-[8px] font-black text-white shadow-lg">10</div>
                         </div>
                     </div>
 
@@ -422,11 +431,27 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, on
                             </p>
                         </div>
                     )}
+                    {/* AI Features Strip */}
+                    <div className="mt-6 pt-5 border-t border-[#2B2D6E]/30">
+                        <div className="flex items-center justify-center gap-4 text-[10px] text-slate-500">
+                            <span className="flex items-center gap-1">
+                                <span className="text-emerald-400">⚡</span> {isRtl ? 'ذكاء اصطناعي' : 'AI-Powered'}
+                            </span>
+                            <span className="text-[#2B2D6E]">|</span>
+                            <span className="flex items-center gap-1">
+                                <span className="text-cyan-400">🔒</span> {isRtl ? 'تشفير متقدم' : 'Encrypted'}
+                            </span>
+                            <span className="text-[#2B2D6E]">|</span>
+                            <span className="flex items-center gap-1">
+                                <span className="text-purple-400">☁️</span> {isRtl ? 'سحابي' : 'Cloud'}
+                            </span>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Footer */}
                 <p className="text-center text-slate-500 text-sm mt-4">
-                    © 2025 {tl(COMPANY_INFO.companyName)} - {tl(COMPANY_INFO.systemName)}. {t('footer_rights')}
+                    © 2026 {tl(COMPANY_INFO.companyName)} - {tl(COMPANY_INFO.systemName)}. {t('footer_rights')}
                 </p>
             </div>
         </div>

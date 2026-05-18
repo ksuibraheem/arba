@@ -28,6 +28,10 @@ export const ROUTES = {
     // Admin routes
     ADMIN: '/admin',
     ADMIN_SUPPLIERS: '/admin/suppliers',
+    ADMIN_COMPANIES: '/admin/companies',
+    ADMIN_DATA: '/admin/data',
+    ADMIN_USERS: '/admin/users',
+    OWNER: '/owner',
 
     // Employee routes
     MANAGER: '/employees/manager',

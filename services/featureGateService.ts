@@ -232,3 +232,6 @@ class FeatureGateService {
 
 // Singleton export
 export const featureGateService = new FeatureGateService();
+
+// Re-export tier-based data filters for consumer views
+export { clientDataFilter } from '../utils/tierFilters';

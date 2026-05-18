@@ -48,6 +48,10 @@ import SupplierDashboard from './pages/supplier/SupplierDashboard';
 import QuantitySurveyorPage from './pages/employees/roles/QuantitySurveyorPage';
 import SupportPage from './pages/employees/roles/SupportPage';
 import SupplierCatalog from './pages/SupplierCatalog';
+import OwnerDashboard from './pages/owner/OwnerDashboard';
+import CompaniesPage from './pages/admin/CompaniesPage';
+import DataPage from './pages/admin/DataPage';
+import UsersPage from './pages/admin/UsersPage';
 import SuppliersManagementPage from './pages/admin/SuppliersManagementPage';
 import TeamLoginPage from './pages/TeamLoginPage';
 import TeamDashboard from './pages/TeamDashboard';
@@ -71,8 +75,9 @@ import { Download, Calendar, User, Briefcase, Hash, LogOut, Calculator, Lock, Cr
 import { COMPANY_INFO, SUBSCRIPTION_PLANS, encryptSupplierName, getStorageInfo, getRemainingProjects, FREE_PLAN_RESTRICTIONS, PAGE_TRANSLATIONS, getLocalizedText } from './companyData';
 // Local auth service (fallback)
 import { registerUser, loginUser, logoutUser, getCurrentUser, StoredUser } from './services/authService';
+import { brainFirestoreSync } from './services/brainFirestoreSync';
 // Firebase auth service
-import { registerWithFirebase, loginWithFirebase, logoutFromFirebase, onAuthChange, getUserData, UserData } from './firebase/authService';
+import { registerWithFirebase, loginWithFirebase, logoutFromFirebase, onAuthChange, getUserData, checkEmailVerified, UserData } from './firebase/authService';
 import { isInTestMode, getCurrentTestSession, endTestMode } from './services/testModeService';
 import { initializeFirestoreData } from './services/firestoreInitializer';
 import SplashScreen from './components/SplashScreen';
@@ -80,7 +85,7 @@ import SplashScreen from './components/SplashScreen';
 // Toggle Firebase mode - set to true to use Firebase
 const USE_FIREBASE = true;
 
-type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'pricing' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'pricing-calc' | 'client-portal' | 'private' | 'security-403' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant' | 'password-reset' | 'cloud-sync' | 'support-center' | 'support' | 'developer' | 'developer-brain' | 'marketing' | 'quality' | 'deputy' | 'supplier' | 'quantity_surveyor' | 'supplier-catalog' | 'admin-suppliers' | 'demo' | 'team-login' | 'team-dashboard' | 'employee-login' | 'boq-engine';
+type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'pricing' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'pricing-calc' | 'client-portal' | 'private' | 'security-403' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant' | 'password-reset' | 'cloud-sync' | 'support-center' | 'support' | 'developer' | 'developer-brain' | 'marketing' | 'quality' | 'deputy' | 'supplier' | 'quantity_surveyor' | 'supplier-catalog' | 'admin-suppliers' | 'demo' | 'team-login' | 'team-dashboard' | 'employee-login' | 'boq-engine' | 'terms' | 'owner' | 'admin-companies' | 'admin-data' | 'admin-users';
 
 // مفتاح الوصول السري للوحة المدير — يُقرأ من .env
 const ADMIN_SECRET_KEY = import.meta.env.VITE_ADMIN_SECRET_KEY || '';
@@ -254,9 +259,18 @@ const App: React.FC = () => {
         if (tapId && arbaPid) {
             (async () => {
                 try {
-                    const { verifyTapPayment, activateSubscription, PLAN_PRICES, PAYMENT_MESSAGES } = await import('./src/services/paymentService');
-                    const { getUserData } = await import('./firebase/authService');
-                    const result = await verifyTapPayment(tapId, arbaPid, PLAN_PRICES.professional);
+                    const paymentService = await import('./src/services/paymentService');
+                    const { verifyTapPayment, activateSubscription, PLAN_PRICES, PAYMENT_MESSAGES } = paymentService;
+                    
+                    // Read the actual plan from the payment record
+                    const { doc, getDoc } = await import('firebase/firestore');
+                    const { db } = await import('./firebase/config');
+                    const paymentDoc = await getDoc(doc(db, 'payments', arbaPid));
+                    const paymentData = paymentDoc.exists() ? paymentDoc.data() : null;
+                    const paidPlan = paymentData?.metadata?.plan || paymentData?.plan || 'professional';
+                    const paidAmount = PLAN_PRICES[paidPlan] || paymentData?.amount || 0;
+
+                    const result = await verifyTapPayment(tapId, arbaPid, paidAmount);
 
                     // Clean URL
                     window.history.replaceState({}, document.title, window.location.pathname);
@@ -268,11 +282,12 @@ const App: React.FC = () => {
                         const currentUser = auth.currentUser;
 
                         if (currentUser) {
-                            // Auto-activate subscription for electronic payment
-                            await activateSubscription(currentUser.uid, 'professional', arbaPid);
+                            // Auto-activate subscription with the actual paid plan + billing cycle
+                            const paidCycle = paymentData?.metadata?.billingCycle || paymentData?.billingCycle || 'monthly';
+                            await activateSubscription(currentUser.uid, paidPlan, arbaPid, paidCycle);
 
                             // Update user plan in state
-                            setUser(prev => prev ? { ...prev, plan: 'professional' } : prev);
+                            setUser(prev => prev ? { ...prev, plan: paidPlan } : prev);
                             alert(PAYMENT_MESSAGES.electronic_success[language]);
                             setCurrentPage('pricing-calc');
                         }
@@ -303,6 +318,13 @@ const App: React.FC = () => {
             // Firebase auth state listener — runs ONCE on mount
             const unsubscribe = onAuthChange(async (firebaseUser) => {
                 if (firebaseUser) {
+                    // Check email verification (skip for Super Admin)
+                    if (!firebaseUser.emailVerified && firebaseUser.email?.toLowerCase() !== SUPER_ADMIN_EMAIL.toLowerCase()) {
+                        setPendingRegistrationEmail(firebaseUser.email || '');
+                        setCurrentPage('verification');
+                        setIsLoading(false);
+                        return;
+                    }
                     const userData = await getUserData(firebaseUser.uid);
                     if (userData) {
                         const verifiedUser = {
@@ -417,12 +439,25 @@ const App: React.FC = () => {
             }
             // Reload supplier data after Firestore sync
             loadSupplierData();
+
+            // V10.0: Start Brain Auto-Sync (pull cloud data + push every 5 min)
+            try {
+                import('firebase/auth').then(({ getAuth }) => {
+                    const userId = getAuth().currentUser?.uid || 'local';
+                    brainFirestoreSync.startAutoSync(userId);
+                }).catch(() => {
+                    brainFirestoreSync.startAutoSync('local');
+                });
+            } catch (e) { console.warn('V10 Brain Auto-Sync init:', e); }
         }).catch(console.error);
 
         // Refresh when page changes or returns to dashboard
         if (currentPage === 'dashboard') {
             loadSupplierData();
         }
+
+        // V10.0: Cleanup auto-sync on unmount
+        return () => { try { brainFirestoreSync.stopAutoSync(); } catch { /* */ } };
     }, [currentPage]);
 
     // Pricing Dashboard State
@@ -652,12 +687,14 @@ const App: React.FC = () => {
                     }
                     // Login successful with approved registration
                     setUser({
+                        uid: registrationRequest.id,
                         name: registrationRequest.name,
                         email: registrationRequest.email,
                         company: registrationRequest.companyName,
                         plan: registrationRequest.plan,
                         usedProjects: 0,
-                        usedStorageMB: 0
+                        usedStorageMB: 0,
+                        userType: registrationRequest.userType
                     });
                     // الموردين: لوحة تحكم خاصة، الشركات: dashboard
                     setCurrentPage(userType === 'supplier' ? 'supplier' : 'dashboard');
@@ -702,12 +739,14 @@ const App: React.FC = () => {
                 const approvedRequest = registrationService.getRequestByEmail(email);
                 if (approvedRequest && approvedRequest.status === 'approved' && approvedRequest.password === password) {
                     setUser({
+                        uid: approvedRequest.id,
                         name: approvedRequest.name,
                         email: approvedRequest.email,
                         company: approvedRequest.companyName,
                         plan: approvedRequest.plan,
                         usedProjects: 0,
-                        usedStorageMB: 0
+                        usedStorageMB: 0,
+                        userType: approvedRequest.userType
                     });
                     setCurrentPage('dashboard');
                     return;
@@ -716,6 +755,13 @@ const App: React.FC = () => {
                 return;
             }
             // User state will be updated by onAuthChange listener
+            // Check email verification status
+            const isVerified = await checkEmailVerified();
+            if (!isVerified && email.toLowerCase() !== SUPER_ADMIN_EMAIL.toLowerCase()) {
+                setPendingRegistrationEmail(email);
+                setCurrentPage('verification');
+                return;
+            }
             // Super Admin: auto-grant full access
             if (email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()) {
                 setAdminAccessGranted(true);
@@ -1290,6 +1336,15 @@ const App: React.FC = () => {
         return <CompanyPage language={language} onNavigate={handleNavigate} />;
     }
 
+    if (currentPage === 'terms') {
+        const TermsPage = React.lazy(() => import('./pages/TermsPage'));
+        return (
+            <React.Suspense fallback={<div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">⏳</div>}>
+                <TermsPage language={language} onBack={() => handleNavigate('landing')} />
+            </React.Suspense>
+        );
+    }
+
     if (currentPage === 'developer-brain') {
         return <DeveloperBrainDashboard language={language} onNavigate={handleNavigate} />;
     }
@@ -1299,7 +1354,7 @@ const App: React.FC = () => {
     }
 
     if (currentPage === 'payment') {
-        return <PaymentPage language={language} onNavigate={handleNavigate} currentPlan={user?.plan} />;
+        return <PaymentPage language={language} onNavigate={handleNavigate} currentPlan={user?.plan} userId={user?.uid || ''} userEmail={user?.email || ''} userName={user?.name || ''} />;
     }
 
     if (currentPage === 'verification') {
@@ -1456,6 +1511,40 @@ const App: React.FC = () => {
             return null;
         }
         return <SuppliersManagementPage language={language} onNavigate={handleNavigate} />;
+    }
+
+    // Owner Dashboard (Super Admin only)
+    if (currentPage === 'owner') {
+        if (!adminAccessGranted || !user) {
+            setCurrentPage('admin');
+            return null;
+        }
+        return <OwnerDashboard language={language} onNavigate={handleNavigate} onLogout={handleLogout} />;
+    }
+
+    // Admin Sub-Pages (Companies, Data, Users)
+    if (currentPage === 'admin-companies') {
+        if (!adminAccessGranted || !user || user.plan !== 'enterprise') {
+            setCurrentPage('admin');
+            return null;
+        }
+        return <CompaniesPage language={language} onNavigate={handleNavigate} />;
+    }
+
+    if (currentPage === 'admin-data') {
+        if (!adminAccessGranted || !user || user.plan !== 'enterprise') {
+            setCurrentPage('admin');
+            return null;
+        }
+        return <DataPage language={language} onNavigate={handleNavigate} />;
+    }
+
+    if (currentPage === 'admin-users') {
+        if (!adminAccessGranted || !user || user.plan !== 'enterprise') {
+            setCurrentPage('admin');
+            return null;
+        }
+        return <UsersPage language={language} onNavigate={handleNavigate} />;
     }
 
     // Manager Dashboard

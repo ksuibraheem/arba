@@ -127,7 +127,8 @@ const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
         }, 2000);
     };
 
-    const amount = request?.amount || PLAN_PRICES.professional;
+    const planName = request?.plan || 'professional';
+    const amount = request?.amount || PLAN_PRICES[planName] || 0;
 
     if (success) {
         return (
@@ -181,7 +182,10 @@ const PaymentUploadPage: React.FC<PaymentUploadPageProps> = ({
                             {amount.toLocaleString()} <span className="text-lg">{t('ر.س', 'SAR')}</span>
                         </p>
                         <p className="text-green-500 text-sm mt-1">
-                            {t('اشتراك سنوي - الباقة الاحترافية', 'Annual Subscription - Professional Plan')}
+                            {language === 'ar'
+                            ? `اشتراك — باقة ${planName === 'free' ? 'المجانية' : planName === 'starter' ? 'الأساسية' : planName === 'professional' ? 'الاحترافية' : planName === 'business' ? 'الأعمال' : 'المؤسسية'}`
+                            : `Subscription — ${planName.charAt(0).toUpperCase() + planName.slice(1)} Plan`
+                        }
                         </p>
                     </div>
 

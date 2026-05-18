@@ -12,6 +12,7 @@ import autoTable from 'jspdf-autotable';
 import { applyWatermark, WatermarkConfig } from './pdfWatermark';
 import { processForRTL, formatArabicNumber } from './arabicTextShaper';
 import { COMPANY_INFO } from '../companyData';
+import { sanitizeItemsForExport, resolveAccessLevel, logSensitiveAccess, type UserAccessLevel } from './dataShieldService';
 
 // =================== TYPES ===================
 
@@ -213,6 +214,16 @@ export async function generatePricingPDF(config: PDFExportConfig): Promise<Blob>
         userId, employeeName, employeeId,
         brandingMode, companyInfo,
     } = config;
+
+    // ── Apply data shield: sanitize items based on user role ──
+    const accessLevel = resolveAccessLevel({
+        isManager: brandingMode === 'company',
+        employeeRole: employeeId ? 'qs' : undefined,
+    });
+    const safeItems = sanitizeItemsForExport(items, accessLevel);
+
+    // ── تسجيل الوصول للبيانات المالية (Audit Trail) ──
+    logSensitiveAccess(`pdf_export_${brandingMode || 'arba'}`, userId);
 
     const isAr = language === 'ar';
     const t = (arText: string, enText: string) => isAr ? arText : enText;
@@ -1087,4 +1098,32 @@ export function downloadPDF(blob: Blob, filename: string): void {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+}
+
+/**
+ * Download PDF + auto-upload to Firebase Storage
+ * يحمّل الـ PDF محلياً ويرفعه تلقائياً لـ Firebase Storage
+ */
+export async function downloadAndStorePDF(
+    blob: Blob,
+    filename: string,
+    projectId: string,
+    userId: string,
+    userName: string,
+    finalPrice: number,
+    totalItems: number,
+): Promise<void> {
+    // 1. Download locally
+    downloadPDF(blob, filename);
+
+    // 2. Upload to Firebase Storage (non-blocking)
+    try {
+        const { uploadPDFToStorage } = await import('./pdfStorageService');
+        const result = await uploadPDFToStorage(blob, projectId, userId, userName, finalPrice, totalItems);
+        if (result.success) {
+            console.log(`☁️ PDF stored: ${result.downloadUrl}`);
+        }
+    } catch {
+        // Storage upload is optional — don't block download
+    }
 }
