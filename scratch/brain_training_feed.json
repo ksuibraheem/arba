@@ -1,0 +1,479 @@
+{
+  "source": "TBC-FM-1226",
+  "date": "2026-05-18T20:22:26.283Z",
+  "stats": {
+    "totalItems": 1566,
+    "matchedItems": 1566,
+    "apiMatchedItems": 1196,
+    "unmatchedItems": 0,
+    "matchRate": 100,
+    "grandTotal": 128628252
+  },
+  "learnedPrices": [
+    {
+      "description": "اعمال الحفر حول رقاب الاعمدة والميد و الفناء الداخلي  للوصول لمنسوب التاسيس لتنفيذ اعمال التدعيم وال",
+      "unit": "م3",
+      "unitPrice": 2800,
+      "matchedBy": "تدعيم الاعمدة بقمصان خرسانية [تنفيذ قمصان بزيادة الأبعاد]",
+      "source": "api",
+      "confidence": 0.95
+    },
+    {
+      "description": "اعمال الردم باستخدام تربة تربة دفان صالحة (A-2-4) ودمك التربة على طبقات وحسب المواصفات  المعتمدة",
+      "unit": "م3",
+      "unitPrice": 2500,
+      "matchedBy": "لوحة تعريفية [حسب العينة المعتمدة]",
+      "source": "api",
+      "confidence": 0.95
+    },
+    {
+      "description": "معالجة  قطاع رقاب الأعمدة و الاعمدة الخرسانية من اثار الرطوبةو صدأ الحديد  وتفكك الغطاء الخرساني  شا",
+      "unit": "م.ط",
+      "unitPrice": 300,
+      "matchedBy": "لاقط صوت لاسلكي [قناتين شامل الملحقات والربط] ⚡سُقِّف",
+      "source": "api",
+      "confidence": 0.95
+    },
+    {
+      "description": "معالجة  قطاع الميد الأرضية للمبنى الرئيسي من صدأ حديد التسليح و تفكك الخرسانة واثار الرطوبة و محمل ع",
+      "unit": "م.ط",
+      "unitPrice": 300,
+      "matchedBy": "لوحة تعريفية [حسب العينة المعتمدة] ⚡سُقِّف",
+      "source": "api",
+      "confidence": 0.95
+    },
+    {
+      "description": "معالجة وتدعيم الوصلات وقطاعات الربط ومراجعة التثبيت ومراجعة اللحامات  للمظلة المعدنيةبالموقع العام  ",
+      "unit": "م 2",
+      "unitPrice": 850,
+      "matchedBy": "لاقط صوت لاسلكي [قناتين شامل الملحقات والربط]",
+      "source": "api",
+      "confidence": 0.95
+    },
+    {
+      "description": "معالجة السواتر المعدنية النظامية المثبتة على الأسوارمن الصدأ شاملا أعمال الدهان لجميع الأجزاء و مراج",
+      "unit": "م.ط",
+      "unitPrice": 300,
+      "matchedBy": "مكبر صوت [500 وات مع مشغل متعدد] ⚡سُقِّف",
+      "source": "api",
+      "confidence": 0.95
+    },
+    {
+      "description": "إزالة  جميع الأسوار الشنكو و الأسوار الشبك و المعدنية  حول الملعب و السواتر الغير نظامية علي الأسوار",
+      "unit": "مقطوعية",
+      "unitPrice": 1200,
+      "matchedBy": "مكبر صوت [500 وات مع مشغل متعدد]",
+      "source": "api",
+      "confidence": 0.95
+    },
+    {
+      "description": "توريد وتنفيذ سور مؤلف من قوائم حديدية مجلفنة مع شبك معدني مجلفن قطر أسلاكه لاتقل عن 2.5  بارتفاع 6 م",
+      "unit": "م.ط",
+      "unitPrice": 300,
+      "matchedBy": "صاري علم [معدني مجلفن 3 متر] ⚡سُقِّف",
+      "source": "api",
+      "confidence": 0.95
+    },
+    {
+      "description": "تغطية ومعالجة فواصل التمدد بالسطح  طبقا للمواصفات وأصول الصناعة وطبقا لتعليمات المهندس المشرف .",
+      "unit": "م .ط",
+      "unitPrice": 80,
+      "matchedBy": "فواصل التمدد",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "توريد وتركيب شبابيك الومنيوم بقطاعات سماكة 2 مم ذو زجاج مزدوج مثلج وشفاف (6-12-6 مم) خارجي يركب بالف",
+      "unit": "م2",
+      "unitPrice": 80,
+      "matchedBy": "حمالة ملابس مزدوجة [للفصول الدراسية]",
+      "source": "api",
+      "confidence": 0.95
+    },
+    {
+      "description": "بالمتر المربع توريد وتنفيذ خرسانة عادية سمك 10سم حسب المواصفات.",
+      "unit": "م2",
+      "unitPrice": 350,
+      "matchedBy": "سبورة بورسلان [مقاس 3x1.2 متر]",
+      "source": "api",
+      "confidence": 0.95
+    },
+    {
+      "description": "توريد وتركيب قواطع داخلية من ألواح الجبسومبورد لا تقل سماكتها عن 12.5 مم وشبكة داخلية من المعدن وترك",
+      "unit": "م2",
+      "unitPrice": 35,
+      "matchedBy": "دهان",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "بالمتر الطوليي توريد وتركيب طرفيات خرسانية سابقة الصب ملونة بسمك 15 سم ومحمل عليها فرشة من الخرسانة ",
+      "unit": "م.ط",
+      "unitPrice": 300,
+      "matchedBy": "سبورة بورسلان [مقاس 3x1.2 متر] ⚡سُقِّف",
+      "source": "api",
+      "confidence": 0.95
+    },
+    {
+      "description": "توريد تركيب صاري علم معدني مجلفن بإرتفاع لايقل عن 3 متر حسب المواصفات المعتمدة وتعليمات الجهة المشرف",
+      "unit": "عدد",
+      "unitPrice": 1800,
+      "matchedBy": "صاري علم [معدني مجلفن 3 متر]",
+      "source": "api",
+      "confidence": 0.95
+    },
+    {
+      "description": "فك وازالة طبقات الارضيات لدورات المياه ونقل المخلفات الى المقالب العمومية   .",
+      "unit": "م2",
+      "unitPrice": 25,
+      "matchedBy": "فك وازالة",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "توريد وتنفيذ دكة خرسانيه عاديه لملئ فراغ السقوط بدورات المياه.",
+      "unit": "م2",
+      "unitPrice": 500,
+      "matchedBy": "تدعيم الاعمدة بقمصان خرسانية [تنفيذ قمصان بزيادة الأبعاد] ⚡سُقِّف",
+      "source": "api",
+      "confidence": 0.95
+    },
+    {
+      "description": "توريد وتركيب حاقن صابون",
+      "unit": "عدد",
+      "unitPrice": 45,
+      "matchedBy": "حاقن صابون",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "بالمتر الطولي توريد وتنفيذ ميضأة من للوضوء بعرض70 سم ( 30 سم منها لحوض الميضأة و 40 سم لجلسة الميضأة",
+      "unit": "م.ط",
+      "unitPrice": 120,
+      "matchedBy": "محبس برونز سكينة [قطر 1 بوصة مطلي نيكل]",
+      "source": "api",
+      "confidence": 0.95
+    },
+    {
+      "description": "توريد وتركيب ربر علي الزوايا الحادة بالفناء",
+      "unit": "عدد",
+      "unitPrice": 30,
+      "matchedBy": "ربر",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "توريد وتركيب وزراعة الأشجار الكبيرة والصغيرة والغطاء الخضري والبند يشمل الزراعة والحفر وخلطة التربة ",
+      "unit": "عدد",
+      "unitPrice": 25,
+      "matchedBy": "حفر",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "وريد وتركيب وتشغيل واختبار وحدة إنارة LED (60 واط) مربعة الشكل تركب غاطسة أو ظاهرة  بدرجة حماية IP42",
+      "unit": "عدد",
+      "unitPrice": 150,
+      "matchedBy": "وحدة إنارة led",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "توريد وتركيب وتشغيل واختبار وحدة إنارة LED (40 واط) دائرية الشكل تركب غاطسة أو ظاهرة بدرجة حماية IP6",
+      "unit": "عدد",
+      "unitPrice": 40,
+      "matchedBy": "مواسير",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "توريد وتركيب وحدة إنارة الطوارئ قدرة ( 1×8 واط ) مزودة بأسهم باتجاه المخارج بدرجة حماية 44 بسعة زمن ",
+      "unit": "عدد",
+      "unitPrice": 450,
+      "matchedBy": "مروحة سحب كاسيت [قدرة سحب 150CFM]",
+      "source": "api",
+      "confidence": 0.95
+    },
+    {
+      "description": "توريد وتركيب واختبار مخرج قوى مفرد للأغراض العادية سعة (13 أمبير/ 220 فولت) ذوقطبين وقطب ارضى و السع",
+      "unit": "عدد",
+      "unitPrice": 85,
+      "matchedBy": "مخرج قوى",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "توريد و تركيب و تشغيل قاطع خارجي لمضخات الحريق ( DISCONNECT SWITCH )\r\n( 100 أمبير/ 220 فولت/ IP65 ) ",
+      "unit": "عدد",
+      "unitPrice": 204.0830491664621,
+      "matchedBy": "كيبل 2.5مم [كيبل نحاس]",
+      "source": "api",
+      "confidence": 0.95
+    },
+    {
+      "description": "فحص واختبار جميع الكابلات عن طريق جهاز فحص معاير وتقديم تقرير مفصل قبل البدء بالاعمال",
+      "unit": "عدد",
+      "unitPrice": 35,
+      "matchedBy": "كابلات",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "توريد وتركيب واختبار لوحة توزيع عمومية MDB بقاطع رئيسي سعة 2000 امبير وعدد قواطع فرعية يتناسب مع الأ",
+      "unit": "عدد",
+      "unitPrice": 25000,
+      "matchedBy": "لوحة توزيع عمومية",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "توريد وتركيب وتشغيل واختبار لوحة توزيع فرعية بقاطع رئيسي بسعة أمبيرية  تتناسب مع الأحمال المتصلة وعد",
+      "unit": "عدد",
+      "unitPrice": 5500,
+      "matchedBy": "لوحة توزيع فرعية",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "وريد وتركيب واختبار وبرمجة وتشغيل لوحة تحكم إنذار الحريق لعدد 4 مناطق كاملة بجهاز اتصال تليفوني آلى ",
+      "unit": "عدد",
+      "unitPrice": 1800,
+      "matchedBy": "جرس حصص [أتوماتيك مربوط بنظام الصوتيات]",
+      "source": "api",
+      "confidence": 0.95
+    },
+    {
+      "description": "توريد وتركيب وبرمجة وتشغيل وحدة إنذار يدوي بكاسر زجاجي محمل على البند التمديدات و جميع ما يلزم\r\nللتش",
+      "unit": "عدد",
+      "unitPrice": 180,
+      "matchedBy": "إنذار يدوي",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "توريد و تركيب و تشغيل مخرج ومدخل لاقط صوت مع الكوابل من الجهاز للمخرج",
+      "unit": "عدد",
+      "unitPrice": 85,
+      "matchedBy": "مخرج",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "توريد وتركيب و تشغيل ميكرفون سلكي منضدة مع محدد مناطق",
+      "unit": "عدد",
+      "unitPrice": 500,
+      "matchedBy": "ميكرفون",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "جهاز استقبال لاسلكي يحتوي على عدد 2 قناة استقبال",
+      "unit": "عدد",
+      "unitPrice": 800,
+      "matchedBy": "استقبال لاسلكي",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "توريد وتركيب كبينة توزيع 16 U وحدة",
+      "unit": "عدد",
+      "unitPrice": 2000,
+      "matchedBy": "كبينة توزيع",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "توريد وتركيب وتشغيل واختبار موزع معلومات فرعي48  PORT من النوع (1000/ 100 / 10 ) (POE)  ( 2sfb )   و",
+      "unit": "عدد",
+      "unitPrice": 450,
+      "matchedBy": "مجمع توصيل [Patch panel 24 port UTP]",
+      "source": "api",
+      "confidence": 0.95
+    },
+    {
+      "description": "توريد وتركيب وتشغيل (WIFI Access Point) تدعم نطاقي التردد (2.4GHz & 5GHz) وتدعم خاصية WIFI6 ، يتم ال",
+      "unit": "عدد",
+      "unitPrice": 1500,
+      "matchedBy": "نقطة وصول WIFI [تردد 2.4/5GHz Access Point]",
+      "source": "api",
+      "confidence": 0.95
+    },
+    {
+      "description": "توريد وتركيب وتشغيل واختبار عدة هاتف قياسية للمكاتب.",
+      "unit": "عدد",
+      "unitPrice": 350,
+      "matchedBy": "عدة هاتف",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "تنظيف وتعقيم خزان المياه الأرضي والخزانات العلوية، وشبكة المياه بواسطة شركة مختصة تقدم للاعتماد من ج",
+      "unit": "عدد",
+      "unitPrice": 3000,
+      "matchedBy": "تنظيف وتعقيم خزان",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "اعتماد مخطات الدفاع المدني من مكتب استشاري سلامة مختص والبند يشمل تقرير الاستلام وشهادة انهاء التركي",
+      "unit": "مقطوعية",
+      "unitPrice": 15000,
+      "matchedBy": "اعتماد مخططات الدفاع المدني [من مكتب استشاري]",
+      "source": "api",
+      "confidence": 0.95
+    },
+    {
+      "description": "توريد و تركيب طفايه حريق بودره كيماويه جافه سعه (6 كجم )",
+      "unit": "عدد",
+      "unitPrice": 220,
+      "matchedBy": "طفايه حريق بودره",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "توريد و تركيب طفايه حريق ثانى أكسيد الكربون  سعه (6 كجم )",
+      "unit": "عدد",
+      "unitPrice": 220,
+      "matchedBy": "طفايه حريق",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "توريد و تركيب مجموعة مضخات افقية  ذاتية التحضير للسقيا مكونة من \" أثنين \" مضخة تعملان بالتبادل تصرف ",
+      "unit": "عدد",
+      "unitPrice": 8500,
+      "matchedBy": "مضخات",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "توريد و تركيب و تشغيل سخان كهربائى للمياه سعه 100 لتر محمل على البند مفتاح التشغيل و جميع التمديدات ",
+      "unit": "عدد",
+      "unitPrice": 200,
+      "matchedBy": "تقدير حسب الوحدة (عدد)",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "توريد وتركيب غطاء غرفة تفتيش",
+      "unit": "عدد",
+      "unitPrice": 2500,
+      "matchedBy": "غرفة تفتيش",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "تسليك شبكة الصرف الصحي للمجموعة كاملة (بضغط الهواء ) ويشمل العمل تنظيف غرف التفتيش  وصيانة الجدران و",
+      "unit": "عدد",
+      "unitPrice": 5000,
+      "matchedBy": "تسليك شبكة",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "توريد وتركيب براد مياه 3 صنبور مع فلتر 7مراحل احد المراحل تكون بالأشعة الفوق بنفسجية",
+      "unit": "عدد",
+      "unitPrice": 2500,
+      "matchedBy": "براد مياه",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "توريد وتركيب وحدات تكييف الهواء DX-split، منفذ دولابي نوع :(FCU/CU)  Tr 5 ،سعة 400 فولت ،   3 فاز ، ",
+      "unit": "عدد",
+      "unitPrice": 3500,
+      "matchedBy": "تكييف",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "إزالة جميع المظلات الغير نظامية والمثبتة على الأسوار",
+      "unit": "م2",
+      "unitPrice": 20,
+      "matchedBy": "إزالة",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "توريد وتركيب لوحات فلين للاعلانات",
+      "unit": "م2",
+      "unitPrice": 120,
+      "matchedBy": "لوحات فلين",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "توريد وتركيب دهان من البلاستيك للاسقف الخرسانة فوق اعمال اللياسة لجدران دورات المياه واسقف دورات الم",
+      "unit": "م2",
+      "unitPrice": 40,
+      "matchedBy": "لياسة",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "صيانة اللوحة الرئيسية والبند يشمل استبدال القواطع الرئيسية والفرعية التالفة وأجهزة حماية وأجهزة القي",
+      "unit": "عدد",
+      "unitPrice": 15000,
+      "matchedBy": "صيانة اللوحة الرئيسية",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "توريد وتركيب واختبار وتشغيل لوحة توزيع كهرباء رئيسية بقاطع رئيسي سعة (800 أمبير) طبقا للمواصفات الفن",
+      "unit": "عدد",
+      "unitPrice": 8000,
+      "matchedBy": "لوحة توزيع",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "حوض غسيل ( مغسلة )  بشكل مناسب بما في ذلك الخلاط و مواسير التغذية و الصرف و المحابس و كل ما يلزم تبع",
+      "unit": "م ط",
+      "unitPrice": 300,
+      "matchedBy": "مغسلة ⚡سُقِّف",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "صيانة اللوحة الرئيسية والبند يشمل استبدال القواطع الرئيسية والفرعية التالفة وأجهزة حماية وأجهزة القي",
+      "unit": "عدد",
+      "unitPrice": 35,
+      "matchedBy": "دهانات",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "إزالة جميع المظلات الشنكو الغير نظامية والمثبتة على الأسوار",
+      "unit": "م2",
+      "unitPrice": 25,
+      "matchedBy": "شنكو",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "توريد و تركيب و تشغيل سخان كهربائى للمياه سعه 100 لتر محمل على البند مفتاح التشغيل و جميع التمديدات ",
+      "unit": "",
+      "unitPrice": 200,
+      "matchedBy": "تقدير عام",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "إزالة البلاطة الكابولية بواجهة المبنى بسقف الأرضي  التي تمثل خطورة",
+      "unit": "م2",
+      "unitPrice": 90,
+      "matchedBy": "بلاط",
+      "source": "dictionary",
+      "confidence": 0.75
+    },
+    {
+      "description": "توريد وتركيب غطاء لغرفة التفتيش",
+      "unit": "عدد",
+      "unitPrice": 350,
+      "matchedBy": "غطاء لغرفة",
+      "source": "dictionary",
+      "confidence": 0.75
+    }
+  ],
+  "errorPatterns": []
+}

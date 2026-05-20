@@ -46,6 +46,6 @@ export {
   getReadyMixPrice,
   PRICES_LAST_UPDATED,
   PRICES_VERSION,
-} from './marketPrices2026';
+} from './marketPricesToday';
 
-export type { MaterialPrice } from './marketPrices2026';
+export type { MaterialPrice } from './marketPricesToday';

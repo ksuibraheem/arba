@@ -17,7 +17,11 @@ import { getAnalytics } from 'firebase/analytics';
 
 // ⚠️ Validate required environment variables at startup
 function getRequiredEnv(key: string): string {
-    const value = import.meta.env[key];
+    const envObj = (typeof process !== 'undefined' && process.env) 
+        ? process.env 
+        : ((import.meta as any).env || {});
+        
+    const value = envObj[key];
     if (!value) {
         console.error(`❌ Missing required environment variable: ${key}. Check your .env file.`);
         // Return empty string instead of crashing — allows the app to load
@@ -35,7 +39,7 @@ const firebaseConfig = {
     storageBucket: getRequiredEnv('VITE_FIREBASE_STORAGE_BUCKET'),
     messagingSenderId: getRequiredEnv('VITE_FIREBASE_MESSAGING_SENDER_ID'),
     appId: getRequiredEnv('VITE_FIREBASE_APP_ID'),
-    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || '' // Optional
+    measurementId: (typeof process !== 'undefined' && process.env) ? process.env.VITE_FIREBASE_MEASUREMENT_ID || '' : ((import.meta as any).env?.VITE_FIREBASE_MEASUREMENT_ID || '') // Optional
 };
 
 // Initialize Firebase

@@ -10,6 +10,7 @@
  */
 
 // =================== Types ===================
+import { externalSupplierService } from './externalSupplierService';
 
 export interface MarketPrice {
   commodityId: string;
@@ -214,6 +215,53 @@ const STATIC_PRICES_2026: Record<string, Omit<MarketPrice, 'lastUpdated'>> = {
 // =================== Service ===================
 
 class MarketDataProvider {
+  private livePrices: Record<string, MarketPrice> = {};
+  private isLiveConnected: boolean = false;
+
+  /**
+   * Sync prices with external APIs
+   */
+  async syncWithExternalAPI(): Promise<number> {
+    // 1. Initialize sample API suppliers if none exist
+    externalSupplierService.initializeSampleData();
+    
+    const suppliers = externalSupplierService.getSuppliers();
+    let totalUpdated = 0;
+
+    for (const sup of suppliers) {
+      if (sup.linkType === 'api') {
+        // Fetch prices from supplier API
+        await externalSupplierService.fetchPricesFromAPI(sup.id);
+      }
+    }
+
+    // 2. Build live prices dictionary
+    const externalPrices = externalSupplierService.getPrices();
+    
+    for (const p of externalPrices) {
+      // Create a unique commodity ID from category and code
+      const commId = `${p.category}_${p.productCode || p.id}`;
+      this.livePrices[commId] = {
+        commodityId: commId,
+        nameAr: p.productName.ar,
+        nameEn: p.productName.en,
+        price: p.price,
+        currency: p.currency as 'SAR' | 'USD',
+        unit: p.unit,
+        source: 'api_live',
+        lastUpdated: new Date(p.updatedAt),
+        confidence: 0.95, // High confidence for API
+        trend: 'stable',
+        changePercent7d: 0,
+        // Using specifications field from API
+        specifications: p.specifications
+      } as MarketPrice & { specifications?: string };
+      totalUpdated++;
+    }
+
+    this.isLiveConnected = totalUpdated > 0;
+    return totalUpdated;
+  }
 
   /**
    * Get current market snapshot
@@ -228,11 +276,16 @@ class MarketDataProvider {
       };
     }
 
+    // Override or add live API prices
+    for (const [id, data] of Object.entries(this.livePrices)) {
+      prices[id] = data;
+    }
+
     return {
       prices,
       fetchedAt: new Date(),
-      source: 'ARBA Static Database Q2 2026',
-      isLive: false,  // Will be true when API is connected
+      source: this.isLiveConnected ? 'External Supplier API' : 'ARBA Static Database Q2 2026',
+      isLive: this.isLiveConnected,
     };
   }
 
@@ -240,7 +293,7 @@ class MarketDataProvider {
    * Get price for a specific commodity
    */
   getPrice(commodityId: string): MarketPrice | null {
-    const data = STATIC_PRICES_2026[commodityId];
+    const data = this.livePrices[commodityId] || STATIC_PRICES_2026[commodityId];
     if (!data) return null;
 
     return {
@@ -252,13 +305,18 @@ class MarketDataProvider {
   /**
    * Search prices by keyword
    */
-  searchPrices(keyword: string): MarketPrice[] {
+  searchPrices(keyword: string): (MarketPrice & { specifications?: string })[] {
     const kw = keyword.toLowerCase();
-    return Object.values(STATIC_PRICES_2026)
+    
+    // Search both static and live prices
+    const allPrices = { ...STATIC_PRICES_2026, ...this.livePrices };
+    
+    return Object.values(allPrices)
       .filter(p =>
         p.nameAr.includes(kw) ||
+        (p as any).specifications?.includes(kw) ||
         p.nameEn.toLowerCase().includes(kw) ||
-        p.commodityId.includes(kw)
+        p.commodityId.toLowerCase().includes(kw)
       )
       .map(p => ({ ...p, lastUpdated: new Date() }));
   }
@@ -288,14 +346,14 @@ class MarketDataProvider {
    * Get all available commodity IDs
    */
   getAvailableCommodities(): string[] {
-    return Object.keys(STATIC_PRICES_2026);
+    return [...Object.keys(STATIC_PRICES_2026), ...Object.keys(this.livePrices)];
   }
 
   /**
    * Get total commodities count
    */
   getCount(): number {
-    return Object.keys(STATIC_PRICES_2026).length;
+    return this.getAvailableCommodities().length;
   }
 }
 

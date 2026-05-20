@@ -354,6 +354,7 @@ class ExternalSupplierService {
                         unit: item.unit || 'قطعة',
                         price: item.price,
                         currency: 'SAR',
+                        specifications: item.specifications,
                         source: 'api_fetch',
                         status: 'pending_review',
                         createdBy: 'system'
@@ -391,10 +392,10 @@ class ExternalSupplierService {
     /**
      * محاكاة استجابة API (للتطوير)
      */
-    private simulateAPIResponse(supplier: ExternalSupplier): Array<{ code: string; name: string; price: number; category?: string; unit?: string }> {
+    private simulateAPIResponse(supplier: ExternalSupplier): Array<{ code: string; name: string; price: number; category?: string; unit?: string; specifications?: string }> {
         // بيانات تجريبية تحاكي استجابة API
         const categories = supplier.categories;
-        const mockProducts: Array<{ code: string; name: string; price: number; category: string; unit: string }> = [];
+        const mockProducts: Array<{ code: string; name: string; price: number; category: string; unit: string; specifications?: string }> = [];
 
         if (categories.includes('steel') || categories.includes('building_materials')) {
             mockProducts.push(
@@ -413,8 +414,31 @@ class ExternalSupplierService {
 
         if (categories.includes('electrical')) {
             mockProducts.push(
-                { code: 'ELC-001', name: 'كيبل 2.5مم', price: 180 + Math.random() * 30, category: 'electrical', unit: 'لفة' },
-                { code: 'ELC-002', name: 'كيبل 4مم', price: 250 + Math.random() * 40, category: 'electrical', unit: 'لفة' }
+                { code: 'ELC-001', name: 'كيبل 2.5مم', price: 180 + Math.random() * 30, category: 'electrical', unit: 'لفة', specifications: 'كيبل نحاس' },
+                { code: 'ELC-002', name: 'كيبل 4مم', price: 250 + Math.random() * 40, category: 'electrical', unit: 'لفة', specifications: 'كيبل نحاس' }
+            );
+        }
+
+        if (categories.includes('school_fixtures') || categories.includes('it_audio') || categories.includes('mep_plumbing') || categories.includes('structural')) {
+            mockProducts.push(
+                { code: 'IT-AUDIO-01', name: 'مكبر صوت', price: 1200, category: 'it_audio', unit: 'عدد', specifications: '500 وات مع مشغل متعدد' },
+                { code: 'IT-AUDIO-02', name: 'لاقط صوت لاسلكي', price: 850, category: 'it_audio', unit: 'عدد', specifications: 'قناتين شامل الملحقات والربط' },
+                { code: 'IT-NET-01', name: 'نقطة وصول WIFI', price: 1500, category: 'it_audio', unit: 'عدد', specifications: 'تردد 2.4/5GHz Access Point' },
+                { code: 'IT-NET-02', name: 'مجمع توصيل', price: 450, category: 'it_audio', unit: 'عدد', specifications: 'Patch panel 24 port UTP' },
+                { code: 'IT-NET-03', name: 'مجمع توصيل', price: 650, category: 'it_audio', unit: 'عدد', specifications: 'Patch panel 48 port UTP' },
+                { code: 'IT-BELL-01', name: 'جرس حصص', price: 1800, category: 'it_audio', unit: 'عدد', specifications: 'أتوماتيك مربوط بنظام الصوتيات' },
+                { code: 'SCH-FIX-01', name: 'سبورة بورسلان', price: 350, category: 'school_fixtures', unit: 'عدد', specifications: 'مقاس 3x1.2 متر' },
+                { code: 'SCH-FIX-02', name: 'صاري علم', price: 1800, category: 'school_fixtures', unit: 'عدد', specifications: 'معدني مجلفن 3 متر' },
+                { code: 'SCH-FIX-03', name: 'لوحة تعريفية', price: 2500, category: 'school_fixtures', unit: 'عدد', specifications: 'حسب العينة المعتمدة' },
+                { code: 'SCH-FIX-04', name: 'لوحة فلين للإعلانات', price: 120, category: 'school_fixtures', unit: 'م2', specifications: 'حسب العينة المعتمدة' },
+                { code: 'SCH-FIX-05', name: 'حمالة ملابس مزدوجة', price: 80, category: 'school_fixtures', unit: 'عدد', specifications: 'للفصول الدراسية' },
+                { code: 'MEP-VALVE-01', name: 'محبس برونز سكينة', price: 120, category: 'mep_plumbing', unit: 'عدد', specifications: 'قطر 1 بوصة مطلي نيكل' },
+                { code: 'MEP-VALVE-02', name: 'محبس برونز سكينة', price: 180, category: 'mep_plumbing', unit: 'عدد', specifications: 'قطر 2 بوصة مطلي نيكل' },
+                { code: 'MEP-VALVE-03', name: 'محبس برونز سكينة', price: 250, category: 'mep_plumbing', unit: 'عدد', specifications: 'قطر 3 بوصة مطلي نيكل' },
+                { code: 'MEP-FAN-01', name: 'مروحة سحب كاسيت', price: 450, category: 'mep_plumbing', unit: 'عدد', specifications: 'قدرة سحب 150CFM' },
+                { code: 'ARCH-FIN-01', name: 'بروفايل للواجهات', price: 28, category: 'finishes', unit: 'م2', specifications: 'سمك 3 مم' },
+                { code: 'STR-REP-01', name: 'تدعيم الاعمدة بقمصان خرسانية', price: 2800, category: 'structural', unit: 'عدد', specifications: 'تنفيذ قمصان بزيادة الأبعاد' },
+                { code: 'FIRE-APP-01', name: 'اعتماد مخططات الدفاع المدني', price: 15000, category: 'fire', unit: 'مقطوعية', specifications: 'من مكتب استشاري' }
             );
         }
 
@@ -532,6 +556,23 @@ class ExternalSupplierService {
                     },
                     categories: ['electrical'],
                     notes: 'وكيل معتمد لشنايدر وليجراند',
+                    status: 'active',
+                    createdBy: 'system'
+                },
+                {
+                    name: { ar: 'مورد التجهيزات المدرسية والميكانيكية', en: 'TBC Specialized Supplier' },
+                    companyName: 'شركة التجهيزات المتكاملة',
+                    phone: '0551112222',
+                    email: 'sales@school-tech.com',
+                    website: 'https://school-tech.com',
+                    linkType: 'api',
+                    apiConfig: {
+                        endpoint: 'https://api.school-tech.com/v1/products',
+                        refreshInterval: 12,
+                        syncStatus: 'pending'
+                    },
+                    categories: ['school_fixtures', 'it_audio', 'mep_plumbing', 'structural', 'finishes', 'fire'],
+                    notes: 'مورد معتمد لوزارة التعليم TBC',
                     status: 'active',
                     createdBy: 'system'
                 }
