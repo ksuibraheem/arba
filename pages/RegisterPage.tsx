@@ -22,7 +22,7 @@ import ArbaLogo from '../components/ArbaLogo';
 interface RegisterPageProps {
     language: Language;
     onNavigate: (page: string) => void;
-    onRegister: (userData: RegisterData) => void;
+    onRegister: (userData: RegisterData) => Promise<void> | void;
 }
 
 export type UserType = 'individual' | 'company' | 'supplier';
@@ -111,11 +111,14 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ language, onNavigate, onReg
 
         setLoading(true);
 
-        // Simulate registration
-        setTimeout(() => {
-            onRegister(formData);
+        try {
+            await onRegister(formData);
+        } catch (err: any) {
+            console.error('Registration error:', err);
+            setError(err.message || 'حدث خطأ أثناء التسجيل');
+        } finally {
             setLoading(false);
-        }, 1500);
+        }
     };
 
     return (

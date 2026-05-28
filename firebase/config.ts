@@ -15,31 +15,30 @@ import { getStorage } from 'firebase/storage';
 import { getAnalytics } from 'firebase/analytics';
 
 
-// ⚠️ Validate required environment variables at startup
-function getRequiredEnv(key: string): string {
-    const envObj = (typeof process !== 'undefined' && process.env) 
-        ? process.env 
-        : ((import.meta as any).env || {});
-        
-    const value = envObj[key];
-    if (!value) {
-        console.error(`❌ Missing required environment variable: ${key}. Check your .env file.`);
-        // Return empty string instead of crashing — allows the app to load
-        // but Firebase operations will fail gracefully
-        return '';
+// ⚠️ Validate required environment variables safely for both Vite and Node.js
+function getEnv(key: string, metaValue: string | undefined): string {
+    // 1. Try Vite's statically injected import.meta.env first (Browser)
+    if (metaValue) return metaValue;
+    
+    // 2. Fallback to process.env (Node.js / Scripts)
+    if (typeof process !== 'undefined' && process.env && process.env[key]) {
+        return process.env[key] as string;
     }
-    return value;
+
+    console.warn(`⚠️ Missing environment variable: ${key}`);
+    return '';
 }
 
 // Firebase configuration — ALL values from .env (no hardcoded secrets)
+// ⚠️ Vite requires LITERAL `import.meta.env.VITE_*` for static replacement
 const firebaseConfig = {
-    apiKey: getRequiredEnv('VITE_FIREBASE_API_KEY'),
-    authDomain: getRequiredEnv('VITE_FIREBASE_AUTH_DOMAIN'),
-    projectId: getRequiredEnv('VITE_FIREBASE_PROJECT_ID'),
-    storageBucket: getRequiredEnv('VITE_FIREBASE_STORAGE_BUCKET'),
-    messagingSenderId: getRequiredEnv('VITE_FIREBASE_MESSAGING_SENDER_ID'),
-    appId: getRequiredEnv('VITE_FIREBASE_APP_ID'),
-    measurementId: (typeof process !== 'undefined' && process.env) ? process.env.VITE_FIREBASE_MEASUREMENT_ID || '' : ((import.meta as any).env?.VITE_FIREBASE_MEASUREMENT_ID || '') // Optional
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
+    appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || ''
 };
 
 // Initialize Firebase

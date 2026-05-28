@@ -520,7 +520,7 @@ class ItemCostAnalyzer {
               name: `${em.name} (${concreteGrade})`,
               qty: em.qty, unit: em.unit,
               unitPrice: Math.round(em.price / Math.max(em.qty, 0.01)),
-              source: `🔬 SBC 304 ${concreteGrade}`,
+              source: 'engineering_db',
               total: em.price,
             };
             materials.push(line);

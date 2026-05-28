@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تسعير مشروع الصندوق الزراعي — عرعر | ARBA Brain</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f0f1a;--card:#161630;--card2:#1c1c3a;--accent:#e8b931;--accent2:#f0d060;--text:#e8e8f0;--text2:#a0a0c0;--border:#2a2a4a;--green:#22c55e;--red:#ef4444;--blue:#3b82f6;--purple:#a855f7;--orange:#f97316;--cyan:#06b6d4;--pink:#ec4899}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.header{background:linear-gradient(135deg,#1a1040 0%,#0d0d2b 50%,#1a0a30 100%);padding:24px 32px;border-bottom:2px solid var(--accent);position:relative;overflow:hidden}
+.header::before{content:'';position:absolute;top:-50%;right:-10%;width:300px;height:300px;background:radial-gradient(circle,rgba(232,185,49,0.08) 0%,transparent 70%);pointer-events:none}
+.header-content{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+.logo{display:flex;align-items:center;gap:16px}
+.logo-icon{width:56px;height:56px;background:linear-gradient(135deg,var(--accent),#d4a020);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#0f0f1a;box-shadow:0 4px 20px rgba(232,185,49,0.3)}
+.logo h1{font-size:22px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo p{font-size:13px;color:var(--text2);margin-top:2px}
+.header-info{text-align:left;font-size:13px;color:var(--text2)}
+.header-info span{display:block;color:var(--accent);font-weight:700;font-size:15px}
+.container{max-width:1400px;margin:0 auto;padding:20px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px;padding:12px;background:var(--card);border-radius:16px;border:1px solid var(--border)}
+.tab{padding:10px 16px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;transition:all .3s;border:1px solid transparent;color:var(--text2);white-space:nowrap}
+.tab:hover{background:var(--card2);color:var(--text)}
+.tab.active{background:linear-gradient(135deg,var(--accent),#d4a020);color:#0f0f1a;border-color:var(--accent);box-shadow:0 4px 15px rgba(232,185,49,0.25)}
+.section{display:none;animation:fadeIn .4s ease}
+.section.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:20px}
+.card-title{font-size:18px;font-weight:800;margin-bottom:4px;color:var(--accent)}
+.card-subtitle{font-size:13px;color:var(--text2);margin-bottom:20px}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+thead th{background:var(--card2);color:var(--accent);padding:12px 16px;text-align:right;font-weight:700;border-bottom:2px solid var(--accent);position:sticky;top:0;z-index:1}
+thead th:first-child{border-radius:0 10px 0 0}
+thead th:last-child{border-radius:10px 0 0 0}
+tbody tr{transition:background .2s}
+tbody tr:hover{background:rgba(232,185,49,0.05)}
+tbody td{padding:10px 16px;border-bottom:1px solid var(--border);text-align:right}
+tbody td:last-child,tbody td:nth-last-child(2){font-family:'Cairo',monospace;direction:ltr;text-align:left}
+.total-row{background:rgba(232,185,49,0.08)!important;font-weight:800}
+.total-row td{border-top:2px solid var(--accent);color:var(--accent);font-size:15px}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:24px}
+.summary-card{background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden;transition:transform .3s,box-shadow .3s}
+.summary-card:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(0,0,0,0.3)}
+.summary-card .label{font-size:13px;color:var(--text2);margin-bottom:8px}
+.summary-card .value{font-size:22px;font-weight:800;color:var(--accent)}
+.summary-card .percent{font-size:12px;color:var(--green);margin-top:4px}
+.summary-card .bar{position:absolute;bottom:0;right:0;left:0;height:4px;background:var(--border);border-radius:0 0 14px 14px}
+.summary-card .bar-fill{height:100%;border-radius:0 0 14px 14px;transition:width .8s ease}
+.grand-total{background:linear-gradient(135deg,#1a1040,#2a1050);border:2px solid var(--accent);border-radius:16px;padding:32px;text-align:center;margin:24px 0}
+.grand-total .label{font-size:16px;color:var(--text2)}
+.grand-total .value{font-size:42px;font-weight:900;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:8px 0}
+.grand-total .sub{font-size:14px;color:var(--text2)}
+.gantt{overflow-x:auto;padding:20px 0}
+.gantt-row{display:flex;align-items:center;margin-bottom:6px;min-height:36px}
+.gantt-label{min-width:200px;font-size:12px;font-weight:600;padding-left:12px;text-align:right;color:var(--text)}
+.gantt-bar-wrap{flex:1;position:relative;height:28px;background:var(--card2);border-radius:6px;overflow:hidden}
+.gantt-bar{position:absolute;height:100%;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,0.5);transition:width .6s ease}
+.gantt-week-markers{display:flex;margin-bottom:8px;padding-right:200px}
+.gantt-week{flex:1;text-align:center;font-size:10px;color:var(--text2);border-left:1px solid var(--border);min-width:20px}
+.chart-container{display:flex;justify-content:center;align-items:center;gap:32px;flex-wrap:wrap;padding:20px}
+.pie-chart{position:relative;width:280px;height:280px}
+.pie-legend{display:flex;flex-direction:column;gap:8px}
+.legend-item{display:flex;align-items:center;gap:10px;font-size:13px}
+.legend-color{width:16px;height:16px;border-radius:4px}
+.print-btn{background:linear-gradient(135deg,var(--accent),#d4a020);color:#0f0f1a;border:none;padding:12px 28px;border-radius:10px;font-family:'Cairo';font-size:14px;font-weight:700;cursor:pointer;transition:transform .2s;box-shadow:0 4px 15px rgba(232,185,49,0.3)}
+.print-btn:hover{transform:scale(1.05)}
+.duration-badge{display:inline-flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--accent);border-radius:10px;padding:12px 20px;font-size:15px;font-weight:700;color:var(--accent)}
+@media print{body{background:#fff;color:#000}.header{background:#fff!important;border-color:#333}.tabs{display:none}.section{display:block!important;page-break-inside:avoid}.card{border-color:#ccc}table{font-size:11px}thead th{background:#f0f0f0;color:#333}.summary-card{border-color:#ccc}}
+@media(max-width:768px){.header-content{flex-direction:column;text-align:center}.summary-grid{grid-template-columns:1fr}.tabs{overflow-x:auto;flex-wrap:nowrap}.tab{font-size:12px;padding:8px 12px}}
+</style>
+</head>
+<body>
+<div class="header">
+<div class="header-content">
+<div class="logo">
+<div class="logo-icon">أ</div>
+<div><h1>ARBA Brain — دماغ أربا</h1><p>تسعير مشروع الصندوق الزراعي — عرعر (الحدود الشمالية)</p></div>
+</div>
+<div class="header-info">
+<span>أسعار Q2-2026</span>
+
+التاريخ: <span id="reportDate"></span>
+</div>
+</div>
+</div>
+<div class="container">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px">
+<div class="duration-badge">🕐 مدة المشروع: 60 أسبوع (≈ 15 شهر)</div>
+<button class="print-btn" onclick="window.print()">🖨️ طباعة التقرير</button>
+</div>
+<div class="tabs" id="tabs"></div>
+<div id="content"></div>
+</div>
+<script>
+const fmt=n=>{const x=Math.round(n*100)/100;return x.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})};
+document.getElementById('reportDate').textContent=new Date().toLocaleDateString('ar-SA');
+
+const DATA={
+site:{name:'أعمال الموقع والحفر',icon:'🏗️',color:'#f97316',items:[
+{d:'Mat Foundations — حفريات لبشة',q:715,u:'م³',r:24.5},{d:'Isolated Footings — حفريات قواعد',q:470,u:'م³',r:30.6},
+{d:'Grade Beams — حفريات ميدات',q:83,u:'م³',r:36.7},{d:'Compacted replacement fill — ردم وإحلال',q:1321,u:'م³',r:24.5}]},
+concrete:{name:'أعمال الخرسانة والصب',icon:'🧱',color:'#3b82f6',items:[
+{d:'خرسانة نظافة — لبشات 75مم',q:30,u:'م³',r:336.6},{d:'خرسانة نظافة — قواعد 75مم',q:35,u:'م³',r:336.6},
+{d:'خرسانة نظافة — ميدات 50مم',q:7,u:'م³',r:367.2},{d:'بلاطة أرضية شاملة قنوات',q:1084,u:'م³',r:85.7},
+{d:'قواعد منفصلة — خرسانة مسلحة',q:175,u:'م³',r:918},{d:'ميدات — خرسانة مسلحة',q:73,u:'م³',r:979.2},
+{d:'لبشة — خرسانة مسلحة',q:175,u:'م³',r:979.2},{d:'جدران خزان مياه',q:55,u:'م³',r:1101.6},
+{d:'سقف خزان مياه',q:53,u:'م³',r:1101.6},{d:'بلاطات مصمتة (Slabs)',q:686,u:'م³',r:1003.7},
+{d:'بلاطات هوردي (Filler block)',q:2415,u:'م²',r:281.5},{d:'كمرات ساقطة (Drop beams)',q:183,u:'م³',r:1101.6},
+{d:'أعمدة (Columns)',q:250,u:'م³',r:1224},{d:'حوائط خرسانية (Cores)',q:60,u:'م³',r:1224},
+{d:'سلالم (Stairs)',q:29,u:'م³',r:1224},{d:'وقف مائي جدران خزان',q:90,u:'م.ط',r:61.2},
+{d:'تغطية 60مم — 700x1750',q:4,u:'عدد',r:244.8},{d:'تغطية 60مم — 850x1000',q:4,u:'عدد',r:244.8},
+{d:'تغطية 60مم — 750x850',q:4,u:'عدد',r:244.8},{d:'تغطية 60مم — 950x850',q:4,u:'عدد',r:244.8},
+{d:'تغطية 60مم — 950x1000',q:4,u:'عدد',r:244.8},{d:'عزل أسفل بلاطة أرضية',q:1084,u:'م²',r:6.1},
+{d:'حماية أسطح',q:1306,u:'م²',r:24.5},{d:'بلكونات مكشوفة',q:30,u:'م²',r:24.5},
+{d:'أرضيات',q:22,u:'م²',r:24.5}]},
+masonry:{name:'أعمال البناء والبلك',icon:'🧱',color:'#a855f7',items:[
+{d:'جدران بلوك 100مم',q:120,u:'م²',r:38},{d:'جدران بلوك 150مم',q:493,u:'م²',r:42},
+{d:'جدران بلوك 200مم',q:1843,u:'م²',r:48},{d:'جدران بلوك 200مم خارجي',q:400,u:'م²',r:65},
+{d:'جدران بلوك 100مم (مبنى 2)',q:21,u:'م²',r:38},{d:'جدران بلوك 150مم (مبنى 2)',q:203,u:'م²',r:44},
+{d:'جدران بلوك 200مم (مبنى 2)',q:500,u:'م²',r:51},{d:'جدران 200مم خارجي (مبنى 2)',q:131,u:'م²',r:55},
+{d:'قاعدة خارجية 300مم',q:4,u:'م.ط',r:130},{d:'قاعدة خارجية 450مم',q:80,u:'م.ط',r:175},
+{d:'أسفل أعمدة — ديكور',q:54,u:'م²',r:300},{d:'أعمدة مسبقة الصنع مع قاعدة وتاج',q:8,u:'عدد',r:2150}]},
+metals:{name:'أعمال المعادن والدرابزين',icon:'⚙️',color:'#06b6d4',items:[
+{d:'سلم معدني 3200مم',q:1,u:'عدد',r:550},{d:'غطاء أرضي 600×600',q:1,u:'عدد',r:500},
+{d:'غطاء أرضي 800×800',q:1,u:'عدد',r:1000},{d:'هيكل معدني Type A — 10م',q:5,u:'عدد',r:5500},
+{d:'درابزين Type B',q:5,u:'م.ط',r:240},{d:'درابزين 1045مم مستقيم',q:12,u:'م.ط',r:500},
+{d:'درابزين 1045مم مائل',q:50,u:'م.ط',r:550},{d:'درابزين 850مم',q:134,u:'م.ط',r:500},
+{d:'درابزين رامب 900مم مائل',q:7,u:'م.ط',r:500},{d:'تغطية أسطح شاملة فلاشينج',q:1,u:'مقطوعية',r:2500}]},
+insulation:{name:'أعمال العزل المائي والحراري',icon:'🛡️',color:'#22c55e',items:[
+{d:'عزل مائي — أساسات منفصلة',q:600,u:'م²',r:8},{d:'عزل مائي — أعمدة وحوائط',q:218,u:'م²',r:8},
+{d:'عزل مائي — ميدات',q:551,u:'م²',r:8},{d:'عزل مائي — لبشة خزان',q:291,u:'م²',r:22},
+{d:'عزل مائي — جدران خزان',q:252,u:'م²',r:22},{d:'عزل مائي — مناطق رطبة',q:820,u:'م²',r:22},
+{d:'عزل مائي — شرفات',q:30,u:'م²',r:22},{d:'عزل خزان — جدران وأعمدة',q:230,u:'م²',r:20},
+{d:'عزل خزان — أرضيات',q:188,u:'م²',r:20},{d:'عزل خزان — سقف',q:188,u:'م²',r:20},
+{d:'عزل حراري — أسطح',q:1306,u:'م²',r:20},{d:'عزل — قاعدة 450مم',q:669,u:'م.ط',r:12},
+{d:'حاجز بخار — أسطح',q:1306,u:'م²',r:3},{d:'حماية عزل — أسطح',q:129,u:'م²',r:12},
+{d:'عزل حراري EPS 50مم — أسطح',q:1306,u:'م²',r:21},{d:'سكريد 50مم — أسطح',q:1280,u:'م²',r:8},
+{d:'عزل حراري 100مم',q:1,u:'م²',r:20},{d:'ألواح ضغط',q:646,u:'م.ط',r:10}]},
+doors:{name:'أعمال الأبواب والنوافذ',icon:'🚪',color:'#ec4899',items:[
+{d:'باب D10',q:1,u:'عدد',r:1100},{d:'باب D12 — مزدوج',q:2,u:'عدد',r:2100},
+{d:'باب D11',q:3,u:'عدد',r:1100},{d:'باب D9',q:1,u:'عدد',r:1700},
+{d:'نافذة W5',q:19,u:'عدد',r:1350},{d:'نافذة W6 مع لوحات جانبية',q:1,u:'عدد',r:4800},
+{d:'نافذة W7',q:8,u:'عدد',r:1350},{d:'نافذة W8',q:1,u:'عدد',r:1750},
+{d:'باب D1 — قياسي',q:161,u:'عدد',r:800},{d:'باب D4',q:24,u:'عدد',r:800},
+{d:'باب D6',q:7,u:'عدد',r:800},{d:'باب D2 — مع فتحة زجاج',q:99,u:'عدد',r:920},
+{d:'باب D3 — مزدوج',q:25,u:'عدد',r:1250},{d:'باب D5',q:9,u:'عدد',r:1700},
+{d:'فتحة 600×1550',q:9,u:'عدد',r:430},{d:'شتر رول',q:125,u:'م²',r:650},
+{d:'نافذة W1',q:48,u:'عدد',r:300},{d:'نافذة W1A',q:40,u:'عدد',r:400},
+{d:'نافذة W2 — محورية',q:99,u:'عدد',r:250},{d:'نافذة W3 — سلايد',q:82,u:'عدد',r:580},
+{d:'نافذة W4 — سلايد',q:10,u:'عدد',r:830},{d:'نافذة HW1',q:192,u:'عدد',r:150},
+{d:'نافذة HW2',q:99,u:'عدد',r:150},{d:'نافذة HW3 — مقاومة حريق',q:25,u:'عدد',r:280},
+{d:'نافذة HW4 — مقاومة حريق',q:9,u:'عدد',r:400},{d:'نافذة HW6',q:2,u:'عدد',r:150},
+{d:'نافذة HW6 — مقاومة حريق',q:3,u:'عدد',r:200},{d:'نافذة HW8',q:1,u:'عدد',r:180},
+{d:'نافذة HW9 — كبيرة',q:2,u:'عدد',r:2000}]},
+finishes:{name:'أعمال التشطيبات',icon:'🎨',color:'#8b5cf6',items:[
+{d:'لياسة — أسطح ساقطة ديكور',q:21,u:'م²',r:18},{d:'لياسة — أسطح ديكور منحنية',q:53,u:'م²',r:18},
+{d:'لياسة جدران 15مم',q:9200,u:'م²',r:18},{d:'لياسة خارجية 20مم محززة',q:3660,u:'م²',r:22},
+{d:'لياسة خارجية 20مم ديكور',q:406,u:'م²',r:22},{d:'لياسة أسقف 15مم',q:3354,u:'م²',r:18},
+{d:'لياسة أسقف مائلة',q:57,u:'م²',r:18},{d:'لياسة أسفل بلاطات 20مم',q:116,u:'م²',r:18},
+{d:'لياسة كمرات ديكور 20مم',q:47,u:'م²',r:20},{d:'لياسة أعمدة 15مم',q:18,u:'م²',r:20},
+{d:'لياسة أعمدة ديكور 20مم',q:14,u:'م²',r:20},{d:'لياسة فتحات خارجية 20مم',q:147,u:'م²',r:22},
+{d:'كرانيش خارجية 300مم',q:150,u:'م.ط',r:20},{d:'بورسلان أرضيات',q:2420,u:'م²',r:70},
+{d:'وزرة 80مم',q:2660,u:'م.ط',r:12},{d:'سيراميك أرضيات',q:656,u:'م²',r:50},
+{d:'وزرة سيراميك',q:215,u:'م.ط',r:12},{d:'سيراميك جدران',q:2569,u:'م²',r:65},
+{d:'أرضيات سكريد',q:26,u:'م²',r:45},{d:'حماية أسطح',q:26,u:'م²',r:50},
+{d:'وزرة 80مم',q:54,u:'م.ط',r:12},{d:'وزرة سطح',q:23,u:'م.ط',r:12},
+{d:'سقف معلق 600×600',q:141,u:'م²',r:75},{d:'رخام أرضيات',q:332,u:'م²',r:180},
+{d:'رامبات',q:35,u:'م²',r:190},{d:'نتوءات مدخل',q:62,u:'م.ط',r:22},
+{d:'درجات سلالم رخام',q:177,u:'م.ط',r:110},{d:'قوائم سلالم',q:244,u:'م.ط',r:50},
+{d:'وزرة سلالم 80مم',q:284,u:'م.ط',r:25},{d:'أوتار سلالم',q:50,u:'م.ط',r:50},
+{d:'عتبة Type A',q:125,u:'م.ط',r:100},{d:'عتبة Type C',q:1,u:'م.ط',r:150},
+{d:'حجر جدران',q:216,u:'م²',r:230},{d:'أعمدة ديكور منحنية',q:16,u:'م²',r:350},
+{d:'دهان أسطح عامة',q:12439,u:'م²',r:16},{d:'دهان أسطح خارجية',q:1970,u:'م²',r:18}]},
+special:{name:'أعمال خاصة',icon:'⭐',color:'#f59e0b',items:[
+{d:'لوحة إرشادية 2400×1000',q:1,u:'عدد',r:1300},{d:'تجهيزات فصول 1400×800',q:48,u:'عدد',r:750}]},
+fire:{name:'مكافحة الحريق',icon:'🔥',color:'#ef4444',items:[
+{d:'لوحة إنذار حريق رئيسية MFAC',q:1,u:'عدد',r:5400},{d:'محطة إنذار يدوي',q:20,u:'عدد',r:110},
+{d:'كاشف دخان بصري',q:50,u:'عدد',r:300},{d:'كاشف دخان مع صفارة',q:26,u:'عدد',r:380},
+{d:'كاشف حرارة',q:2,u:'عدد',r:250},{d:'جرس إنذار',q:15,u:'عدد',r:180},
+{d:'صفارة Horn H1',q:1,u:'عدد',r:200},{d:'جهاز نهاية خط',q:20,u:'عدد',r:320},
+{d:'قطع غيار وأدوات',q:1,u:'مقطوعية',r:2500},{d:'أنابيب حريق 25dn',q:41,u:'م.ط',r:10},
+{d:'أنابيب حريق 50dn',q:35,u:'م.ط',r:30},{d:'أنابيب حريق 65dn',q:84,u:'م.ط',r:45},
+{d:'أنابيب حريق 80dn',q:151,u:'م.ط',r:60},{d:'أنابيب حريق 100dn',q:60,u:'م.ط',r:80},
+{d:'أنابيب حريق 125dn',q:12,u:'م.ط',r:130},{d:'أنابيب حريق 150dn',q:58,u:'م.ط',r:170},
+{d:'محبس بوابة 150dn',q:2,u:'عدد',r:4200},{d:'محبس تصريف 75dn',q:2,u:'عدد',r:3000},
+{d:'محبس تصريف 110dn',q:2,u:'عدد',r:3400},{d:'محبس اختبار 150dn',q:1,u:'عدد',r:4200},
+{d:'صمام عدم رجوع 150dn',q:1,u:'عدد',r:4200},{d:'محبس منطقة 125dn',q:1,u:'عدد',r:3800},
+{d:'خزانة خرطوم FHCN',q:9,u:'عدد',r:300},{d:'وصلة سياميز 150dn',q:1,u:'عدد',r:500},
+{d:'مقياس ضغط',q:1,u:'مقطوعية',r:300},{d:'خزانة خرطوم FHC-1',q:14,u:'عدد',r:1600},
+{d:'رشاش معلق SP-2',q:10,u:'عدد',r:36},{d:'طفاية FE-1',q:19,u:'عدد',r:110},
+{d:'طفاية FE-2',q:3,u:'عدد',r:230},{d:'مضخة حريق FP-1',q:1,u:'عدد',r:69000},
+{d:'مضخة حريق FP-2',q:1,u:'عدد',r:188000},{d:'مضخة جوكي JP-1',q:1,u:'عدد',r:14700}]},
+elevators:{name:'المصاعد',icon:'🛗',color:'#6366f1',items:[
+{d:'مصعد E1 — 450 كجم — 1 م/ث',q:1,u:'عدد',r:120000},{d:'مصعد E2 — 450 كجم — 1 م/ث',q:1,u:'عدد',r:115000},
+{d:'مصعد E3 — 450 كجم — 1 م/ث',q:1,u:'عدد',r:115000},{d:'مصعد E4 — 450 كجم — 1 م/ث',q:1,u:'عدد',r:115000}]},
+mech:{name:'الأعمال الميكانيكية',icon:'🔧',color:'#14b8a6',items:[
+{d:'أنابيب PPR 15dn',q:750,u:'م.ط',r:12},{d:'أنابيب PPR 20dn',q:185,u:'م.ط',r:15},
+{d:'أنابيب PPR 25dn',q:270,u:'م.ط',r:20},{d:'أنابيب PPR 32dn',q:500,u:'م.ط',r:23},
+{d:'أنابيب PPR 40dn',q:20,u:'م.ط',r:26},{d:'أنابيب PPR 50dn',q:55,u:'م.ط',r:30},
+{d:'أنابيب PPR 65dn',q:110,u:'م.ط',r:35},{d:'أنابيب PPR 80dn',q:120,u:'م.ط',r:50},
+{d:'أنابيب PPR 110dn',q:35,u:'م.ط',r:75},{d:'محابس 15dn',q:1,u:'عدد',r:150},
+{d:'محابس 25dn',q:50,u:'عدد',r:250},{d:'محابس 32dn',q:59,u:'عدد',r:300},
+{d:'محابس 80dn',q:3,u:'عدد',r:1800},{d:'محابس 100dn',q:3,u:'عدد',r:2500},
+{d:'محابس 25dn إضافية',q:12,u:'عدد',r:250},
+{d:'أنابيب صرف 15dn',q:425,u:'م.ط',r:15},{d:'أنابيب صرف 20dn',q:310,u:'م.ط',r:20},
+{d:'أنابيب صرف 50dn',q:16,u:'م.ط',r:30},{d:'أنابيب صرف 82dn',q:82,u:'م.ط',r:40},
+{d:'أنابيب صرف 110dn',q:158,u:'م.ط',r:50},{d:'أنابيب صرف 125dn',q:35,u:'م.ط',r:60},
+{d:'أنابيب صرف 200dn',q:23,u:'م.ط',r:80},{d:'أنابيب تهوية 50dn',q:597,u:'م.ط',r:30},
+{d:'أنابيب تهوية 82dn',q:164,u:'م.ط',r:40},{d:'أنابيب تهوية 110dn',q:207,u:'م.ط',r:60},
+{d:'أنابيب مطر 50dn',q:38,u:'م.ط',r:30},{d:'أنابيب مطر 65dn',q:58,u:'م.ط',r:35},
+{d:'أنابيب مطر 82dn',q:13,u:'م.ط',r:40},{d:'أنابيب مطر 110dn',q:14,u:'م.ط',r:50},
+{d:'أنابيب مطر 125dn',q:18,u:'م.ط',r:70},
+{d:'أنابيب مطر 160dn',q:22,u:'م.ط',r:75},{d:'أنابيب مطر 200dn',q:30,u:'م.ط',r:80},
+{d:'أنابيب تكثيف 50dn',q:62,u:'م.ط',r:30},{d:'أنابيب تكثيف 82dn',q:39,u:'م.ط',r:40},
+{d:'أنابيب تكثيف 110dn',q:96,u:'م.ط',r:50},
+{d:'مصفاة سطح RD-1 50dn',q:21,u:'عدد',r:200},{d:'مصفاة RD-1 82dn',q:8,u:'عدد',r:220},
+{d:'مصفاة RD-1 110dn',q:5,u:'عدد',r:230},{d:'بالوعة أرضية FD-1 82dn',q:131,u:'عدد',r:320},
+{d:'تنظيف FCO 50dn',q:2,u:'عدد',r:300},{d:'تنظيف FCO 80dn',q:1,u:'عدد',r:320},
+{d:'تنظيف FCO 110dn',q:9,u:'عدد',r:330},{d:'تنظيف FCO 125dn',q:1,u:'عدد',r:350},
+{d:'تنظيف FCO 150dn',q:1,u:'عدد',r:400},{d:'تنظيف FCO 200dn',q:1,u:'عدد',r:450},
+{d:'غطاء تهوية RVC 82dn',q:24,u:'عدد',r:150},{d:'غطاء تهوية RVC 110dn',q:20,u:'عدد',r:160},
+{d:'صمام هواء AV 20dn',q:12,u:'عدد',r:80},{d:'غرفة تفتيش IC',q:4,u:'عدد',r:150},
+{d:'مصيدة مطبخ',q:2,u:'عدد',r:200},{d:'صندوق محابس مع عداد 50dn',q:1,u:'عدد',r:500},
+{d:'مرحاض EWC-1',q:99,u:'عدد',r:580},{d:'مغسلة LAV-1',q:99,u:'عدد',r:720},
+{d:'شطاف BD-1',q:24,u:'عدد',r:750},{d:'دش SHH-1',q:25,u:'عدد',r:180},
+{d:'بانيو BT-1',q:49,u:'عدد',r:550},{d:'حنفية خارجية',q:4,u:'عدد',r:200},
+{d:'مضخة ضغط PP-1',q:1,u:'عدد',r:18000},{d:'مضخة PP-2',q:1,u:'عدد',r:4800},
+{d:'مضخة مزدوجة PP-3',q:1,u:'عدد',r:36500},
+{d:'خزان FRP 15م³',q:2,u:'عدد',r:9350},{d:'سخان EWH-1',q:25,u:'عدد',r:360},
+{d:'سخان EWH-2',q:73,u:'عدد',r:450},{d:'مكيف RAC-1',q:3,u:'عدد',r:1500},
+{d:'مكيف سبلت SRAC-1',q:1,u:'عدد',r:3500},{d:'شفاط EF-1',q:65,u:'عدد',r:200},
+{d:'شفاط EF-2',q:75,u:'عدد',r:200},{d:'شفاط EF-3',q:1,u:'عدد',r:500}]},
+elec:{name:'الأعمال الكهربائية',icon:'⚡',color:'#eab308',items:[
+{d:'لوحات توزيع وإنارة ولوازم',q:1,u:'مقطوعية',r:30000},{d:'غرف ميكانيكية وآلات',q:1,u:'مقطوعية',r:20000},
+{d:'كابل 4C 16mm²',q:5,u:'م.ط',r:40},{d:'كابل 4C 35mm²',q:1340,u:'م.ط',r:70},
+{d:'كابل 4C 95mm²',q:30,u:'م.ط',r:210},{d:'كابل 4C 150mm²',q:15,u:'م.ط',r:315},
+{d:'كابل 4C 300mm²',q:10,u:'م.ط',r:630},{d:'كابل أرضي 1C 16mm²',q:1345,u:'م.ط',r:9},
+{d:'كابل أرضي 1C 50mm²',q:30,u:'م.ط',r:25},{d:'كابل أرضي 1C 70mm²',q:15,u:'م.ط',r:40},
+{d:'كابل أرضي 1C 150mm²',q:10,u:'م.ط',r:70},{d:'كابل هاتف زوجي',q:2100,u:'م.ط',r:1},
+{d:'أنبوب PVC 100mm',q:30,u:'م.ط',r:12},{d:'أنبوب PVC 50mm',q:85,u:'م.ط',r:8},
+{d:'أنبوب PVC 38mm',q:1300,u:'م.ط',r:5},{d:'أنبوب PVC 25mm',q:32,u:'م.ط',r:4},
+{d:'صندوق توزيع TV رايزر',q:8,u:'عدد',r:400},{d:'صندوق توزيع TV',q:29,u:'عدد',r:100},
+{d:'حاملة كابل 150مم',q:190,u:'م.ط',r:65},{d:'حاملة كابل 300مم',q:80,u:'م.ط',r:100},
+{d:'حاملة كابل 600مم',q:30,u:'م.ط',r:150},{d:'حاملة كابل 900مم',q:12,u:'م.ط',r:200},
+{d:'حاملة كابل 300مم (رايزر)',q:25,u:'م.ط',r:150},{d:'مخرج إنارة',q:360,u:'عدد',r:40},
+{d:'مخرج مروحة',q:132,u:'عدد',r:45},{d:'مخرج سخان',q:100,u:'عدد',r:60},
+{d:'مخرج مكيف',q:190,u:'عدد',r:95},{d:'مفتاح S1 أحادي',q:225,u:'عدد',r:14},
+{d:'مفتاح S1 مزدوج',q:215,u:'عدد',r:16},{d:'مفتاح ضغط S2',q:9,u:'عدد',r:15},
+{d:'مفتاح تأخير درج',q:2,u:'عدد',r:250},{d:'مفتاح مقاوم S15 أحادي',q:2,u:'عدد',r:90},
+{d:'مفتاح مقاوم S15 مزدوج',q:7,u:'عدد',r:100},{d:'مفتاح DP 20A',q:100,u:'عدد',r:17},
+{d:'مفتاح DP 32A',q:178,u:'عدد',r:25},{d:'مفتاح DP 45A',q:12,u:'عدد',r:25},
+{d:'بريزة 15A فردي',q:410,u:'عدد',r:10},{d:'بريزة 15A مزدوج',q:165,u:'عدد',r:18},
+{d:'بريزة 13A فردي',q:220,u:'عدد',r:10},{d:'بريزة 32A مقاوم',q:54,u:'عدد',r:31},
+{d:'بريزة 15A مقاوم',q:7,u:'عدد',r:150},{d:'بريزة 13A مقاوم',q:4,u:'عدد',r:150},
+{d:'وحدة طباخ 45A',q:25,u:'عدد',r:40},{d:'جرس باب',q:25,u:'عدد',r:60},
+{d:'زر جرس',q:25,u:'عدد',r:14},{d:'مأخذ هاتف',q:140,u:'عدد',r:32},
+{d:'حامل هاتف TDF 100 زوج',q:1,u:'عدد',r:2000},{d:'صندوق هاتف TDB 5 أزواج',q:30,u:'عدد',r:200},
+{d:'مأخذ TV',q:51,u:'عدد',r:22},{d:'فاصل 4P 32A مقاوم',q:1,u:'عدد',r:400},
+{d:'فاصل 4P 63A مقاوم',q:4,u:'عدد',r:500},{d:'فاصل 4P 100A',q:2,u:'عدد',r:650},
+{d:'فاصل 4P 250A',q:2,u:'عدد',r:1250},{d:'فاصل 4P 400A مقاوم',q:1,u:'عدد',r:1700},
+{d:'فاصل 2P 16A',q:1,u:'عدد',r:120},{d:'لوحة DP-S-R6',q:1,u:'عدد',r:7500},
+{d:'لوحة LP-R6-G',q:1,u:'عدد',r:1500},{d:'لوحة LP-R6-TA',q:12,u:'عدد',r:1500},
+{d:'لوحة LP-R6-TB',q:12,u:'عدد',r:1500},{d:'لوحة LP-R6-RX',q:1,u:'عدد',r:1500},
+{d:'لوحة LP-R6-EL1',q:1,u:'عدد',r:1200},{d:'لوحة LP-R6-EL2',q:1,u:'عدد',r:1200},
+{d:'لوحة تحكم MCP-U/G',q:1,u:'عدد',r:20000},
+{d:'كشاف F1',q:50,u:'عدد',r:100},{d:'كشاف F2',q:29,u:'عدد',r:260},
+{d:'كشاف F3',q:6,u:'عدد',r:320},{d:'كشاف F3 مع بطارية',q:3,u:'عدد',r:630},
+{d:'كشاف F4',q:20,u:'عدد',r:320},{d:'كشاف F4 مع بطارية',q:21,u:'عدد',r:630},
+{d:'كشاف C1',q:50,u:'عدد',r:340},{d:'كشاف C2',q:100,u:'عدد',r:240},
+{d:'كشاف C12',q:20,u:'عدد',r:950},{d:'كشاف U',q:20,u:'عدد',r:330},
+{d:'كشاف E',q:18,u:'عدد',r:430},{d:'كشاف EX',q:10,u:'عدد',r:490},
+{d:'كشاف E1',q:4,u:'عدد',r:1120},{d:'إنتركوم — محطة رئيسية',q:1,u:'عدد',r:3000},
+{d:'إنتركوم — محطة فرعية',q:26,u:'عدد',r:100},{d:'قطع غيار',q:1,u:'مقطوعية',r:500}]}
+};
+
+const ganttData=[
+{n:'تجهيز الموقع والحفر',s:1,e:6,c:'#f97316'},{n:'خرسانة نظافة وأساسات',s:4,e:12,c:'#3b82f6'},
+{n:'ميدات ورقاب أعمدة',s:10,e:14,c:'#3b82f6'},{n:'أعمدة دور أرضي',s:12,e:16,c:'#3b82f6'},
+{n:'أسقف دور أرضي',s:15,e:20,c:'#3b82f6'},{n:'أعمدة دور أول',s:19,e:23,c:'#3b82f6'},
+{n:'أسقف دور أول',s:22,e:27,c:'#3b82f6'},{n:'هيكل ملحق علوي',s:26,e:31,c:'#3b82f6'},
+{n:'بناء بلك خارجي',s:20,e:30,c:'#a855f7'},{n:'بناء بلك داخلي',s:24,e:34,c:'#a855f7'},
+{n:'أعمال العزل',s:30,e:36,c:'#22c55e'},{n:'تأسيس سباكة',s:24,e:33,c:'#14b8a6'},
+{n:'تأسيس كهرباء',s:24,e:33,c:'#eab308'},{n:'لياسة داخلية',s:33,e:43,c:'#8b5cf6'},
+{n:'لياسة خارجية',s:35,e:43,c:'#8b5cf6'},{n:'أبواب ونوافذ ألمنيوم',s:38,e:46,c:'#ec4899'},
+{n:'بلاط أرضيات',s:40,e:48,c:'#8b5cf6'},{n:'بلاط جدران',s:42,e:48,c:'#8b5cf6'},
+{n:'مكافحة حريق',s:40,e:48,c:'#ef4444'},{n:'مصاعد',s:36,e:48,c:'#6366f1'},
+{n:'أبواب خشب',s:46,e:52,c:'#ec4899'},{n:'أعمال دهان',s:46,e:54,c:'#8b5cf6'},
+{n:'تشطيب سباكة',s:48,e:54,c:'#14b8a6'},{n:'تشطيب كهرباء',s:48,e:54,c:'#eab308'},
+{n:'معادن ودرابزين',s:50,e:54,c:'#06b6d4'},{n:'أعمال خارجية وتنظيف',s:54,e:58,c:'#f97316'},
+{n:'تسليم ابتدائي',s:58,e:60,c:'#22c55e'}
+];
+
+// Calculate totals
+const cats=Object.keys(DATA);
+const totals={};
+let grandTotal=0;
+cats.forEach(k=>{
+  let t=0;
+  DATA[k].items.forEach(i=>{t+=i.q*i.r});
+  totals[k]=t;
+  grandTotal+=t;
+});
+
+// Build tabs
+const tabNames=[...cats.map(k=>({id:k,name:DATA[k].name,icon:DATA[k].icon})),
+  {id:'summary',name:'الملخص الشامل',icon:'📊'},{id:'gantt',name:'المخطط الزمني',icon:'📅'}];
+const tabsEl=document.getElementById('tabs');
+tabNames.forEach((t,i)=>{
+  const btn=document.createElement('div');
+  btn.className='tab'+(i===tabNames.length-2?' active':'');
+  btn.textContent=t.icon+' '+t.name;
+  btn.onclick=()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('sec-'+t.id).classList.add('active');
+  };
+  tabsEl.appendChild(btn);
+});
+
+// Build content
+const contentEl=document.getElementById('content');
+
+// Category sections
+cats.forEach(k=>{
+  const sec=document.createElement('div');
+  sec.id='sec-'+k;
+  sec.className='section';
+  let rows='';
+  let idx=1;
+  DATA[k].items.forEach(i=>{
+    const amt=i.q*i.r;
+    rows+=`<tr><td>${idx++}</td><td>${i.d}</td><td>${i.u}</td><td>${fmt(i.q)}</td><td>${fmt(i.r)}</td><td>${fmt(amt)}</td></tr>`;
+  });
+  sec.innerHTML=`<div class="card">
+    <div class="card-title">${DATA[k].icon} ${DATA[k].name}</div>
+    <div class="card-subtitle">عدد البنود: ${DATA[k].items.length} — الإجمالي: ${fmt(totals[k])} ر.س</div>
+    <div style="overflow-x:auto"><table>
+    <thead><tr><th>#</th><th>البند</th><th>الوحدة</th><th>الكمية</th><th>سعر الوحدة (ر.س)</th><th>الإجمالي (ر.س)</th></tr></thead>
+    <tbody>${rows}
+    <tr class="total-row"><td></td><td>الإجمالي</td><td></td><td></td><td></td><td>${fmt(totals[k])}</td></tr>
+    </tbody></table></div></div>`;
+  contentEl.appendChild(sec);
+});
+
+// Summary section
+const summSec=document.createElement('div');
+summSec.id='sec-summary';
+summSec.className='section active';
+let summCards='';
+const colors=['#f97316','#3b82f6','#a855f7','#06b6d4','#22c55e','#ec4899','#8b5cf6','#f59e0b','#ef4444','#6366f1','#14b8a6','#eab308'];
+cats.forEach((k,i)=>{
+  summCards+=`<div class="summary-card">
+    <div class="label">${DATA[k].icon} ${DATA[k].name}</div>
+    <div class="value">${fmt(totals[k])}</div>
+    <div class="bar"><div class="bar-fill" style="width:${(totals[k]/grandTotal*100).toFixed(1)}%;background:${colors[i]}"></div></div>
+  </div>`;
+});
+const vatRate=0.15;
+const vatAmount=grandTotal*vatRate;
+const grandWithVat=grandTotal+vatAmount;
+summSec.innerHTML=`
+  <div class="grand-total">
+    <div class="label">💰 الإجمالي الشامل للمشروع</div>
+    <div class="value">${fmt(grandTotal)} ر.س</div>
+    <div class="sub">ضريبة القيمة المضافة (15%): ${fmt(vatAmount)} ر.س</div>
+    <div class="value" style="font-size:32px;margin-top:8px">${fmt(grandWithVat)} ر.س</div>
+    <div class="sub" style="font-size:16px;color:var(--accent);font-weight:700">الإجمالي شامل الضريبة</div>
+    <div class="sub" style="margin-top:8px">بما يعادل تقريباً ${(grandWithVat/1000000).toFixed(2)} مليون ريال سعودي</div>
+  </div>
+  <div class="summary-grid">${summCards}</div>
+  <div class="card">
+    <div class="card-title">📊 توزيع التكاليف</div>
+    <div class="chart-container">
+      <canvas id="pieChart" width="320" height="320"></canvas>
+      <div class="pie-legend" id="pieLegend"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">📋 جدول ملخص التكاليف</div>
+    <div style="overflow-x:auto"><table>
+    <thead><tr><th>#</th><th>القسم</th><th>عدد البنود</th><th>الإجمالي (ر.س)</th></tr></thead>
+    <tbody>${cats.map((k,i)=>`<tr><td>${i+1}</td><td>${DATA[k].icon} ${DATA[k].name}</td><td>${DATA[k].items.length}</td><td>${fmt(totals[k])}</td></tr>`).join('')}
+    <tr class="total-row"><td></td><td>الإجمالي قبل الضريبة</td><td>${cats.reduce((s,k)=>s+DATA[k].items.length,0)}</td><td>${fmt(grandTotal)}</td></tr>
+    <tr style="background:rgba(34,197,94,0.1)"><td></td><td>🏷️ ضريبة القيمة المضافة (15%)</td><td></td><td style="color:#22c55e;font-weight:800">${fmt(vatAmount)}</td></tr>
+    <tr class="total-row" style="background:rgba(232,185,49,0.15)"><td></td><td>💰 الإجمالي شامل الضريبة</td><td></td><td style="font-size:17px">${fmt(grandWithVat)}</td></tr>
+    </tbody></table></div>
+  </div>`;
+contentEl.appendChild(summSec);
+
+// Gantt section
+const ganttSec=document.createElement('div');
+ganttSec.id='sec-gantt';
+ganttSec.className='section';
+const totalWeeks=60;
+let ganttHTML='<div class="card"><div class="card-title">📅 المخطط الزمني للمشروع</div>';
+ganttHTML+='<div class="card-subtitle">المدة الإجمالية: 60 أسبوع (≈ 15 شهر) — من تجهيز الموقع إلى التسليم الابتدائي</div>';
+ganttHTML+='<div class="gantt">';
+ganttHTML+='<div class="gantt-week-markers">';
+for(let w=1;w<=totalWeeks;w++){
+  ganttHTML+=`<div class="gantt-week">${w}</div>`;
+}
+ganttHTML+='</div>';
+ganttData.forEach(g=>{
+  const left=((g.s-1)/totalWeeks*100).toFixed(1);
+  const width=((g.e-g.s+1)/totalWeeks*100).toFixed(1);
+  ganttHTML+=`<div class="gantt-row">
+    <div class="gantt-label">${g.n}</div>
+    <div class="gantt-bar-wrap">
+      <div class="gantt-bar" style="right:${left}%;width:${width}%;background:linear-gradient(135deg,${g.c},${g.c}88)">${g.e-g.s+1}w</div>
+    </div>
+  </div>`;
+});
+ganttHTML+='</div></div>';
+ganttHTML+=`<div class="card">
+  <div class="card-title">📋 جدول المراحل التفصيلي</div>
+  <div style="overflow-x:auto"><table>
+  <thead><tr><th>#</th><th>النشاط</th><th>البداية (أسبوع)</th><th>النهاية (أسبوع)</th><th>المدة (أسابيع)</th></tr></thead>
+  <tbody>${ganttData.map((g,i)=>`<tr><td>${i+1}</td><td>${g.n}</td><td>${g.s}</td><td>${g.e}</td><td>${g.e-g.s+1}</td></tr>`).join('')}
+  </tbody></table></div>
+</div>`;
+ganttSec.innerHTML=ganttHTML;
+contentEl.appendChild(ganttSec);
+
+// Draw pie chart
+setTimeout(()=>{
+  const canvas=document.getElementById('pieChart');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const cx=160,cy=160,r=130;
+  let startAngle=-Math.PI/2;
+  const legendEl=document.getElementById('pieLegend');
+  cats.forEach((k,i)=>{
+    const pct=totals[k]/grandTotal;
+    const endAngle=startAngle+pct*2*Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,startAngle,endAngle);
+    ctx.fillStyle=colors[i];
+    ctx.fill();
+    ctx.strokeStyle='#0f0f1a';
+    ctx.lineWidth=2;
+    ctx.stroke();
+    startAngle=endAngle;
+    if(legendEl){
+      legendEl.innerHTML+=`<div class="legend-item"><div class="legend-color" style="background:${colors[i]}"></div>${DATA[k].name}: ${(pct*100).toFixed(1)}%</div>`;
+    }
+  });
+  // Center circle
+  ctx.beginPath();
+  ctx.arc(cx,cy,60,0,2*Math.PI);
+  ctx.fillStyle='#161630';
+  ctx.fill();
+  ctx.fillStyle='#e8b931';
+  ctx.font='bold 14px Cairo';
+  ctx.textAlign='center';
+  ctx.fillText(fmt(grandTotal),cx,cy-4);
+  ctx.font='11px Cairo';
+  ctx.fillStyle='#a0a0c0';
+  ctx.fillText('ر.س',cx,cy+14);
+},200);
+</script>
+</body>
+</html>

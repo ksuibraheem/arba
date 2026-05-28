@@ -809,7 +809,7 @@ const App: React.FC = () => {
                     commercialRegister: data.commercialRegister,
                     businessType: data.businessType,
                     password: data.password,
-                    plan: data.userType === 'supplier' ? 'free' : ((data.plan === 'free' || data.plan === 'professional') ? data.plan : 'free')
+                    plan: data.userType === 'supplier' ? 'free' : (data.plan || 'free')
                 });
 
                 if (!result.success) {
@@ -854,7 +854,7 @@ const App: React.FC = () => {
                         } catch (innerError) {
                             console.error('Error handling existing user:', innerError);
                         }
-                        setLoginError(
+                        throw new Error(
                             language === 'ar'
                                 ? 'البريد الإلكتروني مستخدم مسبقاً. إذا سبق التسجيل، حاول تسجيل الدخول.'
                                 : 'Email already in use. If you already registered, try logging in.'
@@ -863,7 +863,7 @@ const App: React.FC = () => {
                     }
 
                     console.error('Registration failed:', result.error);
-                    setLoginError(result.error || 'حدث خطأ أثناء التسجيل');
+                    throw new Error(result.error || 'حدث خطأ أثناء التسجيل');
                     return;
                 }
 
@@ -1354,7 +1354,12 @@ const App: React.FC = () => {
     }
 
     if (currentPage === 'payment') {
-        return <PaymentPage language={language} onNavigate={handleNavigate} currentPlan={user?.plan} userId={user?.uid || ''} userEmail={user?.email || ''} userName={user?.name || ''} />;
+        // Guard: يجب تسجيل الدخول قبل الدفع
+        if (!user || !user.uid) {
+            setCurrentPage('login');
+            return null;
+        }
+        return <PaymentPage language={language} onNavigate={handleNavigate} currentPlan={user?.plan} userId={user.uid} userEmail={user.email || ''} userName={user.name || ''} />;
     }
 
     if (currentPage === 'verification') {
