@@ -169,7 +169,7 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
             <div className="bg-slate-900 p-2 flex gap-1">
                 <button
                     onClick={() => onChange({ viewMode: 'pricing' })}
-                    className={`flex-1 flex flex-col items-center justify-center py-2 px-1 text-[10px] font-bold rounded ${state.viewMode === 'pricing' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}
+                    className={`flex-1 flex flex-col items-center justify-center py-2 px-1 text-[10px] font-bold rounded ${state.viewMode === 'pricing' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800'}`}
                 >
                     <Calculator className="w-4 h-4 mb-1" /> {t('pricing')}
                 </button>
@@ -214,7 +214,7 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                             className="w-full text-right px-4 py-2 text-sm hover:bg-slate-100 flex items-center justify-between"
                         >
                             <span>{opt.label}</span>
-                            {state.language === opt.id && <Check className="w-3 h-3 text-emerald-500" />}
+                            {state.language === opt.id && <Check className="w-3 h-3 text-indigo-500" />}
                         </button>
                     ))}
                 </div>
@@ -222,11 +222,11 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
 
             {/* Tab Header */}
             <div className="grid grid-cols-5 border-b border-slate-700">
-                <button onClick={() => setActiveTab('main')} className={`p-3 flex justify-center ${activeTab === 'main' ? 'bg-slate-700 text-emerald-400 border-b-2 border-emerald-400' : 'text-slate-400 hover:bg-slate-750'}`} title={t('settings')}><Settings className="w-4 h-4" /></button>
-                <button onClick={() => setActiveTab('team')} className={`p-3 flex justify-center ${activeTab === 'team' ? 'bg-slate-700 text-emerald-400 border-b-2 border-emerald-400' : 'text-slate-400 hover:bg-slate-750'}`} title={t('tab_team')}><Users className="w-4 h-4" /></button>
-                <button onClick={() => setActiveTab('rooms')} className={`p-3 flex justify-center ${activeTab === 'rooms' ? 'bg-slate-700 text-emerald-400 border-b-2 border-emerald-400' : 'text-slate-400 hover:bg-slate-750'}`} title={t('tab_zones')}><Home className="w-4 h-4" /></button>
-                <button onClick={() => setActiveTab('facades')} className={`p-3 flex justify-center ${activeTab === 'facades' ? 'bg-slate-700 text-emerald-400 border-b-2 border-emerald-400' : 'text-slate-400 hover:bg-slate-750'}`} title={t('tab_facades')}><LayoutGrid className="w-4 h-4" /></button>
-                <button onClick={() => setActiveTab('info')} className={`p-3 flex justify-center ${activeTab === 'info' ? 'bg-slate-700 text-emerald-400 border-b-2 border-emerald-400' : 'text-slate-400 hover:bg-slate-750'}`} title={t('tab_data')}><FileText className="w-4 h-4" /></button>
+                <button onClick={() => setActiveTab('main')} className={`p-3 flex justify-center ${activeTab === 'main' ? 'bg-slate-700 text-indigo-400 border-b-2 border-indigo-400' : 'text-slate-400 hover:bg-slate-750'}`} title={t('settings')}><Settings className="w-4 h-4" /></button>
+                <button onClick={() => setActiveTab('team')} className={`p-3 flex justify-center ${activeTab === 'team' ? 'bg-slate-700 text-indigo-400 border-b-2 border-indigo-400' : 'text-slate-400 hover:bg-slate-750'}`} title={t('tab_team')}><Users className="w-4 h-4" /></button>
+                <button onClick={() => setActiveTab('rooms')} className={`p-3 flex justify-center ${activeTab === 'rooms' ? 'bg-slate-700 text-indigo-400 border-b-2 border-indigo-400' : 'text-slate-400 hover:bg-slate-750'}`} title={t('tab_zones')}><Home className="w-4 h-4" /></button>
+                <button onClick={() => setActiveTab('facades')} className={`p-3 flex justify-center ${activeTab === 'facades' ? 'bg-slate-700 text-indigo-400 border-b-2 border-indigo-400' : 'text-slate-400 hover:bg-slate-750'}`} title={t('tab_facades')}><LayoutGrid className="w-4 h-4" /></button>
+                <button onClick={() => setActiveTab('info')} className={`p-3 flex justify-center ${activeTab === 'info' ? 'bg-slate-700 text-indigo-400 border-b-2 border-indigo-400' : 'text-slate-400 hover:bg-slate-750'}`} title={t('tab_data')}><FileText className="w-4 h-4" /></button>
             </div>
 
             <div className="flex-1 overflow-y-auto custom-scrollbar">
@@ -235,7 +235,7 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                     <div className="p-6 space-y-6 animate-in fade-in slide-in-from-right-4">
                         {/* بيانات العميل */}
                         <div className="space-y-4">
-                            <h3 className="text-emerald-400 font-semibold text-sm flex items-center gap-2 border-b border-slate-600 pb-2">
+                            <h3 className="text-indigo-400 font-semibold text-sm flex items-center gap-2 border-b border-slate-600 pb-2">
                                 <User className="w-4 h-4" /> {tl('بيانات العميل', 'Client Info')}
                             </h3>
                             <div className="space-y-2">
@@ -258,7 +258,7 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
 
                         {/* بيانات الموقع والأرض */}
                         <div className="space-y-4 pt-4">
-                            <h3 className="text-emerald-400 font-semibold text-sm flex items-center gap-2 border-b border-slate-600 pb-2">
+                            <h3 className="text-indigo-400 font-semibold text-sm flex items-center gap-2 border-b border-slate-600 pb-2">
                                 <MapPin className="w-4 h-4" /> {tl('بيانات الموقع والأرض', 'Site & Land Data')}
                             </h3>
                             <div className="space-y-2">
@@ -293,7 +293,7 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
 
                         {/* بيانات العرض والمناقصة */}
                         <div className="space-y-4 pt-4">
-                            <h3 className="text-emerald-400 font-semibold text-sm flex items-center gap-2 border-b border-slate-600 pb-2">
+                            <h3 className="text-indigo-400 font-semibold text-sm flex items-center gap-2 border-b border-slate-600 pb-2">
                                 <FileText className="w-4 h-4" /> {tl('بيانات العرض', 'Quotation Data')}
                             </h3>
                             <div className="grid grid-cols-2 gap-2">
@@ -330,7 +330,7 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
 
                         {/* بيانات الشركة / المقاول */}
                         <div className="space-y-4 pt-4">
-                            <h3 className="text-emerald-400 font-semibold text-sm flex items-center gap-2 border-b border-slate-600 pb-2">
+                            <h3 className="text-indigo-400 font-semibold text-sm flex items-center gap-2 border-b border-slate-600 pb-2">
                                 <Briefcase className="w-4 h-4" /> {tl('بيانات الشركة / المقاول', 'Company / Contractor')}
                             </h3>
                             <div className="space-y-2">
@@ -381,7 +381,7 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
 
                         {/* بيانات مالية */}
                         <div className="space-y-4 pt-4">
-                            <h3 className="text-emerald-400 font-semibold text-sm flex items-center gap-2 border-b border-slate-600 pb-2">
+                            <h3 className="text-indigo-400 font-semibold text-sm flex items-center gap-2 border-b border-slate-600 pb-2">
                                 <DollarSign className="w-4 h-4" /> {tl('بيانات مالية', 'Financial')}
                             </h3>
                             <div className="grid grid-cols-2 gap-2">
@@ -398,7 +398,7 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
 
                         {/* الجدول الزمني */}
                         <div className="space-y-4 pt-4">
-                            <h3 className="text-emerald-400 font-semibold text-sm flex items-center gap-2 border-b border-slate-600 pb-2">
+                            <h3 className="text-indigo-400 font-semibold text-sm flex items-center gap-2 border-b border-slate-600 pb-2">
                                 <Calculator className="w-4 h-4" /> {tl('الجدول الزمني والضمان', 'Timeline & Warranty')}
                             </h3>
                             <div className="grid grid-cols-2 gap-2">
@@ -441,7 +441,7 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                                     const value = e.target.value as ProjectType;
                                     onChange({ projectType: value });
                                 }}
-                                className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
+                                className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all"
                             >
                                 <option value="villa">🏠 {t('proj_villa')}</option>
                                 <option value="rest_house">🏖️ {t('proj_rest')}</option>
@@ -480,7 +480,7 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                                                 name="execMethod"
                                                 checked={state.executionMethod === method.id}
                                                 onChange={() => onChange({ executionMethod: method.id as ExecutionMethod })}
-                                                className="text-emerald-500 focus:ring-emerald-500"
+                                                className="text-indigo-500 focus:ring-indigo-500"
                                             />
                                             <span className="text-sm">{method.label}</span>
                                         </label>
@@ -550,7 +550,7 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                                                 name="strategy"
                                                 checked={state.pricingStrategy === 'fixed_margin'}
                                                 onChange={() => onChange({ pricingStrategy: 'fixed_margin' })}
-                                                className="text-emerald-500 focus:ring-emerald-500"
+                                                className="text-indigo-500 focus:ring-indigo-500"
                                             />
                                             <span className="text-sm">{t('strat_fixed')}</span>
                                         </label>
@@ -560,26 +560,26 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                                                 name="strategy"
                                                 checked={state.pricingStrategy === 'target_roi'}
                                                 onChange={() => onChange({ pricingStrategy: 'target_roi' })}
-                                                className="text-emerald-500 focus:ring-emerald-500"
+                                                className="text-indigo-500 focus:ring-indigo-500"
                                             />
                                             <span className="text-sm">{t('strat_roi')}</span>
                                         </label>
-                                        <label className="flex items-center gap-2 p-2 rounded hover:bg-slate-700 cursor-pointer border border-emerald-500/30 bg-emerald-500/5">
+                                        <label className="flex items-center gap-2 p-2 rounded hover:bg-slate-700 cursor-pointer border border-indigo-500/30 bg-indigo-500/5">
                                             <input
                                                 type="radio"
                                                 name="strategy"
                                                 checked={state.pricingStrategy === 'arba_standard'}
                                                 onChange={() => onChange({ pricingStrategy: 'arba_standard' })}
-                                                className="text-emerald-500 focus:ring-emerald-500"
+                                                className="text-indigo-500 focus:ring-indigo-500"
                                             />
-                                            <span className="text-sm font-semibold text-emerald-400">{t('strat_arba')}</span>
-                                            <span className="ml-auto text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-full">★</span>
+                                            <span className="text-sm font-semibold text-indigo-400">{t('strat_arba')}</span>
+                                            <span className="ml-auto text-[9px] bg-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded-full">★</span>
                                         </label>
                                     </div>
 
                                     {state.pricingStrategy === 'arba_standard' ? (
-                                        <div className="space-y-2 animate-in fade-in slide-in-from-top-2 bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/30">
-                                            <div className="flex items-center gap-2 text-emerald-400">
+                                        <div className="space-y-2 animate-in fade-in slide-in-from-top-2 bg-indigo-500/10 p-3 rounded-lg border border-indigo-500/30">
+                                            <div className="flex items-center gap-2 text-indigo-400">
                                                 <span className="text-lg">🏷️</span>
                                                 <span className="text-sm font-bold">{tl('هامش ربح 75% ثابت', 'Fixed 75% Profit Margin')}</span>
                                             </div>
@@ -599,7 +599,7 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                                                     max="200"
                                                     value={state.profitMargin}
                                                     onChange={(e) => onChange({ profitMargin: Number(e.target.value) })}
-                                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 pr-10 text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
+                                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 pr-10 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all"
                                                 />
                                                 <span className="absolute left-3 top-3.5 text-slate-400 font-bold">%</span>
                                             </div>
@@ -639,7 +639,7 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                                                 type="number"
                                                 value={state.globalPriceAdjustment}
                                                 onChange={(e) => onChange({ globalPriceAdjustment: Number(e.target.value) })}
-                                                className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 pr-10 text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
+                                                className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 pr-10 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all"
                                                 placeholder="0"
                                             />
                                             <span className="absolute left-3 top-3.5 text-slate-400 font-bold">%</span>
@@ -658,7 +658,7 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                                 <select
                                     value={state.location}
                                     onChange={(e) => onChange({ location: e.target.value as LocationType })}
-                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
+                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all"
                                 >
                                     <option value="riyadh">{t('loc_riyadh')}</option>
                                     <option value="jeddah">{t('loc_jeddah')}</option>
@@ -691,7 +691,7 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                                     type="number"
                                     value={state.landArea}
                                     onChange={(e) => onChange({ landArea: Number(e.target.value) })}
-                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
+                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all"
                                 />
                             </div>
 
@@ -704,7 +704,7 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                                     type="number"
                                     value={state.buildArea}
                                     onChange={(e) => onChange({ buildArea: Number(e.target.value) })}
-                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
+                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all"
                                 />
                                 <p className="text-xs text-slate-500">{tl('يحسب تلقائياً = مساحة الأرض × 60% × الأدوار', 'Auto = Land × 60% × Floors')}</p>
                             </div>
@@ -720,7 +720,7 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                                     max={50}
                                     value={state.floors}
                                     onChange={(e) => onChange({ floors: Math.max(1, Number(e.target.value)) })}
-                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
+                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all"
                                 />
                             </div>
 
@@ -732,7 +732,7 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                                 <select
                                     value={state.soilType}
                                     onChange={(e) => onChange({ soilType: e.target.value as SoilType })}
-                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
+                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all"
                                 >
                                     <option value="normal">{t('soil_normal')}</option>
                                     <option value="sandy">{t('soil_sandy')}</option>
@@ -752,7 +752,7 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                                     type="number"
                                     value={state.fixedOverhead}
                                     onChange={(e) => onChange({ fixedOverhead: Number(e.target.value) })}
-                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
+                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all"
                                 />
                             </div>
 
@@ -766,7 +766,7 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                                     min={1}
                                     value={state.projectDurationMonths}
                                     onChange={(e) => onChange({ projectDurationMonths: Math.max(1, Number(e.target.value)) })}
-                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
+                                    className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all"
                                 />
                             </div>
                         </div>
@@ -778,21 +778,21 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                     <div className="p-6 space-y-4 animate-in fade-in slide-in-from-right-4">
                         <button
                             onClick={addRoom}
-                            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm font-bold"
+                            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white p-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm font-bold"
                         >
                             <Plus className="w-4 h-4" /> {t('add_room')}
                         </button>
 
                         <div className="space-y-3">
                             {state.rooms.map((room) => (
-                                <div key={room.id} className="bg-slate-700 rounded-lg p-3 border border-slate-600 group hover:border-emerald-500 transition-colors">
+                                <div key={room.id} className="bg-slate-700 rounded-lg p-3 border border-slate-600 group hover:border-indigo-500 transition-colors">
                                     <div className="flex justify-between items-start mb-2">
                                         <div className="flex-1">
                                             <input
                                                 type="text"
                                                 value={room.name}
                                                 onChange={(e) => updateRoom(room.id, 'name', e.target.value)}
-                                                className="bg-transparent border-b border-transparent focus:border-emerald-500 outline-none text-sm font-bold w-full mb-1"
+                                                className="bg-transparent border-b border-transparent focus:border-indigo-500 outline-none text-sm font-bold w-full mb-1"
                                             />
                                             <select
                                                 value={room.type}
@@ -841,17 +841,17 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                     <div className="p-6 space-y-4 animate-in fade-in slide-in-from-right-4">
                         <button
                             onClick={addFacade}
-                            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm font-bold"
+                            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white p-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm font-bold"
                         >
                             <Plus className="w-4 h-4" /> {t('add_facade')}
                         </button>
 
                         <div className="space-y-3">
                             {state.facades.map((facade) => (
-                                <div key={facade.id} className="bg-slate-700 rounded-lg p-3 border border-slate-600 group hover:border-emerald-500 transition-colors">
+                                <div key={facade.id} className="bg-slate-700 rounded-lg p-3 border border-slate-600 group hover:border-indigo-500 transition-colors">
                                     <div className="flex justify-between items-center mb-2">
                                         <h4 className="text-sm font-bold flex items-center gap-2">
-                                            <LayoutGrid className="w-4 h-4 text-emerald-400" />
+                                            <LayoutGrid className="w-4 h-4 text-indigo-400" />
                                             {t('direction')}
                                         </h4>
                                         <button onClick={() => removeFacade(facade.id)} className="text-slate-500 hover:text-red-400 p-1"><Trash2 className="w-4 h-4" /></button>
@@ -910,14 +910,14 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                     <div className="p-6 space-y-4 animate-in fade-in slide-in-from-right-4">
                         <button
                             onClick={addTeamMember}
-                            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white p-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm font-bold"
+                            className="w-full bg-indigo-600 hover:bg-indigo-500 text-white p-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm font-bold"
                         >
                             <Plus className="w-4 h-4" /> {t('add_member')}
                         </button>
 
                         <div className="space-y-3">
                             {state.team.map((member) => (
-                                <div key={member.id} className="bg-slate-700 rounded-lg p-3 border border-slate-600 group hover:border-emerald-500 transition-colors">
+                                <div key={member.id} className="bg-slate-700 rounded-lg p-3 border border-slate-600 group hover:border-indigo-500 transition-colors">
                                     <div className="flex justify-between items-start mb-2">
                                         <div className="flex-1">
                                             <label className="text-[10px] text-slate-500 uppercase block mb-1">{t('role')}</label>
@@ -925,7 +925,7 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                                                 type="text"
                                                 value={member.role}
                                                 onChange={(e) => updateTeamMember(member.id, 'role', e.target.value)}
-                                                className="bg-slate-800 border border-slate-600 rounded p-1 text-sm w-full outline-none focus:border-emerald-500"
+                                                className="bg-slate-800 border border-slate-600 rounded p-1 text-sm w-full outline-none focus:border-indigo-500"
                                             />
                                         </div>
                                         <button onClick={() => removeTeamMember(member.id)} className="text-slate-500 hover:text-red-400 p-1 ml-2 mt-4"><Trash2 className="w-4 h-4" /></button>
@@ -964,9 +964,9 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
             outline: none;
         }
         .sidebar-input:focus {
-            border-color: #10b981;
+            border-color: #6366F1;
             ring: 2px;
-            ring-color: #10b981;
+            ring-color: #6366F1;
         }
       `}</style>
         </div>

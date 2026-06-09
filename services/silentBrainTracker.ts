@@ -45,6 +45,10 @@ export interface PriceOverrideRecord {
   oldPrice: number;
   newPrice: number;
   timestamp: string;
+  userId?: string;      // NEW — who made the change
+  role?: string;        // NEW — 'admin' | 'manager' | 'qs' | 'engineer'
+  source?: string;      // NEW — 'sidebar' | 'boq' | 'quote'
+  version?: number;     // NEW — optimistic lock version
 }
 
 export interface BrainAnalytics {
@@ -241,9 +245,10 @@ class SilentBrainTracker {
   // =================== Pricing Behavior ===================
   
   /** Call when user manually overrides a price */
-  trackPriceOverride(itemId: string, itemName: string, oldPrice: number, newPrice: number): void {
+  trackPriceOverride(itemId: string, itemName: string, oldPrice: number, newPrice: number, userId?: string, role?: string, source?: string): void {
     const overrides = safeGet<PriceOverrideRecord[]>(STORAGE_KEYS.overrides, []);
-    overrides.push({ itemId, itemName, oldPrice, newPrice, timestamp: new Date().toISOString() });
+    const version = overrides.filter(o => o.itemId === itemId).length + 1;
+    overrides.push({ itemId, itemName, oldPrice, newPrice, timestamp: new Date().toISOString(), userId, role, source, version });
     if (overrides.length > MAX_RECORDS) overrides.splice(0, overrides.length - MAX_RECORDS);
     safeSet(STORAGE_KEYS.overrides, overrides);
   }

@@ -175,7 +175,7 @@ const CategoryBarChart: React.FC<CategoryBarChartProps> = ({
         <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
           {isAr ? 'الإجمالي' : 'Total'}
         </span>
-        <span style={{ fontSize: '14px', fontWeight: 700, color: '#10b981' }}>
+        <span style={{ fontSize: '14px', fontWeight: 700, color: '#6366F1' }}>
           {formatNum(totalCost)} {isAr ? 'ر.س' : 'SAR'}
         </span>
       </div>

@@ -12,16 +12,19 @@
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
     "@google/genai": "^1.33.0",
+    "dxf-parser": "^1.1.2",
     "exceljs": "^4.4.0",
     "express": "^5.2.1",
     "firebase": "^12.8.0",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^5.0.7",
     "lucide-react": "^0.561.0",
+    "mammoth": "^1.12.0",
     "qrcode": "^1.5.4",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-router-dom": "^7.14.0",
+    "tesseract.js": "^7.0.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
@@ -33,7 +36,7 @@
     "firebase-admin": "^13.7.0",
     "pdf-parse": "^2.4.5",
     "pdf2json": "^4.0.3",
-    "pdfjs-dist": "^4.9.155",
+    "pdfjs-dist": "^4.10.38",
     "tailwindcss": "^4.2.2",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"

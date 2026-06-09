@@ -288,6 +288,140 @@ const PHYSICAL_RULES: DependencyRule[] = [
     reason: 'أعمال إنشائية بدون فحوصات مختبرية — إلزامي',
     severity: 'important',
   },
+
+  // ═══ قواعد كشف الاكسسوارات المفقودة ACC_01-ACC_10 ═══
+
+  // ── أبواب ──
+  {
+    id: 'ACC_01',
+    ifCategory: 'architecture', ifKeywords: ['باب', 'door', 'أبواب'],
+    thenCategory: 'accessories', thenKeywords: ['مقبض', 'قفل', 'مفصل', 'handle', 'lock', 'hinge'],
+    missingItem: {
+      nameAr: 'اكسسوارات أبواب (مقبض+قفل+مفصلات)',
+      nameEn: 'Door accessories (handle+lock+hinges)',
+      category: 'architecture', defaultUnit: 'طقم', defaultPricePerUnit: 295,
+    },
+    reason: 'كل باب يحتاج مقبض وقفل ومفصلات — ACC_01',
+    severity: 'important',
+  },
+  {
+    id: 'ACC_02',
+    ifCategory: 'safety', ifKeywords: ['باب حريق', 'fire door', 'باب مقاوم'],
+    thenCategory: 'accessories', thenKeywords: ['ذراع غلق', 'door closer', 'شريط انتفاخ', 'intumescent'],
+    missingItem: {
+      nameAr: 'ذراع غلق هيدروليكي + شريط انتفاخ حريق',
+      nameEn: 'Hydraulic door closer + intumescent strip',
+      category: 'safety', defaultUnit: 'طقم', defaultPricePerUnit: 380,
+    },
+    reason: 'أبواب الحريق تحتاج ذراع غلق ذاتي إلزامي SBC 801 — ACC_02',
+    severity: 'critical',
+  },
+
+  // ── شبابيك ──
+  {
+    id: 'ACC_03',
+    ifCategory: 'architecture', ifKeywords: ['شباك', 'نافذة', 'window', 'ألمنيوم'],
+    thenCategory: 'accessories', thenKeywords: ['مقبض شباك', 'سيلكون', 'ناموسية', 'window handle'],
+    missingItem: {
+      nameAr: 'اكسسوارات شبابيك (مقبض+سيلكون+ناموسية)',
+      nameEn: 'Window accessories (handle+sealant+screen)',
+      category: 'architecture', defaultUnit: 'طقم', defaultPricePerUnit: 160,
+    },
+    reason: 'كل شباك يحتاج مقبض وسيلكون عزل — ACC_03',
+    severity: 'important',
+  },
+
+  // ── سباكة - أدوات صحية ──
+  {
+    id: 'ACC_04',
+    ifCategory: 'plumbing', ifKeywords: ['مغسلة', 'حوض', 'sink', 'washbasin', 'مغسل'],
+    thenCategory: 'accessories', thenKeywords: ['خلاط', 'سيفون', 'mixer', 'siphon'],
+    missingItem: {
+      nameAr: 'اكسسوارات مغسلة (خلاط+سيفون+زوايا حبس)',
+      nameEn: 'Washbasin accessories (mixer+siphon+angle valves)',
+      category: 'plumbing', defaultUnit: 'طقم', defaultPricePerUnit: 325,
+    },
+    reason: 'كل مغسلة تحتاج خلاط وسيفون — ACC_04',
+    severity: 'important',
+  },
+  {
+    id: 'ACC_05',
+    ifCategory: 'plumbing', ifKeywords: ['مرحاض', 'toilet', 'كرسي أفرنجي', 'كرسي افرنجي'],
+    thenCategory: 'accessories', thenKeywords: ['شطاف', 'صندوق طرد', 'bidet', 'cistern'],
+    missingItem: {
+      nameAr: 'اكسسوارات مرحاض (شطاف+سيفون+مقعد)',
+      nameEn: 'Toilet accessories (bidet+cistern+seat)',
+      category: 'plumbing', defaultUnit: 'طقم', defaultPricePerUnit: 195,
+    },
+    reason: 'كل مرحاض يحتاج شطاف وصندوق طرد — ACC_05',
+    severity: 'important',
+  },
+  {
+    id: 'ACC_06',
+    ifCategory: 'plumbing', ifKeywords: ['سخان', 'heater', 'water heater'],
+    thenCategory: 'accessories', thenKeywords: ['صمام أمان', 'safety valve'],
+    missingItem: {
+      nameAr: 'اكسسوارات سخان (صمام أمان+وصلات+حامل)',
+      nameEn: 'Heater accessories (safety valve+connections+bracket)',
+      category: 'plumbing', defaultUnit: 'طقم', defaultPricePerUnit: 100,
+    },
+    reason: 'كل سخان يحتاج صمام أمان إلزامي — ACC_06',
+    severity: 'important',
+  },
+
+  // ── تكييف ──
+  {
+    id: 'ACC_07',
+    ifCategory: 'hvac', ifKeywords: ['سبلت', 'مكيف سبلت', 'split unit', 'split'],
+    thenCategory: 'accessories', thenKeywords: ['مواسير نحاس', 'قاعدة خارجية', 'copper pipe'],
+    missingItem: {
+      nameAr: 'اكسسوارات سبلت (مواسير نحاس+قاعدة+تصريف مكثفات)',
+      nameEn: 'Split AC accessories (copper pipes+outdoor bracket+condensate)',
+      category: 'hvac', defaultUnit: 'طقم', defaultPricePerUnit: 364,
+    },
+    reason: 'كل مكيف سبلت يحتاج مواسير نحاس وقاعدة وحدة خارجية — ACC_07',
+    severity: 'important',
+  },
+
+  // ── كهرباء ──
+  {
+    id: 'ACC_08',
+    ifCategory: 'electrical', ifKeywords: ['لوحة كهربائية', 'لوحة توزيع', 'distribution panel'],
+    thenCategory: 'accessories', thenKeywords: ['بسبار', 'قاطع رئيسي', 'busbar', 'main breaker'],
+    missingItem: {
+      nameAr: 'مكونات لوحة كهربائية (بسبار+قاطع رئيسي+تأريض)',
+      nameEn: 'Panel components (busbar+main breaker+earthing)',
+      category: 'electrical', defaultUnit: 'طقم', defaultPricePerUnit: 1320,
+    },
+    reason: 'لوحة التوزيع تحتاج قضبان نحاسية وقاطع رئيسي — ACC_08',
+    severity: 'critical',
+  },
+  {
+    id: 'ACC_09',
+    ifCategory: 'electrical', ifKeywords: ['إنارة led', 'سبوت', 'داون لايت', 'led light', 'سبوت لايت'],
+    thenCategory: 'accessories', thenKeywords: ['درايفر', 'driver', 'علبة تثبيت'],
+    missingItem: {
+      nameAr: 'اكسسوارات إنارة LED (درايفر+علبة تثبيت)',
+      nameEn: 'LED light accessories (driver+mounting box)',
+      category: 'electrical', defaultUnit: 'عدد', defaultPricePerUnit: 37,
+    },
+    reason: 'كل وحدة LED تحتاج درايفر وعلبة تثبيت — ACC_09',
+    severity: 'recommended',
+  },
+
+  // ── خزانات ──
+  {
+    id: 'ACC_10',
+    ifCategory: 'plumbing', ifKeywords: ['خزان مياه', 'water tank', 'خزان'],
+    thenCategory: 'accessories', thenKeywords: ['عوامة', 'محبس', 'float valve'],
+    missingItem: {
+      nameAr: 'اكسسوارات خزان مياه (عوامة+محبس+وصلات)',
+      nameEn: 'Water tank accessories (float valve+gate valve+connections)',
+      category: 'plumbing', defaultUnit: 'طقم', defaultPricePerUnit: 180,
+    },
+    reason: 'كل خزان يحتاج عوامة ومحبس — ACC_10',
+    severity: 'important',
+  },
 ];
 
 // =================== Service ===================

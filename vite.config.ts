@@ -27,6 +27,22 @@ export default defineConfig(({ mode }) => {
       alias: {
         '@': path.resolve(__dirname, '.'),
       }
+    },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+            'vendor-firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+            'services': [
+              './services/itemCostAnalyzer.ts',
+              './services/cognitiveCalculations.ts',
+              './services/boqEngine.ts',
+            ],
+          }
+        }
+      },
+      chunkSizeWarningLimit: 600,
     }
   };
 });

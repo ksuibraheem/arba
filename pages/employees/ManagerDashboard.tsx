@@ -789,7 +789,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
                                         <style>{`
                                             :root {
                                                 --stripe-color-deputy: #a855f7;
-                                                --stripe-color-accountant: #10b981;
+                                                --stripe-color-accountant: #6366F1;
                                                 --stripe-color-hr: #3b82f6;
                                                 --stripe-color-developer: #8b5cf6;
                                                 --stripe-color-support: #f97316;

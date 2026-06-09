@@ -1,0 +1,596 @@
+{
+  "version": "3.0",
+  "trainedAt": "2026-05-31T13:25:26.083Z",
+  "brainVersion": "V11.3",
+  "megaVersion": "3.0",
+  "stats": {
+    "totalSources": 32,
+    "totalItems": 11938,
+    "totalPriced": 681,
+    "totalUnpriced": 11257,
+    "pricedPercent": 6,
+    "categoriesCount": 23,
+    "regionsCount": 6,
+    "projectTypesCount": 17
+  },
+  "benchmarks": {
+    "general": {
+      "items": 4679,
+      "pricesFound": 528,
+      "avgPrice": 17212,
+      "minPrice": 3,
+      "maxPrice": 188000,
+      "units": [
+        "No.",
+        "m",
+        "M²",
+        "M2",
+        "NO.",
+        "M",
+        "Rm.",
+        "LS",
+        "m3",
+        "m2",
+        "م2",
+        "عدد",
+        "م3",
+        "م.ط",
+        "على المتنافس تسعير جداول الكميات بالكامل وعلية التوصل لسعر إجمالى يمثل قيمة العطاء .",
+        "على المتنافس أن يطلع على معنى كل بند فى جداول الكميات والمواصفات المحددة لهذا البند وتعتبر المعدلات والأسعار التى يضعها شاملة كافة الالتزامات اللازمة لتنفيذ مضمون وثائق العقد .",
+        "لايجوز للمتنافس أن يجرى أي تعديلات أو تغييرات على النص المطبوع فى جداول الكميات .",
+        "على المقاول ان يتعرف على كافة التفاصيل للأعمال وظروف تننفيذها , والحصول على كافة الأبعاد والمناسيب على الطبيعة وعليه إحاطة  صاحب العمل فى حالة التعارض قبل البدء فى أي عمل.",
+        "يجب أن تنفذ الاعمال التخصصية(غير الاعتيادية) مثل أعمال القبب السماوية من قبل مقاولين أو شركات متخصصة فى هذا المجال على أن يتم اعتمادهم من قبل جهاز الاشراف قبل البدء فى تنفيذ تلك الاعمال .",
+        "يلتزم المقاول بطرق القياس المذكورة في المواصفات و ذلك لجميع البنود الواردة في جدول الكميات، و فيما لم يرد طريقة للقياس في مواصفات المشروع يتم الرجوع الى طرق القياس الخاصة بمواصفات وزارة التربية و التعليم.",
+        "م 2",
+        "م ط",
+        "م .ط",
+        "مقطوعية",
+        "1",
+        "م,ط",
+        "مجموعة",
+        "م٢",
+        "بوليصة",
+        "زيارة",
+        "م٣",
+        "مجموعه",
+        "لفة",
+        "نقطه",
+        "KW",
+        "طقم",
+        "L.S",
+        "Set",
+        "تاريخي",
+        "تاريخي-أدنى",
+        "تاريخي-أعلى",
+        "طن",
+        "بالمقطوعية",
+        "م 3",
+        "Nr",
+        "Item",
+        "mt",
+        "متر مربع"
+      ],
+      "sourcesCount": 24,
+      "totalValue": 9087701
+    },
+    "plumbing": {
+      "items": 1315,
+      "pricesFound": 18,
+      "avgPrice": 1744,
+      "minPrice": 27,
+      "maxPrice": 8500,
+      "units": [
+        "م.ط",
+        "عدد",
+        "م2",
+        "م ط",
+        "مقطوعية",
+        "نقطه",
+        "No.",
+        "تاريخي",
+        "تاريخي-أدنى",
+        "تاريخي-أعلى",
+        "مجموعة"
+      ],
+      "sourcesCount": 12,
+      "totalValue": 31398
+    },
+    "electrical": {
+      "items": 1181,
+      "pricesFound": 62,
+      "avgPrice": 6313,
+      "minPrice": 1,
+      "maxPrice": 77609,
+      "units": [
+        "NO.",
+        "NO",
+        "على المقاول أن يخطط وينسق الأعمال بين الأنظمة المهنية والتخصصية الأخرى , فتحات إدخال التركيبات الكهربائية , ويجب ضبط مواقع المعدات والمواد كما ينبغى مع استخدام كافة المواد المساندة اللازمة والعمالة لضمان جودة التخطيط والتنسيق والتركيب السليم .",
+        "عدد",
+        "م2",
+        "مقطوعية",
+        "بالمقطوعية",
+        "مجموعه",
+        "م.ط",
+        "نقطه",
+        "m2",
+        "pcs",
+        "M.L",
+        "No.",
+        "L.S.",
+        "SET",
+        "L.S",
+        "تاريخي",
+        "تاريخي-أدنى",
+        "تاريخي-أعلى",
+        "م ط",
+        "1",
+        "مجموعة",
+        "Nr",
+        "Item",
+        "m",
+        "متر مربع"
+      ],
+      "sourcesCount": 21,
+      "totalValue": 391394
+    },
+    "uncategorized": {
+      "items": 980,
+      "pricesFound": 0,
+      "avgPrice": 0,
+      "minPrice": 0,
+      "maxPrice": 0,
+      "units": [],
+      "sourcesCount": 6,
+      "totalValue": 0
+    },
+    "concrete": {
+      "items": 889,
+      "pricesFound": 6,
+      "avgPrice": 298,
+      "minPrice": 40,
+      "maxPrice": 500,
+      "units": [
+        "m3",
+        "m2",
+        "م3",
+        "عدد",
+        "م.ط",
+        "م2",
+        "م .ط",
+        "م 3",
+        "بالمقطوعية",
+        "م٣",
+        "م٢",
+        "مجموعة",
+        "m.l",
+        "L.S.",
+        "Points",
+        "No.",
+        "M.L",
+        "M2",
+        "NO.",
+        "L.S",
+        "متر مكعب",
+        "متر مربع"
+      ],
+      "sourcesCount": 16,
+      "totalValue": 1790
+    },
+    "paint": {
+      "items": 432,
+      "pricesFound": 1,
+      "avgPrice": 300,
+      "minPrice": 300,
+      "maxPrice": 300,
+      "units": [
+        "م.ط",
+        "م2",
+        "عدد",
+        "م ط",
+        "مقطوعية",
+        "م٢",
+        "m2"
+      ],
+      "sourcesCount": 9,
+      "totalValue": 300
+    },
+    "tiles": {
+      "items": 415,
+      "pricesFound": 1,
+      "avgPrice": 90,
+      "minPrice": 90,
+      "maxPrice": 90,
+      "units": [
+        "طن",
+        "م2",
+        "عدد",
+        "م٢",
+        "m2",
+        "pcs"
+      ],
+      "sourcesCount": 9,
+      "totalValue": 90
+    },
+    "hvac": {
+      "items": 349,
+      "pricesFound": 23,
+      "avgPrice": 19470,
+      "minPrice": 16,
+      "maxPrice": 43826.08695652175,
+      "units": [
+        "Item",
+        "NO.",
+        "عدد",
+        "م2",
+        "م.ط",
+        "مجموعه",
+        "Unit",
+        "L.S.",
+        "m3",
+        "pcs",
+        "No.",
+        "Set",
+        "m2",
+        "تاريخي",
+        "م 2",
+        "Nr"
+      ],
+      "sourcesCount": 19,
+      "totalValue": 447815
+    },
+    "blocks": {
+      "items": 305,
+      "pricesFound": 1,
+      "avgPrice": 679823,
+      "minPrice": 281.5,
+      "maxPrice": 281.5,
+      "units": [
+        "م2",
+        "م 2",
+        "م٢",
+        "m2",
+        "متر مربع"
+      ],
+      "sourcesCount": 9,
+      "totalValue": 679823
+    },
+    "fire_safety": {
+      "items": 288,
+      "pricesFound": 16,
+      "avgPrice": 5058,
+      "minPrice": 110,
+      "maxPrice": 15978,
+      "units": [
+        "NO.",
+        "عدد",
+        "مجموعه",
+        "م.ط",
+        "تاريخي",
+        "تاريخي-أدنى",
+        "تاريخي-أعلى",
+        "Nr"
+      ],
+      "sourcesCount": 13,
+      "totalValue": 80924
+    },
+    "demolition": {
+      "items": 233,
+      "pricesFound": 10,
+      "avgPrice": 148,
+      "minPrice": 20,
+      "maxPrice": 1200,
+      "units": [
+        "مقطوعية",
+        "م2",
+        "م٣",
+        "م.ط",
+        "م ط",
+        "عدد",
+        "بالمقطوعية"
+      ],
+      "sourcesCount": 9,
+      "totalValue": 1478
+    },
+    "excavation": {
+      "items": 230,
+      "pricesFound": 2,
+      "avgPrice": 1413,
+      "minPrice": 25,
+      "maxPrice": 2800,
+      "units": [
+        "m3",
+        "م3",
+        "م.ط",
+        "م٣",
+        "عدد",
+        "متر مكعب"
+      ],
+      "sourcesCount": 15,
+      "totalValue": 2825
+    },
+    "doors": {
+      "items": 221,
+      "pricesFound": 7,
+      "avgPrice": 2749,
+      "minPrice": 14,
+      "maxPrice": 3000,
+      "units": [
+        "NO.",
+        "م2",
+        "مجموعه",
+        "No.",
+        "m2",
+        "Nr",
+        "عدد"
+      ],
+      "sourcesCount": 13,
+      "totalValue": 19241
+    },
+    "cleaning": {
+      "items": 97,
+      "pricesFound": 1,
+      "avgPrice": 3000,
+      "minPrice": 3000,
+      "maxPrice": 3000,
+      "units": [
+        "عدد"
+      ],
+      "sourcesCount": 6,
+      "totalValue": 3000
+    },
+    "plaster": {
+      "items": 73,
+      "pricesFound": 0,
+      "avgPrice": 0,
+      "minPrice": 0,
+      "maxPrice": 0,
+      "units": [
+        "م2",
+        "م٢",
+        "M.L",
+        "m2"
+      ],
+      "sourcesCount": 8,
+      "totalValue": 0
+    },
+    "windows": {
+      "items": 62,
+      "pricesFound": 0,
+      "avgPrice": 0,
+      "minPrice": 0,
+      "maxPrice": 0,
+      "units": [
+        "عدد",
+        "L.S.",
+        "No.",
+        "L.S"
+      ],
+      "sourcesCount": 7,
+      "totalValue": 0
+    },
+    "backfill": {
+      "items": 57,
+      "pricesFound": 1,
+      "avgPrice": 2500,
+      "minPrice": 2500,
+      "maxPrice": 2500,
+      "units": [
+        "م3",
+        "م٣",
+        "م٢",
+        "متر مكعب"
+      ],
+      "sourcesCount": 15,
+      "totalValue": 2500
+    },
+    "steel_rebar": {
+      "items": 57,
+      "pricesFound": 1,
+      "avgPrice": 3200,
+      "minPrice": 400,
+      "maxPrice": 400,
+      "units": [
+        "م.ط",
+        "طن",
+        "م٢",
+        "No.",
+        "m2",
+        "m3",
+        "nos",
+        "Nr"
+      ],
+      "sourcesCount": 14,
+      "totalValue": 3200
+    },
+    "landscaping": {
+      "items": 45,
+      "pricesFound": 0,
+      "avgPrice": 0,
+      "minPrice": 0,
+      "maxPrice": 0,
+      "units": [
+        "عدد",
+        "م٢"
+      ],
+      "sourcesCount": 7,
+      "totalValue": 0
+    },
+    "elevator": {
+      "items": 10,
+      "pricesFound": 3,
+      "avgPrice": 2394,
+      "minPrice": 897.5217391304349,
+      "maxPrice": 898,
+      "units": [
+        "NO.",
+        "عدد",
+        "تاريخي"
+      ],
+      "sourcesCount": 10,
+      "totalValue": 7181
+    },
+    "waterproofing": {
+      "items": 9,
+      "pricesFound": 0,
+      "avgPrice": 0,
+      "minPrice": 0,
+      "maxPrice": 0,
+      "units": [
+        "m2",
+        "م٢"
+      ],
+      "sourcesCount": 7,
+      "totalValue": 0
+    },
+    "insulation": {
+      "items": 6,
+      "pricesFound": 0,
+      "avgPrice": 0,
+      "minPrice": 0,
+      "maxPrice": 0,
+      "units": [
+        "م٢",
+        "No."
+      ],
+      "sourcesCount": 6,
+      "totalValue": 0
+    },
+    "formwork": {
+      "items": 5,
+      "pricesFound": 0,
+      "avgPrice": 0,
+      "minPrice": 0,
+      "maxPrice": 0,
+      "units": [],
+      "sourcesCount": 5,
+      "totalValue": 0
+    }
+  },
+  "regions": {
+    "saudi": {
+      "items": 3619,
+      "sources": 21,
+      "types": [
+        "residential_farm",
+        "general",
+        "school_maintenance",
+        "structural_package",
+        "structural",
+        "residential_villa",
+        "unknown",
+        "tender",
+        "residential",
+        "government"
+      ]
+    },
+    "hail": {
+      "items": 282,
+      "sources": 1,
+      "types": [
+        "government_environmental"
+      ]
+    },
+    "dammam": {
+      "items": 461,
+      "sources": 2,
+      "types": [
+        "government_environmental",
+        "office_fitout"
+      ]
+    },
+    "madinah": {
+      "items": 334,
+      "sources": 1,
+      "types": [
+        "government_environmental"
+      ]
+    },
+    "asir": {
+      "items": 100,
+      "sources": 3,
+      "types": [
+        "architectural",
+        "construction",
+        "electrical"
+      ]
+    },
+    "riyadh": {
+      "items": 7142,
+      "sources": 4,
+      "types": [
+        "fm_supplier",
+        "fm_tender"
+      ]
+    }
+  },
+  "projectTypes": {
+    "residential_farm": {
+      "items": 198,
+      "sources": 4
+    },
+    "government_environmental": {
+      "items": 945,
+      "sources": 3
+    },
+    "general": {
+      "items": 15,
+      "sources": 1
+    },
+    "school_maintenance": {
+      "items": 186,
+      "sources": 3
+    },
+    "structural_package": {
+      "items": 0,
+      "sources": 1
+    },
+    "structural": {
+      "items": 346,
+      "sources": 5
+    },
+    "architectural": {
+      "items": 26,
+      "sources": 1
+    },
+    "construction": {
+      "items": 34,
+      "sources": 1
+    },
+    "electrical": {
+      "items": 40,
+      "sources": 1
+    },
+    "office_fitout": {
+      "items": 132,
+      "sources": 1
+    },
+    "fm_supplier": {
+      "items": 1844,
+      "sources": 1
+    },
+    "fm_tender": {
+      "items": 5298,
+      "sources": 3
+    },
+    "residential_villa": {
+      "items": 285,
+      "sources": 3
+    },
+    "unknown": {
+      "items": 211,
+      "sources": 1
+    },
+    "tender": {
+      "items": 1777,
+      "sources": 1
+    },
+    "residential": {
+      "items": 319,
+      "sources": 1
+    },
+    "government": {
+      "items": 282,
+      "sources": 1
+    }
+  }
+}

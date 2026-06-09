@@ -2,12 +2,98 @@
 @import "tailwindcss";
 @import "./styles/design-tokens.css";
 
-/* ═══════ Base Theme ═══════ */
+/* ═══════ Base Theme — ARBA V11.3 Unified Color System ═══════ */
 @theme {
   --font-sans: 'Tajawal', 'Inter', sans-serif;
+
+  /* ── Brand Primary: Indigo ── */
   --color-primary: #6366F1;
   --color-primary-dark: #4338CA;
   --color-accent: #F59E0B;
+
+  /* ══════════════════════════════════════════════════════════
+   * 🎨 ARBA Unified Color Remap
+   * توحيد جميع الألوان المتضاربة لتتوافق مع هوية أربا
+   * Indigo (رئيسي) | Amber (ثانوي) | Slate (خلفيات)
+   * ══════════════════════════════════════════════════════════ */
+
+  /* ── Success Colors: emerald → Indigo-tinted success ── */
+  --color-emerald-50:  #EEF2FF;
+  --color-emerald-100: #E0E7FF;
+  --color-emerald-200: #C7D2FE;
+  --color-emerald-300: #A5B4FC;
+  --color-emerald-400: #818CF8;
+  --color-emerald-500: #6366F1;
+  --color-emerald-600: #4F46E5;
+  --color-emerald-700: #4338CA;
+  --color-emerald-800: #3730A3;
+  --color-emerald-900: #312E81;
+  --color-emerald-950: #1E1B4B;
+
+  /* ── Green → Indigo (brand-unified — same remap as emerald) ── */
+  --color-green-50:  #EEF2FF;
+  --color-green-100: #E0E7FF;
+  --color-green-200: #C7D2FE;
+  --color-green-300: #A5B4FC;
+  --color-green-400: #818CF8;
+  --color-green-500: #6366F1;
+  --color-green-600: #4F46E5;
+  --color-green-700: #4338CA;
+  --color-green-800: #3730A3;
+  --color-green-900: #312E81;
+  --color-green-950: #1E1B4B;
+
+  /* ── Teal → Indigo-blue (cohesive with primary) ── */
+  --color-teal-50:  #EEF2FF;
+  --color-teal-100: #E0E7FF;
+  --color-teal-200: #C7D2FE;
+  --color-teal-300: #A5B4FC;
+  --color-teal-400: #818CF8;
+  --color-teal-500: #6366F1;
+  --color-teal-600: #4F46E5;
+  --color-teal-700: #4338CA;
+  --color-teal-800: #3730A3;
+  --color-teal-900: #312E81;
+  --color-teal-950: #1E1B4B;
+
+  /* ── Cyan → Cool Indigo-slate ── */
+  --color-cyan-50:  #F0F4FF;
+  --color-cyan-100: #DBEAFE;
+  --color-cyan-200: #BFDBFE;
+  --color-cyan-300: #93C5FD;
+  --color-cyan-400: #60A5FA;
+  --color-cyan-500: #3B82F6;
+  --color-cyan-600: #2563EB;
+  --color-cyan-700: #1D4ED8;
+  --color-cyan-800: #1E40AF;
+  --color-cyan-900: #1E3A8A;
+  --color-cyan-950: #172554;
+
+  /* ── Orange → Warm Amber (matches accent) ── */
+  --color-orange-50:  #FFFBEB;
+  --color-orange-100: #FEF3C7;
+  --color-orange-200: #FDE68A;
+  --color-orange-300: #FCD34D;
+  --color-orange-400: #FBBF24;
+  --color-orange-500: #F59E0B;
+  --color-orange-600: #D97706;
+  --color-orange-700: #B45309;
+  --color-orange-800: #92400E;
+  --color-orange-900: #78350F;
+  --color-orange-950: #451A03;
+
+  /* ── Lime → Muted Indigo-green ── */
+  --color-lime-50:  #F0FDF4;
+  --color-lime-100: #E0E7FF;
+  --color-lime-200: #C7D2FE;
+  --color-lime-300: #A5B4FC;
+  --color-lime-400: #818CF8;
+  --color-lime-500: #6366F1;
+  --color-lime-600: #4F46E5;
+  --color-lime-700: #4338CA;
+  --color-lime-800: #3730A3;
+  --color-lime-900: #312E81;
+  --color-lime-950: #1E1B4B;
 }
 
 /* ═══════ Language-Specific Adjustments ═══════ */

@@ -50,13 +50,13 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
                 fadeOut ? 'opacity-0 scale-105' : 'opacity-100 scale-100'
             }`}
             style={{
-                background: '#1A1A4E',
+                background: 'radial-gradient(ellipse at center, #151E31 0%, #0B1120 70%)',
                 transition: 'opacity 0.6s ease, transform 0.6s ease',
             }}
         >
             {/* المحتوى الرئيسي */}
             <div className="relative flex flex-col items-center">
-                {/* ═══ الشعار — حرف A الأخضر ═══ */}
+                {/* ═══ الشعار — حرف A ═══ */}
                 <div
                     style={{
                         opacity: phase === 'blank' ? 0 : 1,
@@ -75,7 +75,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
                         {/* الساق اليسرى */}
                         <path
                             d="M20,195 C20,195 20,190 22,185 L25,178 C25,178 28,172 30,170 L35,165 C35,165 40,155 45,145 L55,125 C55,125 65,105 70,95 L80,75 C80,75 85,65 90,55 L95,45 C95,45 98,38 100,35 C102,38 105,45 105,45 L110,55 C110,55 115,65 120,75 L130,95 C130,95 140,115 150,135 L160,155 C160,155 168,170 172,178 L175,185 C177,190 178,195 178,195"
-                            stroke="#4ADE4A"
+                            stroke="#818CF8"
                             strokeWidth="14"
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -89,7 +89,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
                         {/* القاعدة السفلية */}
                         <path
                             d="M10,198 L55,198 C55,198 60,198 60,193 C60,188 55,188 55,188 L40,188 C40,188 30,185 28,178 L25,170"
-                            stroke="#4ADE4A"
+                            stroke="#818CF8"
                             strokeWidth="12"
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -102,7 +102,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
                         />
                         <path
                             d="M190,198 L145,198 C145,198 140,198 140,193 C140,188 145,188 145,188 L160,188 C160,188 170,185 172,178 L175,170"
-                            stroke="#4ADE4A"
+                            stroke="#818CF8"
                             strokeWidth="12"
                             strokeLinecap="round"
                             strokeLinejoin="round"
@@ -116,7 +116,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete }) => {
                         {/* الفتحة المثلثية الداخلية (الدايموند) */}
                         <path
                             d="M85,140 L100,90 L115,140 Z"
-                            fill="#4ADE4A"
+                            fill="#818CF8"
                             style={{
                                 opacity: phase === 'blank' ? 0 : 1,
                                 transform: phase === 'blank' ? 'scale(0)' : 'scale(1)',

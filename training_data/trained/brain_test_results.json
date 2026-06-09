@@ -1,0 +1,812 @@
+{
+  "version": "V11.3",
+  "testedAt": "2026-06-03T12:53:44.572Z",
+  "totalTests": 41,
+  "passed": 41,
+  "warnings": 0,
+  "failed": 0,
+  "accuracy": "100%",
+  "acceptableRate": "100%",
+  "results": [
+    {
+      "desc": "توريد وصب خرسانة مسلحة للأساسات رتبة C30 مع الشدة والتسليح",
+      "unit": "م3",
+      "category": "concrete",
+      "brainPrice": 1244,
+      "expectedMin": 800,
+      "expectedMax": 1500,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 90,
+      "materials": 6,
+      "labor": 3,
+      "sources": [
+        "engineering_db",
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي"
+      ]
+    },
+    {
+      "desc": "خرسانة عادية نظافة رتبة C15 سمك 10سم",
+      "unit": "م3",
+      "category": "concrete",
+      "brainPrice": 327,
+      "expectedMin": 200,
+      "expectedMax": 400,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 90,
+      "materials": 4,
+      "labor": 1,
+      "sources": [
+        "engineering_db"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي"
+      ]
+    },
+    {
+      "desc": "توريد وعمل بلوك خرساني مقاس 20سم للجدران",
+      "unit": "م2",
+      "category": "blocks",
+      "brainPrice": 92,
+      "expectedMin": 50,
+      "expectedMax": 120,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 70,
+      "materials": 2,
+      "labor": 2,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي",
+        "⚠️ السعر 92 انحراف -82% عن التاريخي 500 (ثقة: 57%)"
+      ]
+    },
+    {
+      "desc": "توريد وعمل حديد تسليح قطر 16مم",
+      "unit": "طن",
+      "category": "steel",
+      "brainPrice": 4968,
+      "expectedMin": 3500,
+      "expectedMax": 5500,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 90,
+      "materials": 1,
+      "labor": 2,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي"
+      ]
+    },
+    {
+      "desc": "أعمال شدات خشبية للأسقف والكمرات",
+      "unit": "م2",
+      "category": "formwork",
+      "brainPrice": 82,
+      "expectedMin": 50,
+      "expectedMax": 130,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 90,
+      "materials": 2,
+      "labor": 2,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي"
+      ]
+    },
+    {
+      "desc": "أعمال حفر وردم بتربة نظيفة مع الدمك",
+      "unit": "م3",
+      "category": "excavation",
+      "brainPrice": 47,
+      "expectedMin": 30,
+      "expectedMax": 80,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 90,
+      "materials": 1,
+      "labor": 1,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي"
+      ]
+    },
+    {
+      "desc": "توريد وعمل لياسة أسمنتية للجدران الداخلية",
+      "unit": "م2",
+      "category": "plaster",
+      "brainPrice": 39,
+      "expectedMin": 25,
+      "expectedMax": 60,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 90,
+      "materials": 2,
+      "labor": 2,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي"
+      ]
+    },
+    {
+      "desc": "دهان الجدران الداخلية وجهين جوتن مع البطانة",
+      "unit": "م2",
+      "category": "paint",
+      "brainPrice": 20,
+      "expectedMin": 18,
+      "expectedMax": 50,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 90,
+      "materials": 2,
+      "labor": 1,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي"
+      ]
+    },
+    {
+      "desc": "دهان خارجي جوتاشيلد مع المعجون والبطانة",
+      "unit": "م2",
+      "category": "paint",
+      "brainPrice": 28,
+      "expectedMin": 25,
+      "expectedMax": 60,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 90,
+      "materials": 2,
+      "labor": 1,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي"
+      ]
+    },
+    {
+      "desc": "توريد وتركيب بلاط سيراميك أرضيات 60×60 محلي فرز أول",
+      "unit": "م2",
+      "category": "tiles",
+      "brainPrice": 115,
+      "expectedMin": 60,
+      "expectedMax": 130,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 90,
+      "materials": 2,
+      "labor": 2,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي"
+      ]
+    },
+    {
+      "desc": "توريد وتركيب بورسلان أرضيات 80×80 إسباني",
+      "unit": "م2",
+      "category": "tiles",
+      "brainPrice": 210,
+      "expectedMin": 200,
+      "expectedMax": 500,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 90,
+      "materials": 3,
+      "labor": 2,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي"
+      ]
+    },
+    {
+      "desc": "توريد وتركيب رخام أرضيات محلي",
+      "unit": "م2",
+      "category": "stone",
+      "brainPrice": 286,
+      "expectedMin": 180,
+      "expectedMax": 400,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 70,
+      "materials": 2,
+      "labor": 2,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي",
+        "⚠️ السعر 286 انحراف 258% عن التاريخي 80 (ثقة: 80%)"
+      ]
+    },
+    {
+      "desc": "أرضيات إيبوكسي صناعي ذاتي التسوية",
+      "unit": "م2",
+      "category": "epoxy",
+      "brainPrice": 161,
+      "expectedMin": 100,
+      "expectedMax": 220,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 90,
+      "materials": 2,
+      "labor": 2,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي"
+      ]
+    },
+    {
+      "desc": "عزل مائي للأسطح بيتومين على البارد وجهين",
+      "unit": "م2",
+      "category": "waterproofing",
+      "brainPrice": 59,
+      "expectedMin": 20,
+      "expectedMax": 70,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 90,
+      "materials": 2,
+      "labor": 1,
+      "sources": [
+        "engineering_db",
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي"
+      ]
+    },
+    {
+      "desc": "عزل حراري بولي ستايرين XPS سمك 5سم",
+      "unit": "م2",
+      "category": "insulation",
+      "brainPrice": 78,
+      "expectedMin": 50,
+      "expectedMax": 120,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 90,
+      "materials": 2,
+      "labor": 1,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي"
+      ]
+    },
+    {
+      "desc": "باب خشب HDF مقولب مع الحلق والمفصلات",
+      "unit": "عدد",
+      "category": "doors",
+      "brainPrice": 1104,
+      "expectedMin": 500,
+      "expectedMax": 1200,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 90,
+      "materials": 2,
+      "labor": 2,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي"
+      ]
+    },
+    {
+      "desc": "شباك ألمنيوم ثيرمال بريك مع زجاج دبل",
+      "unit": "م2",
+      "category": "windows",
+      "brainPrice": 1006,
+      "expectedMin": 800,
+      "expectedMax": 1800,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 70,
+      "materials": 3,
+      "labor": 2,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي",
+        "🚨 السعر 1006 تجاوز السقف 600 ر.س/م2 بنسبة 68%"
+      ]
+    },
+    {
+      "desc": "باب مقاوم للحريق مفرد فولاذ 90 دقيقة",
+      "unit": "عدد",
+      "category": "fire_doors",
+      "brainPrice": 5492,
+      "expectedMin": 2500,
+      "expectedMax": 6000,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 90,
+      "materials": 2,
+      "labor": 2,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي"
+      ]
+    },
+    {
+      "desc": "كابل كهربائي نحاس XLPE مقاس 4×10مم",
+      "unit": "م.ط",
+      "category": "cables",
+      "brainPrice": 20,
+      "expectedMin": 18,
+      "expectedMax": 40,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 75,
+      "materials": 1,
+      "labor": 1,
+      "sources": [
+        "engineering_db"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي",
+        "⚠️ لا توجد وصفة تسعير لهذا البند — تم التقدير"
+      ]
+    },
+    {
+      "desc": "لوحة توزيع كهربائية فرعية 24 خط شنايدر",
+      "unit": "عدد",
+      "category": "panels",
+      "brainPrice": 1394,
+      "expectedMin": 500,
+      "expectedMax": 1500,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 70,
+      "materials": 2,
+      "labor": 1,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي",
+        "⚠️ السعر 1394 انحراف -94% عن التاريخي 25000 (ثقة: 100%)"
+      ]
+    },
+    {
+      "desc": "سبوت لايت LED داون لايت 15 واط",
+      "unit": "عدد",
+      "category": "lighting",
+      "brainPrice": 58,
+      "expectedMin": 30,
+      "expectedMax": 80,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 90,
+      "materials": 2,
+      "labor": 1,
+      "sources": [
+        "supplier_api",
+        "engineering_db"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي"
+      ]
+    },
+    {
+      "desc": "نقطة إنارة شاملة الأنبوب والسلك والعلبة",
+      "unit": "نقطة",
+      "category": "electrical",
+      "brainPrice": 97,
+      "expectedMin": 40,
+      "expectedMax": 100,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 90,
+      "materials": 3,
+      "labor": 2,
+      "sources": [
+        "supplier_api",
+        "engineering_db"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي"
+      ]
+    },
+    {
+      "desc": "مواسير PPR قطر 25مم للمياه الباردة والحارة",
+      "unit": "م.ط",
+      "category": "plumbing",
+      "brainPrice": 21,
+      "expectedMin": 10,
+      "expectedMax": 30,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 90,
+      "materials": 2,
+      "labor": 2,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي"
+      ]
+    },
+    {
+      "desc": "كرسي حمام أرضي سيراميكا أمريكان ستاندرد",
+      "unit": "عدد",
+      "category": "sanitary",
+      "brainPrice": 507,
+      "expectedMin": 300,
+      "expectedMax": 800,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 70,
+      "materials": 2,
+      "labor": 2,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي",
+        "⚠️ السعر 507 انحراف 361% عن المرجع 110 (سيراميك)"
+      ]
+    },
+    {
+      "desc": "خزان مياه فايبرجلاس سعة 2000 لتر",
+      "unit": "عدد",
+      "category": "plumbing",
+      "brainPrice": 1665,
+      "expectedMin": 800,
+      "expectedMax": 2000,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 70,
+      "materials": 2,
+      "labor": 2,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي",
+        "⚠️ السعر 1665 انحراف -93% عن التاريخي 25000 (ثقة: 67%)"
+      ]
+    },
+    {
+      "desc": "مكيف سبليت 2 طن انفرتر",
+      "unit": "عدد",
+      "category": "hvac",
+      "brainPrice": 4122,
+      "expectedMin": 2500,
+      "expectedMax": 5000,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 90,
+      "materials": 2,
+      "labor": 2,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي"
+      ]
+    },
+    {
+      "desc": "مجاري هواء صاج مجلفن مع العزل",
+      "unit": "م2",
+      "category": "ductwork",
+      "brainPrice": 111,
+      "expectedMin": 50,
+      "expectedMax": 120,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 90,
+      "materials": 2,
+      "labor": 2,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي"
+      ]
+    },
+    {
+      "desc": "رشاش حريق مخفي نوع كونسيلد",
+      "unit": "عدد",
+      "category": "fire",
+      "brainPrice": 68,
+      "expectedMin": 30,
+      "expectedMax": 80,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 90,
+      "materials": 2,
+      "labor": 1,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي"
+      ]
+    },
+    {
+      "desc": "لوحة إنذار حريق ذكية addressable 4 مناطق",
+      "unit": "عدد",
+      "category": "fire",
+      "brainPrice": 9131,
+      "expectedMin": 3000,
+      "expectedMax": 10000,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 70,
+      "materials": 2,
+      "labor": 2,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي",
+        "⚠️ السعر 9131 انحراف 407% عن التاريخي 1800 (ثقة: 100%)"
+      ]
+    },
+    {
+      "desc": "كاميرا مراقبة IP 4 ميجابكسل هيك فيجن",
+      "unit": "عدد",
+      "category": "cctv",
+      "brainPrice": 440,
+      "expectedMin": 200,
+      "expectedMax": 500,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 90,
+      "materials": 2,
+      "labor": 1,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي"
+      ]
+    },
+    {
+      "desc": "نظام تحكم وصول بالبصمة مع قفل مغناطيسي",
+      "unit": "عدد",
+      "category": "access",
+      "brainPrice": 2391,
+      "expectedMin": 800,
+      "expectedMax": 2500,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 90,
+      "materials": 2,
+      "labor": 1,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي"
+      ]
+    },
+    {
+      "desc": "مصعد ركاب 8 أشخاص 6 محطات مع التركيب",
+      "unit": "عدد",
+      "category": "elevator",
+      "brainPrice": 159709,
+      "expectedMin": 100000,
+      "expectedMax": 180000,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 70,
+      "materials": 1,
+      "labor": 2,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي",
+        "🚨 السعر 159709 تجاوز السقف 30000 ر.س/عدد بنسبة 432%"
+      ]
+    },
+    {
+      "desc": "مولد كهرباء ديزل 250 كيلو فولت أمبير",
+      "unit": "عدد",
+      "category": "generator",
+      "brainPrice": 249202,
+      "expectedMin": 200000,
+      "expectedMax": 300000,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 70,
+      "materials": 1,
+      "labor": 2,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي",
+        "⚠️ السعر 249202 انحراف 293079% عن التاريخي 85 (ثقة: 57%)"
+      ]
+    },
+    {
+      "desc": "أسفلت طبقة سطحية سمك 5سم",
+      "unit": "م2",
+      "category": "asphalt",
+      "brainPrice": 76,
+      "expectedMin": 30,
+      "expectedMax": 80,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 75,
+      "materials": 1,
+      "labor": 1,
+      "sources": [
+        "engineering_db"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي",
+        "⚠️ لا توجد وصفة تسعير لهذا البند — تم التقدير"
+      ]
+    },
+    {
+      "desc": "بلاط متداخل إنترلوك ملون سمك 8سم",
+      "unit": "م2",
+      "category": "interlock",
+      "brainPrice": 148,
+      "expectedMin": 60,
+      "expectedMax": 150,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 75,
+      "materials": 1,
+      "labor": 1,
+      "sources": [
+        "engineering_db"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي",
+        "⚠️ لا توجد وصفة تسعير لهذا البند — تم التقدير"
+      ]
+    },
+    {
+      "desc": "بردورة خرسانية جاهزة",
+      "unit": "م.ط",
+      "category": "curb",
+      "brainPrice": 21,
+      "expectedMin": 10,
+      "expectedMax": 25,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 70,
+      "materials": 2,
+      "labor": 1,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي",
+        "⚠️ السعر 21 انحراف -93% عن التاريخي 300 (ثقة: 100%)"
+      ]
+    },
+    {
+      "desc": "كلادينج ألمنيوم مركب ACP للواجهات",
+      "unit": "م2",
+      "category": "cladding",
+      "brainPrice": 279,
+      "expectedMin": 100,
+      "expectedMax": 300,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 90,
+      "materials": 2,
+      "labor": 2,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي"
+      ]
+    },
+    {
+      "desc": "درابزين ستانلس ستيل للسلالم",
+      "unit": "م.ط",
+      "category": "handrails",
+      "brainPrice": 403,
+      "expectedMin": 200,
+      "expectedMax": 900,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 90,
+      "materials": 2,
+      "labor": 2,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي"
+      ]
+    },
+    {
+      "desc": "سقف مستعار جبس بورد مع الهيكل المعدني",
+      "unit": "م2",
+      "category": "ceiling",
+      "brainPrice": 110,
+      "expectedMin": 45,
+      "expectedMax": 130,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 70,
+      "materials": 3,
+      "labor": 2,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي",
+        "⚠️ السعر 110 انحراف 214% عن التاريخي 35 (ثقة: 67%)"
+      ]
+    },
+    {
+      "desc": "ساندويتش بانل سقف معدني 75مم",
+      "unit": "م2",
+      "category": "roofing",
+      "brainPrice": 216,
+      "expectedMin": 100,
+      "expectedMax": 250,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 70,
+      "materials": 2,
+      "labor": 1,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي",
+        "⚠️ السعر 216 انحراف 440% عن التاريخي 40 (ثقة: 60%)"
+      ]
+    },
+    {
+      "desc": "خزائن مطبخ MDF مع الأسطح والمفصلات",
+      "unit": "م.ط",
+      "category": "kitchen",
+      "brainPrice": 883,
+      "expectedMin": 500,
+      "expectedMax": 1000,
+      "inRange": true,
+      "closeEnough": true,
+      "confidence": 70,
+      "materials": 2,
+      "labor": 2,
+      "sources": [
+        "supplier_api"
+      ],
+      "warnings": [
+        "⚠️ لم تحدد نسبة المكسب — تم استخدام 15% افتراضي",
+        "🚨 السعر 883 تجاوز السقف 500 ر.س/م.ط بنسبة 77%"
+      ]
+    }
+  ],
+  "failedItems": []
+}

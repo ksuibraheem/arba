@@ -57,9 +57,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, on
 
     const userTypes: { id: UserType; label: Record<string, string>; icon: React.ElementType; color: string }[] = [
         { id: 'individual', label: { ar: 'أفراد', en: 'Individual', fr: 'Individu', zh: '个人' }, icon: User, color: 'from-blue-500 to-blue-600' },
-        { id: 'company', label: { ar: 'شركات', en: 'Company', fr: 'Entreprise', zh: '公司' }, icon: Building2, color: 'from-green-500 to-lime-500' },
+        { id: 'company', label: { ar: 'شركات', en: 'Company', fr: 'Entreprise', zh: '公司' }, icon: Building2, color: 'from-violet-500 to-indigo-600' },
         { id: 'supplier', label: { ar: 'موردين', en: 'Supplier', fr: 'Fournisseur', zh: '供应商' }, icon: Truck, color: 'from-amber-500 to-orange-500' },
-        { id: 'team_member', label: { ar: 'فريق المشروع', en: 'Project Team', fr: 'Équipe Projet', zh: '项目团队' }, icon: HardHat, color: 'from-emerald-500 to-teal-500' }
+        { id: 'team_member', label: { ar: 'فريق المشروع', en: 'Project Team', fr: 'Équipe Projet', zh: '项目团队' }, icon: HardHat, color: 'from-indigo-500 to-violet-500' }
     ];
 
     // All types including hidden employee for config lookup
@@ -183,9 +183,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, on
         <div className="min-h-screen bg-gradient-to-br from-[#070914] via-[#0E132B] to-[#050711] flex items-center justify-center p-6" dir={isRtl ? 'rtl' : 'ltr'}>
             {/* Background Pattern */}
             <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute -top-1/2 -right-1/2 w-full h-full bg-gradient-to-br from-green-500/10 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDuration: '8s' }}></div>
-                <div className="absolute -bottom-1/2 -left-1/2 w-full h-full bg-gradient-to-tr from-indigo-500/10 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDuration: '10s' }}></div>
-                <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-emerald-500/5 rounded-full blur-[100px] animate-pulse" style={{ animationDuration: '6s' }}></div>
+                <div className="absolute -top-1/2 -right-1/2 w-full h-full bg-gradient-to-br from-indigo-500/10 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDuration: '8s' }}></div>
+                <div className="absolute -bottom-1/2 -left-1/2 w-full h-full bg-gradient-to-tr from-violet-500/10 to-transparent rounded-full blur-3xl animate-pulse" style={{ animationDuration: '10s' }}></div>
+                <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-indigo-500/5 rounded-full blur-[100px] animate-pulse" style={{ animationDuration: '6s' }}></div>
             </div>
 
             <div className="relative w-full max-w-lg">
@@ -202,15 +202,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, on
                 <div className="bg-[#0B0F24]/80 backdrop-blur-xl rounded-3xl border border-[#2B2D6E]/40 p-8 shadow-2xl shadow-[#000000]/40">
                     {/* V10 Badge */}
                     <div className="flex justify-center mb-2">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 rounded-full text-[10px] font-bold text-emerald-400 tracking-wider">
-                            <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
-                            ARBA BRAIN V10.0 — AI-POWERED
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-indigo-500/10 to-violet-500/10 border border-indigo-500/20 rounded-full text-[10px] font-bold text-indigo-400 tracking-wider">
+                            <span className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-pulse"></span>
+                            ARBA BRAIN V11.3 — AI-POWERED
                         </span>
                     </div>
                     <div className="flex justify-center mb-6">
-                        <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-[#131A3B]/60 border border-[#2B2D6E]/50 shadow-lg shadow-green-500/10 relative">
+                        <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-[#131A3B]/60 border border-[#2B2D6E]/50 shadow-lg shadow-indigo-500/10 relative">
                             <ArbaLogo size={60} animated />
-                            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-full flex items-center justify-center text-[8px] font-black text-white shadow-lg">10</div>
+                            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-gradient-to-br from-indigo-400 to-violet-500 rounded-full flex items-center justify-center text-[8px] font-black text-white shadow-lg">11</div>
                         </div>
                     </div>
 
@@ -245,7 +245,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, on
 
                     {/* Success Message */}
                     {loginSuccess && (
-                        <div className="bg-green-500/10 border border-green-500/50 text-green-400 px-4 py-3 rounded-xl mb-6 text-sm text-center">
+                        <div className="bg-emerald-500/10 border border-emerald-500/50 text-emerald-400 px-4 py-3 rounded-xl mb-6 text-sm text-center">
                             {loginSuccess}
                         </div>
                     )}
@@ -297,7 +297,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, on
                                         value={teamPhone}
                                         onChange={(e) => setTeamPhone(e.target.value)}
                                         placeholder={tl(config.idPlaceholder)}
-                                        className="w-full bg-[#080B1A]/60 border border-[#2B2D6E]/50 rounded-xl py-3 ps-12 pe-4 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all shadow-inner"
+                                        className="w-full bg-[#080B1A]/60 border border-[#2B2D6E]/50 rounded-xl py-3 ps-12 pe-4 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all shadow-inner"
                                         autoComplete="tel"
                                         required
                                         id="login-team-phone"
@@ -310,7 +310,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, on
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
                                         placeholder={tl(config.idPlaceholder)}
-                                        className={`w-full bg-[#080B1A]/60 border border-[#2B2D6E]/50 rounded-xl py-3 ps-12 pe-4 text-white placeholder-slate-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all shadow-inner`}
+                                        className={`w-full bg-[#080B1A]/60 border border-[#2B2D6E]/50 rounded-xl py-3 ps-12 pe-4 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all shadow-inner`}
                                         autoComplete="email"
                                         required
                                         id="login-email"
@@ -332,7 +332,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, on
                                     value={userType === 'team_member' ? teamPassword : password}
                                     onChange={(e) => userType === 'team_member' ? setTeamPassword(e.target.value) : setPassword(e.target.value)}
                                     placeholder={t('login_enter_password')}
-                                    className="w-full bg-[#080B1A]/60 border border-[#2B2D6E]/50 rounded-xl py-3 ps-12 pe-12 text-white placeholder-slate-500 focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all shadow-inner"
+                                    className="w-full bg-[#080B1A]/60 border border-[#2B2D6E]/50 rounded-xl py-3 ps-12 pe-12 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all shadow-inner"
                                     autoComplete="current-password"
                                     required
                                     id="login-password"
@@ -355,14 +355,14 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, on
                                     type="checkbox"
                                     checked={rememberMe}
                                     onChange={(e) => setRememberMe(e.target.checked)}
-                                    className="w-4 h-4 rounded border-[#2B2D6E]/50 bg-[#080B1A] text-green-500 focus:ring-green-500 focus:ring-offset-0"
+                                    className="w-4 h-4 rounded border-[#2B2D6E]/50 bg-[#080B1A] text-indigo-500 focus:ring-indigo-500 focus:ring-offset-0"
                                 />
                                 <span>{t('login_remember')}</span>
                             </label>
                             <button
                                 type="button"
                                 onClick={() => onNavigate('password-reset')}
-                                className="text-green-400 hover:text-green-300 transition-colors"
+                                className="text-indigo-400 hover:text-indigo-300 transition-colors"
                             >
                                 {t('login_forgot')}
                             </button>
@@ -394,7 +394,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, on
                             <span>{t('login_no_account')} </span>
                             <button
                                 onClick={() => onNavigate('register')}
-                                className="text-green-400 hover:text-green-300 font-medium transition-colors"
+                                className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
                             >
                                 {t('login_create_account')}
                             </button>
@@ -435,7 +435,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ language, onNavigate, onLogin, on
                     <div className="mt-6 pt-5 border-t border-[#2B2D6E]/30">
                         <div className="flex items-center justify-center gap-4 text-[10px] text-slate-500">
                             <span className="flex items-center gap-1">
-                                <span className="text-emerald-400">⚡</span> {isRtl ? 'ذكاء اصطناعي' : 'AI-Powered'}
+                                <span className="text-indigo-400">⚡</span> {isRtl ? 'ذكاء اصطناعي' : 'AI-Powered'}
                             </span>
                             <span className="text-[#2B2D6E]">|</span>
                             <span className="flex items-center gap-1">

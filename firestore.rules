@@ -245,136 +245,341 @@ service cloud.firestore {
     }
 
     // =================== ARBA CONFIG (Employees & Manager) ===================
-    // بيانات الموظفين وبيانات المدير
+    // بيانات الموظفين وبيانات المدير — القراءة للجميع (login flow)، الكتابة للمدير فقط
     match /arba_config/{docId} {
       allow read: if true; // Needed for login flow
-      allow write: if isAuth();
+      allow write: if isAuth() && isAdmin();
     }
 
     // =================== REGISTRATION REQUESTS ===================
     match /registration_requests/{requestId} {
-      allow read: if isAuth();
+      allow read: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        resource.data.email == request.auth.token.email ||
+        isAdmin()
+      );
       allow create: if true; // Allow unauthenticated registration
-      allow update, delete: if isAuth();
+      allow update: if isAuth() && (
+        resource.data.email == request.auth.token.email ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
     }
 
     // =================== ACCOUNTING ===================
+    // الفواتير والقيود — المالك أو المحاسب أو المدير فقط
     match /invoices/{invoiceId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        isOwner(resource.data.companyId) ||
+        isAdmin()
+      );
+      allow create: if isAuth();
+      allow update: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
     }
 
     match /ledger_entries/{entryId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        isOwner(resource.data.companyId) ||
+        isAdmin()
+      );
+      allow create: if isAuth();
+      allow update, delete: if isAdmin();
     }
 
     match /accounting_clients/{clientId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        isOwner(resource.data.companyId) ||
+        isAdmin()
+      );
+      allow create: if isAuth();
+      allow update: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
     }
 
     // =================== SUPPLIER DATA (NEW) ===================
+    // بيانات الموردين — المورد أو المدير فقط
     match /supplier_products/{productId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth(); // All users can browse products
+      allow write: if isAuth() && (
+        isOwner(resource.data.supplierId) ||
+        isAdmin()
+      );
     }
 
     match /purchase_invoices/{invoiceId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        isOwner(resource.data.supplierId) ||
+        isAdmin()
+      );
+      allow create: if isAuth();
+      allow update: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
     }
 
     match /supplier_payments/{paymentId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        isOwner(resource.data.supplierId) ||
+        isAdmin()
+      );
+      allow create: if isAuth();
+      allow update, delete: if isAdmin();
     }
 
     // =================== CONNECT (Communication) ===================
+    // الرسائل — المرسل أو المستقبل أو المدير فقط
     match /connect_messages/{messageId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth() && (
+        isOwner(resource.data.senderId) ||
+        isOwner(resource.data.receiverId) ||
+        isOwner(resource.data.projectOwnerId) ||
+        isAdmin()
+      );
+      allow create: if isAuth();
+      allow update: if isAuth() && (
+        isOwner(resource.data.senderId) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
     }
 
     match /connect_mail/{mailId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth() && (
+        isOwner(resource.data.senderId) ||
+        isOwner(resource.data.receiverId) ||
+        isAdmin()
+      );
+      allow create: if isAuth();
+      allow update, delete: if isAdmin();
     }
 
     match /connect_forms/{formId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        isOwner(resource.data.projectOwnerId) ||
+        isAdmin()
+      );
+      allow create: if isAuth();
+      allow update: if isAuth() && (
+        isOwner(resource.data.userId) || isAdmin()
+      );
+      allow delete: if isAdmin();
     }
 
     match /connect_notes/{noteId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        isOwner(resource.data.projectOwnerId) ||
+        isAdmin()
+      );
+      allow create: if isAuth();
+      allow update: if isAuth() && (
+        isOwner(resource.data.userId) || isAdmin()
+      );
+      allow delete: if isAdmin();
     }
 
     match /connect_gallery/{photoId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        isOwner(resource.data.projectOwnerId) ||
+        isAdmin()
+      );
+      allow create: if isAuth();
+      allow update, delete: if isAuth() && (
+        isOwner(resource.data.userId) || isAdmin()
+      );
     }
 
     // =================== EMPLOYEES ===================
+    // بيانات الموظفين — المدير أو صاحب الشركة فقط
     match /employees/{empId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth() && (
+        request.auth.uid == empId ||
+        isAdmin()
+      );
+      allow write: if isAuth() && isAdmin();
     }
 
     // =================== NOTIFICATIONS ===================
+    // الإشعارات — المستخدم المعني فقط
     match /notifications/{notifId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
+      allow create: if isAuth();
+      allow update: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
+      allow delete: if isAuth() && isOwner(resource.data.userId);
     }
 
     // =================== ATTENDANCE ===================
+    // الحضور — الموظف يقرأ سجلاته، المدير يقرأ ويكتب الكل
     match /attendance/{recordId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth() && (
+        isOwner(resource.data.employeeId) ||
+        isAdmin()
+      );
+      allow create: if isAuth();
+      allow update, delete: if isAdmin();
     }
 
     // =================== DISCOUNT REQUESTS ===================
     match /discount_requests/{requestId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
+      allow create: if isAuth();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     // =================== SUPPORT TICKETS ===================
+    // تذاكر الدعم — صاحب التذكرة أو فريق الدعم
     match /support_tickets/{ticketId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        isOwner(resource.data.assignedTo) ||
+        isAdmin()
+      );
+      allow create: if isAuth();
+      allow update: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        isOwner(resource.data.assignedTo) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
     }
 
     // =================== AUTH USERS ===================
+    // بيانات المصادقة — المستخدم نفسه أو المدير فقط
     match /auth_users/{userId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth() && (
+        request.auth.uid == userId ||
+        isAdmin()
+      );
+      allow create: if isAuth() && request.auth.uid == userId;
+      allow update: if isAuth() && (
+        request.auth.uid == userId ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
     }
 
     // =================== EXTERNAL SUPPLIERS ===================
     match /external_suppliers/{supplierId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth(); // All users can browse suppliers
+      allow write: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
     }
 
     match /external_prices/{priceId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth(); // Price data is browsable
+      allow write: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
     }
 
     // =================== SUPPLIER STORAGE ===================
     match /supplier_storage/{storageId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth() && (
+        isOwner(resource.data.supplierId) ||
+        isAdmin()
+      );
+      allow write: if isAuth() && (
+        isOwner(resource.data.supplierId) ||
+        isAdmin()
+      );
     }
 
     // =================== DATA CORRECTIONS ===================
     match /data_correction_requests/{requestId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
+      allow create: if isAuth();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     match /supplier_notifs/{notifId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth() && (
+        isOwner(resource.data.supplierId) ||
+        isAdmin()
+      );
+      allow create: if isAuth();
+      allow update, delete: if isAdmin();
     }
 
     // =================== COMPANY SETTINGS ===================
+    // إعدادات الشركة — المدير أو المالك فقط
     match /company_settings/{settingId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        isOwner(resource.data.companyId) ||
+        isAdmin()
+      );
+      allow write: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
     }
 
     match /company_employees/{empId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth() && (
+        isOwner(resource.data.companyId) ||
+        request.auth.uid == empId ||
+        isAdmin()
+      );
+      allow write: if isAuth() && (
+        isOwner(resource.data.companyId) ||
+        isAdmin()
+      );
     }
 
     // =================== INVOICE EDIT REQUESTS ===================
     match /invoice_edit_requests/{requestId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
+      allow create: if isAuth();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     // =================== SUPPLIER REVIEWS ===================
+    // التقييمات — الكاتب أو المورد المعني أو المدير
     match /supplier_reviews/{reviewId} {
-      allow read, write: if isAuth();
+      allow read: if isAuth(); // Reviews are public to authenticated users
+      allow create: if isAuth();
+      allow update: if isAuth() && (
+        isOwner(resource.data.userId) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
     }
 
     // =================== SOVEREIGN v8.0: Temporal Audit System ===================

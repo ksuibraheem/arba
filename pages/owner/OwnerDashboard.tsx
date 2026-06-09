@@ -107,7 +107,7 @@ const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ language, onNavigate, o
         email: COMPANY_INFO.email,
         phone: COMPANY_INFO.phone,
         address: COMPANY_INFO.location[language],
-        primaryColor: '#10b981',
+        primaryColor: '#6366F1',
         secondaryColor: '#0d9488',
         logoUrl: '',
         socialLinks: {

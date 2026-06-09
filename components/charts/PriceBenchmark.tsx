@@ -36,7 +36,7 @@ const PriceBenchmark: React.FC<PriceBenchmarkProps> = ({
     statusIcon = '📉';
   } else if (deviation < 5) {
     status = 'competitive';
-    statusColor = '#10b981';
+    statusColor = '#6366F1';
     statusLabel = isAr ? 'سعر تنافسي' : 'Competitive';
     statusIcon = '✅';
   } else if (deviation < 15) {
@@ -133,7 +133,7 @@ const PriceBenchmark: React.FC<PriceBenchmarkProps> = ({
           {/* Blue (below market) 0-18% */}
           <path d={createArcPath(0, 18)} fill="none" stroke="#3b82f6" strokeWidth={compact ? 12 : 16} strokeLinecap="butt" opacity={0.7} />
           {/* Green (competitive) 18-44% */}
-          <path d={createArcPath(18, 44)} fill="none" stroke="#10b981" strokeWidth={compact ? 12 : 16} strokeLinecap="butt" opacity={0.7} />
+          <path d={createArcPath(18, 44)} fill="none" stroke="#6366F1" strokeWidth={compact ? 12 : 16} strokeLinecap="butt" opacity={0.7} />
           {/* Yellow (fair) 44-56% */}
           <path d={createArcPath(44, 56)} fill="none" stroke="#f59e0b" strokeWidth={compact ? 12 : 16} strokeLinecap="butt" opacity={0.7} />
           {/* Orange (high) 56-75% */}

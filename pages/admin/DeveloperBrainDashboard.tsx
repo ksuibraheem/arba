@@ -48,13 +48,21 @@ const DeveloperBrainDashboard: React.FC<DeveloperBrainDashboardProps> = ({ langu
               </p>
             </div>
           </div>
-          <button 
-            onClick={refreshData}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded-lg transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" />
-            {isRTL ? 'تحديث' : 'Refresh'}
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => onNavigate('ai-control-center')}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 rounded-lg transition-colors border border-indigo-500/20"
+            >
+              🧠 {isRTL ? 'مركز تحكم AI' : 'AI Control Center'}
+            </button>
+            <button 
+              onClick={refreshData}
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded-lg transition-colors"
+            >
+              <RefreshCw className="w-4 h-4" />
+              {isRTL ? 'تحديث' : 'Refresh'}
+            </button>
+          </div>
         </div>
 
         {/* Top Stats */}

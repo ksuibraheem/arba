@@ -134,11 +134,16 @@ class OfflineBufferService {
             return { success: true, source: 'firebase' };
         } catch (error) {
             console.warn('[OfflineBuffer] Firebase write failed, buffering locally:', error);
-            this.addToBuffer({
-                collectionPath, docId, data, operationType,
-                lastError: error instanceof Error ? error.message : 'Unknown error',
-            });
-            return { success: true, source: 'local' };
+            try {
+                this.addToBuffer({
+                    collectionPath, docId, data, operationType,
+                    lastError: error instanceof Error ? error.message : 'Unknown error',
+                });
+                return { success: true, source: 'local' as const, buffered: true };
+            } catch (bufferError) {
+                console.error('[OfflineBuffer] Both Firebase and buffer failed:', bufferError);
+                return { success: false, source: 'local' as const, buffered: false };
+            }
         }
     }
 
@@ -180,7 +185,7 @@ class OfflineBufferService {
         }
 
         // Save updated retry counts
-        this.saveBuffer(this.getBuffer());
+        this.saveBuffer(buffer);
         this._syncInProgress = false;
 
         const result: SyncResult = {
@@ -221,10 +226,20 @@ class OfflineBufferService {
     // =================== Private Auto-Sync ===================
 
     private async autoSync(): Promise<void> {
-        // Auto-sync is a no-op here — it requires a firebaseWriter function.
-        // The consuming code should call syncPendingWrites() with the appropriate writer.
-        // This method exists as a hook for the online event listener.
-        console.info('[OfflineBuffer] Connection restored. Call syncPendingWrites() to sync.');
+        console.info('[OfflineBuffer] Connection restored — auto-flushing buffer...');
+        // Use the default Firestore writer
+        try {
+            const { doc, setDoc } = await import('firebase/firestore');
+            const { db } = await import('../firebase/config');
+            const writer = async (collPath: string, docId: string, data: unknown) => {
+                const docRef = doc(db, collPath, docId);
+                await setDoc(docRef, data as Record<string, unknown>, { merge: true });
+            };
+            const result = await this.syncPendingWrites(writer);
+            console.info(`[OfflineBuffer] Auto-flushed: ${result.synced} synced, ${result.failed} failed`);
+        } catch (err) {
+            console.warn('[OfflineBuffer] Auto-flush failed:', err);
+        }
     }
 
     // =================== Persistence ===================

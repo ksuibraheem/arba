@@ -68,7 +68,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
                         <button
                             onClick={() => window.location.reload()}
                             style={{
-                                background: 'linear-gradient(135deg, #10b981, #059669)',
+                                background: 'linear-gradient(135deg, #6366F1, #4F46E5)',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '12px',

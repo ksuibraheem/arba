@@ -33,7 +33,7 @@ const STATUS_CONFIG: Record<RFQStatus, { color: string; icon: React.ReactNode; l
     accepted:  { color: '#3b82f6', icon: <Eye className="w-4 h-4" />,         labelAr: 'مقبول',         labelEn: 'Accepted' },
     paid:      { color: '#22c55e', icon: <Unlock className="w-4 h-4" />,      labelAr: 'مدفوع',         labelEn: 'Paid' },
     delivered: { color: '#8b5cf6', icon: <Truck className="w-4 h-4" />,       labelAr: 'تم التسليم',    labelEn: 'Delivered' },
-    completed: { color: '#10b981', icon: <CheckCircle className="w-4 h-4" />, labelAr: 'مكتمل',         labelEn: 'Completed' },
+    completed: { color: '#6366F1', icon: <CheckCircle className="w-4 h-4" />, labelAr: 'مكتمل',         labelEn: 'Completed' },
     cancelled: { color: '#ef4444', icon: <AlertTriangle className="w-4 h-4" />, labelAr: 'ملغي',       labelEn: 'Cancelled' },
     expired:   { color: '#64748b', icon: <Clock className="w-4 h-4" />,       labelAr: 'منتهي',         labelEn: 'Expired' },
 };

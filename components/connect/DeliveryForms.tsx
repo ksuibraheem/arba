@@ -229,7 +229,7 @@ const DeliveryForms: React.FC<DeliveryFormsProps> = ({ language, userId, userNam
         const r = c.getBoundingClientRect();
         const x = 'touches' in e ? e.touches[0].clientX - r.left : e.clientX - r.left;
         const y = 'touches' in e ? e.touches[0].clientY - r.top : e.clientY - r.top;
-        ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.strokeStyle = '#6366F1';
         ctx.lineTo(x, y); ctx.stroke();
     }, [isDrawing]);
     const stopDraw = useCallback(() => setIsDrawing(false), []);

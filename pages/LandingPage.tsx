@@ -60,11 +60,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#070914] via-[#0E132B] to-[#050711]" dir={isRtl ? 'rtl' : 'ltr'}>
             {/* Navigation */}
-            <nav className="fixed top-0 left-0 right-0 z-50 bg-[#070A18]/90 backdrop-blur-xl border-b border-green-500/10 shadow-lg shadow-[#000000]/20">
+            <nav className="fixed top-0 left-0 right-0 z-50 bg-[#070A18]/90 backdrop-blur-xl border-b border-indigo-500/10 shadow-lg shadow-[#000000]/20">
                 <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 sm:gap-3">
-                            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center bg-[#131A3B]/60 border border-[#2B2D6E]/40 shadow-lg shadow-green-500/10">
+                            <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center bg-[#131A3B]/60 border border-[#2B2D6E]/40 shadow-lg shadow-indigo-500/10">
                                 <ArbaLogo size={32} />
                             </div>
                             <span className="text-base sm:text-xl font-bold text-white">{tl(COMPANY_INFO.systemName)}</span>
@@ -114,7 +114,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                                                     key={opt.id}
                                                     onClick={() => { onLanguageChange(opt.id); setLangMenuOpen(false); }}
                                                     className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
-                                                        language === opt.id ? 'bg-green-500/20 text-green-400' : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'
+                                                        language === opt.id ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-300 hover:bg-slate-700/50 hover:text-white'
                                                     }`}
                                                 >
                                                     <span>{opt.flag}</span>
@@ -134,7 +134,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                             </button>
                             <button
                                 onClick={() => onNavigate('register')}
-                                className="px-3 sm:px-5 py-1.5 sm:py-2 bg-gradient-to-r from-green-500 to-lime-500 hover:from-green-400 hover:to-lime-400 text-white rounded-lg font-medium text-xs sm:text-base transition-all shadow-lg shadow-green-500/25"
+                                className="px-3 sm:px-5 py-1.5 sm:py-2 bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-400 hover:to-violet-400 text-white rounded-lg font-medium text-xs sm:text-base transition-all shadow-lg shadow-indigo-500/25"
                             >
                                 {t('nav_register')}
                             </button>
@@ -144,13 +144,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
             </nav>
 
             {/* Hero Section */}
-            <section className="pt-24 sm:pt-32 pb-12 sm:pb-20 px-4 sm:px-6 relative overflow-hidden">
+            <section className="pt-24 sm:pt-32 pb-12 sm:pb-20 px-4 sm:px-6 relative overflow-hidden gradient-hero">
                 {/* Background decorations */}
-                <div className="absolute top-20 right-0 w-[500px] h-[500px] bg-green-500/[0.04] rounded-full blur-[120px] pointer-events-none"></div>
+                <div className="absolute top-20 right-0 w-[500px] h-[500px] bg-indigo-500/[0.06] rounded-full blur-[120px] pointer-events-none"></div>
                 <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-500/[0.05] rounded-full blur-[100px] pointer-events-none"></div>
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center max-w-4xl mx-auto">
-                        <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-green-500/10 border border-green-500/20 rounded-full text-green-400 text-xs sm:text-sm mb-4 sm:mb-8">
+                        <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-indigo-400 text-xs sm:text-sm mb-4 sm:mb-8">
                             <Star className="w-4 h-4" />
                             <span>{tl(COMPANY_INFO.tagline)}</span>
                         </div>
@@ -166,7 +166,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                             <button
                                 onClick={() => onNavigate('register')}
-                                className="group w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-green-500 to-lime-500 hover:from-green-400 hover:to-lime-400 text-white rounded-xl font-bold text-base sm:text-lg transition-all shadow-xl shadow-green-500/30 flex items-center justify-center gap-2"
+                                className="group w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-400 hover:to-violet-400 text-white rounded-xl font-bold text-base sm:text-lg transition-all shadow-xl shadow-indigo-500/30 flex items-center justify-center gap-2"
                             >
                                 {t('hero_cta')}
                                 <Arrow className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -195,8 +195,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                             { value: '99.7%', label: t('stat_accuracy') },
                             { value: '18+', label: t('stat_support') }
                         ].map((stat, index) => (
-                            <div key={index} className="text-center p-6 bg-[#0E132B]/70 rounded-2xl border border-[#2B2D6E]/40 backdrop-blur-sm hover:border-green-500/20 transition-colors">
-                                <div className="text-3xl md:text-4xl font-extrabold text-green-400 mb-2">{stat.value}</div>
+                            <div key={index} className="text-center p-6 bg-[#0E132B]/70 rounded-2xl border border-[#2B2D6E]/40 backdrop-blur-sm hover:border-indigo-500/20 transition-colors hover:-translate-y-1 hover:shadow-lg hover:shadow-indigo-500/10">
+                                <div className="text-3xl md:text-4xl font-extrabold text-indigo-400 mb-2">{stat.value}</div>
                                 <div className="text-slate-400 text-sm">{stat.label}</div>
                             </div>
                         ))}
@@ -218,10 +218,10 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                             return (
                                 <div
                                     key={service.id}
-                                    className="group p-6 bg-[#0B0F24]/70 rounded-2xl border border-[#2B2D6E]/40 hover:border-green-500/40 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-green-500/10"
+                                    className="group p-6 bg-[#0B0F24]/70 rounded-2xl border border-[#2B2D6E]/40 hover:border-indigo-500/40 transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-indigo-500/10"
                                 >
-                                    <div className="w-14 h-14 bg-gradient-to-br from-green-500/20 to-indigo-500/20 rounded-xl flex items-center justify-center mb-5 group-hover:from-green-500/30 group-hover:to-indigo-500/30 transition-colors">
-                                        <Icon className="w-7 h-7 text-green-400" />
+                                    <div className="w-14 h-14 bg-gradient-to-br from-indigo-500/20 to-violet-500/20 rounded-xl flex items-center justify-center mb-5 group-hover:from-indigo-500/30 group-hover:to-violet-500/30 transition-colors">
+                                        <Icon className="w-7 h-7 text-indigo-400" />
                                     </div>
                                     <h3 className="text-lg font-bold text-white mb-3">{tl(service.title)}</h3>
                                     <p className="text-slate-400 text-sm leading-relaxed">{tl(service.description)}</p>
@@ -247,7 +247,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                                     key={index}
                                     className="text-center p-6"
                                 >
-                                    <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-green-500/25">
+                                    <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-indigo-500/25">
                                         <Icon className="w-8 h-8 text-white" />
                                     </div>
                                     <h3 className="text-lg font-bold text-white mb-2">{tl(feature.title)}</h3>
@@ -272,12 +272,12 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                             <div
                                 key={plan.id}
                                 className={`relative p-8 rounded-2xl border transition-all ${plan.popular
-                                    ? 'bg-[#0E132B] border-green-500 scale-105 shadow-2xl shadow-green-500/10 ring-1 ring-green-500/30'
+                                    ? 'bg-[#0E132B] border-indigo-500 scale-105 shadow-2xl shadow-indigo-500/10 ring-1 ring-indigo-500/30'
                                     : 'bg-[#0B0F24]/60 border-[#2B2D6E]/40 hover:border-[#2B2D6E]/70'
                                     }`}
                             >
                                 {plan.popular && (
-                                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-green-500 to-indigo-600 text-white text-sm font-medium rounded-full">
+                                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-indigo-500 to-violet-600 text-white text-sm font-medium rounded-full">
                                         {t('popular')}
                                     </div>
                                 )}
@@ -307,7 +307,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                                 <ul className="space-y-3 mb-6">
                                     {getLocalizedArray(plan.features, language).map((feature, index) => (
                                         <li key={index} className="flex items-center gap-3 text-slate-300 text-sm">
-                                            <Check className="w-4 h-4 text-green-400 flex-shrink-0" />
+                                            <Check className="w-4 h-4 text-indigo-400 flex-shrink-0" />
                                             <span>{feature}</span>
                                         </li>
                                     ))}
@@ -336,7 +336,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                                 <button
                                     onClick={() => onNavigate('payment')}
                                     className={`w-full py-3 rounded-xl font-medium transition-all ${plan.popular
-                                        ? 'bg-gradient-to-r from-green-500 to-lime-500 hover:from-green-400 hover:to-lime-400 text-white shadow-lg shadow-green-500/25'
+                                        ? 'bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-400 hover:to-violet-400 text-white shadow-lg shadow-indigo-500/25'
                                         : 'bg-[#2B2D6E] hover:bg-[#34378A] text-white shadow-lg shadow-[#2B2D6E]/20'
                                         }`}
                                 >
@@ -362,9 +362,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ language, onNavigate, onLangu
                             { icon: MapPin, label: t('contact_location'), value: tl(COMPANY_INFO.location), isLtr: false },
                             { icon: Clock, label: t('contact_hours'), value: tl(COMPANY_INFO.workingHours), isLtr: false }
                         ].map((item, index) => (
-                            <div key={index} className="text-center p-6 bg-[#0E132B]/60 rounded-2xl border border-[#2B2D6E]/40 hover:border-green-500/20 transition-colors">
-                                <div className="w-12 h-12 bg-green-500/10 rounded-xl flex items-center justify-center mx-auto mb-4">
-                                    <item.icon className="w-6 h-6 text-green-400" />
+                            <div key={index} className="text-center p-6 bg-[#0E132B]/60 rounded-2xl border border-[#2B2D6E]/40 hover:border-indigo-500/20 transition-colors hover:-translate-y-1 hover:shadow-lg hover:shadow-indigo-500/10">
+                                <div className="w-12 h-12 bg-indigo-500/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+                                    <item.icon className="w-6 h-6 text-indigo-400" />
                                 </div>
                                 <div className="text-slate-400 text-sm mb-1">{item.label}</div>
                                 <div className="text-white font-medium text-sm" dir={item.isLtr ? 'ltr' : undefined}>{item.value}</div>

@@ -16,6 +16,7 @@
 import { BENCHMARK_RATES } from '../src/engines/benchmarkData';
 import { brainTestKnowledgeBase } from './brainTestKnowledgeBase';
 import { brainFirestoreSync } from './brainFirestoreSync';
+import { priceProtectionService } from './priceProtectionService';
 
 // =================== Types ===================
 
@@ -98,7 +99,26 @@ class BrainSelfDiagnostic {
     const performance = this.checkPerformance();
     const learning = this.checkLearning();
     const knowledgeBase = this.checkKnowledgeBase();
+    const pricingHealth = this.checkPricingOutputs();
     const suggestions = this.generateSuggestions(dataHealth, performance, learning, knowledgeBase);
+
+    // ═══ Pricing output health checks ═══
+    if (pricingHealth.issues.length > 0) {
+      for (const issue of pricingHealth.issues) {
+        suggestions.push({
+          id: `pricing_${issue.type}`,
+          priority: issue.severity === 'critical' ? 'critical' : 'high',
+          area: 'pricing',
+          title: issue.title,
+          titleAr: issue.titleAr,
+          description: issue.description,
+          descriptionAr: issue.descriptionAr,
+          impact: issue.impact,
+          status: 'pending',
+          createdAt: new Date(),
+        });
+      }
+    }
 
     // Cloud sync health check
     const lastSyncStr = localStorage.getItem('arba_brain_last_sync');
@@ -177,6 +197,65 @@ class BrainSelfDiagnostic {
     };
 
     return report;
+  }
+
+  /**
+   * ═══ Layer 4: فحص مخرجات التسعير ═══
+   * يقرأ سجل التحقق من priceProtectionService
+   * يكتشف أنماط التسعير الخاطئة المتكررة
+   */
+  private checkPricingOutputs(): {
+    issues: { type: string; severity: string; title: string; titleAr: string;
+      description: string; descriptionAr: string; impact: string }[];
+  } {
+    const issues: any[] = [];
+    try {
+      const stats = priceProtectionService.getStats();
+      const logs = JSON.parse(localStorage.getItem('arba_price_validation_logs') || '[]');
+      
+      // 1. نسبة التصحيحات العالية
+      if (stats.totalValidations > 0 && stats.totalCorrections > stats.totalValidations * 3) {
+        issues.push({
+          type: 'high_correction_rate',
+          severity: 'critical',
+          title: 'High auto-correction rate in pricing',
+          titleAr: `معدل تصحيح مرتفع: ${stats.totalCorrections} تصحيح في ${stats.totalValidations} عملية`,
+          description: `Average ${Math.round(stats.totalCorrections / stats.totalValidations)} corrections per validation. Database matching may be too aggressive.`,
+          descriptionAr: 'قاعدة البيانات تعطي أسعار خاطئة بشكل متكرر — المطابقة الضبابية تحتاج تحسين',
+          impact: 'User sees incorrect prices frequently — damages trust',
+        });
+      }
+      
+      // 2. تخفيضات كبيرة متكررة
+      const highReductions = logs.filter((l: any) => (l.reductionPercent || 0) > 50);
+      if (highReductions.length >= 2) {
+        issues.push({
+          type: 'repeated_anomalies',
+          severity: 'critical',
+          title: 'Repeated >50% price reductions',
+          titleAr: `${highReductions.length} عمليات تسعير بانحراف >50%`,
+          description: 'Multiple projects needed >50% price correction. Smart pricing engine has systemic issues.',
+          descriptionAr: 'محرك التسعير الذكي يعطي أسعار مبالغة بشكل متكرر — يحتاج مراجعة جذرية',
+          impact: 'Critical — pricing engine unreliable',
+        });
+      }
+      
+      // 3. لم يتم أي فحص
+      if (stats.totalValidations === 0) {
+        issues.push({
+          type: 'no_validations',
+          severity: 'high',
+          title: 'No pricing validations recorded',
+          titleAr: 'لم يتم تسجيل أي فحص أسعار',
+          description: 'Price protection service has never been triggered. Ensure it is integrated into the processing pipeline.',
+          descriptionAr: 'خدمة حماية الأسعار لم تعمل بعد — تأكد من تفعيلها',
+          impact: 'No protection against pricing anomalies',
+        });
+      }
+    } catch (e) {
+      console.warn('Pricing output check failed:', e);
+    }
+    return { issues };
   }
 
   // ═══════════════════════════════════════════════════

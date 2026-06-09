@@ -1,5 +1,7 @@
 /**
- * 🧠 Brain Training Runner — يشغل تغذية الدماغ من بيانات R.E Farm
+ * 🧠 ARBA V11.3 — Full Brain Training Runner
+ * يشغّل تدريب الدماغ على كل بيانات mega_training v3.0
+ * 32 مصدر | 13,005 بند | 17 نوع مشروع
  */
 import * as fs from 'fs';
 import * as path from 'path';
@@ -7,136 +9,260 @@ import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const dataPath = path.resolve(__dirname, '../data/training/re_farm_mep_audit.json');
 
-console.log('🧠 ARBA Brain — Training Mode');
-console.log('='.repeat(60));
-
-// Load data
-const raw = fs.readFileSync(dataPath, 'utf-8');
-const data = JSON.parse(raw);
-
-console.log(`📂 المشروع: ${data.project}`);
-console.log(`📐 المساحة: ${data.bua?.toLocaleString() || 'N/A'} م²`);
-console.log(`📦 البنود: ${data.items?.length || 0}`);
+console.log('');
+console.log('╔══════════════════════════════════════════════════════════════╗');
+console.log('║        🧠 ARBA Brain V11.3 — Full Training Pipeline        ║');
+console.log('╚══════════════════════════════════════════════════════════════╝');
 console.log('');
 
-// Category mapping
-const CAT_MAP: Record<string, string> = {
-  'MDB': 'elec_panels', 'SMDB': 'elec_panels', 'DP ': 'elec_panels',
-  'switch': 'elec_switches', 'socket': 'elec_sockets',
-  'TYPE-L': 'lighting', 'LED': 'lighting', 'CHANDELIER': 'lighting',
-  'Cable Tray': 'cable_tray', 'mm Thickness': 'cable_tray',
-  'NYY': 'cables', 'cable': 'cables',
-  'FACP': 'fire_alarm', 'detector': 'fire_alarm', 'sounder': 'fire_alarm', 'manual station': 'fire_alarm', 'monitor module': 'fire_alarm',
-  'camera': 'cctv', 'camara': 'cctv', 'NVR': 'cctv', 'WORK STATION': 'cctv', 'STORAGE': 'cctv',
-  'speaker': 'pa_system', 'Public address': 'pa_system', 'microphone': 'pa_system',
-  'RJ 45': 'data_network', 'Fiber': 'data_network', 'IDT': 'data_network',
-  'earth': 'earthing',
-  'Lavator': 'sanitary', 'Water Closet': 'sanitary', 'Sink': 'sanitary', 'Shower': 'sanitary', 'Hand Spray': 'sanitary', 'Ablution': 'sanitary',
-  'mm dia': 'pipes_ppr', 'Trench Drain': 'drainage',
-  'Pump': 'pumps', 'Booster': 'pumps',
-  'AIR DUCT': 'ductwork', 'EXHAUST': 'ductwork', 'FRESH AIR': 'ductwork',
-  'EF-': 'fans', 'FAF-': 'fans',
-  'VRV': 'vrv_system', 'VRF': 'vrv_system',
-  'Diffuser': 'air_terminals', 'SLD': 'air_terminals', 'RLD': 'air_terminals', 'SD-': 'air_terminals', 'RD-': 'air_terminals', 'SAG': 'air_terminals', 'RAG': 'air_terminals', 'ELD': 'air_terminals',
-  'DV-': 'hvac_valves', 'Damper': 'hvac_dampers',
-  '"': 'copper_pipes', // copper pipe sizes like 3/8", 1/2" etc
-  'Isolated': 'isolators', 'Disconnect': 'disconnects',
-  'Elevator': 'elevator_supply',
-  'Sauna': 'sauna_supply', 'EWH': 'ewh_supply',
+// ══════════════════════════════════════════════════
+// 1. تحميل mega training v3.0
+// ══════════════════════════════════════════════════
+const megaPath = path.resolve(__dirname, '../training_data/trained/brain_mega_training.json');
+console.log('📂 Step 1: Loading mega training v3.0...');
+
+if (!fs.existsSync(megaPath)) {
+  console.error('❌ لم يتم العثور على brain_mega_training.json');
+  process.exit(1);
+}
+
+const megaRaw = fs.readFileSync(megaPath, 'utf-8');
+const mega = JSON.parse(megaRaw);
+const sizeKB = (Buffer.byteLength(megaRaw) / 1024).toFixed(0);
+
+console.log(`  ✅ Version: ${mega.version}`);
+console.log(`  ✅ Sources: ${mega.totalSources}`);
+console.log(`  ✅ Items:   ${mega.totalItems?.toLocaleString()}`);
+console.log(`  ✅ Size:    ${sizeKB} KB`);
+console.log('');
+
+// ══════════════════════════════════════════════════
+// 2. تحليل وتصنيف كل البنود
+// ══════════════════════════════════════════════════
+console.log('🔍 Step 2: Analyzing all sources...');
+console.log('─'.repeat(90));
+
+interface CategoryStats {
+  items: number;
+  pricesFound: number;
+  avgPrice: number;
+  minPrice: number;
+  maxPrice: number;
+  units: Set<string>;
+  sources: Set<string>;
+  totalValue: number;
+}
+
+const categories: Record<string, CategoryStats> = {};
+const regionStats: Record<string, { items: number; sources: number; types: Set<string> }> = {};
+const typeStats: Record<string, { items: number; sources: number }> = {};
+let totalItems = 0;
+let totalPriced = 0;
+let totalUnpriced = 0;
+
+// الكلمات المفتاحية للتصنيف
+const CAT_KEYWORDS: Record<string, string[]> = {
+  'concrete':     ['خرسان', 'concrete', 'نظافة', 'blinding', 'ready mix'],
+  'steel_rebar':  ['حديد تسليح', 'rebar', 'steel', 'تسليح'],
+  'formwork':     ['شدة', 'قوالب', 'formwork', 'shuttering'],
+  'excavation':   ['حفر', 'excavat', 'حفريات'],
+  'backfill':     ['ردم', 'backfill', 'تربة'],
+  'blocks':       ['بلوك', 'block', 'طوب'],
+  'plaster':      ['لياسة', 'plaster', 'مح ارة'],
+  'tiles':        ['بلاط', 'سيراميك', 'بورسلان', 'tile', 'ceramic', 'porcelain'],
+  'paint':        ['دهان', 'paint', 'طلاء'],
+  'waterproofing':['عزل مائي', 'waterproof', 'بيتومين'],
+  'insulation':   ['عزل حراري', 'thermal', 'insulation', 'فوم'],
+  'doors':        ['باب', 'door', 'أبواب'],
+  'windows':      ['شباك', 'نافذة', 'window', 'ألمنيوم', 'aluminum'],
+  'electrical':   ['كهرب', 'elect', 'كابل', 'cable', 'مفتاح', 'switch', 'لوحة', 'panel'],
+  'plumbing':     ['صحي', 'سباكة', 'plumb', 'مواسير', 'pipe', 'صرف'],
+  'hvac':         ['تكييف', 'hvac', 'تبريد', 'cooling', 'مكيف', 'ac'],
+  'fire_safety':  ['حريق', 'fire', 'إطفاء', 'كاشف', 'detector'],
+  'elevator':     ['مصعد', 'elevator', 'lift'],
+  'landscaping':  ['تنسيق', 'landscape', 'إنترلوك', 'interlock', 'زراعة'],
+  'cleaning':     ['تنظيف', 'cleaning', 'نظافة عامة'],
+  'demolition':   ['هدم', 'إزالة', 'demolit', 'فك'],
 };
 
-function categorize(desc: string): string {
-  for (const [kw, cat] of Object.entries(CAT_MAP)) {
-    if (desc.includes(kw)) return cat;
+function categorizeItem(desc: string): string {
+  const lower = desc.toLowerCase();
+  for (const [cat, keywords] of Object.entries(CAT_KEYWORDS)) {
+    for (const kw of keywords) {
+      if (lower.includes(kw.toLowerCase())) return cat;
+    }
   }
-  return 'uncategorized';
+  return 'general';
 }
 
-// Process items
-const categories: Record<string, { items: number; totalCost: number; prices: number[]; units: string[] }> = {};
-let totalFed = 0;
-let totalSkipped = 0;
+// معالجة كل المصادر
+for (const [srcKey, src] of Object.entries(mega.sources) as [string, any][]) {
+  const items = Array.isArray(src.items) ? src.items : [];
+  const srcType = src.type || 'unknown';
+  const srcRegion = src.location || 'saudi';
 
-for (const item of (data.items || [])) {
-  if (!item.boqPrice || item.boqPrice <= 0) {
-    totalSkipped++;
-    continue;
+  // إحصائيات المنطقة
+  if (!regionStats[srcRegion]) regionStats[srcRegion] = { items: 0, sources: 0, types: new Set() };
+  regionStats[srcRegion].items += items.length;
+  regionStats[srcRegion].sources++;
+  regionStats[srcRegion].types.add(srcType);
+
+  // إحصائيات النوع
+  if (!typeStats[srcType]) typeStats[srcType] = { items: 0, sources: 0 };
+  typeStats[srcType].items += items.length;
+  typeStats[srcType].sources++;
+
+  let srcPriced = 0;
+  let srcUnpriced = 0;
+
+  for (const item of items) {
+    totalItems++;
+    const desc = item.desc || item.description || item.spec || item.category || '';
+    const price = item.unitPrice || item.originalPrice || item.boqPrice || item.avgPrice || item.rate || 0;
+    const unit = item.unit || '';
+    const qty = item.qty || 0;
+
+    const cat = desc ? categorizeItem(desc) : 'uncategorized';
+
+    if (!categories[cat]) {
+      categories[cat] = {
+        items: 0, pricesFound: 0, avgPrice: 0, minPrice: Infinity, maxPrice: 0,
+        units: new Set(), sources: new Set(), totalValue: 0,
+      };
+    }
+
+    categories[cat].items++;
+    categories[cat].sources.add(srcKey);
+    if (unit) categories[cat].units.add(unit);
+
+    if (price > 0) {
+      categories[cat].pricesFound++;
+      categories[cat].minPrice = Math.min(categories[cat].minPrice, price);
+      categories[cat].maxPrice = Math.max(categories[cat].maxPrice, price);
+      categories[cat].totalValue += price * (qty || 1);
+      totalPriced++;
+      srcPriced++;
+    } else {
+      totalUnpriced++;
+      srcUnpriced++;
+    }
   }
-  
-  const cat = categorize(item.desc || '');
-  if (!categories[cat]) {
-    categories[cat] = { items: 0, totalCost: 0, prices: [], units: [] };
-  }
-  
-  categories[cat].items++;
-  categories[cat].totalCost += item.boqPrice * item.qty;
-  categories[cat].prices.push(item.boqPrice);
-  if (!categories[cat].units.includes(item.unit)) {
-    categories[cat].units.push(item.unit);
-  }
-  totalFed++;
+
+  const pctPriced = items.length > 0 ? Math.round(srcPriced / items.length * 100) : 0;
+  console.log(`  ${srcKey.padEnd(35)} ${String(items.length).padStart(6)} items  ${String(pctPriced).padStart(3)}% priced  [${srcType}]`);
 }
 
-// Print results
-console.log(`✅ تم تغذية: ${totalFed} بند`);
-console.log(`⏭️ تم تخطي: ${totalSkipped} بند (بدون سعر)`);
+// حساب المتوسطات
+for (const cat of Object.values(categories)) {
+  if (cat.pricesFound > 0) {
+    cat.avgPrice = Math.round(cat.totalValue / cat.pricesFound);
+  }
+  if (cat.minPrice === Infinity) cat.minPrice = 0;
+}
+
 console.log('');
 
-console.log('📊 الأسعار المرجعية المستخلصة لكل فئة:');
-console.log('-'.repeat(90));
-console.log(`${'الفئة'.padEnd(20)} ${'البنود'.padStart(6)} ${'الحد الأدنى'.padStart(12)} ${'المتوسط'.padStart(12)} ${'الحد الأعلى'.padStart(12)} ${'إجمالي الفئة'.padStart(14)}`);
-console.log('-'.repeat(90));
+// ══════════════════════════════════════════════════
+// 3. بناء الأسعار المرجعية (Benchmarks)
+// ══════════════════════════════════════════════════
+console.log('📊 Step 3: Building price benchmarks...');
+console.log('─'.repeat(100));
+console.log(`  ${'الفئة'.padEnd(20)} ${'البنود'.padStart(6)} ${'مسعّر'.padStart(6)} ${'الأدنى'.padStart(10)} ${'المتوسط'.padStart(10)} ${'الأعلى'.padStart(10)} ${'المصادر'.padStart(8)} ${'الوحدات'.padStart(15)}`);
+console.log('─'.repeat(100));
 
-const sorted = Object.entries(categories).sort((a, b) => b[1].totalCost - a[1].totalCost);
-let grandTotal = 0;
+const sortedCats = Object.entries(categories).sort((a, b) => b[1].items - a[1].items);
 
-for (const [cat, info] of sorted) {
-  const avg = Math.round(info.prices.reduce((s, p) => s + p, 0) / info.prices.length);
-  const min = Math.round(Math.min(...info.prices));
-  const max = Math.round(Math.max(...info.prices));
-  grandTotal += info.totalCost;
-  
-  console.log(`  ${cat.padEnd(19)} ${String(info.items).padStart(6)} ${min.toLocaleString().padStart(12)} ${avg.toLocaleString().padStart(12)} ${max.toLocaleString().padStart(12)} ${Math.round(info.totalCost).toLocaleString().padStart(14)} SAR`);
+for (const [cat, info] of sortedCats) {
+  const unitsStr = [...info.units].slice(0, 3).join(', ');
+  console.log(`  ${cat.padEnd(20)} ${String(info.items).padStart(6)} ${String(info.pricesFound).padStart(6)} ${info.minPrice.toLocaleString().padStart(10)} ${info.avgPrice.toLocaleString().padStart(10)} ${info.maxPrice.toLocaleString().padStart(10)} ${String(info.sources.size).padStart(8)} ${unitsStr.padStart(15)}`);
 }
 
-console.log('-'.repeat(90));
-console.log(`  ${'الإجمالي'.padEnd(19)} ${String(totalFed).padStart(6)} ${''.padStart(12)} ${''.padStart(12)} ${''.padStart(12)} ${Math.round(grandTotal).toLocaleString().padStart(14)} SAR`);
+console.log('─'.repeat(100));
+console.log(`  ${'الإجمالي'.padEnd(20)} ${String(totalItems).padStart(6)} ${String(totalPriced).padStart(6)}`);
+console.log('');
 
-// Cost per m2 analysis
-const bua = data.bua || 6975.87;
-console.log(`\n💰 تكلفة MEP لكل م² حسب القسم (BUA = ${bua.toLocaleString()} م²):`);
-console.log('-'.repeat(50));
-for (const [cat, info] of sorted) {
-  const perM2 = info.totalCost / bua;
-  const pct = (info.totalCost / grandTotal * 100).toFixed(1);
-  const bar = '█'.repeat(Math.round(parseFloat(pct) / 2));
-  console.log(`  ${cat.padEnd(19)} ${perM2.toFixed(1).padStart(8)} ر.س/م²  ${pct.padStart(5)}%  ${bar}`);
+// ══════════════════════════════════════════════════
+// 4. تقرير المناطق
+// ══════════════════════════════════════════════════
+console.log('🗺️  Step 4: Regional coverage...');
+console.log('─'.repeat(60));
+for (const [region, stats] of Object.entries(regionStats).sort((a, b) => b[1].items - a[1].items)) {
+  console.log(`  ${region.padEnd(15)} ${String(stats.items).padStart(6)} items  ${String(stats.sources).padStart(3)} sources  [${[...stats.types].join(', ')}]`);
 }
-console.log('-'.repeat(50));
-console.log(`  ${'الإجمالي MEP'.padEnd(19)} ${(grandTotal/bua).toFixed(1).padStart(8)} ر.س/م²  100.0%`);
+console.log('');
 
-// Save structured baseline
-const baseline = {
-  projectType: 'residential_farm',
-  bua_m2: bua,
-  mepCostPerM2: Math.round(grandTotal / bua),
-  categories: Object.fromEntries(sorted.map(([cat, info]) => {
-    const prices = info.prices;
-    return [cat, {
-      avgPrice: Math.round(prices.reduce((s,p) => s+p, 0) / prices.length),
-      minPrice: Math.round(Math.min(...prices)),
-      maxPrice: Math.round(Math.max(...prices)),
-      samples: prices.length,
-      costPerM2: Math.round(info.totalCost / bua * 100) / 100,
-      percentOfTotal: Math.round(info.totalCost / grandTotal * 1000) / 10,
-    }];
-  })),
+// ══════════════════════════════════════════════════
+// 5. تقرير أنواع المشاريع
+// ══════════════════════════════════════════════════
+console.log('🏗️  Step 5: Project types coverage...');
+console.log('─'.repeat(60));
+for (const [type, stats] of Object.entries(typeStats).sort((a, b) => b[1].items - a[1].items)) {
+  const bar = '█'.repeat(Math.min(Math.round(stats.items / 200), 30));
+  console.log(`  ${type.padEnd(25)} ${String(stats.items).padStart(6)} items  ${bar}`);
+}
+console.log('');
+
+// ══════════════════════════════════════════════════
+// 6. حفظ نتائج التدريب
+// ══════════════════════════════════════════════════
+console.log('💾 Step 6: Saving training results...');
+
+const trainingResult = {
+  version: '3.0',
   trainedAt: new Date().toISOString(),
+  brainVersion: 'V11.3',
+  megaVersion: mega.version,
+  stats: {
+    totalSources: mega.totalSources,
+    totalItems,
+    totalPriced,
+    totalUnpriced,
+    pricedPercent: Math.round(totalPriced / totalItems * 100),
+    categoriesCount: Object.keys(categories).length,
+    regionsCount: Object.keys(regionStats).length,
+    projectTypesCount: Object.keys(typeStats).length,
+  },
+  benchmarks: Object.fromEntries(
+    sortedCats.map(([cat, info]) => [cat, {
+      items: info.items,
+      pricesFound: info.pricesFound,
+      avgPrice: info.avgPrice,
+      minPrice: info.minPrice,
+      maxPrice: info.maxPrice,
+      units: [...info.units],
+      sourcesCount: info.sources.size,
+      totalValue: Math.round(info.totalValue),
+    }])
+  ),
+  regions: Object.fromEntries(
+    Object.entries(regionStats).map(([r, s]) => [r, {
+      items: s.items,
+      sources: s.sources,
+      types: [...s.types],
+    }])
+  ),
+  projectTypes: typeStats,
 };
 
-const outPath = path.resolve(__dirname, '../data/training/brain_baseline_farm.json');
-fs.writeFileSync(outPath, JSON.stringify(baseline, null, 2));
-console.log(`\n💾 تم حفظ الأسعار المرجعية: brain_baseline_farm.json`);
-console.log('🧠 الدماغ جاهز للاستخدام!');
+const outPath = path.resolve(__dirname, '../training_data/trained/brain_training_results_v3.json');
+fs.writeFileSync(outPath, JSON.stringify(trainingResult, null, 2));
+console.log(`  ✅ Saved: brain_training_results_v3.json`);
+
+// ══════════════════════════════════════════════════
+// 7. التقرير النهائي
+// ══════════════════════════════════════════════════
+console.log('');
+console.log('╔══════════════════════════════════════════════════════════════╗');
+console.log('║              🧠 Training Complete — ARBA V11.3             ║');
+console.log('╠══════════════════════════════════════════════════════════════╣');
+console.log(`║  Sources:        ${String(mega.totalSources).padStart(6)}                                   ║`);
+console.log(`║  Total Items:    ${String(totalItems).padStart(6).toLocaleString()}                                   ║`);
+console.log(`║  Priced Items:   ${String(totalPriced).padStart(6)} (${String(Math.round(totalPriced/totalItems*100)).padStart(2)}%)                              ║`);
+console.log(`║  Categories:     ${String(Object.keys(categories).length).padStart(6)}                                   ║`);
+console.log(`║  Regions:        ${String(Object.keys(regionStats).length).padStart(6)}                                   ║`);
+console.log(`║  Project Types:  ${String(Object.keys(typeStats).length).padStart(6)}                                   ║`);
+console.log('╚══════════════════════════════════════════════════════════════╝');
+console.log('');
+console.log('🧠 الدماغ مدرّب وجاهز للاستخدام!');
+console.log('');

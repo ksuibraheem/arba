@@ -1,13 +1,13 @@
 /**
- * 🧠 ARBA Brain v2.0 — Data Loader & Intelligence Layer
+ * 🧠 ARBA V11.3 — Brain Data Loader & Intelligence Layer
  * يحمّل بيانات التدريب من brain_mega_training.json
  * ويحولها إلى أوزان ذكية يستخدمها المحرك في التسعير
  * 
- * v2.0: دعم 10 مصادر بيانات | 5,121 بند | 3 مناطق جغرافية
+ * Brain Data v3.0: دعم 32 مصدر بيانات | 13,005 بند | 5+ مناطق جغرافية
  */
 
 import { StandardWeight, collectiveBrainService } from './collectiveBrainService';
-import megaTrainingData from '../data/training/brain_mega_training.json';
+import megaTrainingData from '../training_data/trained/brain_mega_training.json';
 
 // =================== Types ===================
 
@@ -301,15 +301,176 @@ class BrainDataLoader {
       });
     });
 
-    // ─── 6. Generate updated standard weights ───
-    // Cost per sqm (updated from real data)
+    // ─── 6v3. Process AL SHAFA Structural Villas ───
+    const villaKeys = ['AL_SHAFA_Villa_A', 'AL_SHAFA_Villa_B', 'AL_SHAFA_Villa_C', 'AL_SHAFA_Villa_C_Attached', 'AL_SHAFA_Villa_VIP'];
+    for (const villaKey of villaKeys) {
+      const villaSrc = megaData.sources[villaKey];
+      if (!villaSrc?.items) continue;
+      const items = Array.isArray(villaSrc.items) ? villaSrc.items : [];
+      items.forEach((item: any) => {
+        const desc = (item.desc || item.description || '').toLowerCase();
+        const price = item.originalPrice || item.unitPrice || 0;
+        const unit = item.unit || '';
+        if (desc && price > 0) {
+          // Auto-categorize structural items
+          let cat = 'structural_general';
+          if (desc.includes('concrete') || desc.includes('خرسان')) cat = 'concrete';
+          else if (desc.includes('steel') || desc.includes('حديد') || desc.includes('rebar')) cat = 'steel_rebar';
+          else if (desc.includes('formwork') || desc.includes('قوالب') || desc.includes('شدة')) cat = 'formwork';
+          else if (desc.includes('excavat') || desc.includes('حفر')) cat = 'excavation';
+          else if (desc.includes('backfill') || desc.includes('ردم')) cat = 'backfill';
+          else if (desc.includes('block') || desc.includes('بلوك')) cat = 'blocks';
+          else if (desc.includes('waterproof') || desc.includes('عزل')) cat = 'waterproofing';
+          
+          const benchKey = `villa_str_${cat}`;
+          if (!benchmarks[benchKey]) {
+            benchmarks[benchKey] = { category: cat, avgPrice: price, minPrice: price, maxPrice: price, unit, samples: 1, sources: [villaKey] };
+          } else {
+            const b = benchmarks[benchKey];
+            b.samples++;
+            b.avgPrice = Math.round((b.avgPrice * (b.samples - 1) + price) / b.samples);
+            b.minPrice = Math.min(b.minPrice, price);
+            b.maxPrice = Math.max(b.maxPrice, price);
+            if (!b.sources.includes(villaKey)) b.sources.push(villaKey);
+          }
+        }
+      });
+    }
+
+    // ─── 7v3. Process Asir Charity (architectural + electrical) ───
+    const asirKeys = ['Asir_Charity_ARCH', 'Asir_Charity_LEFT', 'Asir_Charity_ELEC'];
+    for (const asirKey of asirKeys) {
+      const asirSrc = megaData.sources[asirKey];
+      if (!asirSrc?.items) continue;
+      const items = Array.isArray(asirSrc.items) ? asirSrc.items : [];
+      items.forEach((item: any) => {
+        const desc = (item.desc || item.description || '').toLowerCase();
+        const price = item.originalPrice || item.unitPrice || 0;
+        if (desc && price > 0) {
+          let cat = asirKey.includes('ELEC') ? 'electrical' : 'architectural';
+          const benchKey = `asir_${cat}`;
+          if (!benchmarks[benchKey]) {
+            benchmarks[benchKey] = { category: cat, avgPrice: price, minPrice: price, maxPrice: price, unit: item.unit || '', samples: 1, sources: [asirKey] };
+          } else {
+            const b = benchmarks[benchKey];
+            b.samples++;
+            b.avgPrice = Math.round((b.avgPrice * (b.samples - 1) + price) / b.samples);
+            b.minPrice = Math.min(b.minPrice, price);
+            b.maxPrice = Math.max(b.maxPrice, price);
+          }
+        }
+      });
+      // Add Asir as a region
+      if (!regionalIndex['asir']) {
+        const prices = items.filter((i: any) => (i.originalPrice || i.unitPrice || 0) > 0).map((i: any) => i.originalPrice || i.unitPrice);
+        if (prices.length > 0) {
+          regionalIndex['asir'] = {
+            region: 'asir', items: items.slice(0, 20),
+            avgUnitPrice: Math.round(prices.reduce((s: number, p: number) => s + p, 0) / prices.length),
+            itemCount: items.length,
+          };
+        }
+      }
+    }
+
+    // ─── 8v3. Process TBC FM Supplier Data (largest source ~7,142 items) ───
+    const tbcKeys = ['TBC_FM_Pricing_Sheet', 'TBC_FM_Final_Pricing', 'TBC_FM_Real_Pricing', 'TBC_FM_Approved_Pricing'];
+    for (const tbcKey of tbcKeys) {
+      const tbcSrc = megaData.sources[tbcKey];
+      if (!tbcSrc?.items) continue;
+      const items = Array.isArray(tbcSrc.items) ? tbcSrc.items : [];
+      items.forEach((item: any) => {
+        const desc = (item.desc || item.description || '').toLowerCase();
+        const price = item.originalPrice || item.unitPrice || 0;
+        if (desc && price > 0 && desc.length > 5) {
+          // FM items cover: HVAC, plumbing, electrical, fire, finishes, etc.
+          let cat = 'fm_general';
+          if (desc.includes('hvac') || desc.includes('تكييف') || desc.includes('تبريد')) cat = 'fm_hvac';
+          else if (desc.includes('plumb') || desc.includes('صحي') || desc.includes('سباكة')) cat = 'fm_plumbing';
+          else if (desc.includes('elect') || desc.includes('كهرب')) cat = 'fm_electrical';
+          else if (desc.includes('fire') || desc.includes('حريق') || desc.includes('إطفاء')) cat = 'fm_fire';
+          else if (desc.includes('paint') || desc.includes('دهان')) cat = 'fm_finishes';
+          
+          const benchKey = `tbc_${cat}`;
+          if (!benchmarks[benchKey]) {
+            benchmarks[benchKey] = { category: cat, avgPrice: price, minPrice: price, maxPrice: price, unit: item.unit || '', samples: 1, sources: [tbcKey] };
+          } else {
+            const b = benchmarks[benchKey];
+            b.samples++;
+            b.avgPrice = Math.round((b.avgPrice * (b.samples - 1) + price) / b.samples);
+            b.minPrice = Math.min(b.minPrice, price);
+            b.maxPrice = Math.max(b.maxPrice, price);
+            if (!b.sources.includes(tbcKey)) b.sources.push(tbcKey);
+          }
+        }
+      });
+    }
+
+    // ─── 9v3. Process Dhahran Office + Villa BOQs + Annex + Tender ───
+    const miscKeys = [
+      { key: 'Dhahran_Office', type: 'office_fitout', region: 'dammam' },
+      { key: 'Villa_BOQ_Final', type: 'residential_villa', region: 'saudi' },
+      { key: 'Villa_BOQ_Original', type: 'residential_villa', region: 'saudi' },
+      { key: 'Annex_1_BOQ', type: 'mixed', region: 'saudi' },
+      { key: 'Tender_Real_Root', type: 'tender', region: 'saudi' },
+    ];
+    for (const { key: miscKey, type: miscType, region: miscRegion } of miscKeys) {
+      const miscSrc = megaData.sources[miscKey];
+      if (!miscSrc?.items) continue;
+      const items = Array.isArray(miscSrc.items) ? miscSrc.items : [];
+      items.forEach((item: any) => {
+        const desc = (item.desc || item.description || '').toLowerCase();
+        const price = item.originalPrice || item.unitPrice || 0;
+        if (desc && price > 0) {
+          const benchKey = `${miscKey.toLowerCase()}_items`;
+          if (!benchmarks[benchKey]) {
+            benchmarks[benchKey] = { category: miscType, avgPrice: price, minPrice: price, maxPrice: price, unit: item.unit || '', samples: 1, sources: [miscKey] };
+          } else {
+            const b = benchmarks[benchKey];
+            b.samples++;
+            b.avgPrice = Math.round((b.avgPrice * (b.samples - 1) + price) / b.samples);
+            b.minPrice = Math.min(b.minPrice, price);
+            b.maxPrice = Math.max(b.maxPrice, price);
+          }
+        }
+      });
+    }
+
+    // ─── 10v3. Process pending feed data ───
+    const feedKeys = ['tbc_fm_1226_feed', 'v11_price_history', 'extracted_boq_residential', 'extracted_boq_v2_adf'];
+    for (const feedKey of feedKeys) {
+      const feedSrc = megaData.sources[feedKey];
+      if (!feedSrc?.items) continue;
+      const items = Array.isArray(feedSrc.items) ? feedSrc.items : [];
+      items.forEach((item: any) => {
+        const price = item.avgPrice || item.unitPrice || item.unitRate || 0;
+        if (price > 0) {
+          const cat = item.category || feedKey;
+          const benchKey = `feed_${cat}`;
+          if (!benchmarks[benchKey]) {
+            benchmarks[benchKey] = { category: cat, avgPrice: price, minPrice: price, maxPrice: price, unit: item.unit || '', samples: item.samples || 1, sources: [feedKey] };
+          } else {
+            const b = benchmarks[benchKey];
+            b.samples += (item.samples || 1);
+            b.avgPrice = Math.round((b.avgPrice + price) / 2);
+            b.minPrice = Math.min(b.minPrice, item.minPrice || price);
+            b.maxPrice = Math.max(b.maxPrice, item.maxPrice || price);
+          }
+        }
+      });
+    }
+
+    // ─── 11. Generate updated standard weights ───
+    // Cost per sqm (updated from real data — v3.0 with 32 sources)
     weights.push(
-      { metric: 'cost_per_sqm_villa', value: 1850, unit: 'ر.س/م²', sampleSize: 0, confidence: 0.3, lastUpdated: now },
+      { metric: 'cost_per_sqm_villa', value: 1850, unit: 'ر.س/م²', sampleSize: 7, confidence: 0.75, lastUpdated: now },
       { metric: 'cost_per_sqm_tower', value: 2400, unit: 'ر.س/م²', sampleSize: 0, confidence: 0.3, lastUpdated: now },
       { metric: 'cost_per_sqm_residential_building', value: 2100, unit: 'ر.س/م²', sampleSize: 1, confidence: 0.6, lastUpdated: now },
       { metric: 'cost_per_sqm_school', value: 1800, unit: 'ر.س/م²', sampleSize: 8, confidence: 0.75, lastUpdated: now },
       { metric: 'cost_per_sqm_hospital', value: 3500, unit: 'ر.س/م²', sampleSize: 0, confidence: 0.3, lastUpdated: now },
       { metric: 'cost_per_sqm_mosque', value: 2200, unit: 'ر.س/م²', sampleSize: 0, confidence: 0.3, lastUpdated: now },
+      { metric: 'cost_per_sqm_office', value: 2050, unit: 'ر.س/م²', sampleSize: 1, confidence: 0.6, lastUpdated: now },
+      { metric: 'cost_per_sqm_fm', value: 1650, unit: 'ر.س/م²', sampleSize: 4, confidence: 0.7, lastUpdated: now },
     );
 
     // Concrete per sqm (updated from STR Package: C35 for 6 floors)
@@ -335,7 +496,7 @@ class BrainDataLoader {
       { metric: 'waste_paint_default', value: 5, unit: '%', sampleSize: 8, confidence: 0.75, lastUpdated: now },
     );
 
-    // ─── 7. Default error patterns (from SOW-TBC audit) ───
+    // ─── 12. Default error patterns (from SOW-TBC audit) ───
     if (errorPatterns.length === 0) {
       errorPatterns.push(
         { type: 'price_inflation', description: 'سعر أعلى من benchmark بأكثر من 400%', threshold: 4.0, action: 'تحذير: سعر مبالغ فيه' },

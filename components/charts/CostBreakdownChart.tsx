@@ -53,7 +53,7 @@ const CostBreakdownChart: React.FC<CostBreakdownProps> = ({
     {
       label: isAr ? 'الربح' : 'Profit',
       value: profit,
-      color: '#10b981',
+      color: '#6366F1',
       icon: '💰',
     },
   ].filter(s => s.value > 0);

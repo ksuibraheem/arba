@@ -200,7 +200,7 @@ const PriceQuote: React.FC<PriceQuoteProps> = ({
                 name: COMPANY_INFO.systemName[language],
                 tagline: COMPANY_INFO.tagline[language],
                 logo: 'أ',
-                color: '#059669',
+                color: '#4F46E5',
                 phone: COMPANY_INFO.phone,
                 email: COMPANY_INFO.email,
                 cr: '',
@@ -550,7 +550,7 @@ const PriceQuote: React.FC<PriceQuoteProps> = ({
             <tr><td colspan="8"></td><td style="font-weight:bold;">التكلفة المباشرة</td><td style="font-weight:bold;">${totals.totalDirect.toFixed(2)}</td></tr>
             <tr><td colspan="8"></td><td>المصاريف الإدارية (10%)</td><td>${totals.totalOverhead.toFixed(2)}</td></tr>
             <tr><td colspan="8"></td><td>الربح (15%)</td><td>${totals.totalProfit.toFixed(2)}</td></tr>
-            <tr style="background:#059669; color:white;"><td colspan="8"></td><td style="font-weight:bold;">الإجمالي النهائي</td><td style="font-weight:bold; font-size:14px;">${totals.finalPrice.toFixed(2)}</td></tr>
+            <tr style="background:#4F46E5; color:white;"><td colspan="8"></td><td style="font-weight:bold;">الإجمالي النهائي</td><td style="font-weight:bold; font-size:14px;">${totals.finalPrice.toFixed(2)}</td></tr>
         </table>
         </body>
         </html>`;

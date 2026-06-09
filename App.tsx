@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, Suspense } from 'react';
 import { GoogleGenAI } from "@google/genai";
 import Sidebar from './components/Sidebar';
 import StatsGrid from './components/StatsGrid';
@@ -35,24 +35,24 @@ import UnderReviewPage from './pages/UnderReviewPage';
 import PaymentUploadPage from './pages/PaymentUploadPage';
 import { registrationService } from './services/registrationService';
 import { supplierService } from './services/supplierService';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import ManagerDashboard from './pages/employees/ManagerDashboard';
+const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboard'));
+const ManagerDashboard = React.lazy(() => import('./pages/employees/ManagerDashboard'));
 import EmployeeDashboard from './pages/employees/EmployeeDashboard';
 import { employeeService, Employee, MANAGER_CREDENTIALS, getManagerCredentials, loadEmployeesFromFirestore, loadManagerCredentialsFromFirestore } from './services/employeeService';
-import HRPage from './pages/employees/roles/HRPage';
-import AccountantPage from './pages/employees/roles/AccountantPage';
+const HRPage = React.lazy(() => import('./pages/employees/roles/HRPage'));
+const AccountantPage = React.lazy(() => import('./pages/employees/roles/AccountantPage'));
 import PasswordResetPage from './pages/PasswordResetPage';
 import SupportCenterPage from './pages/SupportCenterPage';
 import CloudSyncPage from './pages/CloudSyncPage';
-import SupplierDashboard from './pages/supplier/SupplierDashboard';
-import QuantitySurveyorPage from './pages/employees/roles/QuantitySurveyorPage';
-import SupportPage from './pages/employees/roles/SupportPage';
+const SupplierDashboard = React.lazy(() => import('./pages/supplier/SupplierDashboard'));
+const QuantitySurveyorPage = React.lazy(() => import('./pages/employees/roles/QuantitySurveyorPage'));
+const SupportPage = React.lazy(() => import('./pages/employees/roles/SupportPage'));
 import SupplierCatalog from './pages/SupplierCatalog';
 import OwnerDashboard from './pages/owner/OwnerDashboard';
-import CompaniesPage from './pages/admin/CompaniesPage';
-import DataPage from './pages/admin/DataPage';
-import UsersPage from './pages/admin/UsersPage';
-import SuppliersManagementPage from './pages/admin/SuppliersManagementPage';
+const CompaniesPage = React.lazy(() => import('./pages/admin/CompaniesPage'));
+const DataPage = React.lazy(() => import('./pages/admin/DataPage'));
+const UsersPage = React.lazy(() => import('./pages/admin/UsersPage'));
+const SuppliersManagementPage = React.lazy(() => import('./pages/admin/SuppliersManagementPage'));
 import TeamLoginPage from './pages/TeamLoginPage';
 import TeamDashboard from './pages/TeamDashboard';
 import { ProjectMember } from './services/projectSupplierService';
@@ -85,7 +85,7 @@ import SplashScreen from './components/SplashScreen';
 // Toggle Firebase mode - set to true to use Firebase
 const USE_FIREBASE = true;
 
-type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'pricing' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'pricing-calc' | 'client-portal' | 'private' | 'security-403' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant' | 'password-reset' | 'cloud-sync' | 'support-center' | 'support' | 'developer' | 'developer-brain' | 'marketing' | 'quality' | 'deputy' | 'supplier' | 'quantity_surveyor' | 'supplier-catalog' | 'admin-suppliers' | 'demo' | 'team-login' | 'team-dashboard' | 'employee-login' | 'boq-engine' | 'terms' | 'owner' | 'admin-companies' | 'admin-data' | 'admin-users';
+type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'pricing' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'pricing-calc' | 'client-portal' | 'private' | 'security-403' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant' | 'password-reset' | 'cloud-sync' | 'support-center' | 'support' | 'developer' | 'developer-brain' | 'ai-control-center' | 'marketing' | 'quality' | 'deputy' | 'supplier' | 'quantity_surveyor' | 'supplier-catalog' | 'admin-suppliers' | 'demo' | 'team-login' | 'team-dashboard' | 'employee-login' | 'boq-engine' | 'terms' | 'owner' | 'admin-companies' | 'admin-data' | 'admin-users';
 
 // مفتاح الوصول السري للوحة المدير — يُقرأ من .env
 const ADMIN_SECRET_KEY = import.meta.env.VITE_ADMIN_SECRET_KEY || '';
@@ -1349,6 +1349,15 @@ const App: React.FC = () => {
         return <DeveloperBrainDashboard language={language} onNavigate={handleNavigate} />;
     }
 
+    if (currentPage === 'ai-control-center') {
+        const AIControlCenter = React.lazy(() => import('./pages/admin/AIControlCenter'));
+        return (
+            <React.Suspense fallback={<div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">⏳ جاري تحميل مركز التحكم...</div>}>
+                <AIControlCenter language={language} onNavigate={handleNavigate} userRole={(currentEmployee?.role as any) || 'manager'} />
+            </React.Suspense>
+        );
+    }
+
     if (currentPage === 'pricing') {
         return <PricingPage language={language} onNavigate={handleNavigate} currentPlan={user?.plan} onSelectPlan={() => handleNavigate('payment')} />;
     }
@@ -1814,34 +1823,6 @@ const App: React.FC = () => {
                     <SupportPage language={language} employee={supportEmployee} />
                 </div>
             </div>
-        );
-    }
-
-    // Quantity Surveyor Page (مهندس الكميات والتسعيرات)
-    if (currentPage === 'quantity_surveyor') {
-        const qsEmployee: Employee = currentEmployee || {
-            id: 'manager-view',
-            employeeNumber: 'MGR-001',
-            password: '',
-            name: isManager ? MANAGER_CREDENTIALS.name : 'مهندس الكميات',
-            email: 'qs@arba-sys.com',
-            phone: '0500000000',
-            role: 'quantity_surveyor',
-            isActive: true,
-            createdAt: new Date().toISOString()
-        };
-
-        return (
-            <QuantitySurveyorPage
-                language={language}
-                employee={qsEmployee}
-                onLogout={() => {
-                    setUser(null);
-                    setIsManager(false);
-                    setCurrentEmployee(null);
-                    setCurrentPage('landing');
-                }}
-            />
         );
     }
 

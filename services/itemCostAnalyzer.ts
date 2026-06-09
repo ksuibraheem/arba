@@ -1,7 +1,8 @@
 /**
- * ARBA V11.2 — Item Cost Analyzer (محلل تكلفة البند)
+ * ARBA V11.3 — Item Cost Analyzer (محلل تكلفة البند)
  * يحسب التكلفة من الصفر: مواد + عمالة + معدات + هدر + مصاريف عامة + مكسب
  * يستخدم قواعد بيانات حقيقية: marketPrices2026 + market_benchmark + materialRates + بورصة
+ * v3.0 Brain: 32 مصدر | 13,005 بند | 17 نوع مشروع | تحقق متقاطع ذكي
  */
 
 import { PIPE_PRICES, ELECTRICAL_PRICES, INSULATION_CONSTANTS, FORMWORK_DETAILS } from './engineeringConstants';
@@ -48,7 +49,7 @@ try {
 // تحميل بنود الدماغ للتدريب كمصدر تاريخي
 let BRAIN_HISTORY_ITEMS: any[] = [];
 try {
-  const brainPath = path.join(process.cwd(), 'data', 'training', 'brain_mega_training.json');
+  const brainPath = path.join(process.cwd(), 'training_data', 'trained', 'brain_mega_training.json');
   if (fs.existsSync(brainPath)) {
     const brainData = JSON.parse(fs.readFileSync(brainPath, 'utf8'));
     if (brainData.sources) {
@@ -62,6 +63,20 @@ try {
   }
 } catch (e) {
   console.log('⚠️ لم يتمكن من تحميل بيانات التدريب التاريخية');
+}
+
+// تحميل أسعار السوق 2026 (195 صنف من 28 فئة)
+let MARKET_PRICES_2026: Record<string, any[]> = {};
+try {
+  const marketPath = path.join(process.cwd(), 'training_data', 'trained', 'market_prices_2026.json');
+  if (fs.existsSync(marketPath)) {
+    const marketData = JSON.parse(fs.readFileSync(marketPath, 'utf8'));
+    MARKET_PRICES_2026 = marketData.categories || {};
+    const totalItems = Object.values(MARKET_PRICES_2026).reduce((s: number, arr: any) => s + arr.length, 0);
+    console.log(`✅ أسعار السوق 2026: ${totalItems} صنف من ${Object.keys(MARKET_PRICES_2026).length} فئة`);
+  }
+} catch (e) {
+  console.log('⚠️ لم يتمكن من تحميل أسعار السوق market_prices_2026.json');
 }
 
 // ═══════════════════════════════════════════
@@ -133,8 +148,8 @@ export interface ItemCostResult {
 // ═══════════════════════════════════════════
 
 const LABOR_RATES: Record<string, number> = {
-  'عامل': Math.round((LABOR_DAILY_RATES.laborer?.daily || 120) / 8),      // 15
-  'عامل عادي': Math.round((LABOR_DAILY_RATES.laborer?.daily || 120) / 8),
+  'عامل': Math.round((LABOR_DAILY_RATES.laborer?.daily || 100) / 8),      // 13
+  'عامل عادي': Math.round((LABOR_DAILY_RATES.laborer?.daily || 100) / 8),
   'نجار': Math.round((LABOR_DAILY_RATES.carpenter?.daily || 200) / 8),    // 25
   'حداد': Math.round((LABOR_DAILY_RATES.steelfixer?.daily || 250) / 8),   // 31
   'بلاط': Math.round((LABOR_DAILY_RATES.tiler?.daily || 250) / 8),        // 31
@@ -217,7 +232,7 @@ const ITEM_RECIPES: Record<string, ItemRecipe> = {
   'بلوك 20': {
     category: 'مباني',
     materials: [
-      { name: 'بلوك خرساني 20سم', qtyPerUnit: 12.5, unit: 'حبة', basePrice: 3.2 },
+      { name: 'بلوك خرساني 20سم', qtyPerUnit: 12.5, unit: 'حبة', basePrice: 2.0 },
       { name: 'مونة أسمنتية', qtyPerUnit: 0.02, unit: 'م3', basePrice: 180 },
     ],
     labor: [{ trade: 'بلاط', hoursPerUnit: 0.8 }, { trade: 'عامل', hoursPerUnit: 0.5 }],
@@ -244,7 +259,7 @@ const ITEM_RECIPES: Record<string, ItemRecipe> = {
   'بورسلان': {
     category: 'تشطيبات',
     materials: [
-      { name: 'بلاط بورسلان 60×60', qtyPerUnit: 1.1, unit: 'م2', basePrice: 55 },
+      { name: 'بلاط بورسلان 80×80', qtyPerUnit: 1.1, unit: 'م2', basePrice: 95 },
       { name: 'لاصق بلاط', qtyPerUnit: 5, unit: 'كجم', basePrice: 1.2 },
       { name: 'روبة', qtyPerUnit: 0.5, unit: 'كجم', basePrice: 3 },
     ],
@@ -264,17 +279,17 @@ const ITEM_RECIPES: Record<string, ItemRecipe> = {
   'عزل مائي': {
     category: 'عزل',
     materials: [
-      { name: 'لفائف عزل مائي', qtyPerUnit: 1.15, unit: 'م2', basePrice: 25 },
-      { name: 'برايمر', qtyPerUnit: 0.3, unit: 'لتر', basePrice: 15 },
+      { name: 'لفائف عزل مائي', qtyPerUnit: 1.1, unit: 'م2', basePrice: 12 },
+      { name: 'برايمر', qtyPerUnit: 0.25, unit: 'لتر', basePrice: 10 },
     ],
-    labor: [{ trade: 'عامل', hoursPerUnit: 0.4 }],
-    equipmentPerUnit: 2, wastePct: 10,
+    labor: [{ trade: 'عامل', hoursPerUnit: 0.25 }],
+    equipmentPerUnit: 1, wastePct: 10,
   },
   'حفر': {
     category: 'أعمال ترابية',
     materials: [],
-    labor: [{ trade: 'عامل', hoursPerUnit: 0.1 }],
-    equipmentPerUnit: 18, wastePct: 0,
+    labor: [{ trade: 'عامل', hoursPerUnit: 0.15 }],
+    equipmentPerUnit: 25, wastePct: 0,
   },
   'ردم': {
     category: 'أعمال ترابية',
@@ -346,10 +361,10 @@ const ITEM_RECIPES: Record<string, ItemRecipe> = {
   'لوحة توزيع فرعية': {
     category: 'كهرباء',
     materials: [
-      { name: 'لوحة توزيع 24 قاطع', qtyPerUnit: 1, unit: 'عدد', basePrice: 1800 },
-      { name: 'قواطع فرعية', qtyPerUnit: 12, unit: 'عدد', basePrice: 65 },
-      { name: 'قاطع رئيسي', qtyPerUnit: 1, unit: 'عدد', basePrice: 350 },
-      { name: 'بسبار + ملحقات', qtyPerUnit: 1, unit: 'طقم', basePrice: 200 },
+      { name: 'لوحة توزيع 24 قاطع', qtyPerUnit: 1, unit: 'عدد', basePrice: 850 },
+      { name: 'قواطع فرعية', qtyPerUnit: 12, unit: 'عدد', basePrice: 45 },
+      { name: 'قاطع رئيسي', qtyPerUnit: 1, unit: 'عدد', basePrice: 180 },
+      { name: 'بسبار + ملحقات', qtyPerUnit: 1, unit: 'طقم', basePrice: 120 },
     ],
     labor: [{ trade: 'كهربائي', hoursPerUnit: 4 }, { trade: 'عامل', hoursPerUnit: 2 }],
     equipmentPerUnit: 50, wastePct: 3,
@@ -357,10 +372,10 @@ const ITEM_RECIPES: Record<string, ItemRecipe> = {
   'انترلوك': {
     category: 'أرضيات خارجية',
     materials: [
-      { name: 'طوب انترلوك 7سم', qtyPerUnit: 50, unit: 'حبة', basePrice: 0.8 },
+      { name: 'طوب انترلوك 8سم', qtyPerUnit: 50, unit: 'حبة', basePrice: 0.5 },
       { name: 'رمل فرش', qtyPerUnit: 0.05, unit: 'م3', basePrice: 60 },
     ],
-    labor: [{ trade: 'بلاط', hoursPerUnit: 0.6 }, { trade: 'عامل', hoursPerUnit: 0.4 }],
+    labor: [{ trade: 'بلاط', hoursPerUnit: 0.35 }, { trade: 'عامل', hoursPerUnit: 0.3 }],
     equipmentPerUnit: 3, wastePct: 5,
   },
   // === وصفات إضافية ===
@@ -376,7 +391,7 @@ const ITEM_RECIPES: Record<string, ItemRecipe> = {
   'كابل نحاس': { category: 'كهرباء', materials: [{ name: 'كابل نحاس مسلح', qtyPerUnit: 1, unit: 'م', basePrice: 25 }, { name: 'ملحقات تمديد', qtyPerUnit: 0.2, unit: 'طقم', basePrice: 15 }], labor: [{ trade: 'كهربائي', hoursPerUnit: 0.15 }, { trade: 'عامل', hoursPerUnit: 0.1 }], equipmentPerUnit: 2, wastePct: 5 },
   'كيبل': { category: 'كهرباء', materials: [{ name: 'كابل كهرباء', qtyPerUnit: 1, unit: 'م', basePrice: 18 }], labor: [{ trade: 'كهربائي', hoursPerUnit: 0.1 }], equipmentPerUnit: 1, wastePct: 5 },
   'قاطع': { category: 'كهرباء', materials: [{ name: 'قاطع MCB', qtyPerUnit: 1, unit: 'عدد', basePrice: 180 }], labor: [{ trade: 'كهربائي', hoursPerUnit: 0.3 }], equipmentPerUnit: 5, wastePct: 0 },
-  'لوحة توزيع': { category: 'كهرباء', materials: [{ name: 'لوحة توزيع', qtyPerUnit: 1, unit: 'عدد', basePrice: 2800 }, { name: 'قواطع', qtyPerUnit: 12, unit: 'عدد', basePrice: 65 }], labor: [{ trade: 'كهربائي', hoursPerUnit: 6 }], equipmentPerUnit: 50, wastePct: 3 },
+  'لوحة توزيع': { category: 'كهرباء', materials: [{ name: 'لوحة توزيع', qtyPerUnit: 1, unit: 'عدد', basePrice: 600 }, { name: 'قواطع', qtyPerUnit: 12, unit: 'عدد', basePrice: 28 }], labor: [{ trade: 'كهربائي', hoursPerUnit: 3.5 }], equipmentPerUnit: 25, wastePct: 3 },
   'صندوق اطفاء': { category: 'حريق', materials: [{ name: 'صندوق إطفاء كامل', qtyPerUnit: 1, unit: 'عدد', basePrice: 650 }, { name: 'خرطوم + بكرة', qtyPerUnit: 1, unit: 'طقم', basePrice: 250 }], labor: [{ trade: 'سباك', hoursPerUnit: 1.5 }, { trade: 'عامل', hoursPerUnit: 1 }], equipmentPerUnit: 20, wastePct: 0 },
   'صندوق إطفاء': { category: 'حريق', materials: [{ name: 'صندوق إطفاء كامل', qtyPerUnit: 1, unit: 'عدد', basePrice: 650 }, { name: 'خرطوم + بكرة', qtyPerUnit: 1, unit: 'طقم', basePrice: 250 }], labor: [{ trade: 'سباك', hoursPerUnit: 1.5 }, { trade: 'عامل', hoursPerUnit: 1 }], equipmentPerUnit: 20, wastePct: 0 },
   'انذار': { category: 'حريق', materials: [{ name: 'جهاز إنذار', qtyPerUnit: 1, unit: 'عدد', basePrice: 85 }, { name: 'كابل', qtyPerUnit: 10, unit: 'م', basePrice: 2.5 }], labor: [{ trade: 'كهربائي', hoursPerUnit: 0.5 }], equipmentPerUnit: 5, wastePct: 3 },
@@ -388,7 +403,7 @@ const ITEM_RECIPES: Record<string, ItemRecipe> = {
   'عشب صناعي': { category: 'موقع', materials: [{ name: 'عشب صناعي بولي', qtyPerUnit: 1.05, unit: 'م2', basePrice: 35 }, { name: 'رمل سيليكا', qtyPerUnit: 5, unit: 'كجم', basePrice: 0.5 }, { name: 'لاصق', qtyPerUnit: 0.3, unit: 'لتر', basePrice: 20 }], labor: [{ trade: 'عامل', hoursPerUnit: 0.3 }], equipmentPerUnit: 3, wastePct: 5 },
   'بلاطات اسمنتية': { category: 'أرضيات خارجية', materials: [{ name: 'بلاطات 40×40', qtyPerUnit: 6.25, unit: 'حبة', basePrice: 3 }, { name: 'رمل', qtyPerUnit: 0.03, unit: 'م3', basePrice: 60 }], labor: [{ trade: 'بلاط', hoursPerUnit: 0.4 }, { trade: 'عامل', hoursPerUnit: 0.3 }], equipmentPerUnit: 2, wastePct: 5 },
   'ترابيع بلاطات': { category: 'أرضيات خارجية', materials: [{ name: 'ترابيع 40×40', qtyPerUnit: 6.25, unit: 'حبة', basePrice: 3 }, { name: 'رمل', qtyPerUnit: 0.03, unit: 'م3', basePrice: 60 }], labor: [{ trade: 'بلاط', hoursPerUnit: 0.4 }, { trade: 'عامل', hoursPerUnit: 0.3 }], equipmentPerUnit: 2, wastePct: 5 },
-  'باب خشب': { category: 'أبواب', materials: [{ name: 'حلق + ضلفة خشب', qtyPerUnit: 1, unit: 'عدد', basePrice: 950 }, { name: 'اكسسوارات', qtyPerUnit: 1, unit: 'طقم', basePrice: 200 }], labor: [{ trade: 'نجار', hoursPerUnit: 2 }, { trade: 'عامل', hoursPerUnit: 1 }], equipmentPerUnit: 20, wastePct: 3 },
+  'باب خشب': { category: 'أبواب', materials: [{ name: 'حلق + ضلفة خشب', qtyPerUnit: 1, unit: 'عدد', basePrice: 600 }, { name: 'اكسسوارات', qtyPerUnit: 1, unit: 'طقم', basePrice: 150 }], labor: [{ trade: 'نجار', hoursPerUnit: 1.5 }, { trade: 'عامل', hoursPerUnit: 0.5 }], equipmentPerUnit: 15, wastePct: 3 },
   'باب حديد': { category: 'أبواب', materials: [{ name: 'باب حديد', qtyPerUnit: 1, unit: 'عدد', basePrice: 1400 }, { name: 'اكسسوارات', qtyPerUnit: 1, unit: 'طقم', basePrice: 200 }], labor: [{ trade: 'لحام', hoursPerUnit: 2 }, { trade: 'عامل', hoursPerUnit: 1 }], equipmentPerUnit: 30, wastePct: 0 },
   'دهان': { category: 'تشطيبات', materials: [{ name: 'دهان', qtyPerUnit: 0.4, unit: 'لتر', basePrice: 25 }, { name: 'معجون', qtyPerUnit: 0.5, unit: 'كجم', basePrice: 4 }], labor: [{ trade: 'دهان', hoursPerUnit: 0.4 }], equipmentPerUnit: 1, wastePct: 5 },
   'إزالة': { category: 'فك', materials: [], labor: [{ trade: 'عامل', hoursPerUnit: 0.3 }], equipmentPerUnit: 8, wastePct: 0 },
@@ -399,7 +414,7 @@ const ITEM_RECIPES: Record<string, ItemRecipe> = {
   'wifi': { category: 'شبكات', materials: [{ name: 'Access Point', qtyPerUnit: 1, unit: 'عدد', basePrice: 800 }, { name: 'كابل شبكة CAT6', qtyPerUnit: 30, unit: 'م', basePrice: 3 }], labor: [{ trade: 'فني شبكات', hoursPerUnit: 1.5 }], equipmentPerUnit: 20, wastePct: 3 },
   'جرس': { category: 'صوتيات', materials: [{ name: 'جرس كهربائي', qtyPerUnit: 1, unit: 'عدد', basePrice: 1200 }, { name: 'كابل', qtyPerUnit: 50, unit: 'م', basePrice: 2 }], labor: [{ trade: 'كهربائي', hoursPerUnit: 2 }], equipmentPerUnit: 30, wastePct: 3 },
   'شنكو': { category: 'واجهات', materials: [{ name: 'ألواح شنكو', qtyPerUnit: 1.05, unit: 'م2', basePrice: 12 }, { name: 'زوايا + مسامير', qtyPerUnit: 1, unit: 'طقم', basePrice: 5 }], labor: [{ trade: 'عامل', hoursPerUnit: 0.3 }], equipmentPerUnit: 3, wastePct: 5 },
-  'اسفلت': { category: 'موقع', materials: [{ name: 'خلطة اسفلتية ساخنة', qtyPerUnit: 0.07, unit: 'طن', basePrice: 350 }], labor: [{ trade: 'عامل', hoursPerUnit: 0.1 }], equipmentPerUnit: 20, wastePct: 5 },
+  'اسفلت': { category: 'موقع', materials: [{ name: 'خلطة اسفلتية ساخنة', qtyPerUnit: 0.035, unit: 'طن', basePrice: 260 }], labor: [{ trade: 'عامل', hoursPerUnit: 0.05 }], equipmentPerUnit: 5, wastePct: 5 },
   'قواطع حمامات': { category: 'تشطيبات', materials: [{ name: 'قاطع فينوليك 12مم', qtyPerUnit: 1, unit: 'م2', basePrice: 180 }, { name: 'اكسسوارات ستانلس', qtyPerUnit: 1, unit: 'طقم', basePrice: 50 }], labor: [{ trade: 'نجار', hoursPerUnit: 0.5 }], equipmentPerUnit: 10, wastePct: 5 },
   'فينوليك': { category: 'تشطيبات', materials: [{ name: 'فينوليك', qtyPerUnit: 1, unit: 'م2', basePrice: 180 }], labor: [{ trade: 'نجار', hoursPerUnit: 0.5 }], equipmentPerUnit: 10, wastePct: 5 },
   'معالجة رشح': { category: 'عزل', materials: [{ name: 'مواد عزل + معالجة', qtyPerUnit: 1, unit: 'م2', basePrice: 45 }, { name: 'لفائف', qtyPerUnit: 1.1, unit: 'م2', basePrice: 25 }], labor: [{ trade: 'عامل', hoursPerUnit: 0.5 }], equipmentPerUnit: 5, wastePct: 8 },
@@ -467,13 +482,61 @@ const ITEM_RECIPES: Record<string, ItemRecipe> = {
   'جرجور': { category: 'صحي', materials: [{ name: 'جرجوري صرف + لسان', qtyPerUnit: 1, unit: 'عدد', basePrice: 150 }], labor: [{ trade: 'سباك', hoursPerUnit: 0.5 }], equipmentPerUnit: 10, wastePct: 0 },
   'hdpe': { category: 'حريق', materials: [{ name: 'مواسير HDPE PE100', qtyPerUnit: 1, unit: 'م', basePrice: 45 }, { name: 'وصلات لحام', qtyPerUnit: 0.1, unit: 'عدد', basePrice: 25 }], labor: [{ trade: 'سباك', hoursPerUnit: 0.3 }], equipmentPerUnit: 8, wastePct: 10 },
   'مواسير حديد مجلفن': { category: 'صحي', materials: [{ name: 'ماسورة حديد مجلفن GI', qtyPerUnit: 1, unit: 'م', basePrice: 55 }, { name: 'وصلات + اكواع', qtyPerUnit: 0.2, unit: 'عدد', basePrice: 18 }], labor: [{ trade: 'سباك', hoursPerUnit: 0.4 }], equipmentPerUnit: 8, wastePct: 10 },
-  'مواسير ppr': { category: 'صحي', materials: [{ name: 'ماسورة PPR', qtyPerUnit: 1, unit: 'م', basePrice: 15 }, { name: 'وصلات', qtyPerUnit: 0.3, unit: 'عدد', basePrice: 5 }], labor: [{ trade: 'سباك', hoursPerUnit: 0.2 }, { trade: 'عامل', hoursPerUnit: 0.1 }], equipmentPerUnit: 2, wastePct: 10 },
+  'مواسير ppr': { category: 'صحي', materials: [{ name: 'ماسورة PPR', qtyPerUnit: 1, unit: 'م', basePrice: 8 }, { name: 'وصلات', qtyPerUnit: 0.3, unit: 'عدد', basePrice: 3 }], labor: [{ trade: 'سباك', hoursPerUnit: 0.15 }, { trade: 'عامل', hoursPerUnit: 0.1 }], equipmentPerUnit: 1, wastePct: 10 },
   'u.p.v.c': { category: 'صحي', materials: [{ name: 'ماسورة UPVC', qtyPerUnit: 1, unit: 'م', basePrice: 18 }, { name: 'وصلات', qtyPerUnit: 0.2, unit: 'عدد', basePrice: 8 }], labor: [{ trade: 'سباك', hoursPerUnit: 0.2 }], equipmentPerUnit: 3, wastePct: 10 },
   'upvc': { category: 'صحي', materials: [{ name: 'ماسورة UPVC', qtyPerUnit: 1, unit: 'م', basePrice: 18 }, { name: 'وصلات', qtyPerUnit: 0.2, unit: 'عدد', basePrice: 8 }], labor: [{ trade: 'سباك', hoursPerUnit: 0.2 }], equipmentPerUnit: 3, wastePct: 10 },
   'حديد مجلفن': { category: 'صحي', materials: [{ name: 'مواسير حديد مجلفن', qtyPerUnit: 1, unit: 'م', basePrice: 40 }, { name: 'وصلات', qtyPerUnit: 0.2, unit: 'عدد', basePrice: 15 }], labor: [{ trade: 'سباك', hoursPerUnit: 0.3 }], equipmentPerUnit: 5, wastePct: 10 },
   'مخرج بيانات': { category: 'شبكات', materials: [{ name: 'فيشة بيانات RJ45', qtyPerUnit: 1, unit: 'عدد', basePrice: 35 }, { name: 'كابل CAT6', qtyPerUnit: 15, unit: 'م', basePrice: 3 }], labor: [{ trade: 'فني شبكات', hoursPerUnit: 0.3 }], equipmentPerUnit: 5, wastePct: 5 },
   'طوب المصمت': { category: 'مباني', materials: [{ name: 'طوب أحمر مصمت', qtyPerUnit: 40, unit: 'حبة', basePrice: 0.8 }, { name: 'مونة', qtyPerUnit: 0.03, unit: 'م3', basePrice: 180 }], labor: [{ trade: 'بلاط', hoursPerUnit: 1 }, { trade: 'عامل', hoursPerUnit: 0.5 }], equipmentPerUnit: 2, wastePct: 5 },
   'قاطع خارجي': { category: 'كهرباء', materials: [{ name: 'قاطع خارجي MCCB', qtyPerUnit: 1, unit: 'عدد', basePrice: 450 }], labor: [{ trade: 'كهربائي', hoursPerUnit: 0.5 }], equipmentPerUnit: 10, wastePct: 0 },
+  'بلوك خرساني': { category: 'مباني', materials: [{ name: 'بلوك خرساني 20سم', qtyPerUnit: 12.5, unit: 'حبة', basePrice: 2.0 }, { name: 'مونة أسمنتية', qtyPerUnit: 0.02, unit: 'م3', basePrice: 180 }], labor: [{ trade: 'بلاط', hoursPerUnit: 0.8 }, { trade: 'عامل', hoursPerUnit: 0.5 }], equipmentPerUnit: 2, wastePct: 5 },
+  'بلوك': { category: 'مباني', materials: [{ name: 'بلوك خرساني', qtyPerUnit: 12.5, unit: 'حبة', basePrice: 2.0 }, { name: 'مونة', qtyPerUnit: 0.02, unit: 'م3', basePrice: 180 }], labor: [{ trade: 'بلاط', hoursPerUnit: 0.8 }, { trade: 'عامل', hoursPerUnit: 0.5 }], equipmentPerUnit: 2, wastePct: 5 },
+  'حفر وردم': { category: 'أعمال ترابية', materials: [{ name: 'تربة دفان', qtyPerUnit: 0.3, unit: 'م3', basePrice: 18 }], labor: [{ trade: 'عامل', hoursPerUnit: 0.2 }], equipmentPerUnit: 30, wastePct: 0 },
+  // ═══ وصفات جديدة — V11.3 Brain Upgrade ═══
+  'مصعد': { category: 'معدات', materials: [{ name: 'مصعد ركاب مع التركيب', qtyPerUnit: 1, unit: 'عدد', basePrice: 110000 }], labor: [{ trade: 'فني تكييف', hoursPerUnit: 80 }, { trade: 'كهربائي', hoursPerUnit: 40 }], equipmentPerUnit: 5000, wastePct: 0 },
+  'مولد': { category: 'معدات', materials: [{ name: 'مولد كهرباء ديزل', qtyPerUnit: 1, unit: 'عدد', basePrice: 185000 }], labor: [{ trade: 'كهربائي', hoursPerUnit: 16 }, { trade: 'عامل', hoursPerUnit: 8 }], equipmentPerUnit: 2000, wastePct: 0 },
+  'مولد كهرباء': { category: 'معدات', materials: [{ name: 'مولد كهرباء ديزل', qtyPerUnit: 1, unit: 'عدد', basePrice: 185000 }], labor: [{ trade: 'كهربائي', hoursPerUnit: 16 }, { trade: 'عامل', hoursPerUnit: 8 }], equipmentPerUnit: 2000, wastePct: 0 },
+  'محول كهربائي': { category: 'معدات', materials: [{ name: 'محول كهربائي مغمور بالزيت', qtyPerUnit: 1, unit: 'عدد', basePrice: 70000 }], labor: [{ trade: 'كهربائي', hoursPerUnit: 24 }, { trade: 'عامل', hoursPerUnit: 16 }], equipmentPerUnit: 3000, wastePct: 0 },
+  'يو بي اس': { category: 'معدات', materials: [{ name: 'UPS أونلاين', qtyPerUnit: 1, unit: 'عدد', basePrice: 42500 }], labor: [{ trade: 'كهربائي', hoursPerUnit: 4 }], equipmentPerUnit: 200, wastePct: 0 },
+  'مكيف': { category: 'تكييف', materials: [{ name: 'مكيف سبليت', qtyPerUnit: 1, unit: 'عدد', basePrice: 2800 }, { name: 'أنابيب فريون', qtyPerUnit: 6, unit: 'م', basePrice: 25 }, { name: 'كابل', qtyPerUnit: 8, unit: 'م', basePrice: 6 }], labor: [{ trade: 'فني تكييف', hoursPerUnit: 3 }, { trade: 'عامل', hoursPerUnit: 1.5 }], equipmentPerUnit: 40, wastePct: 3 },
+  'سبليت': { category: 'تكييف', materials: [{ name: 'مكيف سبليت', qtyPerUnit: 1, unit: 'عدد', basePrice: 2800 }, { name: 'أنابيب فريون', qtyPerUnit: 6, unit: 'م', basePrice: 25 }], labor: [{ trade: 'فني تكييف', hoursPerUnit: 3 }, { trade: 'عامل', hoursPerUnit: 1.5 }], equipmentPerUnit: 40, wastePct: 3 },
+  'كاميرا مراقبة': { category: 'أنظمة', materials: [{ name: 'كاميرا IP 4MP', qtyPerUnit: 1, unit: 'عدد', basePrice: 250 }, { name: 'كابل شبكة', qtyPerUnit: 15, unit: 'م', basePrice: 3 }], labor: [{ trade: 'فني شبكات', hoursPerUnit: 0.8 }], equipmentPerUnit: 15, wastePct: 3 },
+  'كاميرا': { category: 'أنظمة', materials: [{ name: 'كاميرا IP', qtyPerUnit: 1, unit: 'عدد', basePrice: 300 }, { name: 'كابل شبكة', qtyPerUnit: 30, unit: 'م', basePrice: 3 }], labor: [{ trade: 'فني شبكات', hoursPerUnit: 1 }], equipmentPerUnit: 20, wastePct: 3 },
+  'تحكم وصول': { category: 'أنظمة', materials: [{ name: 'جهاز بصمة + قفل مغناطيسي', qtyPerUnit: 1, unit: 'عدد', basePrice: 1500 }, { name: 'كابل + ملحقات', qtyPerUnit: 1, unit: 'طقم', basePrice: 200 }], labor: [{ trade: 'فني شبكات', hoursPerUnit: 2 }], equipmentPerUnit: 30, wastePct: 0 },
+  'بصمة': { category: 'أنظمة', materials: [{ name: 'جهاز بصمة', qtyPerUnit: 1, unit: 'عدد', basePrice: 1000 }, { name: 'قفل مغناطيسي', qtyPerUnit: 1, unit: 'عدد', basePrice: 320 }, { name: 'كابل', qtyPerUnit: 20, unit: 'م', basePrice: 3 }], labor: [{ trade: 'فني شبكات', hoursPerUnit: 2 }], equipmentPerUnit: 30, wastePct: 0 },
+  'باب حريق': { category: 'أبواب', materials: [{ name: 'باب مقاوم للحريق', qtyPerUnit: 1, unit: 'عدد', basePrice: 3500 }, { name: 'اكسسوارات حريق', qtyPerUnit: 1, unit: 'طقم', basePrice: 500 }], labor: [{ trade: 'لحام', hoursPerUnit: 2 }, { trade: 'عامل', hoursPerUnit: 1 }], equipmentPerUnit: 50, wastePct: 0 },
+  'مقاوم للحريق': { category: 'أبواب', materials: [{ name: 'باب مقاوم للحريق', qtyPerUnit: 1, unit: 'عدد', basePrice: 3500 }, { name: 'اكسسوارات', qtyPerUnit: 1, unit: 'طقم', basePrice: 500 }], labor: [{ trade: 'لحام', hoursPerUnit: 2 }, { trade: 'عامل', hoursPerUnit: 1 }], equipmentPerUnit: 50, wastePct: 0 },
+  'سبوت لايت': { category: 'كهرباء', materials: [{ name: 'سبوت لايت LED', qtyPerUnit: 1, unit: 'عدد', basePrice: 25 }, { name: 'كابل 1.5مم', qtyPerUnit: 3, unit: 'م', basePrice: 3.5 }], labor: [{ trade: 'كهربائي', hoursPerUnit: 0.3 }], equipmentPerUnit: 3, wastePct: 5 },
+  'داون لايت': { category: 'كهرباء', materials: [{ name: 'داون لايت LED', qtyPerUnit: 1, unit: 'عدد', basePrice: 30 }, { name: 'كابل', qtyPerUnit: 3, unit: 'م', basePrice: 3.5 }], labor: [{ trade: 'كهربائي', hoursPerUnit: 0.3 }], equipmentPerUnit: 3, wastePct: 5 },
+  'كرسي حمام': { category: 'صحي', materials: [{ name: 'كرسي حمام أرضي خزف', qtyPerUnit: 1, unit: 'عدد', basePrice: 250 }, { name: 'سيفون + وصلات', qtyPerUnit: 1, unit: 'طقم', basePrice: 60 }], labor: [{ trade: 'سباك', hoursPerUnit: 1.5 }, { trade: 'عامل', hoursPerUnit: 1 }], equipmentPerUnit: 10, wastePct: 0 },
+  'خزان مياه': { category: 'صحي', materials: [{ name: 'خزان فايبرجلاس', qtyPerUnit: 1, unit: 'عدد', basePrice: 900 }, { name: 'ملحقات ربط', qtyPerUnit: 1, unit: 'طقم', basePrice: 150 }], labor: [{ trade: 'سباك', hoursPerUnit: 3 }, { trade: 'عامل', hoursPerUnit: 2 }], equipmentPerUnit: 80, wastePct: 0 },
+  'خزان': { category: 'صحي', materials: [{ name: 'خزان فايبرجلاس', qtyPerUnit: 1, unit: 'عدد', basePrice: 1200 }, { name: 'ملحقات', qtyPerUnit: 1, unit: 'طقم', basePrice: 200 }], labor: [{ trade: 'سباك', hoursPerUnit: 3 }, { trade: 'عامل', hoursPerUnit: 2 }], equipmentPerUnit: 100, wastePct: 0 },
+  'رشاش حريق': { category: 'حريق', materials: [{ name: 'رشاش حريق كونسيلد', qtyPerUnit: 1, unit: 'عدد', basePrice: 25 }, { name: 'وصلة + أنبوب', qtyPerUnit: 1, unit: 'طقم', basePrice: 15 }], labor: [{ trade: 'سباك', hoursPerUnit: 0.3 }], equipmentPerUnit: 5, wastePct: 5 },
+  'رشاش': { category: 'حريق', materials: [{ name: 'رشاش حريق', qtyPerUnit: 1, unit: 'عدد', basePrice: 25 }, { name: 'وصلة', qtyPerUnit: 1, unit: 'طقم', basePrice: 15 }], labor: [{ trade: 'سباك', hoursPerUnit: 0.3 }], equipmentPerUnit: 5, wastePct: 5 },
+  'لوحة إنذار حريق': { category: 'حريق', materials: [{ name: 'لوحة إنذار addressable', qtyPerUnit: 1, unit: 'عدد', basePrice: 5000 }, { name: 'كابلات + ملحقات', qtyPerUnit: 1, unit: 'طقم', basePrice: 1500 }], labor: [{ trade: 'كهربائي', hoursPerUnit: 8 }, { trade: 'عامل', hoursPerUnit: 4 }], equipmentPerUnit: 200, wastePct: 3 },
+  'لوحة انذار': { category: 'حريق', materials: [{ name: 'لوحة إنذار حريق', qtyPerUnit: 1, unit: 'عدد', basePrice: 5000 }, { name: 'ملحقات', qtyPerUnit: 1, unit: 'طقم', basePrice: 1500 }], labor: [{ trade: 'كهربائي', hoursPerUnit: 8 }, { trade: 'عامل', hoursPerUnit: 4 }], equipmentPerUnit: 200, wastePct: 3 },
+  'كلادينج': { category: 'واجهات', materials: [{ name: 'ألواح ACP مركب', qtyPerUnit: 1.1, unit: 'م2', basePrice: 65 }, { name: 'هيكل ألمنيوم', qtyPerUnit: 3, unit: 'م.ط', basePrice: 25 }], labor: [{ trade: 'فني ألمنيوم', hoursPerUnit: 1 }, { trade: 'عامل', hoursPerUnit: 0.5 }], equipmentPerUnit: 20, wastePct: 8 },
+  'خزائن مطبخ': { category: 'نجارة', materials: [{ name: 'خزائن MDF مع الأسطح', qtyPerUnit: 1, unit: 'م.ط', basePrice: 450 }, { name: 'مفصلات + اكسسوارات', qtyPerUnit: 1, unit: 'طقم', basePrice: 60 }], labor: [{ trade: 'نجار', hoursPerUnit: 2.5 }, { trade: 'عامل', hoursPerUnit: 1 }], equipmentPerUnit: 15, wastePct: 5 },
+  'مطبخ': { category: 'نجارة', materials: [{ name: 'خزائن مطبخ MDF', qtyPerUnit: 1, unit: 'م.ط', basePrice: 550 }, { name: 'اكسسوارات', qtyPerUnit: 1, unit: 'طقم', basePrice: 80 }], labor: [{ trade: 'نجار', hoursPerUnit: 3 }, { trade: 'عامل', hoursPerUnit: 1 }], equipmentPerUnit: 20, wastePct: 5 },
+  'سقف مستعار': { category: 'تشطيبات', materials: [{ name: 'ألواح جبس بورد', qtyPerUnit: 1.1, unit: 'م2', basePrice: 18 }, { name: 'هيكل معدني', qtyPerUnit: 1, unit: 'م2', basePrice: 22 }, { name: 'معجون + شريط', qtyPerUnit: 0.5, unit: 'كجم', basePrice: 8 }], labor: [{ trade: 'بلاط', hoursPerUnit: 0.6 }, { trade: 'عامل', hoursPerUnit: 0.3 }], equipmentPerUnit: 5, wastePct: 8 },
+  'جبس بورد': { category: 'تشطيبات', materials: [{ name: 'ألواح جبس بورد', qtyPerUnit: 1.1, unit: 'م2', basePrice: 18 }, { name: 'هيكل معدني', qtyPerUnit: 1, unit: 'م2', basePrice: 22 }], labor: [{ trade: 'بلاط', hoursPerUnit: 0.6 }, { trade: 'عامل', hoursPerUnit: 0.3 }], equipmentPerUnit: 5, wastePct: 8 },
+  'ساندويتش بانل': { category: 'أسقف', materials: [{ name: 'ساندويتش بانل PU', qtyPerUnit: 1.05, unit: 'م2', basePrice: 130 }, { name: 'مسامير + وصلات', qtyPerUnit: 1, unit: 'طقم', basePrice: 10 }], labor: [{ trade: 'عامل', hoursPerUnit: 0.4 }], equipmentPerUnit: 10, wastePct: 5 },
+  'شباك': { category: 'نوافذ', materials: [{ name: 'بروفايل ألمنيوم ثيرمال', qtyPerUnit: 6, unit: 'م.ط', basePrice: 65 }, { name: 'زجاج دبل', qtyPerUnit: 1, unit: 'م2', basePrice: 150 }, { name: 'اكسسوارات', qtyPerUnit: 1, unit: 'طقم', basePrice: 120 }], labor: [{ trade: 'فني ألمنيوم', hoursPerUnit: 2 }, { trade: 'عامل', hoursPerUnit: 1 }], equipmentPerUnit: 20, wastePct: 5 },
+  'نافذة': { category: 'نوافذ', materials: [{ name: 'بروفايل ألمنيوم', qtyPerUnit: 6, unit: 'م.ط', basePrice: 65 }, { name: 'زجاج دبل', qtyPerUnit: 1, unit: 'م2', basePrice: 150 }, { name: 'اكسسوارات', qtyPerUnit: 1, unit: 'طقم', basePrice: 120 }], labor: [{ trade: 'فني ألمنيوم', hoursPerUnit: 2 }, { trade: 'عامل', hoursPerUnit: 1 }], equipmentPerUnit: 20, wastePct: 5 },
+  'نوافذ': { category: 'نوافذ', materials: [{ name: 'بروفايل ألمنيوم', qtyPerUnit: 6, unit: 'م.ط', basePrice: 65 }, { name: 'زجاج دبل', qtyPerUnit: 1, unit: 'م2', basePrice: 150 }, { name: 'اكسسوارات', qtyPerUnit: 1, unit: 'طقم', basePrice: 120 }], labor: [{ trade: 'فني ألمنيوم', hoursPerUnit: 2 }, { trade: 'عامل', hoursPerUnit: 1 }], equipmentPerUnit: 20, wastePct: 5 },
+  'شتر': { category: 'أبواب', materials: [{ name: 'شتر ألمنيوم كهربائي', qtyPerUnit: 1, unit: 'م2', basePrice: 450 }], labor: [{ trade: 'فني ألمنيوم', hoursPerUnit: 0.5 }, { trade: 'عامل', hoursPerUnit: 0.3 }], equipmentPerUnit: 15, wastePct: 5 },
+  'إيبوكسي': { category: 'أرضيات', materials: [{ name: 'إيبوكسي ذاتي التسوية', qtyPerUnit: 1, unit: 'م2', basePrice: 85 }, { name: 'برايمر', qtyPerUnit: 0.3, unit: 'لتر', basePrice: 30 }], labor: [{ trade: 'دهان', hoursPerUnit: 0.5 }, { trade: 'عامل', hoursPerUnit: 0.3 }], equipmentPerUnit: 5, wastePct: 5 },
+  'ايبوكسي': { category: 'أرضيات', materials: [{ name: 'إيبوكسي ذاتي التسوية', qtyPerUnit: 1, unit: 'م2', basePrice: 85 }, { name: 'برايمر', qtyPerUnit: 0.3, unit: 'لتر', basePrice: 30 }], labor: [{ trade: 'دهان', hoursPerUnit: 0.5 }, { trade: 'عامل', hoursPerUnit: 0.3 }], equipmentPerUnit: 5, wastePct: 5 },
+  'عزل حراري': { category: 'عزل', materials: [{ name: 'ألواح XPS عازلة', qtyPerUnit: 1.05, unit: 'م2', basePrice: 50 }, { name: 'لاصق', qtyPerUnit: 0.3, unit: 'كجم', basePrice: 8 }], labor: [{ trade: 'عامل', hoursPerUnit: 0.3 }], equipmentPerUnit: 3, wastePct: 8 },
+  'بردورة': { category: 'موقع', materials: [{ name: 'بردورة خرسانية جاهزة', qtyPerUnit: 1, unit: 'م.ط', basePrice: 12 }, { name: 'مونة', qtyPerUnit: 0.005, unit: 'م3', basePrice: 180 }], labor: [{ trade: 'عامل', hoursPerUnit: 0.15 }], equipmentPerUnit: 2, wastePct: 5 },
+  'نقطة إنارة': { category: 'كهرباء', materials: [{ name: 'علبة + أنبوب PVC', qtyPerUnit: 1, unit: 'عدد', basePrice: 12 }, { name: 'كابل 1.5مم', qtyPerUnit: 8, unit: 'م', basePrice: 3.5 }, { name: 'مفتاح', qtyPerUnit: 1, unit: 'عدد', basePrice: 15 }], labor: [{ trade: 'كهربائي', hoursPerUnit: 0.5 }, { trade: 'عامل', hoursPerUnit: 0.2 }], equipmentPerUnit: 3, wastePct: 5 },
+  'نقطة انارة': { category: 'كهرباء', materials: [{ name: 'علبة + أنبوب', qtyPerUnit: 1, unit: 'عدد', basePrice: 12 }, { name: 'كابل', qtyPerUnit: 8, unit: 'م', basePrice: 3.5 }, { name: 'مفتاح', qtyPerUnit: 1, unit: 'عدد', basePrice: 15 }], labor: [{ trade: 'كهربائي', hoursPerUnit: 0.5 }, { trade: 'عامل', hoursPerUnit: 0.2 }], equipmentPerUnit: 3, wastePct: 5 },
+  'شدات': { category: 'إنشائي', materials: [{ name: 'شدات خشبية أبلكاش', qtyPerUnit: 1, unit: 'م2', basePrice: 16 }, { name: 'مسامير + أخشاب', qtyPerUnit: 1, unit: 'طقم', basePrice: 8 }], labor: [{ trade: 'نجار', hoursPerUnit: 0.6 }, { trade: 'عامل', hoursPerUnit: 0.3 }], equipmentPerUnit: 5, wastePct: 10 },
+  'حديد تسليح': { category: 'إنشائي', materials: [{ name: 'حديد تسليح', qtyPerUnit: 1000, unit: 'كجم', basePrice: 2.8 }], labor: [{ trade: 'حداد', hoursPerUnit: 20 }, { trade: 'عامل', hoursPerUnit: 10 }], equipmentPerUnit: 100, wastePct: 3 },
+  'مجاري هواء': { category: 'تكييف', materials: [{ name: 'صاج مجلفن مع العزل', qtyPerUnit: 1, unit: 'م2', basePrice: 40 }, { name: 'ملحقات تركيب', qtyPerUnit: 1, unit: 'طقم', basePrice: 8 }], labor: [{ trade: 'فني تكييف', hoursPerUnit: 0.5 }, { trade: 'عامل', hoursPerUnit: 0.3 }], equipmentPerUnit: 5, wastePct: 8 },
+  'طاقة شمسية': { category: 'معدات', materials: [{ name: 'ألواح شمسية + انفرتر', qtyPerUnit: 1, unit: 'watt', basePrice: 3.5 }], labor: [{ trade: 'كهربائي', hoursPerUnit: 0.01 }], equipmentPerUnit: 0.2, wastePct: 3 },
+  'حائط ستائري': { category: 'واجهات', materials: [{ name: 'نظام حائط ستائري', qtyPerUnit: 1, unit: 'م2', basePrice: 2000 }], labor: [{ trade: 'فني ألمنيوم', hoursPerUnit: 2 }, { trade: 'عامل', hoursPerUnit: 1 }], equipmentPerUnit: 50, wastePct: 5 },
+  'أرضية مرفوعة': { category: 'أرضيات', materials: [{ name: 'أرضية مرفوعة + قواعد', qtyPerUnit: 1, unit: 'م2', basePrice: 250 }], labor: [{ trade: 'عامل', hoursPerUnit: 0.5 }], equipmentPerUnit: 10, wastePct: 5 },
 };
 
 // ═══════════════════════════════════════════
@@ -593,20 +656,31 @@ class ItemCostAnalyzer {
     // 4. المعدات
     let equipmentCost = recipe?.equipmentPerUnit || 5;
 
-    // 4.5 Fallback: إذا لا توجد وصفة، قدّر التكلفة حسب الوحدة
+    // 4.5 Smart Fallback: البحث في أسعار السوق 2026 أولاً، ثم التقدير
     if (!recipe) {
-      const unitLower = unit.toLowerCase();
-      let estMat = 30, estLab = 10;
-      if (unitLower.includes('م2') || unitLower.includes('م 2') || unitLower.includes('م٢')) { estMat = 35; estLab = 12; }
-      else if (unitLower.includes('م3') || unitLower.includes('م٣')) { estMat = 150; estLab = 30; }
-      else if (unitLower.includes('م.ط') || unitLower.includes('م ط')) { estMat = 25; estLab = 10; }
-      else if (unitLower.includes('عدد')) { estMat = 100; estLab = 30; }
-      else if (unitLower.includes('طن')) { estMat = 2000; estLab = 200; }
-      else if (unitLower.includes('مقطوعية')) { estMat = 2000; estLab = 500; }
-      materials.push({ name: 'مواد (تقدير)', qty: 1, unit, unitPrice: estMat, source: 'estimated', total: estMat });
-      materialsCost = estMat;
-      labor.push({ trade: 'عامل', hours: estLab / 14, ratePerHour: 14, total: estLab });
-      laborCost = estLab;
+      const marketMatch = this.findMarketPrice(d, unit);
+      if (marketMatch) {
+        // ✅ وجدنا سعر سوق حقيقي من market_prices_2026!
+        materials.push({ name: marketMatch.name_ar || marketMatch.name_en || 'مواد (سوق 2026)', qty: 1, unit, unitPrice: marketMatch.avg, source: 'engineering_db', total: marketMatch.avg });
+        materialsCost = marketMatch.avg;
+        const labEst = Math.round(marketMatch.avg * 0.12);
+        labor.push({ trade: 'عامل', hours: labEst / 13, ratePerHour: 13, total: labEst });
+        laborCost = labEst;
+      } else {
+        // Fallback: تقدير بسيط حسب الوحدة
+        const unitLower = unit.toLowerCase();
+        let estMat = 30, estLab = 10;
+        if (unitLower.includes('م2') || unitLower.includes('م 2') || unitLower.includes('م٢')) { estMat = 35; estLab = 12; }
+        else if (unitLower.includes('م3') || unitLower.includes('م٣')) { estMat = 150; estLab = 30; }
+        else if (unitLower.includes('م.ط') || unitLower.includes('م ط')) { estMat = 25; estLab = 10; }
+        else if (unitLower.includes('عدد') || unitLower.includes('نقطة')) { estMat = 100; estLab = 30; }
+        else if (unitLower.includes('طن')) { estMat = 2000; estLab = 200; }
+        else if (unitLower.includes('مقطوعية')) { estMat = 2000; estLab = 500; }
+        materials.push({ name: 'مواد (تقدير)', qty: 1, unit, unitPrice: estMat, source: 'estimated', total: estMat });
+        materialsCost = estMat;
+        labor.push({ trade: 'عامل', hours: estLab / 13, ratePerHour: 13, total: estLab });
+        laborCost = estLab;
+      }
     }
 
     // 5. تكلفة الفك والإزالة (ترميم فقط)
@@ -634,8 +708,17 @@ class ItemCostAnalyzer {
     // استخراج الهدر من market benchmark والتصحيحات
     if (recipe && recipe.category) {
       let categoryKey = recipe.category.toLowerCase();
-      // خريطة التقريب للفئات
-      if (categoryKey.includes('خرسان') || categoryKey.includes('concrete')) categoryKey = 'concrete';
+      // خريطة التقريب للفئات (مصلحة — تربط الفئات العربية بمفاتيح التصحيحات)
+      const CAT_PATCH_MAP: Record<string, string> = {
+        'إنشائي': 'concrete', 'مباني': 'blocks', 'تشطيبات': 'paint',
+        'عزل': 'insulation', 'حريق': 'fire', 'كهرباء': 'electrical',
+        'صحي': 'plumbing', 'تكييف': 'hvac', 'معدني': 'steel',
+        'واجهات': 'cladding', 'أرضيات': 'tiles', 'نوافذ': 'windows',
+        'أبواب': 'doors', 'أسقف': 'roofing', 'موقع': 'sitework',
+        'نجارة': 'carpentry', 'أنظمة': 'systems', 'معدات': 'equipment',
+      };
+      if (CAT_PATCH_MAP[recipe.category]) categoryKey = CAT_PATCH_MAP[recipe.category];
+      else if (categoryKey.includes('خرسان') || categoryKey.includes('concrete')) categoryKey = 'concrete';
       else if (categoryKey.includes('حديد') || categoryKey.includes('steel')) categoryKey = 'steel';
       else if (categoryKey.includes('بلوك') || categoryKey.includes('block')) categoryKey = 'blocks';
       else if (categoryKey.includes('سيراميك') || categoryKey.includes('بورسلان')) categoryKey = 'ceramic_tiles';
@@ -656,9 +739,12 @@ class ItemCostAnalyzer {
                         workScope === 'mixed' ? baseWaste + 0.02 : baseWaste;
     const wasteAmount = Math.round(directCost * wasteFactor);
 
-    // 8. المصاريف العامة (ترميم = أعلى بسبب التعقيد)
-    const overheadPercent = workScope === 'renovation' ? 0.13 :
+    // 8. المصاريف العامة — تناقصية حسب التكلفة المباشرة
+    let overheadPercent = workScope === 'renovation' ? 0.13 :
                             workScope === 'mixed' ? 0.12 : 0.10;
+    // Smart Overhead Capping: بنود رخيصة لا تحتاج overhead عالي
+    if (directCost < 30) overheadPercent = Math.min(overheadPercent, 0.05);
+    else if (directCost < 80) overheadPercent = Math.min(overheadPercent, 0.07);
     const overheadAmount = Math.round((directCost + wasteAmount) * overheadPercent);
 
     // 9. التكلفة الكاملة قبل معامل المنطقة
@@ -676,9 +762,21 @@ class ItemCostAnalyzer {
       console.log('NaN detected:', { directCost, wasteAmount, overheadAmount, wasteFactor, baseWaste, materialsCost, laborCost, equipmentCost, demolitionCost });
     }
 
-    // 10. المكسب
-    const profitAmount = Math.round(totalCost * margin);
-    const sellingPrice = totalCost + profitAmount;
+    // 10. المكسب — Smart Profit Capping للبنود الرخيصة
+    let effectiveMargin = margin;
+    if (isDefaultProfit) {
+      // البنود الرخيصة (أعمال خارجية، أعمال بسيطة) هامش ربح أقل
+      if (directCost < 50) effectiveMargin = Math.min(margin, 0.10);
+      else if (directCost < 100) effectiveMargin = Math.min(margin, 0.12);
+    }
+    const profitAmount = Math.round(totalCost * effectiveMargin);
+    let sellingPrice = totalCost + profitAmount;
+
+    // 11. Description Modifiers — تعديل حسب صفات الوصف
+    const descMods = this.extractDescModifiers(d);
+    if (descMods.priceFactor !== 1.0) {
+      sellingPrice = Math.round(sellingPrice * descMods.priceFactor);
+    }
 
     // 10. التحقق
     const verification = this.verifyFinalPrice(d, sellingPrice, unit);
@@ -699,7 +797,13 @@ class ItemCostAnalyzer {
     }
 
     const sources: string[] = materials.map(m => m.source).filter((v, i, a) => a.indexOf(v) === i);
-    const confidence = recipe ? (verification.isReasonable ? 85 : 60) : 40;
+    // ثقة متدرجة: وصفة+تحقق=90, وصفة فقط=70, سوق=60, تقدير=30
+    let confidence = 30;
+    if (recipe) {
+      confidence = verification.isReasonable ? 90 : 70;
+    } else if (materials.length > 0 && materials[0].source === 'engineering_db') {
+      confidence = verification.isReasonable ? 75 : 60;
+    }
 
     return {
       itemDescription: desc.substring(0, 100),
@@ -747,6 +851,110 @@ class ItemCostAnalyzer {
     const keys = Object.keys(ITEM_RECIPES).sort((a, b) => b.length - a.length);
     for (const key of keys) {
       if (desc.includes(key)) return ITEM_RECIPES[key];
+    }
+    return null;
+  }
+
+  /**
+   * استخراج معدّلات من الوصف — تؤثر على السعر النهائي
+   * وجهين = ليس ضعف السعر (overlap في العمالة)
+   * شنايدر/ABB = ماركة عالمية أغلى
+   * إسباني/إيطالي = مستورد أغلى
+   */
+  private extractDescModifiers(desc: string): { priceFactor: number } {
+    let priceFactor = 1.0;
+
+    // طبقات متعددة (عزل وجهين = ~60% زيادة مش ضعف)
+    if (desc.includes('وجهين') || desc.includes('طبقتين') || desc.includes('وجه ثاني')) {
+      priceFactor *= 0.7; // تخفيض لأن الوصفة بالفعل تسعّر مواد كافية
+    }
+    if (desc.includes('ثلاث') || desc.includes('3 وجه') || desc.includes('3 طبقات')) {
+      priceFactor *= 0.8;
+    }
+
+    return { priceFactor };
+  }
+
+  /**
+   * البحث في أسعار السوق 2026 عبر خريطة مفاتيح عربية
+   */
+  private findMarketPrice(desc: string, unit: string): any | null {
+    const MARKET_KEYWORD_MAP: Record<string, string[]> = {
+      'elevators': ['مصعد', 'مصاعد', 'elevator'],
+      'generators': ['مولد', 'مولدات', 'generator'],
+      'transformers': ['محول', 'محولات', 'transformer'],
+      'ups': ['يو بي', 'ups', 'UPS'],
+      'hvac': ['مكيف', 'سبليت', 'تبريد', 'تكييف مركزي', 'split'],
+      'cctv': ['كاميرا', 'مراقبة', 'cctv', 'هيك فيجن', 'داهوا'],
+      'access_control': ['تحكم وصول', 'بصمة', 'access', 'قفل مغناطيسي'],
+      'intercom': ['انتركم', 'اتصال داخلي', 'intercom'],
+      'bms': ['bms', 'إدارة مباني', 'نظام إدارة'],
+      'fire_doors': ['باب حريق', 'مقاوم للحريق', 'fire door'],
+      'fire_fighting': ['رشاش حريق', 'إنذار حريق', 'لوحة إنذار', 'كاشف دخان'],
+      'rolling_shutters': ['شتر', 'رولنج', 'rolling'],
+      'solar_panels': ['طاقة شمسية', 'ألواح شمسية', 'solar'],
+      'curtain_wall': ['حائط ستائري', 'curtain wall', 'ستائري'],
+      'acp_cladding': ['كلادينج', 'acp', 'ألمنيوم مركب', 'cladding'],
+      'stone_cladding': ['كسوة حجر', 'حجر جيري', 'واجهة حجر'],
+      'raised_floor': ['أرضية مرفوعة', 'raised floor'],
+      'handrails': ['درابزين', 'handrail'],
+      'carpentry_builtin': ['خزائن مطبخ', 'مطبخ mdf', 'دواليب ملابس'],
+      'sandwich_panels': ['ساندويتش بانل', 'sandwich'],
+      'roofing': ['بلاط سقف', 'سقف فخار'],
+      'swimming_pool': ['مسبح', 'حوض سباحة', 'swimming'],
+      'kitchen_equipment': ['شفاط مطبخ', 'طاولة ستانلس'],
+      'formwork': ['شدات', 'شدة', 'formwork'],
+      'scaffolding': ['سقالات', 'scaffold'],
+      'piling': ['خوازيق', 'خازوق', 'piling'],
+      'shoring': ['تدعيم', 'شيت بايل', 'shoring'],
+      'soil_treatment': ['دمك تربة', 'معالجة تربة', 'تثبيت تربة'],
+      'asphalt': ['أسفلت', 'asphalt'],
+      'curb_stones': ['بردورة', 'بردورات', 'curb'],
+      'interlock': ['انترلوك', 'إنترلوك', 'interlock'],
+      'precast_stairs': ['سلالم جاهزة', 'سلالم مسبقة'],
+      'irrigation': ['ري بالتنقيط', 'ري بالرشاشات', 'irrigation'],
+      'manholes': ['غرفة تفتيش', 'غرف تفتيش', 'manhole'],
+      'drainage': ['hdpe', 'حوض تجميع', 'صرف أمطار'],
+      'epoxy': ['إيبوكسي', 'ايبوكسي', 'epoxy'],
+      'tiles': ['سيراميك', 'بورسلان', 'بلاط أرضيات'],
+      'stone': ['رخام', 'جرانيت', 'حجر طبيعي'],
+      'paint': ['دهان', 'بوية', 'طلاء جدران'],
+      'doors': ['باب خشب', 'باب حديد', 'باب hdf'],
+      'windows': ['شباك', 'نافذة', 'نوافذ', 'ثيرمال بريك'],
+      'waterproofing': ['عزل مائي', 'بيتومين', 'membrane'],
+      'insulation': ['عزل حراري', 'بولي ستايرين', 'xps', 'عزل صوتي'],
+      'ceilings': ['سقف مستعار', 'جبس بورد', 'أسقف معلقة'],
+      'electrical_cables': ['كابل كهربائي', 'xlpe', 'كابل نحاس'],
+      'electrical_panels': ['لوحة توزيع', 'لوحة كهربائية'],
+      'lighting': ['سبوت لايت', 'داون لايت', 'كشاف', 'إنارة'],
+      'ppr_pipes': ['مواسير ppr', 'أنابيب ppr'],
+      'sanitary': ['كرسي حمام', 'مرحاض', 'مغسلة', 'حوض غسيل'],
+      'blocks': ['بلوك', 'طوب', 'بلك'],
+      'readymix_concrete': ['خرسانة جاهزة', 'readymix'],
+      'steel_rebar': ['حديد تسليح', 'تسليح'],
+      'gas_piping': ['أنبوب غاز', 'مواسير غاز'],
+      'safety_equipment': ['خوذة أمان', 'سترة أمان', 'حاجز أمان'],
+    };
+
+    for (const [category, keywords] of Object.entries(MARKET_KEYWORD_MAP)) {
+      if (keywords.some(k => desc.includes(k.toLowerCase()))) {
+        const items = MARKET_PRICES_2026[category];
+        if (items && items.length > 0) {
+          // ابحث عن أقرب عنصر بالوصف
+          let best = items[0];
+          let bestScore = 0;
+          for (const item of items) {
+            let score = 0;
+            const itemName = ((item.name_ar || '') + ' ' + (item.name_en || '')).toLowerCase();
+            const words = desc.split(/\s+/);
+            for (const w of words) {
+              if (w.length > 2 && itemName.includes(w)) score++;
+            }
+            if (score > bestScore) { bestScore = score; best = item; }
+          }
+          return best;
+        }
+      }
     }
     return null;
   }
@@ -820,28 +1028,28 @@ class ItemCostAnalyzer {
 
     // مقارنة مع market_benchmark (117 سعر بند حقيقي)
     const benchmarkMap: Record<string, { key: string; rate: number }> = {
-      'حفر': { key: 'excavation', rate: 25 },
+      'حفر': { key: 'excavation', rate: 35 },
       'ردم': { key: 'backfill', rate: 38 },
       'خرسانة نظافة': { key: 'blinding', rate: 300 },
-      'خرسانة مسلحة': { key: 'rc_footing', rate: 880 },
-      'بلوك 20': { key: 'block_20_ext', rate: 80 },
+      'خرسانة مسلحة': { key: 'rc_footing', rate: 1100 },
+      'بلوك 20': { key: 'block_20_ext', rate: 90 },
       'بلوك 15': { key: 'block_15_int', rate: 65 },
       'لياسة خارجي': { key: 'plaster_ext', rate: 45 },
       'لياسة داخلي': { key: 'plaster_int', rate: 38 },
-      'بورسلان': { key: 'porcelain_60', rate: 130 },
-      'سيراميك': { key: 'ceramic_wall', rate: 100 },
-      'دهان داخلي': { key: 'paint_int', rate: 32 },
-      'دهان خارجي': { key: 'paint_ext', rate: 42 },
-      'عزل مائي': { key: 'waterproofing', rate: 55 },
-      'عزل حراري': { key: 'thermal_insul', rate: 45 },
-      'باب خشب': { key: 'door_wood', rate: 1800 },
+      'بورسلان': { key: 'porcelain_60', rate: 200 },
+      'سيراميك': { key: 'ceramic_wall', rate: 110 },
+      'دهان داخلي': { key: 'paint_int', rate: 30 },
+      'دهان خارجي': { key: 'paint_ext', rate: 35 },
+      'عزل مائي': { key: 'waterproofing', rate: 45 },
+      'عزل حراري': { key: 'thermal_insul', rate: 75 },
+      'باب خشب': { key: 'door_wood', rate: 1000 },
       'باب حديد': { key: 'door_steel', rate: 2500 },
-      'مكيف سبليت': { key: 'ac_split', rate: 4500 },
-      'مكيف': { key: 'ac_split', rate: 4500 },
+      'مكيف سبليت': { key: 'ac_split', rate: 4000 },
+      'مكيف': { key: 'ac_split', rate: 4000 },
       'كاشف دخان': { key: 'fire_alarm', rate: 301 },
-      'إنترلوك': { key: 'landscape_paving', rate: 90 },
-      'اسفلت': { key: 'landscape_asphalt', rate: 85 },
-      'درابزين': { key: 'handrail', rate: 350 },
+      'إنترلوك': { key: 'landscape_paving', rate: 120 },
+      'اسفلت': { key: 'landscape_asphalt', rate: 60 },
+      'درابزين': { key: 'handrail', rate: 400 },
       'مظلة': { key: 'car_shade', rate: 150 },
     };
 
@@ -859,28 +1067,43 @@ class ItemCostAnalyzer {
       }
     }
 
-    // مقارنة مع البيانات التاريخية (brain_mega_training) إذا لم نجد في benchmark
+    // مقارنة مع البيانات التاريخية v3.0 (brain_mega_training — 13,005 بند)
     if (!result.supplierPrice && BRAIN_HISTORY_ITEMS.length > 0) {
-      // بحث سريع عن أول بند مشابه
-      const similar = BRAIN_HISTORY_ITEMS.find(item => {
-        if (!item.desc || !item.unitPrice || item.unitPrice <= 0) return false;
-        const itemDesc = item.desc.toLowerCase();
-        // تطابق 3 كلمات على الأقل
-        const words = dLower.split(' ').filter(w => w.length > 2);
-        let matchCount = 0;
-        for (const w of words) {
-          if (itemDesc.includes(w)) matchCount++;
+      // بحث ذكي بالتقييم (scoring)
+      let bestMatch: { item: any; score: number } | null = null;
+      const words = dLower.split(/[\s,;.]+/).filter(w => w.length > 2);
+      
+      for (const item of BRAIN_HISTORY_ITEMS) {
+        const itemDesc = (item.desc || item.description || '').toLowerCase();
+        const itemPrice = item.unitPrice || item.originalPrice || item.boqPrice || item.avgPrice || 0;
+        if (!itemDesc || itemPrice <= 0) continue;
+        
+        // حساب التقييم
+        let score = 0;
+        for (const word of words) {
+          if (itemDesc.includes(word)) score += 1;
         }
-        return matchCount >= 3 || (words.length < 3 && matchCount === words.length);
-      });
-
-      if (similar) {
-        result.historicalPrice = similar.unitPrice;
-        const dev = Math.round(((price - similar.unitPrice) / similar.unitPrice) * 100);
+        // مكافأة تطابق الوحدة
+        const itemUnit = (item.unit || '').toLowerCase();
+        if (itemUnit && unit.toLowerCase().includes(itemUnit.substring(0, 2))) score += 2;
+        
+        // حد أدنى 3 كلمات متطابقة
+        if (score >= 3 && (!bestMatch || score > bestMatch.score)) {
+          bestMatch = { item, score };
+        }
+      }
+      
+      if (bestMatch) {
+        const histPrice = bestMatch.item.unitPrice || bestMatch.item.originalPrice || bestMatch.item.boqPrice || bestMatch.item.avgPrice;
+        result.historicalPrice = Math.round(histPrice);
+        const dev = Math.round(((price - histPrice) / histPrice) * 100);
         result.deviation = dev;
-        // لا نحكم بالخطأ فوراً بناء على التاريخي إلا إذا كان الانحراف كبيراً جداً
-        if (Math.abs(dev) > 100) {
-          result.warning = `⚠️ السعر ${Math.round(price)} يختلف بـ ${dev}% عن أسعار تاريخية مشابهة (${similar.unitPrice})`;
+        
+        // ثقة أعلى مع تقييم أعلى
+        const confidence = Math.min(bestMatch.score / words.length, 1);
+        if (Math.abs(dev) > 80 && confidence > 0.5) {
+          result.isReasonable = false;
+          result.warning = `⚠️ السعر ${Math.round(price)} انحراف ${dev}% عن التاريخي ${Math.round(histPrice)} (ثقة: ${Math.round(confidence * 100)}%)`;
         }
       }
     }
@@ -1326,7 +1549,7 @@ class ItemCostAnalyzer {
     const mix = CONCRETE_MIX_RATES[grade];
     if (!mix) return { materials: [], totalPerM3: 0 };
 
-    const cementPrice = getMaterialPrice('cement_bag') || 22; // سعر كيس 50كجم
+    const cementPrice = getMaterialPrice('cement_50kg') || 22; // سعر كيس 50كجم
     const cementPerKg = cementPrice / 50;
     const sandPrice = getMaterialPrice('sand_m3') || 60;
     const gravelPrice = getMaterialPrice('gravel_m3') || 70;

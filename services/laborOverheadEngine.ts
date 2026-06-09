@@ -147,19 +147,46 @@ const LABOR_RATIOS: Record<string, Record<string, number>> = {
   },
 };
 
+/** Regional labor cost multipliers — V11.3 */
+const REGIONAL_MULTIPLIERS: Record<string, { equipmentFactor: number; laborFactor: number; note: string }> = {
+  riyadh:   { equipmentFactor: 1.15, laborFactor: 0.95, note: 'تربة صخرية — معدات حفر أغلى، عمالة أقل' },
+  jeddah:   { equipmentFactor: 1.0,  laborFactor: 1.10, note: 'تربة سبخة — نزح مياه + عزل إضافي = عمالة أكثر' },
+  dammam:   { equipmentFactor: 1.05, laborFactor: 1.05, note: 'تربة ملحية — حماية إضافية' },
+  makkah:   { equipmentFactor: 1.10, laborFactor: 1.15, note: 'قيود لوجستية — تكلفة نقل أعلى' },
+  madinah:  { equipmentFactor: 1.0,  laborFactor: 1.0,  note: 'تربة متوسطة — معيارية' },
+  tabuk:    { equipmentFactor: 1.0,  laborFactor: 1.20, note: 'منطقة نائية — بدل سكن أعلى' },
+  abha:     { equipmentFactor: 1.10, laborFactor: 1.10, note: 'جبلية — حفر صعب + نقل مكلف' },
+  hail:     { equipmentFactor: 1.0,  laborFactor: 1.15, note: 'منطقة نائية' },
+  jazan:    { equipmentFactor: 1.0,  laborFactor: 1.20, note: 'رطوبة عالية — حماية إضافية' },
+  najran:   { equipmentFactor: 1.05, laborFactor: 1.15, note: 'حدودية — لوجستيات' },
+  hafr_albatin: { equipmentFactor: 1.10, laborFactor: 1.20, note: 'منطقة حدودية نائية عسكرية — بدل سكن أعلى + تصاريح أمنية' },
+};
+
+const SOIL_MULTIPLIERS: Record<string, { equipmentFactor: number; laborFactor: number }> = {
+  normal:     { equipmentFactor: 1.0,  laborFactor: 1.0 },
+  sandy:      { equipmentFactor: 0.90, laborFactor: 1.05 },
+  clay:       { equipmentFactor: 1.05, laborFactor: 1.10 },
+  rocky_soft: { equipmentFactor: 1.15, laborFactor: 0.95 },
+  rocky_hard: { equipmentFactor: 1.30, laborFactor: 0.90 },
+  marshy:     { equipmentFactor: 1.10, laborFactor: 1.25 },
+};
+
 // =================== Service ===================
 
 class LaborOverheadEngine {
 
   /**
    * Calculate full labor overhead for a project
+   * V11.3: يدعم السياق الإقليمي ونوع التربة
    */
   calculate(params: {
     projectType: string;
     areaM2: number;
     durationMonths: number;
-    saudizationPercent?: number;  // Default 20%
+    saudizationPercent?: number;
     projectCost?: number;
+    location?: string;
+    soilType?: string;
   }): LaborOverheadResult {
     const {
       projectType = 'residential_villa',
@@ -167,13 +194,15 @@ class LaborOverheadEngine {
       durationMonths,
       saudizationPercent = 20,
       projectCost = 0,
+      location,
+      soilType,
     } = params;
 
     // ── 1. Estimate workers ──
     const laborEstimate = this.estimateWorkers(projectType, areaM2, durationMonths, saudizationPercent);
 
-    // ── 2. Calculate costs ──
-    const breakdown = this.calculateBreakdown(laborEstimate, durationMonths);
+    // ── 2. Calculate costs (with regional context) ──
+    const breakdown = this.calculateBreakdown(laborEstimate, durationMonths, location, soilType);
 
     // ── 3. Calculate overhead percent ──
     const overheadPercent = projectCost > 0
@@ -224,7 +253,7 @@ class LaborOverheadEngine {
     };
   }
 
-  private calculateBreakdown(labor: LaborEstimate, months: number): LaborCostBreakdown {
+  private calculateBreakdown(labor: LaborEstimate, months: number, location?: string, soilType?: string): LaborCostBreakdown {
     // Total monthly wages
     let totalMonthlyWages = 0;
     for (const [trade, count] of Object.entries(labor.workersByTrade)) {
@@ -267,8 +296,22 @@ class LaborOverheadEngine {
       (totalMonthlyWages / 30) * ANNUAL_COSTS.annual_leave_days * (months / 12)
     );
 
-    const total = gosiCost + nitaqatFees + medicalInsurance + housingAllowance +
+    let total = gosiCost + nitaqatFees + medicalInsurance + housingAllowance +
       transportAllowance + iqamaRenewal + ppeSafety + workPermits + endOfService + annualLeave;
+
+    // V11.3: Apply regional & soil multipliers
+    if (location) {
+      const regionMult = REGIONAL_MULTIPLIERS[location.toLowerCase()];
+      if (regionMult) {
+        total = Math.round(total * ((regionMult.equipmentFactor + regionMult.laborFactor) / 2));
+      }
+    }
+    if (soilType) {
+      const soilMult = SOIL_MULTIPLIERS[soilType.toLowerCase()];
+      if (soilMult) {
+        total = Math.round(total * ((soilMult.equipmentFactor + soilMult.laborFactor) / 2));
+      }
+    }
 
     return {
       gosiCost,

@@ -1223,7 +1223,7 @@ const LiveFloorPlan: React.FC<{ blueprint: BlueprintConfig; language: Language }
         office: { bg: 'rgba(244,63,94,0.15)', bd: '#f43f5e', lb: '#9f1239' },
         corridor: { bg: 'rgba(148,163,184,0.12)', bd: '#94a3b8', lb: '#475569' },
         storage: { bg: 'rgba(120,113,108,0.12)', bd: '#78716c', lb: '#44403c' },
-        prayer: { bg: 'rgba(16,185,129,0.18)', bd: '#10b981', lb: '#065f46' },
+        prayer: { bg: 'rgba(129,140,248,0.18)', bd: '#818CF8', lb: '#3730a3' },
         shop: { bg: 'rgba(249,115,22,0.18)', bd: '#f97316', lb: '#9a3412' },
         clinic: { bg: 'rgba(239,68,68,0.15)', bd: '#ef4444', lb: '#991b1b' },
         gym: { bg: 'rgba(124,58,237,0.15)', bd: '#7c3aed', lb: '#5b21b6' },

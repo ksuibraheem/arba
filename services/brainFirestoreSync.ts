@@ -19,6 +19,7 @@ import {
   collection,
   serverTimestamp,
   Timestamp,
+  writeBatch,
 } from 'firebase/firestore';
 import { offlineBufferService } from './offlineBufferService';
 
@@ -77,6 +78,9 @@ const BRAIN_SYNC_KEYS = [
   'arba_commodity_alerts',
   // Brain Test Knowledge Base (error patterns)
   'arba_brain_error_patterns',
+  // Project tracking
+  'arba_brain_projects',
+  'arba_brain_locations',
 ];
 
 const SYNC_QUEUE_KEY = 'arba_brain_sync_queue';
@@ -100,42 +104,67 @@ class BrainFirestoreSync {
    * يدفع كل بيانات الدماغ من المتصفح إلى السحابة
    */
   async pushAll(userId: string): Promise<SyncReport> {
-    const synced: string[] = [];
-    const failed: string[] = [];
+    return new Promise((resolve) => {
+      const doSync = async () => {
+        const synced: string[] = [];
+        const failed: string[] = [];
+        const batch = writeBatch(db);
 
-    for (const key of BRAIN_SYNC_KEYS) {
-      try {
-        const value = localStorage.getItem(key);
-        if (value) {
-          await this.pushKey(userId, key, value);
-          synced.push(key);
+        for (const key of BRAIN_SYNC_KEYS) {
+          try {
+            const value = localStorage.getItem(key);
+            if (value) {
+              const docRef = doc(db, 'brain_data', userId, 'keys', key);
+              batch.set(docRef, {
+                key,
+                value,
+                updatedAt: serverTimestamp(),
+                sizeBytes: new Blob([value]).size,
+              }, { merge: true });
+              synced.push(key);
+            }
+          } catch (err) {
+            failed.push(key);
+            this.addToQueue(key, localStorage.getItem(key) || '');
+          }
         }
-      } catch (err) {
-        console.error(`❌ Sync failed for ${key}:`, err);
-        failed.push(key);
-        this.addToQueue(key, localStorage.getItem(key) || '');
-        // Buffer to offlineBufferService for auto-retry when online
-        offlineBufferService.addToBuffer({
-          collectionPath: `brain_data/${userId}/keys`,
-          docId: key,
-          data: { key, value: localStorage.getItem(key) || '' },
-          operationType: 'update',
+
+        try {
+          await batch.commit();
+        } catch (batchErr) {
+          // Batch failed — move all to offline buffer
+          for (const key of synced) {
+            this.addToQueue(key, localStorage.getItem(key) || '');
+            offlineBufferService.addToBuffer({
+              collectionPath: `brain_data/${userId}/keys`,
+              docId: key,
+              data: { key, value: localStorage.getItem(key) || '' },
+              operationType: 'update',
+            });
+          }
+          failed.push(...synced);
+          synced.length = 0;
+        }
+
+        const now = new Date();
+        localStorage.setItem(LAST_SYNC_KEY, now.toISOString());
+
+        resolve({
+          syncedKeys: synced,
+          failedKeys: failed,
+          totalSynced: synced.length,
+          totalFailed: failed.length,
+          timestamp: now,
+          direction: 'push',
         });
+      };
+
+      if (typeof requestIdleCallback === 'function') {
+        requestIdleCallback(() => doSync());
+      } else {
+        setTimeout(() => doSync(), 0);
       }
-    }
-
-    // Record last sync time
-    const now = new Date();
-    localStorage.setItem(LAST_SYNC_KEY, now.toISOString());
-
-    return {
-      syncedKeys: synced,
-      failedKeys: failed,
-      totalSynced: synced.length,
-      totalFailed: failed.length,
-      timestamp: now,
-      direction: 'push',
-    };
+    });
   }
 
   /**
@@ -173,16 +202,45 @@ class BrainFirestoreSync {
           const localValue = localStorage.getItem(key);
           const remoteValue = data.value;
 
-          // Merge strategy: remote wins if local is empty, otherwise keep newer
           if (!localValue || localValue === '[]' || localValue === '{}') {
             localStorage.setItem(key, remoteValue);
             synced.push(key);
           } else {
-            // Both have data — keep the one with more content
-            const localSize = new Blob([localValue]).size;
-            const remoteSize = new Blob([remoteValue]).size;
-            if (remoteSize > localSize) {
-              localStorage.setItem(key, remoteValue);
+            // ID-based Array Merge Strategy
+            try {
+              const localData = JSON.parse(localValue);
+              const remoteData = JSON.parse(remoteValue);
+
+              if (Array.isArray(localData) && Array.isArray(remoteData)) {
+                // Merge arrays by ID, keeping newer entries
+                const merged = new Map<string, any>();
+                for (const item of remoteData) {
+                  const id = item.id || item.itemId || item.key || JSON.stringify(item);
+                  merged.set(id, item);
+                }
+                for (const item of localData) {
+                  const id = item.id || item.itemId || item.key || JSON.stringify(item);
+                  // Local entry overrides remote (local is fresher during active session)
+                  merged.set(id, item);
+                }
+                localStorage.setItem(key, JSON.stringify(Array.from(merged.values())));
+                synced.push(key);
+              } else if (typeof localData === 'object' && typeof remoteData === 'object') {
+                // Merge objects: local keys override remote keys
+                const mergedObj = { ...remoteData, ...localData };
+                localStorage.setItem(key, JSON.stringify(mergedObj));
+                synced.push(key);
+              } else {
+                // Primitive or unknown — keep local (active session wins)
+                synced.push(key);
+              }
+            } catch {
+              // Parse failed — keep the bigger one as fallback
+              const localSize = new Blob([localValue]).size;
+              const remoteSize = new Blob([remoteValue]).size;
+              if (remoteSize > localSize) {
+                localStorage.setItem(key, remoteValue);
+              }
               synced.push(key);
             }
           }

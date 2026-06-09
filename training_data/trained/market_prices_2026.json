@@ -1,0 +1,2155 @@
+{
+  "version": "2026.Q2.2",
+  "lastUpdated": "2026-05-31",
+  "currency": "SAR",
+  "vatExcluded": true,
+  "sources": [
+    "CEIC Data",
+    "Saudi Contractors Authority",
+    "Hadeed/PIF",
+    "Rajhi Steel",
+    "LME London Metal Exchange",
+    "Trading Economics",
+    "elburoj.com",
+    "youmats.com",
+    "noon.com",
+    "extra.com",
+    "siqalh.com",
+    "alzaben.com.sa",
+    "aqar.fm",
+    "luxuryland.sa",
+    "costs-app.com",
+    "awazly.com"
+  ],
+  "globalBenchmarks": [
+    {
+      "name": "LME Copper Cash",
+      "priceUSD": 13612,
+      "priceSAR": 51045,
+      "unit": "ton",
+      "date": "2026-05-29"
+    },
+    {
+      "name": "LME Aluminum Cash",
+      "priceUSD": 3769,
+      "priceSAR": 14134,
+      "unit": "ton",
+      "date": "2026-05-29"
+    },
+    {
+      "name": "LME Steel Rebar FOB Turkey",
+      "priceUSD": 590,
+      "priceSAR": 2213,
+      "unit": "ton",
+      "date": "2026-05"
+    },
+    {
+      "name": "LME Steel HRC FOB China",
+      "priceUSD": 496,
+      "priceSAR": 1860,
+      "unit": "ton",
+      "date": "2026-05"
+    },
+    {
+      "name": "Steel Rebar China Futures",
+      "priceCNY": 3190,
+      "priceSAR": 1650,
+      "unit": "ton",
+      "date": "2026-05"
+    }
+  ],
+  "categories": {
+    "steel_rebar": [
+      {
+        "name_en": "Steel Rebar 8mm",
+        "name_ar": "حديد تسليح 8مم",
+        "unit": "ton",
+        "min": 3800,
+        "avg": 3900,
+        "max": 4000
+      },
+      {
+        "name_en": "Steel Rebar 10mm",
+        "name_ar": "حديد تسليح 10مم",
+        "unit": "ton",
+        "min": 3200,
+        "avg": 3400,
+        "max": 3600
+      },
+      {
+        "name_en": "Steel Rebar 12mm",
+        "name_ar": "حديد تسليح 12مم",
+        "unit": "ton",
+        "min": 2700,
+        "avg": 2850,
+        "max": 3000
+      },
+      {
+        "name_en": "Steel Rebar 16mm",
+        "name_ar": "حديد تسليح 16مم",
+        "unit": "ton",
+        "min": 2700,
+        "avg": 2800,
+        "max": 2930
+      },
+      {
+        "name_en": "Steel Rebar 20mm",
+        "name_ar": "حديد تسليح 20مم",
+        "unit": "ton",
+        "min": 2700,
+        "avg": 2800,
+        "max": 2900
+      },
+      {
+        "name_en": "Steel Rebar 25mm",
+        "name_ar": "حديد تسليح 25مم",
+        "unit": "ton",
+        "min": 2700,
+        "avg": 2800,
+        "max": 2900
+      },
+      {
+        "name_en": "Steel Rebar 32mm",
+        "name_ar": "حديد تسليح 32مم",
+        "unit": "ton",
+        "min": 2700,
+        "avg": 2800,
+        "max": 2900
+      }
+    ],
+    "structural_steel": [
+      {
+        "name_en": "H-Beam HEA",
+        "name_ar": "كمرة H",
+        "unit": "ton",
+        "min": 3000,
+        "avg": 3200,
+        "max": 3500
+      },
+      {
+        "name_en": "I-Beam IPE",
+        "name_ar": "كمرة I",
+        "unit": "ton",
+        "min": 2900,
+        "avg": 3100,
+        "max": 3400
+      },
+      {
+        "name_en": "Steel Channels UPN",
+        "name_ar": "قنوات حديدية",
+        "unit": "ton",
+        "min": 2800,
+        "avg": 3000,
+        "max": 3200
+      },
+      {
+        "name_en": "Steel Plates Carbon 6-25mm",
+        "name_ar": "ألواح حديد كربوني",
+        "unit": "ton",
+        "min": 2900,
+        "avg": 3200,
+        "max": 3500
+      },
+      {
+        "name_en": "Stainless Steel 304 Plates",
+        "name_ar": "ألواح ستانلس 304",
+        "unit": "ton",
+        "min": 10000,
+        "avg": 12000,
+        "max": 14000
+      }
+    ],
+    "steel_mesh": [
+      {
+        "name_en": "Wire Mesh 5mm 200x200",
+        "name_ar": "شبك حديد 5مم",
+        "unit": "m2",
+        "min": 15,
+        "avg": 18,
+        "max": 22
+      },
+      {
+        "name_en": "Wire Mesh 6mm 150x150",
+        "name_ar": "شبك حديد 6مم",
+        "unit": "m2",
+        "min": 22,
+        "avg": 28,
+        "max": 35
+      },
+      {
+        "name_en": "Wire Mesh 8mm 200x200",
+        "name_ar": "شبك حديد 8مم",
+        "unit": "m2",
+        "min": 30,
+        "avg": 38,
+        "max": 45
+      },
+      {
+        "name_en": "Wire Mesh 10mm 200x200",
+        "name_ar": "شبك حديد 10مم",
+        "unit": "m2",
+        "min": 45,
+        "avg": 55,
+        "max": 65
+      }
+    ],
+    "galvanized_steel": [
+      {
+        "name_en": "Galv Steel Sheet 0.5mm",
+        "name_ar": "صاج مجلفن 0.5مم",
+        "unit": "ton",
+        "min": 3800,
+        "avg": 4200,
+        "max": 4600
+      },
+      {
+        "name_en": "Galv Steel Sheet 0.8-1.0mm",
+        "name_ar": "صاج مجلفن 0.8-1مم",
+        "unit": "ton",
+        "min": 3500,
+        "avg": 3800,
+        "max": 4200
+      },
+      {
+        "name_en": "Galv Steel Coil 1.5-2.0mm",
+        "name_ar": "لفائف مجلفنة",
+        "unit": "ton",
+        "min": 3200,
+        "avg": 3500,
+        "max": 3800
+      },
+      {
+        "name_en": "Galv Steel Pipe",
+        "name_ar": "مواسير مجلفنة",
+        "unit": "ton",
+        "min": 3600,
+        "avg": 4000,
+        "max": 4500
+      }
+    ],
+    "aluminum": [
+      {
+        "name_en": "Aluminum 6063 Mill Finish",
+        "name_ar": "ألمنيوم خام",
+        "unit": "kg",
+        "min": 10,
+        "avg": 12,
+        "max": 15
+      },
+      {
+        "name_en": "Aluminum 6063 Anodized",
+        "name_ar": "ألمنيوم مؤنود",
+        "unit": "kg",
+        "min": 15,
+        "avg": 18,
+        "max": 22
+      },
+      {
+        "name_en": "Aluminum 6063 Powder Coated",
+        "name_ar": "ألمنيوم دهان إلكتروستاتيك",
+        "unit": "kg",
+        "min": 17,
+        "avg": 20,
+        "max": 25
+      }
+    ],
+    "copper_pipes": [
+      {
+        "name_en": "Copper Pipe 1/4in",
+        "name_ar": "نحاس 1/4 بوصة",
+        "unit": "m",
+        "min": 10,
+        "avg": 55,
+        "max": 65
+      },
+      {
+        "name_en": "Copper Pipe 3/8in",
+        "name_ar": "نحاس 3/8 بوصة",
+        "unit": "m",
+        "min": 14,
+        "avg": 65,
+        "max": 75
+      },
+      {
+        "name_en": "Copper Pipe 1/2in",
+        "name_ar": "نحاس 1/2 بوصة",
+        "unit": "m",
+        "min": 18,
+        "avg": 82,
+        "max": 95
+      },
+      {
+        "name_en": "Copper Pipe 3/4in",
+        "name_ar": "نحاس 3/4 بوصة",
+        "unit": "m",
+        "min": 28,
+        "avg": 122,
+        "max": 140
+      },
+      {
+        "name_en": "Copper Pipe 7/8in",
+        "name_ar": "نحاس 7/8 بوصة",
+        "unit": "m",
+        "min": 125,
+        "avg": 145,
+        "max": 165
+      }
+    ],
+    "cement": [
+      {
+        "name_en": "OPC Type I Bag",
+        "name_ar": "أسمنت بورتلاندي كيس",
+        "unit": "50kg bag",
+        "min": 14.33,
+        "avg": 15,
+        "max": 15.8
+      },
+      {
+        "name_en": "OPC Type I Bulk",
+        "name_ar": "أسمنت بورتلاندي سائب",
+        "unit": "ton",
+        "min": 180,
+        "avg": 210,
+        "max": 240
+      },
+      {
+        "name_en": "SRC Type V Bag",
+        "name_ar": "أسمنت مقاوم كبريتات كيس",
+        "unit": "50kg bag",
+        "min": 15,
+        "avg": 16.5,
+        "max": 18
+      },
+      {
+        "name_en": "SRC Type V Bulk",
+        "name_ar": "أسمنت مقاوم كبريتات سائب",
+        "unit": "ton",
+        "min": 240,
+        "avg": 270,
+        "max": 300
+      },
+      {
+        "name_en": "White Cement Bag",
+        "name_ar": "أسمنت أبيض كيس",
+        "unit": "50kg bag",
+        "min": 37.9,
+        "avg": 38.2,
+        "max": 38.5
+      },
+      {
+        "name_en": "White Cement Bulk",
+        "name_ar": "أسمنت أبيض سائب",
+        "unit": "ton",
+        "min": 630,
+        "avg": 700,
+        "max": 770
+      }
+    ],
+    "readymix_concrete": [
+      {
+        "name_en": "Ready-Mix C20",
+        "name_ar": "خرسانة جاهزة C20",
+        "unit": "m3",
+        "min": 195,
+        "avg": 198,
+        "max": 200
+      },
+      {
+        "name_en": "Ready-Mix C25",
+        "name_ar": "خرسانة جاهزة C25",
+        "unit": "m3",
+        "min": 205,
+        "avg": 210,
+        "max": 215
+      },
+      {
+        "name_en": "Ready-Mix C30",
+        "name_ar": "خرسانة جاهزة C30",
+        "unit": "m3",
+        "min": 216,
+        "avg": 217,
+        "max": 218
+      },
+      {
+        "name_en": "Ready-Mix C30 SRC",
+        "name_ar": "خرسانة C30 مقاومة كبريتات",
+        "unit": "m3",
+        "min": 226,
+        "avg": 227,
+        "max": 228
+      },
+      {
+        "name_en": "Ready-Mix C35",
+        "name_ar": "خرسانة جاهزة C35",
+        "unit": "m3",
+        "min": 230,
+        "avg": 240,
+        "max": 250
+      },
+      {
+        "name_en": "Ready-Mix C40",
+        "name_ar": "خرسانة جاهزة C40",
+        "unit": "m3",
+        "min": 250,
+        "avg": 265,
+        "max": 280
+      },
+      {
+        "name_en": "Ready-Mix C45",
+        "name_ar": "خرسانة جاهزة C45",
+        "unit": "m3",
+        "min": 280,
+        "avg": 315,
+        "max": 350
+      }
+    ],
+    "aggregates": [
+      {
+        "name_en": "Washed Sand",
+        "name_ar": "رمل مغسول",
+        "unit": "m3",
+        "min": 75,
+        "avg": 77.7,
+        "max": 80
+      },
+      {
+        "name_en": "Plaster Sand",
+        "name_ar": "رمل لياسة",
+        "unit": "m3",
+        "min": 50,
+        "avg": 52.63,
+        "max": 55
+      },
+      {
+        "name_en": "Backfill Sand Red",
+        "name_ar": "رمل ردم أحمر",
+        "unit": "m3",
+        "min": 35,
+        "avg": 38.81,
+        "max": 42
+      },
+      {
+        "name_en": "Aggregate 10mm",
+        "name_ar": "بحص 10مم",
+        "unit": "m3",
+        "min": 45,
+        "avg": 55,
+        "max": 65
+      },
+      {
+        "name_en": "Aggregate 20mm",
+        "name_ar": "بحص 20مم",
+        "unit": "m3",
+        "min": 40,
+        "avg": 50,
+        "max": 60
+      },
+      {
+        "name_en": "Aggregate 40mm",
+        "name_ar": "بحص 40مم",
+        "unit": "m3",
+        "min": 35,
+        "avg": 45,
+        "max": 55
+      }
+    ],
+    "blocks": [
+      {
+        "name_en": "Block 100mm",
+        "name_ar": "بلك 10سم",
+        "unit": "pc",
+        "min": 0.75,
+        "avg": 1.2,
+        "max": 1.6
+      },
+      {
+        "name_en": "Block 150mm",
+        "name_ar": "بلك 15سم",
+        "unit": "pc",
+        "min": 0.95,
+        "avg": 1.35,
+        "max": 1.7
+      },
+      {
+        "name_en": "Block 200mm",
+        "name_ar": "بلك 20سم",
+        "unit": "pc",
+        "min": 1.1,
+        "avg": 1.55,
+        "max": 2
+      },
+      {
+        "name_en": "Block 250mm",
+        "name_ar": "بلك 25سم",
+        "unit": "pc",
+        "min": 2.5,
+        "avg": 3,
+        "max": 3.5
+      },
+      {
+        "name_en": "Block 300mm",
+        "name_ar": "بلك 30سم",
+        "unit": "pc",
+        "min": 3,
+        "avg": 4,
+        "max": 5
+      },
+      {
+        "name_en": "Insulated Block 200mm",
+        "name_ar": "بلك معزول 20سم",
+        "unit": "pc",
+        "min": 1.8,
+        "avg": 2.3,
+        "max": 3
+      }
+    ],
+    "electrical_cables": [
+      {
+        "name_en": "Cable 1.5mm² PVC",
+        "name_ar": "كابل 1.5مم²",
+        "unit": "m",
+        "min": 1.5,
+        "avg": 2.25,
+        "max": 3
+      },
+      {
+        "name_en": "Cable 2.5mm² PVC",
+        "name_ar": "كابل 2.5مم²",
+        "unit": "m",
+        "min": 2.5,
+        "avg": 3.75,
+        "max": 5
+      },
+      {
+        "name_en": "Cable 4mm² PVC",
+        "name_ar": "كابل 4مم²",
+        "unit": "m",
+        "min": 4,
+        "avg": 5.5,
+        "max": 7
+      },
+      {
+        "name_en": "Cable 10mm² XLPE",
+        "name_ar": "كابل 10مم²",
+        "unit": "m",
+        "min": 8,
+        "avg": 10,
+        "max": 12
+      },
+      {
+        "name_en": "Cable 4x10mm² Multi",
+        "name_ar": "كابل 4×10مم²",
+        "unit": "m",
+        "min": 18,
+        "avg": 26,
+        "max": 35
+      },
+      {
+        "name_en": "Cable 16mm² XLPE",
+        "name_ar": "كابل 16مم²",
+        "unit": "m",
+        "min": 12,
+        "avg": 15,
+        "max": 18
+      },
+      {
+        "name_en": "Cable 70mm² XLPE",
+        "name_ar": "كابل 70مم²",
+        "unit": "m",
+        "min": 45,
+        "avg": 55,
+        "max": 65
+      },
+      {
+        "name_en": "Cable 150mm² XLPE",
+        "name_ar": "كابل 150مم²",
+        "unit": "m",
+        "min": 95,
+        "avg": 112,
+        "max": 130
+      },
+      {
+        "name_en": "Cable 300mm² XLPE",
+        "name_ar": "كابل 300مم²",
+        "unit": "m",
+        "min": 180,
+        "avg": 215,
+        "max": 250
+      }
+    ],
+    "electrical_panels": [
+      {
+        "name_en": "DB 12-way",
+        "name_ar": "لوحة توزيع 12 خط",
+        "unit": "unit",
+        "min": 250,
+        "avg": 425,
+        "max": 600
+      },
+      {
+        "name_en": "DB 24-way",
+        "name_ar": "لوحة توزيع 24 خط",
+        "unit": "unit",
+        "min": 500,
+        "avg": 850,
+        "max": 1200
+      },
+      {
+        "name_en": "SMDB 400A",
+        "name_ar": "لوحة فرعية 400 أمبير",
+        "unit": "unit",
+        "min": 8000,
+        "avg": 16500,
+        "max": 25000
+      },
+      {
+        "name_en": "MDB 630A-2000A",
+        "name_ar": "لوحة رئيسية",
+        "unit": "unit",
+        "min": 25000,
+        "avg": 72500,
+        "max": 120000
+      }
+    ],
+    "electrical_switches": [
+      {
+        "name_en": "Switch Single Basic",
+        "name_ar": "مفتاح مفرد عادي",
+        "unit": "unit",
+        "min": 10,
+        "avg": 15,
+        "max": 20
+      },
+      {
+        "name_en": "Switch Premium",
+        "name_ar": "مفتاح فاخر",
+        "unit": "unit",
+        "min": 50,
+        "avg": 85,
+        "max": 120
+      },
+      {
+        "name_en": "Socket Double",
+        "name_ar": "بريزة مزدوجة",
+        "unit": "unit",
+        "min": 20,
+        "avg": 32,
+        "max": 45
+      }
+    ],
+    "lighting": [
+      {
+        "name_en": "LED Downlight 4-8W",
+        "name_ar": "سبوت لايت LED",
+        "unit": "unit",
+        "min": 10,
+        "avg": 22,
+        "max": 35
+      },
+      {
+        "name_en": "LED Downlight COB 15-30W",
+        "name_ar": "سبوت COB",
+        "unit": "unit",
+        "min": 40,
+        "avg": 52,
+        "max": 65
+      },
+      {
+        "name_en": "LED Panel 60x60 40W",
+        "name_ar": "لوحة LED 60×60",
+        "unit": "unit",
+        "min": 150,
+        "avg": 207,
+        "max": 265
+      },
+      {
+        "name_en": "LED Floodlight 30-50W",
+        "name_ar": "كشاف LED 30-50W",
+        "unit": "unit",
+        "min": 70,
+        "avg": 110,
+        "max": 150
+      },
+      {
+        "name_en": "LED Floodlight 100-200W",
+        "name_ar": "كشاف LED 100-200W",
+        "unit": "unit",
+        "min": 200,
+        "avg": 550,
+        "max": 900
+      }
+    ],
+    "cable_trays": [
+      {
+        "name_en": "Cable Tray 100mm",
+        "name_ar": "حوامل كابلات 100مم",
+        "unit": "m",
+        "min": 15,
+        "avg": 20,
+        "max": 25
+      },
+      {
+        "name_en": "Cable Tray 200mm",
+        "name_ar": "حوامل كابلات 200مم",
+        "unit": "m",
+        "min": 22,
+        "avg": 28,
+        "max": 35
+      },
+      {
+        "name_en": "Cable Tray 300mm",
+        "name_ar": "حوامل كابلات 300مم",
+        "unit": "m",
+        "min": 30,
+        "avg": 37,
+        "max": 45
+      },
+      {
+        "name_en": "Cable Tray 600mm",
+        "name_ar": "حوامل كابلات 600مم",
+        "unit": "m",
+        "min": 60,
+        "avg": 75,
+        "max": 90
+      }
+    ],
+    "ppr_pipes": [
+      {
+        "name_en": "PPR 20mm",
+        "name_ar": "مواسير PPR 20مم",
+        "unit": "m",
+        "min": 3.5,
+        "avg": 4.12,
+        "max": 4.75
+      },
+      {
+        "name_en": "PPR 25mm",
+        "name_ar": "مواسير PPR 25مم",
+        "unit": "m",
+        "min": 5,
+        "avg": 6,
+        "max": 7
+      },
+      {
+        "name_en": "PPR 32mm",
+        "name_ar": "مواسير PPR 32مم",
+        "unit": "m",
+        "min": 7.5,
+        "avg": 8.75,
+        "max": 10
+      },
+      {
+        "name_en": "PPR 63mm",
+        "name_ar": "مواسير PPR 63مم",
+        "unit": "m",
+        "min": 17.5,
+        "avg": 25,
+        "max": 33
+      },
+      {
+        "name_en": "PPR 110mm",
+        "name_ar": "مواسير PPR 110مم",
+        "unit": "m",
+        "min": 78,
+        "avg": 84,
+        "max": 90
+      }
+    ],
+    "upvc_pipes": [
+      {
+        "name_en": "UPVC 50mm",
+        "name_ar": "مواسير صرف 50مم",
+        "unit": "m",
+        "min": 5,
+        "avg": 6.5,
+        "max": 8
+      },
+      {
+        "name_en": "UPVC 110mm Standard",
+        "name_ar": "مواسير صرف 110مم",
+        "unit": "m",
+        "min": 12.5,
+        "avg": 13,
+        "max": 13.5
+      },
+      {
+        "name_en": "UPVC 110mm Heavy",
+        "name_ar": "مواسير صرف 110مم ثقيل",
+        "unit": "m",
+        "min": 18,
+        "avg": 19,
+        "max": 20
+      },
+      {
+        "name_en": "UPVC 160mm",
+        "name_ar": "مواسير صرف 160مم",
+        "unit": "m",
+        "min": 25,
+        "avg": 30,
+        "max": 35
+      }
+    ],
+    "sanitary": [
+      {
+        "name_en": "WC Floor Standard",
+        "name_ar": "كرسي حمام أرضي عادي",
+        "unit": "unit",
+        "min": 170,
+        "avg": 310,
+        "max": 450
+      },
+      {
+        "name_en": "WC Floor Mid",
+        "name_ar": "كرسي حمام أرضي متوسط",
+        "unit": "unit",
+        "min": 450,
+        "avg": 575,
+        "max": 700
+      },
+      {
+        "name_en": "WC Wall Hung",
+        "name_ar": "كرسي حمام معلق",
+        "unit": "unit",
+        "min": 500,
+        "avg": 850,
+        "max": 1200
+      },
+      {
+        "name_en": "Wash Basin Pedestal",
+        "name_ar": "مغسلة عمود",
+        "unit": "unit",
+        "min": 200,
+        "avg": 300,
+        "max": 400
+      },
+      {
+        "name_en": "Shower Mixer",
+        "name_ar": "خلاط دش",
+        "unit": "unit",
+        "min": 200,
+        "avg": 250,
+        "max": 300
+      }
+    ],
+    "hvac": [
+      {
+        "name_en": "Split AC 1 Ton",
+        "name_ar": "مكيف سبليت 1 طن",
+        "unit": "unit",
+        "min": 1500,
+        "avg": 2000,
+        "max": 2500
+      },
+      {
+        "name_en": "Split AC 1.5 Ton",
+        "name_ar": "مكيف سبليت 1.5 طن",
+        "unit": "unit",
+        "min": 2000,
+        "avg": 2750,
+        "max": 3500
+      },
+      {
+        "name_en": "Split AC 2 Ton",
+        "name_ar": "مكيف سبليت 2 طن",
+        "unit": "unit",
+        "min": 2500,
+        "avg": 3500,
+        "max": 4500
+      },
+      {
+        "name_en": "Split AC 3 Ton",
+        "name_ar": "مكيف سبليت 3 طن",
+        "unit": "unit",
+        "min": 4500,
+        "avg": 5750,
+        "max": 7000
+      },
+      {
+        "name_en": "VRF System",
+        "name_ar": "نظام VRF",
+        "unit": "ton",
+        "min": 7000,
+        "avg": 15000,
+        "max": 22500
+      },
+      {
+        "name_en": "Ductwork 24ga",
+        "name_ar": "مجاري هواء 24ga",
+        "unit": "m2",
+        "min": 35,
+        "avg": 44,
+        "max": 55
+      },
+      {
+        "name_en": "Chilled Water Pipe 2in",
+        "name_ar": "مواسير ماء بارد 2 بوصة",
+        "unit": "m",
+        "min": 20,
+        "avg": 23,
+        "max": 26
+      }
+    ],
+    "fire_fighting": [
+      {
+        "name_en": "Sprinkler Head Standard",
+        "name_ar": "رشاش حريق عادي",
+        "unit": "unit",
+        "min": 17,
+        "avg": 21,
+        "max": 25
+      },
+      {
+        "name_en": "Fire Alarm Panel Conventional",
+        "name_ar": "لوحة إنذار حريق تقليدية",
+        "unit": "unit",
+        "min": 800,
+        "avg": 1150,
+        "max": 1500
+      },
+      {
+        "name_en": "Fire Alarm Panel Addressable",
+        "name_ar": "لوحة إنذار حريق ذكية",
+        "unit": "unit",
+        "min": 4000,
+        "avg": 7000,
+        "max": 50000
+      },
+      {
+        "name_en": "Fire Extinguisher 6kg ABC",
+        "name_ar": "طفاية حريق 6كجم",
+        "unit": "unit",
+        "min": 100,
+        "avg": 140,
+        "max": 180
+      }
+    ],
+    "tiles": [
+      {
+        "name_en": "Ceramic Local 1st Grade",
+        "name_ar": "سيراميك محلي فرز أول",
+        "unit": "m2",
+        "min": 24,
+        "avg": 45,
+        "max": 70
+      },
+      {
+        "name_en": "Ceramic Imported",
+        "name_ar": "سيراميك مستورد",
+        "unit": "m2",
+        "min": 65,
+        "avg": 120,
+        "max": 200
+      },
+      {
+        "name_en": "Porcelain Economy",
+        "name_ar": "بورسلان اقتصادي",
+        "unit": "m2",
+        "min": 31,
+        "avg": 50,
+        "max": 70
+      },
+      {
+        "name_en": "Porcelain Mid-range",
+        "name_ar": "بورسلان متوسط",
+        "unit": "m2",
+        "min": 70,
+        "avg": 110,
+        "max": 150
+      },
+      {
+        "name_en": "Porcelain Premium",
+        "name_ar": "بورسلان فاخر",
+        "unit": "m2",
+        "min": 150,
+        "avg": 300,
+        "max": 600
+      }
+    ],
+    "stone": [
+      {
+        "name_en": "Marble Local",
+        "name_ar": "رخام محلي",
+        "unit": "m2",
+        "min": 120,
+        "avg": 220,
+        "max": 350
+      },
+      {
+        "name_en": "Marble Imported Premium",
+        "name_ar": "رخام مستورد فاخر",
+        "unit": "m2",
+        "min": 350,
+        "avg": 800,
+        "max": 3000
+      },
+      {
+        "name_en": "Granite Local",
+        "name_ar": "جرانيت محلي",
+        "unit": "m2",
+        "min": 120,
+        "avg": 180,
+        "max": 300
+      },
+      {
+        "name_en": "Granite Imported",
+        "name_ar": "جرانيت مستورد",
+        "unit": "m2",
+        "min": 400,
+        "avg": 500,
+        "max": 700
+      }
+    ],
+    "paint": [
+      {
+        "name_en": "Interior Paint S&A",
+        "name_ar": "دهان داخلي توريد وتطبيق",
+        "unit": "m2",
+        "min": 18,
+        "avg": 30,
+        "max": 45
+      },
+      {
+        "name_en": "Exterior Paint S&A",
+        "name_ar": "دهان خارجي توريد وتطبيق",
+        "unit": "m2",
+        "min": 25,
+        "avg": 38,
+        "max": 55
+      }
+    ],
+    "doors": [
+      {
+        "name_en": "Flush Door Economy",
+        "name_ar": "باب فلش اقتصادي",
+        "unit": "unit",
+        "min": 180,
+        "avg": 280,
+        "max": 400
+      },
+      {
+        "name_en": "HDF Door Mid",
+        "name_ar": "باب HDF متوسط",
+        "unit": "unit",
+        "min": 500,
+        "avg": 700,
+        "max": 900
+      },
+      {
+        "name_en": "Solid Wood Door",
+        "name_ar": "باب خشب صولد",
+        "unit": "unit",
+        "min": 1500,
+        "avg": 3000,
+        "max": 10000
+      }
+    ],
+    "windows": [
+      {
+        "name_en": "Aluminum Window Standard",
+        "name_ar": "شباك ألمنيوم عادي",
+        "unit": "m2",
+        "min": 550,
+        "avg": 700,
+        "max": 850
+      },
+      {
+        "name_en": "Aluminum Thermal Break",
+        "name_ar": "ألمنيوم ثيرمال بريك",
+        "unit": "m2",
+        "min": 950,
+        "avg": 1200,
+        "max": 1600
+      }
+    ],
+    "waterproofing": [
+      {
+        "name_en": "Bituminous Membrane",
+        "name_ar": "عزل بيتومين",
+        "unit": "m2",
+        "min": 10,
+        "avg": 18,
+        "max": 30
+      },
+      {
+        "name_en": "PU Foam Dual",
+        "name_ar": "عزل فوم بولي يوريثان",
+        "unit": "m2",
+        "min": 25,
+        "avg": 50,
+        "max": 105
+      },
+      {
+        "name_en": "Polyurea Membrane",
+        "name_ar": "عزل بولي يوريا",
+        "unit": "m2",
+        "min": 40,
+        "avg": 48,
+        "max": 55
+      }
+    ],
+    "insulation": [
+      {
+        "name_en": "EPS Board",
+        "name_ar": "عزل EPS",
+        "unit": "m2",
+        "min": 30,
+        "avg": 35,
+        "max": 45
+      },
+      {
+        "name_en": "XPS Board",
+        "name_ar": "عزل XPS",
+        "unit": "m2",
+        "min": 40,
+        "avg": 50,
+        "max": 65
+      },
+      {
+        "name_en": "Thermal S&I System",
+        "name_ar": "عزل حراري توريد وتركيب",
+        "unit": "m2",
+        "min": 60,
+        "avg": 80,
+        "max": 110
+      }
+    ],
+    "ceilings": [
+      {
+        "name_en": "Gypsum False Ceiling S&I",
+        "name_ar": "سقف مستعار جبس",
+        "unit": "m2",
+        "min": 45,
+        "avg": 75,
+        "max": 120
+      },
+      {
+        "name_en": "Decorative Gypsum Ceiling",
+        "name_ar": "سقف جبس ديكوري",
+        "unit": "m2",
+        "min": 140,
+        "avg": 200,
+        "max": 450
+      },
+      {
+        "name_en": "Metal False Ceiling",
+        "name_ar": "سقف مستعار معدني",
+        "unit": "m2",
+        "min": 90,
+        "avg": 150,
+        "max": 250
+      }
+    ],
+    "epoxy": [
+      {
+        "name_en": "Epoxy Standard",
+        "name_ar": "إيبوكسي عادي",
+        "unit": "m2",
+        "min": 30,
+        "avg": 50,
+        "max": 70
+      },
+      {
+        "name_en": "Epoxy Self-leveling",
+        "name_ar": "إيبوكسي ذاتي التسوية",
+        "unit": "m2",
+        "min": 130,
+        "avg": 160,
+        "max": 190
+      },
+      {
+        "name_en": "Epoxy Decorative",
+        "name_ar": "إيبوكسي ديكوري",
+        "unit": "m2",
+        "min": 240,
+        "avg": 340,
+        "max": 450
+      }
+    ],
+    "labor_rates": [
+      {
+        "name_en": "Concrete Works Labor",
+        "name_ar": "مصنعية خرسانة",
+        "unit": "m2",
+        "min": 150,
+        "avg": 200,
+        "max": 250
+      },
+      {
+        "name_en": "Block Laying Labor",
+        "name_ar": "مصنعية بناء بلك",
+        "unit": "m2",
+        "min": 25,
+        "avg": 35,
+        "max": 45
+      },
+      {
+        "name_en": "Plastering Labor",
+        "name_ar": "مصنعية لياسة",
+        "unit": "m2",
+        "min": 12,
+        "avg": 15,
+        "max": 18
+      },
+      {
+        "name_en": "Plastering Engineered",
+        "name_ar": "لياسة هندسية ببؤج",
+        "unit": "m2",
+        "min": 18,
+        "avg": 22,
+        "max": 28
+      },
+      {
+        "name_en": "Tiling Labor Standard",
+        "name_ar": "مصنعية بلاط عادي",
+        "unit": "m2",
+        "min": 30,
+        "avg": 45,
+        "max": 60
+      },
+      {
+        "name_en": "Tiling Labor Large/Marble",
+        "name_ar": "مصنعية بلاط كبير/رخام",
+        "unit": "m2",
+        "min": 60,
+        "avg": 90,
+        "max": 150
+      },
+      {
+        "name_en": "Painting Labor Interior",
+        "name_ar": "مصنعية دهان داخلي",
+        "unit": "m2",
+        "min": 8,
+        "avg": 12,
+        "max": 18
+      },
+      {
+        "name_en": "Painting Labor Exterior",
+        "name_ar": "مصنعية دهان خارجي",
+        "unit": "m2",
+        "min": 12,
+        "avg": 18,
+        "max": 25
+      },
+      {
+        "name_en": "Electrical Point Light",
+        "name_ar": "نقطة كهرباء إنارة",
+        "unit": "point",
+        "min": 25,
+        "avg": 30,
+        "max": 35
+      },
+      {
+        "name_en": "Electrical Point Socket",
+        "name_ar": "نقطة بريزة",
+        "unit": "point",
+        "min": 30,
+        "avg": 35,
+        "max": 40
+      },
+      {
+        "name_en": "Electrical Point AC",
+        "name_ar": "نقطة مكيف",
+        "unit": "point",
+        "min": 50,
+        "avg": 60,
+        "max": 70
+      },
+      {
+        "name_en": "Plumbing Point",
+        "name_ar": "نقطة سباكة",
+        "unit": "point",
+        "min": 40,
+        "avg": 55,
+        "max": 80
+      },
+      {
+        "name_en": "HVAC Install Split",
+        "name_ar": "تركيب سبليت",
+        "unit": "unit",
+        "min": 150,
+        "avg": 250,
+        "max": 300
+      },
+      {
+        "name_en": "HVAC Install Central",
+        "name_ar": "تركيب تكييف مركزي",
+        "unit": "ton",
+        "min": 1500,
+        "avg": 2500,
+        "max": 3500
+      },
+      {
+        "name_en": "General Labor Daily",
+        "name_ar": "عامل عادي يومية",
+        "unit": "day",
+        "min": 80,
+        "avg": 100,
+        "max": 130
+      },
+      {
+        "name_en": "Skilled Labor Daily",
+        "name_ar": "عامل ماهر يومية",
+        "unit": "day",
+        "min": 170,
+        "avg": 250,
+        "max": 350
+      }
+    ],
+    "bms": [
+      {
+        "name_en": "BMS Point",
+        "name_ar": "نقطة BMS",
+        "unit": "point",
+        "min": 350,
+        "avg": 550,
+        "max": 850
+      },
+      {
+        "name_en": "BMS System Small ~200pt",
+        "name_ar": "نظام BMS صغير",
+        "unit": "system",
+        "min": 150000,
+        "avg": 300000,
+        "max": 500000
+      },
+      {
+        "name_en": "BMS System Large ~1000pt",
+        "name_ar": "نظام BMS كبير",
+        "unit": "system",
+        "min": 500000,
+        "avg": 1000000,
+        "max": 2000000
+      }
+    ],
+    "access_control": [
+      {
+        "name_en": "RFID Card Reader",
+        "name_ar": "قارئ بطاقات RFID",
+        "unit": "unit",
+        "min": 400,
+        "avg": 650,
+        "max": 900
+      },
+      {
+        "name_en": "Biometric Terminal",
+        "name_ar": "جهاز بصمة/وجه",
+        "unit": "unit",
+        "min": 500,
+        "avg": 1000,
+        "max": 1500
+      },
+      {
+        "name_en": "Access Controller 4-door",
+        "name_ar": "وحدة تحكم 4 أبواب",
+        "unit": "unit",
+        "min": 1200,
+        "avg": 2000,
+        "max": 3500
+      },
+      {
+        "name_en": "Magnetic Lock 280kg",
+        "name_ar": "قفل مغناطيسي",
+        "unit": "unit",
+        "min": 250,
+        "avg": 320,
+        "max": 400
+      }
+    ],
+    "cctv": [
+      {
+        "name_en": "IP Camera 2MP",
+        "name_ar": "كاميرا 2 ميجا",
+        "unit": "unit",
+        "min": 160,
+        "avg": 250,
+        "max": 350
+      },
+      {
+        "name_en": "IP Camera 4MP",
+        "name_ar": "كاميرا 4 ميجا",
+        "unit": "unit",
+        "min": 200,
+        "avg": 300,
+        "max": 400
+      },
+      {
+        "name_en": "IP Camera 8MP 4K",
+        "name_ar": "كاميرا 8 ميجا 4K",
+        "unit": "unit",
+        "min": 400,
+        "avg": 650,
+        "max": 950
+      },
+      {
+        "name_en": "NVR 8-16CH",
+        "name_ar": "جهاز تسجيل NVR",
+        "unit": "unit",
+        "min": 700,
+        "avg": 1100,
+        "max": 1500
+      },
+      {
+        "name_en": "Security Monitor 32in",
+        "name_ar": "شاشة مراقبة 32 بوصة",
+        "unit": "unit",
+        "min": 450,
+        "avg": 625,
+        "max": 800
+      }
+    ],
+    "intercom": [
+      {
+        "name_en": "Video Door Phone Basic",
+        "name_ar": "انتركم مرئي بسيط",
+        "unit": "unit",
+        "min": 250,
+        "avg": 425,
+        "max": 600
+      },
+      {
+        "name_en": "Video Door Phone WiFi",
+        "name_ar": "انتركم مرئي واي فاي",
+        "unit": "unit",
+        "min": 600,
+        "avg": 950,
+        "max": 1300
+      },
+      {
+        "name_en": "Video Door Phone IP",
+        "name_ar": "انتركم IP متقدم",
+        "unit": "unit",
+        "min": 1300,
+        "avg": 1800,
+        "max": 2500
+      }
+    ],
+    "generators": [
+      {
+        "name_en": "Generator 100KVA",
+        "name_ar": "مولد 100 كيلو",
+        "unit": "unit",
+        "min": 90000,
+        "avg": 102500,
+        "max": 115000
+      },
+      {
+        "name_en": "Generator 250KVA",
+        "name_ar": "مولد 250 كيلو",
+        "unit": "unit",
+        "min": 210000,
+        "avg": 235000,
+        "max": 260000
+      },
+      {
+        "name_en": "Generator 500KVA",
+        "name_ar": "مولد 500 كيلو",
+        "unit": "unit",
+        "min": 380000,
+        "avg": 440000,
+        "max": 500000
+      },
+      {
+        "name_en": "Generator 1000KVA",
+        "name_ar": "مولد 1000 كيلو",
+        "unit": "unit",
+        "min": 850000,
+        "avg": 975000,
+        "max": 1100000
+      }
+    ],
+    "transformers": [
+      {
+        "name_en": "Transformer 500KVA",
+        "name_ar": "محول 500 كيلو",
+        "unit": "unit",
+        "min": 18750,
+        "avg": 37500,
+        "max": 56250
+      },
+      {
+        "name_en": "Transformer 1000KVA",
+        "name_ar": "محول 1000 كيلو",
+        "unit": "unit",
+        "min": 45000,
+        "avg": 70000,
+        "max": 93750
+      },
+      {
+        "name_en": "Transformer 1500KVA",
+        "name_ar": "محول 1500 كيلو",
+        "unit": "unit",
+        "min": 67500,
+        "avg": 100000,
+        "max": 131250
+      }
+    ],
+    "ups": [
+      {
+        "name_en": "UPS 10KVA",
+        "name_ar": "يو بي إس 10",
+        "unit": "unit",
+        "min": 13000,
+        "avg": 16000,
+        "max": 21000
+      },
+      {
+        "name_en": "UPS 30KVA",
+        "name_ar": "يو بي إس 30",
+        "unit": "unit",
+        "min": 35000,
+        "avg": 42500,
+        "max": 50000
+      },
+      {
+        "name_en": "UPS 100KVA",
+        "name_ar": "يو بي إس 100",
+        "unit": "unit",
+        "min": 50000,
+        "avg": 75000,
+        "max": 100000
+      }
+    ],
+    "solar_panels": [
+      {
+        "name_en": "Solar System Installed",
+        "name_ar": "نظام شمسي مركب",
+        "unit": "watt",
+        "min": 3,
+        "avg": 3.5,
+        "max": 4
+      },
+      {
+        "name_en": "Solar System per m2",
+        "name_ar": "نظام شمسي لكل م2",
+        "unit": "m2",
+        "min": 430,
+        "avg": 540,
+        "max": 650
+      }
+    ],
+    "fire_doors": [
+      {
+        "name_en": "Fire Door Single",
+        "name_ar": "باب حريق مفرد",
+        "unit": "unit",
+        "min": 2500,
+        "avg": 3500,
+        "max": 5000
+      },
+      {
+        "name_en": "Fire Door Double",
+        "name_ar": "باب حريق مزدوج",
+        "unit": "unit",
+        "min": 4000,
+        "avg": 5500,
+        "max": 8000
+      }
+    ],
+    "rolling_shutters": [
+      {
+        "name_en": "Shutter Manual",
+        "name_ar": "شتر يدوي",
+        "unit": "m2",
+        "min": 350,
+        "avg": 425,
+        "max": 500
+      },
+      {
+        "name_en": "Shutter Electric",
+        "name_ar": "شتر كهربائي",
+        "unit": "m2",
+        "min": 450,
+        "avg": 575,
+        "max": 700
+      },
+      {
+        "name_en": "Shutter Steel Heavy",
+        "name_ar": "شتر حديد ثقيل",
+        "unit": "m2",
+        "min": 600,
+        "avg": 750,
+        "max": 900
+      }
+    ],
+    "gas_piping": [
+      {
+        "name_en": "Gas Copper 15mm",
+        "name_ar": "نحاس غاز 15مم",
+        "unit": "m",
+        "min": 25,
+        "avg": 40,
+        "max": 55
+      },
+      {
+        "name_en": "Gas Copper 22mm",
+        "name_ar": "نحاس غاز 22مم",
+        "unit": "m",
+        "min": 40,
+        "avg": 60,
+        "max": 80
+      },
+      {
+        "name_en": "Gas Steel 20mm",
+        "name_ar": "فولاذ غاز 20مم",
+        "unit": "m",
+        "min": 30,
+        "avg": 50,
+        "max": 70
+      },
+      {
+        "name_en": "Gas Steel 25mm",
+        "name_ar": "فولاذ غاز 25مم",
+        "unit": "m",
+        "min": 45,
+        "avg": 70,
+        "max": 95
+      }
+    ],
+    "safety_equipment": [
+      {
+        "name_en": "Traffic Cone",
+        "name_ar": "مخروط مروري",
+        "unit": "unit",
+        "min": 15,
+        "avg": 50,
+        "max": 100
+      },
+      {
+        "name_en": "Safety Barrier",
+        "name_ar": "حاجز أمان",
+        "unit": "unit",
+        "min": 150,
+        "avg": 350,
+        "max": 600
+      },
+      {
+        "name_en": "Hard Hat",
+        "name_ar": "خوذة أمان",
+        "unit": "unit",
+        "min": 25,
+        "avg": 45,
+        "max": 80
+      },
+      {
+        "name_en": "Safety Shoes",
+        "name_ar": "حذاء أمان",
+        "unit": "pair",
+        "min": 120,
+        "avg": 300,
+        "max": 900
+      }
+    ],
+    "formwork": [
+      {
+        "name_en": "Timber Formwork",
+        "name_ar": "شدات خشبية",
+        "unit": "m2",
+        "min": 60,
+        "avg": 80,
+        "max": 110
+      },
+      {
+        "name_en": "Steel Formwork",
+        "name_ar": "شدات معدنية",
+        "unit": "m2",
+        "min": 90,
+        "avg": 120,
+        "max": 160
+      },
+      {
+        "name_en": "Aluminum Formwork",
+        "name_ar": "شدات ألمنيوم",
+        "unit": "m2",
+        "min": 110,
+        "avg": 150,
+        "max": 200
+      }
+    ],
+    "scaffolding": [
+      {
+        "name_en": "Scaffolding Rental",
+        "name_ar": "سقالات إيجار",
+        "unit": "m2/month",
+        "min": 15,
+        "avg": 30,
+        "max": 50
+      },
+      {
+        "name_en": "Scaffolding Purchase",
+        "name_ar": "سقالات شراء",
+        "unit": "m2",
+        "min": 100,
+        "avg": 120,
+        "max": 180
+      }
+    ],
+    "piling": [
+      {
+        "name_en": "Bored Pile 600mm",
+        "name_ar": "خازوق 600مم",
+        "unit": "lm",
+        "min": 350,
+        "avg": 500,
+        "max": 700
+      },
+      {
+        "name_en": "Bored Pile 800mm",
+        "name_ar": "خازوق 800مم",
+        "unit": "lm",
+        "min": 550,
+        "avg": 750,
+        "max": 1000
+      },
+      {
+        "name_en": "Bored Pile 1000mm",
+        "name_ar": "خازوق 1000مم",
+        "unit": "lm",
+        "min": 800,
+        "avg": 1100,
+        "max": 1500
+      }
+    ],
+    "shoring": [
+      {
+        "name_en": "Sheet Piles Steel",
+        "name_ar": "ستائر معدنية",
+        "unit": "m2",
+        "min": 250,
+        "avg": 400,
+        "max": 600
+      },
+      {
+        "name_en": "Soldier Piles",
+        "name_ar": "خوازيق جندي",
+        "unit": "m2",
+        "min": 300,
+        "avg": 500,
+        "max": 750
+      }
+    ],
+    "soil_treatment": [
+      {
+        "name_en": "Soil Compaction",
+        "name_ar": "دمك تربة",
+        "unit": "m3",
+        "min": 8,
+        "avg": 15,
+        "max": 25
+      },
+      {
+        "name_en": "Chemical Stabilization",
+        "name_ar": "تثبيت كيميائي",
+        "unit": "m3",
+        "min": 35,
+        "avg": 55,
+        "max": 85
+      }
+    ],
+    "asphalt": [
+      {
+        "name_en": "Asphalt Wearing 5cm",
+        "name_ar": "أسفلت سطحي 5سم",
+        "unit": "m2",
+        "min": 35,
+        "avg": 50,
+        "max": 65
+      },
+      {
+        "name_en": "Asphalt Base 7cm",
+        "name_ar": "أسفلت أساسي 7سم",
+        "unit": "m2",
+        "min": 45,
+        "avg": 60,
+        "max": 80
+      },
+      {
+        "name_en": "Asphalt Heavy Duty",
+        "name_ar": "أسفلت تحمل ثقيل",
+        "unit": "m2",
+        "min": 70,
+        "avg": 85,
+        "max": 95
+      }
+    ],
+    "curb_stones": [
+      {
+        "name_en": "Curb Standard",
+        "name_ar": "بردورة عادية",
+        "unit": "lm",
+        "min": 11,
+        "avg": 15,
+        "max": 20
+      },
+      {
+        "name_en": "Curb Terrazzo",
+        "name_ar": "بردورة جرانو",
+        "unit": "lm",
+        "min": 55,
+        "avg": 70,
+        "max": 80
+      }
+    ],
+    "interlock": [
+      {
+        "name_en": "Interlock Standard",
+        "name_ar": "انترلوك عادي",
+        "unit": "m2",
+        "min": 45,
+        "avg": 70,
+        "max": 95
+      },
+      {
+        "name_en": "Interlock Colored",
+        "name_ar": "انترلوك ملون",
+        "unit": "m2",
+        "min": 65,
+        "avg": 95,
+        "max": 130
+      },
+      {
+        "name_en": "Interlock Heavy Duty",
+        "name_ar": "انترلوك ثقيل",
+        "unit": "m2",
+        "min": 80,
+        "avg": 110,
+        "max": 150
+      }
+    ],
+    "precast_stairs": [
+      {
+        "name_en": "Precast Stairs Standard",
+        "name_ar": "سلالم جاهزة عادية",
+        "unit": "flight",
+        "min": 3500,
+        "avg": 5500,
+        "max": 8000
+      },
+      {
+        "name_en": "Precast Stairs Custom",
+        "name_ar": "سلالم جاهزة مخصصة",
+        "unit": "flight",
+        "min": 6000,
+        "avg": 9000,
+        "max": 14000
+      }
+    ],
+    "irrigation": [
+      {
+        "name_en": "Drip Irrigation S&I",
+        "name_ar": "ري بالتنقيط",
+        "unit": "m2",
+        "min": 15,
+        "avg": 30,
+        "max": 55
+      },
+      {
+        "name_en": "Sprinkler Irrigation S&I",
+        "name_ar": "ري بالرشاشات",
+        "unit": "m2",
+        "min": 25,
+        "avg": 45,
+        "max": 75
+      }
+    ],
+    "manholes": [
+      {
+        "name_en": "Precast Manhole <=1.5m",
+        "name_ar": "غرفة تفتيش <=1.5م",
+        "unit": "unit",
+        "min": 1800,
+        "avg": 2800,
+        "max": 4000
+      },
+      {
+        "name_en": "Precast Manhole 1.5-3m",
+        "name_ar": "غرفة تفتيش 1.5-3م",
+        "unit": "unit",
+        "min": 3500,
+        "avg": 5000,
+        "max": 7500
+      },
+      {
+        "name_en": "Manhole Cover D400",
+        "name_ar": "غطاء حديد دكتايل",
+        "unit": "unit",
+        "min": 180,
+        "avg": 280,
+        "max": 400
+      }
+    ],
+    "drainage": [
+      {
+        "name_en": "HDPE 200mm",
+        "name_ar": "أنابيب HDPE 200مم",
+        "unit": "lm",
+        "min": 45,
+        "avg": 65,
+        "max": 85
+      },
+      {
+        "name_en": "HDPE 300mm",
+        "name_ar": "أنابيب HDPE 300مم",
+        "unit": "lm",
+        "min": 80,
+        "avg": 110,
+        "max": 140
+      },
+      {
+        "name_en": "HDPE 400mm",
+        "name_ar": "أنابيب HDPE 400مم",
+        "unit": "lm",
+        "min": 130,
+        "avg": 175,
+        "max": 220
+      },
+      {
+        "name_en": "Catch Basin 600x600",
+        "name_ar": "حوض تجميع 600",
+        "unit": "unit",
+        "min": 800,
+        "avg": 1200,
+        "max": 1800
+      }
+    ],
+    "curtain_wall": [
+      {
+        "name_en": "Curtain Wall Stick",
+        "name_ar": "حائط ستائري عادي",
+        "unit": "m2",
+        "min": 1500,
+        "avg": 2250,
+        "max": 3000
+      },
+      {
+        "name_en": "Curtain Wall Unitized",
+        "name_ar": "حائط ستائري موحد",
+        "unit": "m2",
+        "min": 2000,
+        "avg": 2750,
+        "max": 3500
+      }
+    ],
+    "stone_cladding": [
+      {
+        "name_en": "Limestone Cladding",
+        "name_ar": "كسوة حجر جيري",
+        "unit": "m2",
+        "min": 80,
+        "avg": 150,
+        "max": 300
+      },
+      {
+        "name_en": "Sandstone Cladding",
+        "name_ar": "كسوة حجر رملي",
+        "unit": "m2",
+        "min": 75,
+        "avg": 130,
+        "max": 250
+      }
+    ],
+    "acp_cladding": [
+      {
+        "name_en": "ACP Standard PE",
+        "name_ar": "ألومنيوم مركب عادي",
+        "unit": "m2",
+        "min": 45,
+        "avg": 65,
+        "max": 85
+      },
+      {
+        "name_en": "ACP Fire Rated FR",
+        "name_ar": "ألومنيوم مركب مقاوم حريق",
+        "unit": "m2",
+        "min": 90,
+        "avg": 105,
+        "max": 120
+      },
+      {
+        "name_en": "ACP Premium",
+        "name_ar": "ألومنيوم مركب فاخر",
+        "unit": "m2",
+        "min": 100,
+        "avg": 130,
+        "max": 160
+      }
+    ],
+    "raised_floor": [
+      {
+        "name_en": "Raised Floor Office",
+        "name_ar": "أرضية مرفوعة مكتبي",
+        "unit": "m2",
+        "min": 180,
+        "avg": 280,
+        "max": 400
+      },
+      {
+        "name_en": "Raised Floor Data Center",
+        "name_ar": "أرضية مرفوعة بيانات",
+        "unit": "m2",
+        "min": 350,
+        "avg": 500,
+        "max": 700
+      }
+    ],
+    "handrails": [
+      {
+        "name_en": "Handrail Stainless",
+        "name_ar": "درابزين ستانلس",
+        "unit": "lm",
+        "min": 250,
+        "avg": 400,
+        "max": 800
+      },
+      {
+        "name_en": "Handrail Glass",
+        "name_ar": "درابزين زجاج",
+        "unit": "lm",
+        "min": 500,
+        "avg": 750,
+        "max": 1200
+      },
+      {
+        "name_en": "Handrail Wrought Iron",
+        "name_ar": "درابزين حديد مشغول",
+        "unit": "lm",
+        "min": 250,
+        "avg": 350,
+        "max": 500
+      }
+    ],
+    "carpentry_builtin": [
+      {
+        "name_en": "Kitchen Cabinets Basic",
+        "name_ar": "مطبخ MDF بسيط",
+        "unit": "lm",
+        "min": 550,
+        "avg": 650,
+        "max": 750
+      },
+      {
+        "name_en": "Kitchen Cabinets Premium",
+        "name_ar": "مطبخ HPL/خشب فاخر",
+        "unit": "lm",
+        "min": 700,
+        "avg": 1100,
+        "max": 1500
+      },
+      {
+        "name_en": "Wardrobes Standard",
+        "name_ar": "دواليب ملابس عادي",
+        "unit": "m2",
+        "min": 400,
+        "avg": 550,
+        "max": 700
+      }
+    ],
+    "roofing": [
+      {
+        "name_en": "Clay Roof Tiles",
+        "name_ar": "بلاط سقف فخار",
+        "unit": "m2",
+        "min": 80,
+        "avg": 120,
+        "max": 180
+      },
+      {
+        "name_en": "Concrete Roof Tiles",
+        "name_ar": "بلاط سقف خرساني",
+        "unit": "m2",
+        "min": 40,
+        "avg": 65,
+        "max": 90
+      }
+    ],
+    "sandwich_panels": [
+      {
+        "name_en": "Sandwich Panel 50mm",
+        "name_ar": "ساندويتش بانل 50مم",
+        "unit": "m2",
+        "min": 95,
+        "avg": 130,
+        "max": 180
+      },
+      {
+        "name_en": "Sandwich Panel 75mm",
+        "name_ar": "ساندويتش بانل 75مم",
+        "unit": "m2",
+        "min": 120,
+        "avg": 165,
+        "max": 220
+      },
+      {
+        "name_en": "Sandwich Panel 100mm",
+        "name_ar": "ساندويتش بانل 100مم",
+        "unit": "m2",
+        "min": 150,
+        "avg": 210,
+        "max": 300
+      }
+    ],
+    "swimming_pool": [
+      {
+        "name_en": "Pool Fiberglass 4x8m",
+        "name_ar": "مسبح فايبرجلاس 4×8",
+        "unit": "lump",
+        "min": 35000,
+        "avg": 50000,
+        "max": 65000
+      },
+      {
+        "name_en": "Pool Concrete 4x8m",
+        "name_ar": "مسبح خرسانة 4×8",
+        "unit": "lump",
+        "min": 60000,
+        "avg": 120000,
+        "max": 200000
+      }
+    ],
+    "elevators": [
+      {
+        "name_en": "Elevator 6-Person",
+        "name_ar": "مصعد 6 أشخاص",
+        "unit": "unit",
+        "min": 85000,
+        "avg": 110000,
+        "max": 140000
+      },
+      {
+        "name_en": "Elevator 8-Person",
+        "name_ar": "مصعد 8 أشخاص",
+        "unit": "unit",
+        "min": 100000,
+        "avg": 130000,
+        "max": 160000
+      },
+      {
+        "name_en": "Elevator 13-Person",
+        "name_ar": "مصعد 13 شخص",
+        "unit": "unit",
+        "min": 130000,
+        "avg": 165000,
+        "max": 200000
+      }
+    ],
+    "kitchen_equipment": [
+      {
+        "name_en": "Exhaust Hood SS",
+        "name_ar": "شفاط مطبخ ستانلس",
+        "unit": "unit",
+        "min": 2500,
+        "avg": 4500,
+        "max": 8000
+      },
+      {
+        "name_en": "SS Work Table",
+        "name_ar": "طاولة عمل ستانلس",
+        "unit": "unit",
+        "min": 900,
+        "avg": 1200,
+        "max": 1600
+      }
+    ]
+  },
+  "totalItems": 245,
+  "totalCategories": 65
+}
