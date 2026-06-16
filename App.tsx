@@ -53,6 +53,9 @@ const CompaniesPage = React.lazy(() => import('./pages/admin/CompaniesPage'));
 const DataPage = React.lazy(() => import('./pages/admin/DataPage'));
 const UsersPage = React.lazy(() => import('./pages/admin/UsersPage'));
 const SuppliersManagementPage = React.lazy(() => import('./pages/admin/SuppliersManagementPage'));
+const TermsPage = React.lazy(() => import('./pages/TermsPage'));
+const AIControlCenter = React.lazy(() => import('./pages/admin/AIControlCenter'));
+const BOQUploader = React.lazy(() => import('./components/BOQUploader'));
 import TeamLoginPage from './pages/TeamLoginPage';
 import TeamDashboard from './pages/TeamDashboard';
 import { ProjectMember } from './services/projectSupplierService';
@@ -92,6 +95,14 @@ const ADMIN_SECRET_KEY = import.meta.env.VITE_ADMIN_SECRET_KEY || '';
 
 // Super Admin — full access bypass (from .env)
 const SUPER_ADMIN_EMAIL = import.meta.env.VITE_SUPER_ADMIN_EMAIL || '';
+
+// 🧠 Initialize brain synchronously at module scope to ensure it is loaded on first render
+try {
+    initializeBrain();
+} catch (e) {
+    console.warn('🧠 Synchronous brain initialization failed:', e);
+}
+
 
 interface AuthUser {
     uid?: string; // معرف المستخدم الفريد
@@ -168,6 +179,16 @@ const App: React.FC = () => {
     const [adminAccessGranted, setAdminAccessGranted] = useState(false);
     const [adminKeyInput, setAdminKeyInput] = useState('');
     const [isLoading, setIsLoading] = useState(true);
+    const loadingStartTimeRef = useRef(Date.now());
+
+    const finishLoading = async () => {
+        const elapsed = Date.now() - loadingStartTimeRef.current;
+        const remaining = 1500 - elapsed;
+        if (remaining > 0) {
+            await new Promise(resolve => setTimeout(resolve, remaining));
+        }
+        setIsLoading(false);
+    };
     // Splash screen state - shows only on first login for full data restoration
     const [showSplash, setShowSplash] = useState(false);
     // Employee state
@@ -322,7 +343,7 @@ const App: React.FC = () => {
                     if (!firebaseUser.emailVerified && firebaseUser.email?.toLowerCase() !== SUPER_ADMIN_EMAIL.toLowerCase()) {
                         setPendingRegistrationEmail(firebaseUser.email || '');
                         setCurrentPage('verification');
-                        setIsLoading(false);
+                        finishLoading();
                         return;
                     }
                     const userData = await getUserData(firebaseUser.uid);
@@ -387,14 +408,14 @@ const App: React.FC = () => {
                     // ── GUARD: لا تمسح الجلسة إذا المستخدم مدير أو موظف (تسجيل دخولهم محلي) ──
                     if (isManagerRef.current || currentEmployeeRef.current) {
                         // Manager/employee logged in locally — don't clear session
-                        setIsLoading(false);
+                        finishLoading();
                         return;
                     }
                     setUser(null);
                     localStorage.removeItem('arba_cached_user');
                     clearRole();
                 }
-                setIsLoading(false);
+                finishLoading();
             });
             return () => unsubscribe();
         } else {
@@ -414,7 +435,7 @@ const App: React.FC = () => {
             } else {
                 clearRole();
             }
-            setIsLoading(false);
+            finishLoading();
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // ← Empty deps: subscribe ONCE on mount, use refs for latest values
@@ -440,13 +461,15 @@ const App: React.FC = () => {
             // Reload supplier data after Firestore sync
             loadSupplierData();
 
-            // V10.0: Start Brain Auto-Sync (pull cloud data + push every 5 min)
+            // V10.0: Start Brain Auto-Sync (pull cloud data + push with dynamic interval)
             try {
                 import('firebase/auth').then(({ getAuth }) => {
                     const userId = getAuth().currentUser?.uid || 'local';
-                    brainFirestoreSync.startAutoSync(userId);
+                    const intervalMinutes = Number(localStorage.getItem('arba_sync_interval') || '5');
+                    brainFirestoreSync.startAutoSync(userId, intervalMinutes * 60 * 1000);
                 }).catch(() => {
-                    brainFirestoreSync.startAutoSync('local');
+                    const intervalMinutes = Number(localStorage.getItem('arba_sync_interval') || '5');
+                    brainFirestoreSync.startAutoSync('local', intervalMinutes * 60 * 1000);
                 });
             } catch (e) { console.warn('V10 Brain Auto-Sync init:', e); }
         }).catch(console.error);
@@ -505,8 +528,8 @@ const App: React.FC = () => {
             warrantyYearsMEP: 5,
         },
 
-        pricingStrategy: 'fixed_margin',
-        profitMargin: 15,
+        pricingStrategy: (localStorage.getItem('arba_pricing_strategy') as any) || 'fixed_margin',
+        profitMargin: Number(localStorage.getItem('arba_default_profit_margin') || '15'),
         targetROI: 20,
         totalInvestment: 1000000,
         fixedOverhead: INITIAL_OVERHEAD,
@@ -601,6 +624,18 @@ const App: React.FC = () => {
     // Auth Handlers
     const handleLogin = async (email: string, password: string, userType?: string) => {
         setLoginError('');
+        loadingStartTimeRef.current = Date.now();
+        setIsLoading(true);
+
+        const handleSuccess = async (action: () => void | Promise<void>) => {
+            await action();
+            await finishLoading();
+        };
+
+        const handleFailure = (err: string) => {
+            setLoginError(err);
+            setIsLoading(false);
+        };
 
         // موظفين - تحقق خاص
         if (userType === 'employee') {
@@ -610,51 +645,75 @@ const App: React.FC = () => {
             if (result.success && result.employee) {
                 // جلب بيانات المدير المحدّثة بعد التحميل من Firestore
                 const mgr = getManagerCredentials();
+
+                // دالة مساعدة للمصادقة بالـ Custom Token
+                const authSignIn = async (customToken?: string) => {
+                    if (customToken) {
+                        try {
+                            const { getAuth, signInWithCustomToken } = await import('firebase/auth');
+                            const auth = getAuth();
+                            await signInWithCustomToken(auth, customToken);
+                            console.log('🛡️ Security Shield: Authenticated session via custom token');
+                        } catch (authErr) {
+                            console.error('Error signing in with custom token:', authErr);
+                        }
+                    }
+                };
+
                 // التحقق إذا كان المدير
                 if ('role' in result.employee && result.employee.role === 'manager') {
                     // المدير
-                    setIsManager(true);
-                    setCurrentEmployee(null);
-                    setUser({
-                        name: mgr.name,
-                        email: 'manager@arba-sys.com',
-                        plan: 'enterprise',
-                        usedProjects: 0,
-                        usedStorageMB: 0
+                    await handleSuccess(async () => {
+                        setIsManager(true);
+                        setCurrentEmployee(null);
+                        setUser({
+                            name: mgr.name,
+                            email: 'manager@arba-sys.com',
+                            plan: 'enterprise',
+                            usedProjects: 0,
+                            usedStorageMB: 0
+                        });
+                        setRoleData('manager', mgr.name, 'manager@arba-sys.com').catch(console.error);
+                        await authSignIn(result.customToken);
+                        setCurrentPage('manager');
                     });
-                    setRoleData('manager', mgr.name, 'manager@arba-sys.com').catch(console.error);
-                    setCurrentPage('manager');
                 } else if ('employeeNumber' in result.employee && result.employee.employeeNumber === mgr.employeeNumber) {
                     // المدير (من بيانات الدخول الثابتة)
-                    setIsManager(true);
-                    setCurrentEmployee(null);
-                    setUser({
-                        name: mgr.name,
-                        email: 'manager@arba-sys.com',
-                        plan: 'enterprise',
-                        usedProjects: 0,
-                        usedStorageMB: 0
+                    await handleSuccess(async () => {
+                        setIsManager(true);
+                        setCurrentEmployee(null);
+                        setUser({
+                            name: mgr.name,
+                            email: 'manager@arba-sys.com',
+                            plan: 'enterprise',
+                            usedProjects: 0,
+                            usedStorageMB: 0
+                        });
+                        setRoleData('manager', mgr.name, 'manager@arba-sys.com').catch(console.error);
+                        await authSignIn(result.customToken);
+                        setCurrentPage('manager');
                     });
-                    setRoleData('manager', mgr.name, 'manager@arba-sys.com').catch(console.error);
-                    setCurrentPage('manager');
                 } else {
                     // موظف عادي
                     const emp = result.employee as Employee;
-                    setIsManager(false);
-                    setCurrentEmployee(emp);
-                    setUser({
-                        name: emp.name,
-                        email: emp.email,
-                        plan: 'enterprise',
-                        usedProjects: 0,
-                        usedStorageMB: 0
+                    await handleSuccess(async () => {
+                        setIsManager(false);
+                        setCurrentEmployee(emp);
+                        setUser({
+                            name: emp.name,
+                            email: emp.email,
+                            plan: 'enterprise',
+                            usedProjects: 0,
+                            usedStorageMB: 0
+                        });
+                        setRoleData(emp.id || emp.employeeNumber, emp.name, emp.email).catch(console.error);
+                        await authSignIn(result.customToken);
+                        setCurrentPage('employee');
                     });
-                    setRoleData(emp.id || emp.employeeNumber, emp.name, emp.email).catch(console.error);
-                    setCurrentPage('employee');
                 }
                 return;
             } else {
-                setLoginError(result.error || 'رقم الموظف أو كلمة المرور غير صحيحة');
+                handleFailure(result.error || 'رقم الموظف أو كلمة المرور غير صحيحة');
                 return;
             }
         }
@@ -669,10 +728,12 @@ const App: React.FC = () => {
                 // First check if commercial register is verified
                 if (!registrationRequest.crVerified) {
                     // CR not verified - redirect to under review page
-                    setRegistrationRequestId(registrationRequest.id);
-                    setPendingRegistrationEmail(registrationRequest.email);
-                    setPendingRegistrationPhone(registrationRequest.phone);
-                    setCurrentPage('under-review');
+                    await handleSuccess(() => {
+                        setRegistrationRequestId(registrationRequest.id);
+                        setPendingRegistrationEmail(registrationRequest.email);
+                        setPendingRegistrationPhone(registrationRequest.phone);
+                        setCurrentPage('under-review');
+                    });
                     return;
                 }
 
@@ -680,52 +741,60 @@ const App: React.FC = () => {
                 if (registrationRequest.status === 'approved') {
                     // Check if account is suspended
                     if (registrationRequest.isSuspended) {
-                        setLoginError(language === 'ar'
+                        handleFailure(language === 'ar'
                             ? `حسابك محظور: ${registrationRequest.suspensionReason || 'للاستفسار تواصل مع الدعم'}`
                             : `Your account is suspended: ${registrationRequest.suspensionReason || 'Contact support for more info'}`);
                         return;
                     }
                     // Login successful with approved registration
-                    setUser({
-                        uid: registrationRequest.id,
-                        name: registrationRequest.name,
-                        email: registrationRequest.email,
-                        company: registrationRequest.companyName,
-                        plan: registrationRequest.plan,
-                        usedProjects: 0,
-                        usedStorageMB: 0,
-                        userType: registrationRequest.userType
+                    await handleSuccess(() => {
+                        setUser({
+                            uid: registrationRequest.id,
+                            name: registrationRequest.name,
+                            email: registrationRequest.email,
+                            company: registrationRequest.companyName,
+                            plan: registrationRequest.plan,
+                            usedProjects: 0,
+                            usedStorageMB: 0,
+                            userType: registrationRequest.userType
+                        });
+                        // الموردين: لوحة تحكم خاصة، الشركات: dashboard
+                        setCurrentPage(userType === 'supplier' ? 'supplier' : 'dashboard');
                     });
-                    // الموردين: لوحة تحكم خاصة، الشركات: dashboard
-                    setCurrentPage(userType === 'supplier' ? 'supplier' : 'dashboard');
                     return;
                 } else if (registrationRequest.status === 'pending_payment') {
                     // الموردين مجاناً - لا يحتاجون دفع، تحويلهم لصفحة المراجعة
                     if (userType === 'supplier') {
-                        setRegistrationRequestId(registrationRequest.id);
-                        setPendingRegistrationEmail(registrationRequest.email);
-                        setPendingRegistrationPhone(registrationRequest.phone);
-                        setCurrentPage('under-review');
+                        await handleSuccess(() => {
+                            setRegistrationRequestId(registrationRequest.id);
+                            setPendingRegistrationEmail(registrationRequest.email);
+                            setPendingRegistrationPhone(registrationRequest.phone);
+                            setCurrentPage('under-review');
+                        });
                         return;
                     }
                     // CR verified but payment pending - redirect to payment page (companies only)
-                    setRegistrationRequestId(registrationRequest.id);
-                    setPendingRegistrationEmail(registrationRequest.email);
-                    setPendingRegistrationPhone(registrationRequest.phone);
-                    setCurrentPage('payment-upload');
+                    await handleSuccess(() => {
+                        setRegistrationRequestId(registrationRequest.id);
+                        setPendingRegistrationEmail(registrationRequest.email);
+                        setPendingRegistrationPhone(registrationRequest.phone);
+                        setCurrentPage('payment-upload');
+                    });
                     return;
                 } else if (
                     registrationRequest.status === 'pending_approval' ||
                     registrationRequest.status === 'payment_under_review'
                 ) {
                     // CR verified but still under review
-                    setRegistrationRequestId(registrationRequest.id);
-                    setPendingRegistrationEmail(registrationRequest.email);
-                    setPendingRegistrationPhone(registrationRequest.phone);
-                    setCurrentPage('under-review');
+                    await handleSuccess(() => {
+                        setRegistrationRequestId(registrationRequest.id);
+                        setPendingRegistrationEmail(registrationRequest.email);
+                        setPendingRegistrationPhone(registrationRequest.phone);
+                        setCurrentPage('under-review');
+                    });
                     return;
                 } else if (registrationRequest.status === 'rejected') {
-                    setLoginError('تم رفض طلب التسجيل. يرجى التواصل مع الدعم الفني.');
+                    handleFailure('تم رفض طلب التسجيل. يرجى التواصل مع الدعم الفني.');
                     return;
                 }
             }
@@ -738,35 +807,41 @@ const App: React.FC = () => {
                 // If Firebase fails, check approved registrations as fallback
                 const approvedRequest = registrationService.getRequestByEmail(email);
                 if (approvedRequest && approvedRequest.status === 'approved' && approvedRequest.password === password) {
-                    setUser({
-                        uid: approvedRequest.id,
-                        name: approvedRequest.name,
-                        email: approvedRequest.email,
-                        company: approvedRequest.companyName,
-                        plan: approvedRequest.plan,
-                        usedProjects: 0,
-                        usedStorageMB: 0,
-                        userType: approvedRequest.userType
+                    await handleSuccess(() => {
+                        setUser({
+                            uid: approvedRequest.id,
+                            name: approvedRequest.name,
+                            email: approvedRequest.email,
+                            company: approvedRequest.companyName,
+                            plan: approvedRequest.plan,
+                            usedProjects: 0,
+                            usedStorageMB: 0,
+                            userType: approvedRequest.userType
+                        });
+                        setCurrentPage('dashboard');
                     });
-                    setCurrentPage('dashboard');
                     return;
                 }
-                setLoginError(result.error || 'حدث خطأ أثناء تسجيل الدخول');
+                handleFailure(result.error || 'حدث خطأ أثناء تسجيل الدخول');
                 return;
             }
             // User state will be updated by onAuthChange listener
             // Check email verification status
             const isVerified = await checkEmailVerified();
             if (!isVerified && email.toLowerCase() !== SUPER_ADMIN_EMAIL.toLowerCase()) {
-                setPendingRegistrationEmail(email);
-                setCurrentPage('verification');
+                await handleSuccess(() => {
+                    setPendingRegistrationEmail(email);
+                    setCurrentPage('verification');
+                });
                 return;
             }
             // Super Admin: auto-grant full access
             if (email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase()) {
                 setAdminAccessGranted(true);
             }
-            setCurrentPage('dashboard');
+            await handleSuccess(() => {
+                setCurrentPage('dashboard');
+            });
         } else {
             // Local login
             const result = loginUser(
@@ -776,22 +851,24 @@ const App: React.FC = () => {
             );
 
             if (!result.success) {
-                setLoginError(result.error || 'حدث خطأ أثناء تسجيل الدخول');
+                handleFailure(result.error || 'حدث خطأ أثناء تسجيل الدخول');
                 return;
             }
 
             if (result.user) {
-                setUser({
-                    name: result.user.name,
-                    email: result.user.email,
-                    company: result.user.company,
-                    companyLogo: result.user.companyLogo,
-                    plan: result.user.plan,
-                    usedProjects: result.user.usedProjects,
-                    usedStorageMB: result.user.usedStorageMB
+                await handleSuccess(() => {
+                    setUser({
+                        name: result.user.name,
+                        email: result.user.email,
+                        company: result.user.company,
+                        companyLogo: result.user.companyLogo,
+                        plan: result.user.plan,
+                        usedProjects: result.user.usedProjects,
+                        usedStorageMB: result.user.usedStorageMB
+                    });
+                    setRoleData(result.user.id || 'local', result.user.name || '', result.user.email || '').catch(console.error);
+                    setCurrentPage('dashboard');
                 });
-                setRoleData(result.user.id || 'local', result.user.name || '', result.user.email || '').catch(console.error);
-                setCurrentPage('dashboard');
             }
         }
     };
@@ -1017,12 +1094,36 @@ const App: React.FC = () => {
     // Dashboard State Handlers
     const handleStateChange = (updates: Partial<AppState>) => {
         setState((prev) => {
+            // Prevent changing the project type in demo mode (lock it to villa)
+            if (isDemoMode && updates.projectType !== undefined && updates.projectType !== 'villa') {
+                return prev;
+            }
             const merged = { ...prev, ...updates };
-            // Auto-recalculate buildArea when landArea or floors change
-            if (updates.landArea !== undefined || updates.floors !== undefined) {
-                const landArea = updates.landArea ?? prev.landArea;
-                const floors = updates.floors ?? prev.floors;
-                merged.buildArea = Math.round(landArea * 0.60 * floors);
+            
+            // If project type changes, load its defaults (blueprint, rooms, facades, team)
+            if (updates.projectType !== undefined && updates.projectType !== prev.projectType) {
+                const defaults = PROJECT_DEFAULTS[updates.projectType];
+                if (defaults) {
+                    merged.rooms = defaults.rooms;
+                    merged.facades = defaults.facades;
+                    merged.team = defaults.team;
+                    merged.blueprint = defaults.blueprint;
+                    merged.itemOverrides = {}; // Reset manual overrides for a clean baseline quote
+                    
+                    // Also update landArea / buildArea / floors from defaults if available
+                    if (defaults.blueprint) {
+                        merged.landArea = defaults.blueprint.plotLength * defaults.blueprint.plotWidth;
+                        merged.floors = defaults.blueprint.floors.length;
+                        merged.buildArea = defaults.blueprint.floors.reduce((sum, f) => sum + f.area, 0);
+                    }
+                }
+            } else {
+                // Auto-recalculate buildArea when landArea or floors change (only when not switching projectType)
+                if (updates.landArea !== undefined || updates.floors !== undefined) {
+                    const landArea = updates.landArea ?? prev.landArea;
+                    const floors = updates.floors ?? prev.floors;
+                    merged.buildArea = Math.round(landArea * 0.60 * floors);
+                }
             }
             return merged;
         });
@@ -1287,12 +1388,60 @@ const App: React.FC = () => {
 
 
 
+    // Loading Screen - يظهر عند تحميل التطبيق أو التنقل ريثما تنتهي عمليات التحقق
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white font-sans p-6" dir={isRtl ? 'rtl' : 'ltr'}>
+                <div className="flex flex-col items-center max-w-md w-full bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-2xl p-8 text-center shadow-2xl">
+                    <div className="relative w-16 h-16 mb-6">
+                        <div className="absolute inset-0 rounded-full border-4 border-slate-800"></div>
+                        <div className="absolute inset-0 rounded-full border-4 border-indigo-500 border-t-transparent animate-spin"></div>
+                    </div>
+                    <h3 className="text-xl font-bold mb-2">
+                        {language === 'ar' ? 'جاري تهيئة النظام والبيانات...' : 'Initializing System & Data...'}
+                    </h3>
+                    <p className="text-slate-400 text-sm">
+                        {language === 'ar' ? 'يرجى الانتظار بضع ثوانٍ ريثما يتم التحقق ومزامنة قاعدة البيانات.' : 'Please wait a few seconds while verifying and syncing database.'}
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     // Splash Screen - يظهر عند أول تسجيل دخول أثناء استرجاع البيانات
     if (showSplash) {
         return <SplashScreen language={language} onComplete={() => setShowSplash(false)} />;
     }
 
+    // 🛡️ Security Shield: Router-Level Guards
+    const isPageGuarded = ['hr', 'quantity_surveyor', 'accountant', 'support', 'developer-brain', 'ai-control-center'].includes(currentPage);
+    let isAuthorized = true;
+    if (isPageGuarded) {
+        isAuthorized = false;
+        if (isManager) {
+            isAuthorized = true;
+        } else if (currentEmployee) {
+            const role = currentEmployee.role;
+            if (currentPage === 'hr' && role === 'hr') isAuthorized = true;
+            else if (currentPage === 'quantity_surveyor' && role === 'quantity_surveyor') isAuthorized = true;
+            else if (currentPage === 'accountant' && role === 'accountant') isAuthorized = true;
+            else if (currentPage === 'support' && role === 'support') isAuthorized = true;
+            else if (currentPage === 'developer-brain' && role === 'developer') isAuthorized = true;
+            else if (currentPage === 'ai-control-center' && role === 'developer') isAuthorized = true;
+        }
+    }
+
     // Render Pages Based on Route
+    if (!isAuthorized) {
+        return (
+            <SecurityRedirect
+                language={language}
+                attemptedZone="A"
+                onGoBack={() => setCurrentPage('landing')}
+            />
+        );
+    }
+
     if (currentPage === 'landing') {
         return <LandingPage language={language} onNavigate={handleNavigate} onLanguageChange={setLanguage} />;
     }
@@ -1337,7 +1486,6 @@ const App: React.FC = () => {
     }
 
     if (currentPage === 'terms') {
-        const TermsPage = React.lazy(() => import('./pages/TermsPage'));
         return (
             <React.Suspense fallback={<div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">⏳</div>}>
                 <TermsPage language={language} onBack={() => handleNavigate('landing')} />
@@ -1350,7 +1498,6 @@ const App: React.FC = () => {
     }
 
     if (currentPage === 'ai-control-center') {
-        const AIControlCenter = React.lazy(() => import('./pages/admin/AIControlCenter'));
         return (
             <React.Suspense fallback={<div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">⏳ جاري تحميل مركز التحكم...</div>}>
                 <AIControlCenter language={language} onNavigate={handleNavigate} userRole={(currentEmployee?.role as any) || 'manager'} />
@@ -1843,7 +1990,6 @@ const App: React.FC = () => {
 
     // ═══════ BOQ ENGINE — ARBA V8.2 ═══════
     if (currentPage === 'boq-engine') {
-        const BOQUploader = React.lazy(() => import('./components/BOQUploader'));
         return (
             <React.Suspense fallback={<div className="min-h-screen bg-slate-900 flex items-center justify-center"><div className="animate-pulse text-emerald-400 text-xl">⚡ ARBA Engine...</div></div>}>
                 <BOQUploader language={language} />
