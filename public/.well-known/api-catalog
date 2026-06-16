@@ -1,0 +1,44 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://arba-platform.web.app/",
+      "relations": {
+        "api-catalog": [
+          {
+            "href": "https://arba-platform.web.app/.well-known/api-catalog",
+            "type": "application/linkset+json"
+          }
+        ],
+        "about": [
+          {
+            "href": "https://arba-platform.web.app/auth.md",
+            "type": "text/markdown"
+          }
+        ],
+        "terms-of-service": [
+          {
+            "href": "https://arba-platform.web.app/terms",
+            "type": "text/html"
+          }
+        ]
+      }
+    },
+    {
+      "anchor": "https://arba-platform.web.app/api/public",
+      "relations": {
+        "service": [
+          {
+            "href": "https://arba-platform.web.app/api/packages",
+            "type": "application/json",
+            "description": "Lists public pricing plans and features"
+          },
+          {
+            "href": "https://arba-platform.web.app/api/regions",
+            "type": "application/json",
+            "description": "Lists supported Saudi Arabian regions and cities"
+          }
+        ]
+      }
+    }
+  ]
+}

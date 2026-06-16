@@ -1,0 +1,7 @@
+{
+  "scopes_supported": [
+    "read:estimates",
+    "write:estimates"
+  ],
+  "authorization_server": "https://arba-platform.web.app/login"
+}

@@ -6,6 +6,18 @@
             "**/.*",
             "**/node_modules/**"
         ],
+        "redirects": [
+            {
+                "source": "/auth.md",
+                "destination": "https://us-central1-arba-d6baf.cloudfunctions.net/trackAgentQuery",
+                "type": 302
+            },
+            {
+                "source": "/auth-agent",
+                "destination": "https://us-central1-arba-d6baf.cloudfunctions.net/trackAgentQuery",
+                "type": 302
+            }
+        ],
         "rewrites": [
             {
                 "source": "**",

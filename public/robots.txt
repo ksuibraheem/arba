@@ -1,0 +1,27 @@
+# ARBA Robots Policy - Secure Selective Agent Readiness
+User-agent: *
+# Allow indexing of public, marketing, and agent-guidance paths
+Allow: /$
+Allow: /about$
+Allow: /pricing$
+Allow: /terms$
+Allow: /auth.md$
+Allow: /sitemap.xml$
+Allow: /.well-known/api-catalog$
+Allow: /.well-known/mcp/server-card.json$
+
+# Block access to private dashboards, calculation engines, and database configurations
+Disallow: /admin/
+Disallow: /owner/
+Disallow: /employee/
+Disallow: /supplier/
+Disallow: /pricing-calc/
+Disallow: /boq-engine/
+Disallow: /private/
+Disallow: /api/calculate/
+Disallow: /api/admin/
+
+# Content Signal - Protect proprietary brain data from training
+Content-Signal: ai-train=no, search=yes, ai-input=no
+
+Sitemap: https://arba-platform.web.app/sitemap.xml
