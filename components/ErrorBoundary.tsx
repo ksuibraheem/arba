@@ -1,4 +1,5 @@
 import React from 'react';
+import { draftAutosaveService } from '../services/draftAutosaveService';
 
 interface ErrorBoundaryState {
     hasError: boolean;
@@ -29,6 +30,22 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
     componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
         console.error('🚨 Application Error:', error);
         console.error('Component Stack:', errorInfo.componentStack);
+
+        // Crash snapshot: flush the latest pricing draft (single overwritten key)
+        try {
+            draftAutosaveService.tick(true);
+        } catch { /* autosave may not be started — ignore */ }
+
+        // Save crash metadata (single key, overwritten each crash)
+        try {
+            localStorage.setItem('arba_crash_meta', JSON.stringify({
+                error: error.message,
+                stack: error.stack?.slice(0, 500),
+                component: errorInfo.componentStack?.slice(0, 300),
+                url: window.location.href,
+                crashedAt: Date.now(),
+            }));
+        } catch { /* localStorage full — ignore */ }
     }
 
     render() {
@@ -66,7 +83,11 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
                             نعتذر عن هذا الخطأ. يرجى تحديث الصفحة أو المحاولة لاحقاً.
                         </p>
                         <button
-                            onClick={() => window.location.reload()}
+                            onClick={() => {
+                                // Final flush before reload
+                                try { draftAutosaveService.tick(true); } catch { /* ignore */ }
+                                window.location.reload();
+                            }}
                             style={{
                                 background: 'linear-gradient(135deg, #6366F1, #4F46E5)',
                                 color: 'white',
