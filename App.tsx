@@ -79,6 +79,8 @@ import { COMPANY_INFO, SUBSCRIPTION_PLANS, encryptSupplierName, getStorageInfo, 
 // Local auth service (fallback)
 import { registerUser, loginUser, logoutUser, getCurrentUser, StoredUser } from './services/authService';
 import { brainFirestoreSync } from './services/brainFirestoreSync';
+import { draftAutosaveService } from './services/draftAutosaveService';
+import { checkForUpdate } from './services/versionChecker';
 // Firebase auth service
 import { registerWithFirebase, loginWithFirebase, logoutFromFirebase, onAuthChange, getUserData, checkEmailVerified, UserData } from './firebase/authService';
 import { isInTestMode, getCurrentTestSession, endTestMode } from './services/testModeService';
@@ -482,6 +484,36 @@ const App: React.FC = () => {
         // V10.0: Cleanup auto-sync on unmount
         return () => { try { brainFirestoreSync.stopAutoSync(); } catch { /* */ } };
     }, [currentPage]);
+
+    // P2: Draft autosave — start when entering pricing, stop when leaving
+    useEffect(() => {
+        if (currentPage === 'pricing-calc') {
+            draftAutosaveService.start(() => state, { draftId: 'pricing' });
+        } else {
+            draftAutosaveService.stop();
+        }
+        return () => { draftAutosaveService.stop(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentPage]);
+
+    // P2: Draft recovery on startup + P3: version check
+    useEffect(() => {
+        // Version check (reload once if new version deployed)
+        checkForUpdate().catch(console.warn);
+
+        // Offer to restore unsaved draft
+        if (draftAutosaveService.hasUnsyncedDraft()) {
+            const env = draftAutosaveService.restore();
+            if (env && env.state) {
+                const ago = Math.round((Date.now() - env.savedAt) / 60000);
+                if (confirm(`يوجد مسودة تسعير غير محفوظة (منذ ${ago} دقيقة). هل تريد استرجاعها؟`)) {
+                    setState(env.state as AppState);
+                    setCurrentPage('pricing-calc');
+                }
+                draftAutosaveService.clear();
+            }
+        }
+    }, []);
 
     // Pricing Dashboard State
     const [state, setState] = useState<AppState>({
