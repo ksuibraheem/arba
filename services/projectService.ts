@@ -7,23 +7,44 @@ import { db } from '../firebase/config';
 import {
     collection, doc, setDoc, getDoc, getDocs,
     updateDoc, deleteDoc, query, where, orderBy,
-    serverTimestamp, Timestamp, limit
+    serverTimestamp, limit
 } from 'firebase/firestore';
 import {
     ArbaProject, ArbaQuote, DashboardStats, SecurityAlert,
     ProjectStatus, UserRole, generateId
 } from './projectTypes';
+import { offlineBufferService } from './offlineBufferService';
 
 const PROJECTS_COL = 'projects';
 const QUOTES_COL = 'quotes';
 const ALERTS_COL = 'securityAlerts';
 const CLIENTS_COL = 'clients';
 
+/** Shared Firestore writer (setDoc+merge) used for both first writes and buffered replays. */
+const fsMergeWriter = async (path: string, id: string, data: unknown): Promise<void> => {
+    await setDoc(doc(db, path, id), data as Record<string, unknown>, { merge: true });
+};
+
+export interface ProjectWriteResult {
+    status: 'written' | 'buffered' | 'conflict';
+    serverData?: ArbaProject;
+}
+
+function toMillis(value: unknown): number {
+    if (value && typeof (value as { toMillis?: () => number }).toMillis === 'function') {
+        return (value as { toMillis: () => number }).toMillis();
+    }
+    return 0;
+}
+
 // =================== PROJECT CRUD ===================
 
 export async function createProject(data: Partial<ArbaProject>): Promise<string> {
     const id = data.id || generateId('proj');
-    const project: ArbaProject = {
+    // createdAt/updatedAt are NOT serverTimestamp() sentinels here: if offline this
+    // object is JSON-buffered and the sentinel would corrupt. They are stamped by
+    // safeWrite at the real write/replay moment via serverTimestampFields.
+    const project = {
         id,
         ownerId: data.ownerId || '',
         assignedTo: data.assignedTo || [data.ownerId || ''],
@@ -38,11 +59,12 @@ export async function createProject(data: Partial<ArbaProject>): Promise<string>
         quoteCount: 0,
         stateSnapshot: data.stateSnapshot,
         isEditable: data.isEditable ?? true,     // V10: editable by default
-        createdAt: serverTimestamp() as unknown as Timestamp,
-        updatedAt: serverTimestamp() as unknown as Timestamp,
     };
 
-    await setDoc(doc(db, PROJECTS_COL, id), project);
+    // Offline-resilient: writes now if online, else buffers and auto-syncs later.
+    await offlineBufferService.safeWrite(
+        PROJECTS_COL, id, project, 'create', fsMergeWriter, ['createdAt', 'updatedAt']
+    );
     return id;
 }
 
@@ -51,11 +73,46 @@ export async function getProject(id: string): Promise<ArbaProject | null> {
     return snap.exists() ? ({ ...snap.data(), id: snap.id } as ArbaProject) : null;
 }
 
+/** Backward-compatible update; offline-resilient, no conflict detection. */
 export async function updateProject(id: string, updates: Partial<ArbaProject>): Promise<void> {
-    await updateDoc(doc(db, PROJECTS_COL, id), {
-        ...updates,
-        updatedAt: serverTimestamp(),
-    });
+    await updateProjectChecked(id, updates);
+}
+
+/**
+ * Conflict-aware update. If baseUpdatedAt (millis of the loaded version) is given
+ * and the server copy is newer, the write is refused and { status: 'conflict' } is
+ * returned with the fresher server data — no blind last-write-wins. Offline writes
+ * are buffered and synced when the connection returns.
+ */
+export async function updateProjectChecked(
+    id: string,
+    updates: Partial<ArbaProject>,
+    opts: { baseUpdatedAt?: number } = {}
+): Promise<ProjectWriteResult> {
+    if (opts.baseUpdatedAt && offlineBufferService.isOnline) {
+        try {
+            const snap = await getDoc(doc(db, PROJECTS_COL, id));
+            if (snap.exists()) {
+                const serverMs = toMillis(snap.data().updatedAt);
+                if (serverMs > opts.baseUpdatedAt) {
+                    return {
+                        status: 'conflict',
+                        serverData: { ...(snap.data() as Record<string, unknown>), id } as ArbaProject,
+                    };
+                }
+            }
+        } catch {
+            // read failed (offline/flaky) -> fall through and buffer the write
+        }
+    }
+
+    const clean: Record<string, unknown> = { ...updates };
+    delete clean.updatedAt;
+
+    const res = await offlineBufferService.safeWrite(
+        PROJECTS_COL, id, clean, 'update', fsMergeWriter, ['updatedAt']
+    );
+    return { status: res.source === 'firebase' ? 'written' : 'buffered' };
 }
 
 export async function deleteProject(id: string): Promise<void> {
@@ -119,7 +176,8 @@ export async function linkQuoteToProject(
     const id = generateId('qt');
     const quote: ArbaQuote = { ...quoteData, id };
 
-    await setDoc(doc(db, QUOTES_COL, id), quote);
+    // Offline-resilient quote write.
+    await offlineBufferService.safeWrite(QUOTES_COL, id, quote, 'create', fsMergeWriter);
     await updateProject(projectId, {
         latestQuoteId: id,
         quoteCount: (quoteData.version || 1),

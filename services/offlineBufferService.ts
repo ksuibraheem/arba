@@ -22,6 +22,13 @@ export interface BufferedWrite {
     retryCount: number;
     maxRetries: number;
     lastError?: string;
+    /**
+     * Field names to (re)stamp with Firestore serverTimestamp() at write/replay
+     * time. The FieldValue sentinel is NOT JSON-serializable, so we never store
+     * it in localStorage; we record field names and rebuild the sentinel right
+     * before the actual Firestore write.
+     */
+    serverTimestampFields?: string[];
 }
 
 export interface SyncResult {
@@ -120,23 +127,28 @@ class OfflineBufferService {
         docId: string,
         data: unknown,
         operationType: 'create' | 'update',
-        firebaseWriter: (path: string, id: string, data: unknown) => Promise<void>
+        firebaseWriter: (path: string, id: string, data: unknown) => Promise<void>,
+        serverTimestampFields: string[] = []
     ): Promise<{ success: boolean; source: 'firebase' | 'local'; buffered?: boolean }> {
+
+        // `data` MUST be plain/JSON-serializable (no serverTimestamp() sentinels).
+        // Timestamp fields are named in serverTimestampFields and stamped at write time.
 
         // If clearly offline, buffer immediately
         if (!this._isOnline) {
-            this.addToBuffer({ collectionPath, docId, data, operationType });
+            this.addToBuffer({ collectionPath, docId, data, operationType, serverTimestampFields });
             return { success: true, source: 'local' };
         }
 
         try {
-            await firebaseWriter(collectionPath, docId, data);
+            const payload = await this.applyServerTimestamps(data, serverTimestampFields);
+            await firebaseWriter(collectionPath, docId, payload);
             return { success: true, source: 'firebase' };
         } catch (error) {
             console.warn('[OfflineBuffer] Firebase write failed, buffering locally:', error);
             try {
                 this.addToBuffer({
-                    collectionPath, docId, data, operationType,
+                    collectionPath, docId, data, operationType, serverTimestampFields,
                     lastError: error instanceof Error ? error.message : 'Unknown error',
                 });
                 return { success: true, source: 'local' as const, buffered: true };
@@ -145,6 +157,22 @@ class OfflineBufferService {
                 return { success: false, source: 'local' as const, buffered: false };
             }
         }
+    }
+
+    /**
+     * Rebuild a write payload, replacing each named field with a fresh
+     * serverTimestamp(). Async so firebase is only imported when writing.
+     */
+    private async applyServerTimestamps(data: unknown, fields?: string[]): Promise<unknown> {
+        if (!fields || fields.length === 0 || typeof data !== 'object' || data === null) {
+            return data;
+        }
+        const { serverTimestamp } = await import('firebase/firestore');
+        const out: Record<string, unknown> = { ...(data as Record<string, unknown>) };
+        for (const field of fields) {
+            out[field] = serverTimestamp();
+        }
+        return out;
     }
 
     // =================== Auto-Sync ===================
@@ -165,34 +193,38 @@ class OfflineBufferService {
         let synced = 0;
         let failed = 0;
 
+        // Rebuild the buffer from the entries that were NOT successfully synced.
+        // (The previous version re-saved the whole array at the end, which
+        // resurrected already-synced entries so the buffer never emptied.)
+        const remaining: BufferedWrite[] = [];
         for (const entry of buffer) {
             if (entry.retryCount >= entry.maxRetries) {
                 failed++;
+                remaining.push(entry); // keep maxed-out entries (do not silently lose data)
                 continue;
             }
 
             try {
-                await firebaseWriter(entry.collectionPath, entry.docId, entry.data);
-                this.removeFromBuffer(entry.id);
-                synced++;
+                const payload = await this.applyServerTimestamps(entry.data, entry.serverTimestampFields);
+                await firebaseWriter(entry.collectionPath, entry.docId, payload);
+                synced++; // success -> drop from buffer
             } catch {
-                // Increment retry count
                 entry.retryCount++;
                 if (entry.retryCount >= entry.maxRetries) {
                     failed++;
                 }
+                remaining.push(entry); // keep for a later retry
             }
         }
 
-        // Save updated retry counts
-        this.saveBuffer(buffer);
+        this.saveBuffer(remaining);
         this._syncInProgress = false;
 
         const result: SyncResult = {
             total: buffer.length,
             synced,
             failed,
-            remaining: buffer.length - synced - failed,
+            remaining: remaining.length,
         };
 
         // Notify listeners
