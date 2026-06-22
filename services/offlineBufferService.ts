@@ -121,7 +121,7 @@ class OfflineBufferService {
         data: unknown,
         operationType: 'create' | 'update',
         firebaseWriter: (path: string, id: string, data: unknown) => Promise<void>
-    ): Promise<{ success: boolean; source: 'firebase' | 'local' }> {
+    ): Promise<{ success: boolean; source: 'firebase' | 'local'; buffered?: boolean }> {
 
         // If clearly offline, buffer immediately
         if (!this._isOnline) {

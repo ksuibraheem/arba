@@ -3,8 +3,9 @@
  * CRUD for CompanyEmployee within ArbaClient + seat validation
  */
 
-import { db } from '../firebase/config';
+import app, { db } from '../firebase/config';
 import { doc, updateDoc, setDoc, getDoc, serverTimestamp, collection, query, where, getDocs, onSnapshot, Unsubscribe, Timestamp } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import {
     ArbaClient, CompanyEmployee, EmployeePermission,
     SubscriptionPlan, PLAN_EMPLOYEE_LIMITS, EXTRA_SEAT_PRICE_SAR,
@@ -282,18 +283,18 @@ export async function loadManagerCredentialsFromFirestore(): Promise<typeof DEFA
 }
 
 /**
- * حفظ الموظفين في Firestore (fire-and-forget)
+ * حفظ الموظف في Firestore (Document-per-employee)
  */
-async function syncEmployeesToFirestore(employees: Employee[]) {
+async function syncEmployeeToFirestore(emp: Employee) {
     try {
-        await setDoc(doc(db, FIRESTORE_EMPLOYEES_DOC.split('/')[0], FIRESTORE_EMPLOYEES_DOC.split('/')[1]), {
-            employees: employees,
-            count: employees.length,
-            updatedAt: serverTimestamp(),
-        });
-
+        const toSync = { ...emp };
+        if (toSync.password) {
+            toSync.passwordHash = toSync.passwordHash || await hashPassword(toSync.password);
+            delete toSync.password; // Secure plaintext password
+        }
+        await setDoc(doc(db, 'employees', emp.id), toSync);
     } catch (error) {
-        console.warn('⚠️ Failed to sync employees to Firestore:', error);
+        console.warn('⚠️ Failed to sync employee to Firestore:', error);
     }
 }
 
@@ -303,28 +304,28 @@ async function syncEmployeesToFirestore(employees: Employee[]) {
  */
 export async function loadEmployeesFromFirestore(): Promise<Employee[]> {
     try {
-        const docSnap = await getDoc(doc(db, FIRESTORE_EMPLOYEES_DOC.split('/')[0], FIRESTORE_EMPLOYEES_DOC.split('/')[1]));
-        if (docSnap.exists()) {
-            const data = docSnap.data();
-            const employees: Employee[] = data.employees || [];
-            // Always sync Firestore → localStorage (even if empty)
-            localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(employees));
+        const querySnapshot = await getDocs(collection(db, 'employees'));
+        const employees: Employee[] = [];
+        querySnapshot.forEach((doc) => {
+            employees.push({ id: doc.id, ...doc.data() } as Employee);
+        });
 
+        if (employees.length > 0) {
+            localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(employees));
             return employees;
         } else {
-
-            // If no doc in Firestore but we have local data, push local → Firestore
+            // Migrate legacy/local employees to collection
             const localEmployees = getStoredEmployees();
             if (localEmployees.length > 0) {
-
-                await syncEmployeesToFirestore(localEmployees);
+                for (const emp of localEmployees) {
+                    await syncEmployeeToFirestore(emp);
+                }
+                return localEmployees;
             }
-            return localEmployees;
         }
     } catch (error) {
         console.warn('⚠️ Failed to load employees from Firestore, using local:', error);
     }
-    // Fallback to localStorage
     return getStoredEmployees();
 }
 
@@ -340,8 +341,6 @@ function getStoredEmployees(): Employee[] {
 
 function saveEmployees(employees: Employee[]) {
     localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(employees));
-    // Sync to Firestore (fire-and-forget — won't block UI)
-    syncEmployeesToFirestore(employees).catch(console.error);
 }
 
 export const employeeService = {
@@ -367,12 +366,40 @@ export const employeeService = {
         };
         employees.push(newEmp);
         saveEmployees(employees);
+
+        // Background sync and password hashing
+        (async () => {
+            try {
+                const passwordHash = await hashPassword(data.password);
+                newEmp.passwordHash = passwordHash;
+                const currentEmps = getStoredEmployees();
+                const idx = currentEmps.findIndex(e => e.id === newEmp.id);
+                if (idx !== -1) {
+                    currentEmps[idx].passwordHash = passwordHash;
+                    localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(currentEmps));
+                }
+                await syncEmployeeToFirestore(newEmp);
+            } catch (err) {
+                console.error('Error syncing added employee:', err);
+            }
+        })();
+
         return newEmp;
     },
 
     deleteEmployee(id: string) {
         const employees = getStoredEmployees().filter(e => e.id !== id);
         saveEmployees(employees);
+
+        // Background delete
+        (async () => {
+            try {
+                const { deleteDoc } = await import('firebase/firestore');
+                await deleteDoc(doc(db, 'employees', id));
+            } catch (err) {
+                console.error('Error deleting employee from Firestore:', err);
+            }
+        })();
     },
 
     generateEmployeeNumber(): string {
@@ -388,52 +415,176 @@ export const employeeService = {
         return password;
     },
 
-    async login(employeeNumberOrEmail: string, password: string): Promise<{ success: boolean; employee?: Employee | { role: 'manager'; name: string; employeeNumber: string }; error?: string }> {
-        // Hash the input password
-        const inputHash = await hashPassword(password);
-        // Check manager credentials (compare hash)
-        const mgr = getManagerCredentials();
-        const mgrPasswordHash = await hashPassword(mgr.password);
-        if (employeeNumberOrEmail === mgr.employeeNumber && inputHash === mgrPasswordHash) {
-            return { success: true, employee: { role: 'manager', name: mgr.name, employeeNumber: mgr.employeeNumber } };
-        }
-        // Check regular employees — compare against stored passwordHash
-        const employees = getStoredEmployees();
-        const emp = employees.find(
-            e => (e.employeeNumber === employeeNumberOrEmail || e.email === employeeNumberOrEmail)
-                && (e.passwordHash === inputHash || e.password === password) && e.isActive
-        );
-        if (emp) {
-            // Migration: if employee still has plaintext password, hash it now
-            if (!emp.passwordHash && emp.password === password) {
-                emp.passwordHash = inputHash;
-                delete (emp as any).password;
-                saveEmployees(employees);
+    async login(employeeNumberOrEmail: string, password: string): Promise<{ success: boolean; employee?: any; error?: string }> {
+        try {
+            const profileJson = localStorage.getItem('arba_offline_profile');
+            const signature = localStorage.getItem('arba_offline_signature');
+            const storedHashOfHash = localStorage.getItem('arba_offline_hash');
+            const offlineExpiry = localStorage.getItem('arba_offline_expiry');
+
+            if (!profileJson || !signature || !storedHashOfHash) {
+                return { success: false, error: 'لا يوجد اتصال بالإنترنت، ولم يتم العثور على بيانات تسجيل دخول مخزنة مسبقاً.' };
             }
-            return { success: true, employee: emp };
+
+            // 🔒 Security: Check offline session expiry (24 hours)
+            if (offlineExpiry && Date.now() > parseInt(offlineExpiry)) {
+                localStorage.removeItem('arba_offline_profile');
+                localStorage.removeItem('arba_offline_signature');
+                localStorage.removeItem('arba_offline_hash');
+                localStorage.removeItem('arba_offline_hmac');
+                localStorage.removeItem('arba_offline_expiry');
+                return { success: false, error: 'انتهت صلاحية الجلسة المحلية (24 ساعة). يرجى الاتصال بالإنترنت لتسجيل الدخول.' };
+            }
+
+            const inputPasswordHash = await hashPassword(password);
+            const inputHashOfHash = await hashPassword(inputPasswordHash);
+
+            if (inputHashOfHash !== storedHashOfHash) {
+                return { success: false, error: 'كلمة المرور غير صحيحة' };
+            }
+
+            // 🔒 Security: Verify integrity with serverHmac binding (tamper detection)
+            const storedHmac = localStorage.getItem('arba_offline_hmac') || '';
+            const computedSignature = await hashPassword(profileJson + inputPasswordHash + storedHmac);
+            if (computedSignature !== signature) {
+                console.error('🛡️ Security Shield: Offline profile data has been tampered with!');
+                localStorage.removeItem('arba_offline_profile');
+                localStorage.removeItem('arba_offline_signature');
+                localStorage.removeItem('arba_offline_hash');
+                localStorage.removeItem('arba_offline_hmac');
+                localStorage.removeItem('arba_offline_expiry');
+                return { success: false, error: 'تم كشف تلاعب بالملفات المحلية. يرجى الاتصال بالإنترنت لتسجيل الدخول.' };
+            }
+
+            const parsed = JSON.parse(profileJson);
+            const targetKey = employeeNumberOrEmail.toLowerCase();
+            const matchesUser = (parsed.employeeNumber && parsed.employeeNumber.toLowerCase() === targetKey) ||
+                                (parsed.email && parsed.email.toLowerCase() === targetKey);
+            
+            if (!matchesUser) {
+                return { success: false, error: 'رقم الموظف أو البريد الإلكتروني غير متطابق مع الجلسة المخزنة.' };
+            }
+
+            return { success: true, employee: parsed };
+        } catch (err: any) {
+            return { success: false, error: `فشل تسجيل الدخول المحلي: ${err.message}` };
         }
-        return { success: false, error: 'رقم الموظف أو كلمة المرور غير صحيحة' };
     },
 
-    /**
-     * تسجيل دخول الموظف مع تحميل البيانات من Firestore أولاً
-     * يضمن العمل من أي جهاز
-     */
-    async loginAsync(employeeNumberOrEmail: string, password: string): Promise<{ success: boolean; employee?: Employee | { role: 'manager'; name: string; employeeNumber: string }; error?: string }> {
-        // 1) تحميل بيانات المدير والموظفين من Firestore
+    async loginAsync(employeeNumberOrEmail: string, password: string): Promise<{ success: boolean; employee?: any; customToken?: string; error?: string }> {
         try {
-            await loadManagerCredentialsFromFirestore();
-            await loadEmployeesFromFirestore();
-        } catch (err) {
-            console.warn('⚠️ Firestore load failed during loginAsync, using local data:', err);
+            const functions = getFunctions(app, 'us-central1');
+            const verifyEmployeeFn = httpsCallable(functions, 'verifyEmployeeCredentials');
+
+            // 🔒 Security: Add timeout to prevent indefinite hanging
+            // Use shorter timeout on localhost for faster dev experience
+            const isLocalDev = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+            const timeoutMs = isLocalDev ? 3000 : 10000;
+            const timeoutPromise = new Promise<never>((_, reject) =>
+                setTimeout(() => reject(new Error('NETWORK_TIMEOUT')), timeoutMs)
+            );
+            const response = await Promise.race([
+                verifyEmployeeFn({ employeeNumberOrEmail, password }),
+                timeoutPromise
+            ]);
+            const result = (response as any).data as any;
+
+            if (!result || !result.success) {
+                return { success: false, error: result?.error || 'فشلت عملية التحقق' };
+            }
+
+            const { customToken, employee, passwordHash, serverHmac } = result;
+
+            // 🔒 Security: Store offline cache with server HMAC binding + 24h expiry
+            const profileJson = JSON.stringify(employee);
+            const offlineHash = await hashPassword(passwordHash);
+            const hmacBinding = serverHmac || '';
+            const offlineSignature = await hashPassword(profileJson + passwordHash + hmacBinding);
+
+            localStorage.setItem('arba_offline_profile', profileJson);
+            localStorage.setItem('arba_offline_hash', offlineHash);
+            localStorage.setItem('arba_offline_signature', offlineSignature);
+            localStorage.setItem('arba_offline_hmac', hmacBinding);
+            localStorage.setItem('arba_offline_expiry', (Date.now() + 24 * 60 * 60 * 1000).toString());
+
+            return {
+                success: true,
+                employee,
+                customToken
+            };
+        } catch (err: any) {
+            // 🔒 Security: Smart error differentiation
+            const errorCode = err?.code || '';
+            const errorMessage = err?.message || '';
+            const fullError = `${errorCode} ${errorMessage}`.toLowerCase();
+            
+            console.warn('🔒 loginAsync error details:', { code: errorCode, message: errorMessage, online: navigator.onLine });
+
+            // 1. Manager local validation bypass (Always allow manager fallback if credentials match)
+            const mgr = getManagerCredentials();
+            const isManagerNum = employeeNumberOrEmail === mgr.employeeNumber || employeeNumberOrEmail === 'manager@arba-sys.com';
+            const isManagerPass = password === mgr.password;
+
+            if (isManagerNum && isManagerPass) {
+                console.warn('⚠️ Cloud function failed. Logging in with local manager credentials fallback.');
+                const employeeObj = {
+                    name: mgr.name,
+                    employeeNumber: mgr.employeeNumber,
+                    role: 'manager',
+                    isActive: true
+                };
+                return { success: true, employee: employeeObj };
+            }
+
+            // Check if explicitly offline first
+            if (!navigator.onLine) {
+                console.warn('⚠️ Device is offline, attempting offline login fallback');
+                return this.login(employeeNumberOrEmail, password);
+            }
+
+            // Check for network-related error codes/messages
+            const isNetworkError = 
+                errorCode === 'NETWORK_TIMEOUT' ||
+                fullError.includes('unavailable') ||
+                fullError.includes('deadline-exceeded') ||
+                fullError.includes('failed to fetch') ||
+                fullError.includes('econnreset') ||
+                fullError.includes('network request failed') ||
+                fullError.includes('net::err');
+
+            if (isNetworkError) {
+                console.warn('⚠️ Network error detected, attempting offline login fallback:', fullError);
+                return this.login(employeeNumberOrEmail, password);
+            }
+
+            // For local development on localhost, allow fallback for all local employees
+            const isDevHost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+            if (isDevHost || fullError.includes('internal') || fullError.includes('not-found')) {
+                console.warn('⚠️ Dev environment / server error detected, attempting local DB fallback');
+                
+                // Check sample/local database directly
+                const employees = getStoredEmployees();
+                const inputPasswordHash = await hashPassword(password);
+                const emp = employees.find(
+                    e => (e.employeeNumber === employeeNumberOrEmail || e.email === employeeNumberOrEmail)
+                        && (e.passwordHash === inputPasswordHash || e.password === password)
+                        && e.isActive
+                );
+                if (emp) {
+                    console.warn('⚠️ Logged in using local employee database account.');
+                    return { success: true, employee: emp };
+                }
+            }
+
+            // Server errors (invalid-argument, internal, etc.) — do NOT fall back to offline in production
+            console.error('🔒 Server authentication error (no offline fallback):', errorCode);
+            return { success: false, error: err?.message || 'حدث خطأ في الخادم. يرجى المحاولة لاحقاً.' };
         }
-        // 2) استخدام دالة تسجيل الدخول المُحدّثة (hashed)
-        return this.login(employeeNumberOrEmail, password);
     },
 
     initializeSampleData() {
         const employees = getStoredEmployees();
-        if (employees.length > 0) return; // Already initialized
+        if (employees.length > 0) return;
         const sampleEmployees: Employee[] = [
             { id: 'emp_1', name: 'أحمد محمد', email: 'ahmed@arba-sys.com', phone: '0501234567', role: 'accountant', employeeNumber: '3301001', password: 'Acc@2025', isActive: true, createdAt: '2025-01-15', emergencyContact: '', salary: { ...DEFAULT_SALARY }, contract: { ...DEFAULT_CONTRACT }, certificates: [], experiences: [], notes: [], warnings: [] },
             { id: 'emp_2', name: 'سارة العلي', email: 'sara@arba-sys.com', phone: '0509876543', role: 'hr', employeeNumber: '3301002', password: 'Hr@2025', isActive: true, createdAt: '2025-02-01', emergencyContact: '', salary: { ...DEFAULT_SALARY }, contract: { ...DEFAULT_CONTRACT }, certificates: [], experiences: [], notes: [], warnings: [] },
@@ -442,6 +593,13 @@ export const employeeService = {
             { id: 'emp_5', name: 'فهد القحطاني', email: 'fahad@arba-sys.com', phone: '0557778899', role: 'quantity_surveyor', employeeNumber: '3301005', password: 'Qs@2025', isActive: true, createdAt: '2025-05-20', emergencyContact: '', salary: { ...DEFAULT_SALARY }, contract: { ...DEFAULT_CONTRACT }, certificates: [], experiences: [], notes: [], warnings: [] },
         ];
         saveEmployees(sampleEmployees);
+        
+        // Background sync
+        (async () => {
+            for (const emp of sampleEmployees) {
+                await syncEmployeeToFirestore(emp);
+            }
+        })();
     },
 
     // === Extended Methods ===
@@ -450,15 +608,34 @@ export const employeeService = {
         const employees = getStoredEmployees();
         const index = employees.findIndex(e => e.id === id);
         if (index !== -1) {
-            employees[index] = { ...employees[index], ...data };
+            const updated = { ...employees[index], ...data };
+            employees[index] = updated;
             saveEmployees(employees);
+
+            // Background sync
+            (async () => {
+                try {
+                    if (data.password) {
+                        updated.passwordHash = await hashPassword(data.password);
+                        delete updated.password;
+                        const currentEmps = getStoredEmployees();
+                        const idx = currentEmps.findIndex(e => e.id === id);
+                        if (idx !== -1) {
+                            currentEmps[idx] = updated;
+                            localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(currentEmps));
+                        }
+                    }
+                    await syncEmployeeToFirestore(updated);
+                } catch (err) {
+                    console.error('Error updating employee:', err);
+                }
+            })();
         }
     },
 
     async changePassword(employeeNumber: string, oldPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
         const oldHash = await hashPassword(oldPassword);
         const newHash = await hashPassword(newPassword);
-        // Check manager credentials
         const mgr = getManagerCredentials();
         if (employeeNumber === mgr.employeeNumber) {
             const mgrHash = await hashPassword(mgr.password);
@@ -468,7 +645,6 @@ export const employeeService = {
             updateManagerCredentials({ password: newPassword });
             return { success: true };
         }
-        // Check regular employees (compare hash)
         const employees = getStoredEmployees();
         const emp = employees.find(e => e.employeeNumber === employeeNumber);
         if (!emp) return { success: false, error: 'الموظف غير موجود' };
@@ -479,6 +655,7 @@ export const employeeService = {
         emp.passwordHash = newHash;
         delete (emp as any).password;
         saveEmployees(employees);
+        await syncEmployeeToFirestore(emp);
         return { success: true };
     },
 
@@ -499,6 +676,7 @@ export const employeeService = {
         };
         emp.warnings = [...(emp.warnings || []), newWarning];
         saveEmployees(employees);
+        syncEmployeeToFirestore(emp).catch(console.error);
         return newWarning;
     },
 

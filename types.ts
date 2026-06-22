@@ -647,6 +647,8 @@ export interface AppState {
 
   metadata: ProjectMetadata;
 
+  projectDurationMonths?: number;
+
   pricingStrategy: PricingStrategy;
   profitMargin: number;
   targetROI: number;

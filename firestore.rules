@@ -245,10 +245,21 @@ service cloud.firestore {
     }
 
     // =================== ARBA CONFIG (Employees & Manager) ===================
-    // بيانات الموظفين وبيانات المدير — القراءة للجميع (login flow)، الكتابة للمدير فقط
+    // بيانات الموظفين وبيانات المدير — حظر الوصول الحساس للعامة
     match /arba_config/{docId} {
-      allow read: if true; // Needed for login flow
-      allow write: if isAuth() && isAdmin();
+      allow read: if docId != 'employees_data' && docId != 'manager_credentials';
+      allow read, write: if isAuth() && isAdmin();
+    }
+
+    // =================== BRAIN DATA SYNC ===================
+    match /brain_data/{userId} {
+      allow read, write: if isAuth() && (request.auth.uid == userId || isAdmin());
+      match /keys/{key} {
+        allow read, write: if isAuth() && (request.auth.uid == userId || isAdmin());
+      }
+    }
+    match /brain_health/{userId} {
+      allow read, write: if isAuth() && (request.auth.uid == userId || isAdmin());
     }
 
     // =================== REGISTRATION REQUESTS ===================

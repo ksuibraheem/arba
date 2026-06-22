@@ -16,9 +16,9 @@ const ExcelJS = require('exceljs');
 
 // Import ARBA V8.1 Engines
 const SanitizerEngine = require('./sanitizer_engine.cjs');
-const { DoubleAgentConsensus } = require('./double_agent_extractor.cjs');
+const { DoubleAgentConsensus } = require('./extraction/double_agent_extractor.cjs');
 const ClassificationEngine = require('./classification_rules.cjs');
-const AsymmetricPricer = require('./asymmetric_pricer.cjs');
+const AsymmetricPricer = require('./pricing/asymmetric_pricer.cjs');
 
 const PROFIT_MARGIN = 1.15; // 15% profit
 
@@ -162,7 +162,7 @@ class ArbaOrchestrator {
      * Auto-detect column positions from header row
      */
     _detectColumns(headerRow) {
-        const map = { desc: 1, unit: 2, qty: 3, rate: 4, amount: 5 };
+        const map = { desc: null, unit: null, qty: null, rate: null, amount: null };
         
         headerRow.forEach((cell, idx) => {
             const h = String(cell || '').toLowerCase();
@@ -172,6 +172,15 @@ class ArbaOrchestrator {
             if (h.includes('rate') || h.includes('u/price') || h.includes('سعر')) map.rate = idx;
             if (h.includes('amount') || h.includes('price') || h.includes('إجمالي') || h.includes('المبلغ')) map.amount = idx;
         });
+
+        // Default fallbacks only for essential fields
+        if (map.desc === null) map.desc = 1;
+        if (map.unit === null) map.unit = 2;
+        if (map.qty === null) map.qty = 3;
+        
+        // Strict: Rate and Amount must be explicitly found, otherwise set to -1
+        if (map.rate === null) map.rate = -1;
+        if (map.amount === null) map.amount = -1;
 
         return map;
     }

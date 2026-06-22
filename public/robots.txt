@@ -13,7 +13,10 @@ Allow: /.well-known/mcp/server-card.json$
 # Block access to private dashboards, calculation engines, and database configurations
 Disallow: /admin/
 Disallow: /owner/
+Disallow: /employee
+Disallow: /employees
 Disallow: /employee/
+Disallow: /employees/
 Disallow: /supplier/
 Disallow: /pricing-calc/
 Disallow: /boq-engine/

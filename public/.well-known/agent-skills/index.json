@@ -1,0 +1,16 @@
+{
+  "skills": [
+    {
+      "id": "unbalanced-bid-detection",
+      "name": "Unbalanced Bid Detection",
+      "description": "Scans structural and civil BOQ entries to identify front-loading and unbalanced pricing using the Saudi Building Code (SBC 301/304).",
+      "url": "https://arba-sys.com/agent-skills/unbalanced-bid-detection.md"
+    },
+    {
+      "id": "sbc-concrete-estimation",
+      "name": "SBC Concrete & Reinforcement Estimation",
+      "description": "Calculates concrete volumes, curing parameters, rebar weights, and tie-wire ratios according to SBC 301/304.",
+      "url": "https://arba-sys.com/agent-skills/sbc-concrete-estimation.md"
+    }
+  ]
+}

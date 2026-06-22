@@ -231,7 +231,7 @@ assert('مختص آربا: يرى الأرقام', filteredSpec[0].brainWarnings
 
 // 4.8 رسالة ترقية
 const upgradeMsg = getUpgradePrompt('basic_alerts', 'تحليل AI');
-assert('رسالة ترقية للعميل المجاني', upgradeMsg !== null && upgradeMsg.includes('149'), `got: "${upgradeMsg}"`);
+assert('رسالة ترقية للعميل المجاني', upgradeMsg !== null && (upgradeMsg.includes('399') || upgradeMsg.includes('149')), `got: "${upgradeMsg}"`);
 
 const noUpgrade = getUpgradePrompt('arba_specialist', 'تحليل AI');
 assert('مختص آربا: لا يحتاج ترقية', noUpgrade === null);

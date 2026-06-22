@@ -78,7 +78,7 @@ const EmployeeWorkspace: React.FC<EmployeeWorkspaceProps> = ({
     // Demo mode: use props. Authenticated: use RoleContext.
     const uid = isDemoMode ? (propUserId || 'demo') : (roleCtx.uid || propUserId || 'demo');
     const displayName = isDemoMode ? (propUserName || 'Demo') : (roleCtx.displayName || propUserName || 'Demo');
-    const role = isDemoMode ? 'admin' as const : (roleCtx.role || 'qs_engineer');
+    const role = isDemoMode ? 'viewer' as const : (roleCtx.role || 'qs_engineer');
     const isAr = language === 'ar';
 
     // State

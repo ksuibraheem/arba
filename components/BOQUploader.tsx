@@ -27,7 +27,7 @@ type ViewMode = 'upload' | 'processing' | 'results';
 const BOQUploader: React.FC<BOQUploaderProps> = ({ language = 'ar' }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('upload');
   const [region, setRegion] = useState('riyadh');
-  const [profitMargin, setProfitMargin] = useState(15);
+  const [profitMargin, setProfitMargin] = useState(() => Number(localStorage.getItem('arba_default_profit_margin') || '15'));
   const [fileName, setFileName] = useState('');
   const [result, setResult] = useState<ProcessingResult | null>(null);
   const [isDragging, setIsDragging] = useState(false);

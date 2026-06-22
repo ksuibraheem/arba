@@ -1,24 +1,29 @@
 {
     "hosting": {
+        "site": "arba-d6baf",
         "public": "dist",
         "ignore": [
             "firebase.json",
             "**/.*",
             "**/node_modules/**"
         ],
-        "redirects": [
+        "rewrites": [
             {
                 "source": "/auth.md",
-                "destination": "https://us-central1-arba-d6baf.cloudfunctions.net/trackAgentQuery",
-                "type": 302
+                "function": {
+                    "id": "trackAgentQuery",
+                    "region": "us-central1",
+                    "codebase": "arba-universal-parser"
+                }
             },
             {
                 "source": "/auth-agent",
-                "destination": "https://us-central1-arba-d6baf.cloudfunctions.net/trackAgentQuery",
-                "type": 302
-            }
-        ],
-        "rewrites": [
+                "function": {
+                    "id": "trackAgentQuery",
+                    "region": "us-central1",
+                    "codebase": "arba-universal-parser"
+                }
+            },
             {
                 "source": "**",
                 "destination": "/index.html"
@@ -46,6 +51,10 @@
             {
                 "source": "/index.html",
                 "headers": [
+                    {
+                        "key": "Link",
+                        "value": "</.well-known/api-catalog>; rel=\"api-catalog\", </auth.md>; rel=\"about\""
+                    },
                     {
                         "key": "Cache-Control",
                         "value": "no-cache, no-store, must-revalidate"
@@ -77,6 +86,33 @@
                     {
                         "key": "Permissions-Policy",
                         "value": "camera=(), microphone=(), geolocation=()"
+                    }
+                ]
+            },
+            {
+                "source": "/",
+                "headers": [
+                    {
+                        "key": "Link",
+                        "value": "</.well-known/api-catalog>; rel=\"api-catalog\", </auth.md>; rel=\"about\""
+                    }
+                ]
+            },
+            {
+                "source": "/.well-known/api-catalog",
+                "headers": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/linkset+json"
+                    }
+                ]
+            },
+            {
+                "source": "/.well-known/mcp/server-card.json",
+                "headers": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
                     }
                 ]
             },

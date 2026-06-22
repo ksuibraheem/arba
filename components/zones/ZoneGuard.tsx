@@ -25,9 +25,19 @@ const ZoneGuard: React.FC<ZoneGuardProps> = ({ requiredZone, children, language,
     const hasLoggedViolation = useRef(false);
     const t = (ar: string, en: string) => { const m: Record<string, string> = { ar, en, fr: en, zh: en }; return m[language] || en; };
 
-    // In demo mode, always grant access (no Firestore role data)
+    // In demo mode, show content with demo restriction banner
     if (isDemoMode) {
-        return <>{children}</>;
+        return (
+            <div className="relative">
+                <div className="pointer-events-none opacity-75">
+                    {children}
+                </div>
+                <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-amber-500/90 backdrop-blur-sm text-black px-6 py-3 rounded-full shadow-lg flex items-center gap-2 text-sm font-medium">
+                    <span>🔒</span>
+                    <span>{t('وضع المعاينة — سجّل للوصول الكامل', 'Preview Mode — Sign up for full access')}</span>
+                </div>
+            </div>
+        );
     }
 
     const hasAccess = canAccessZone(requiredZone);

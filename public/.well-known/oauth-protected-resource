@@ -1,7 +1,7 @@
 {
-  "scopes_supported": [
-    "read:estimates",
-    "write:estimates"
+  "resource": "https://arba-sys.com/api/v1",
+  "authorization_servers": [
+    "https://arba-sys.com/.well-known/oauth-authorization-server"
   ],
-  "authorization_server": "https://arba-platform.web.app/login"
+  "scopes_supported": ["pricing:read", "boq:analyze"]
 }

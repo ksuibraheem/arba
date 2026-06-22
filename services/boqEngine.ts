@@ -44,7 +44,6 @@ const COGNITIVE_TO_DB_MAP: Record<string, string> = {
   // Masonry — map to structure blocks
   'masonry_block_ext':  '05.04',
   'masonry_block_int':  '05.05',
-  'masonry_mortar':     '05.07', // approx → lintels (cement-based)
   'masonry_spatter_dash': '07.01',
   'masonry_plaster_int': '07.01',
   'masonry_plaster_ext': '07.02',
@@ -59,7 +58,6 @@ const COGNITIVE_TO_DB_MAP: Record<string, string> = {
   // MEP — Plumbing
   'mep_plumb_supply':   '08.01',
   'mep_plumb_drain':    '08.02',
-  'mep_plumb_vent':     '08.02', // use drain prices
   'mep_plumb_ground_tank': '08.03',
   'mep_plumb_fixtures': '08.07',
   'mep_plumb_water_heater': '08.06',
@@ -71,21 +69,16 @@ const COGNITIVE_TO_DB_MAP: Record<string, string> = {
 
   // MEP — HVAC
   'mep_hvac_units':     '10.01',
-  'mep_hvac_freon_pipes': '10.02',
-  'mep_hvac_condensate': '10.03',
 
   // Finishes
   'finish_floor_tiles': '11.03',
   'finish_wall_tiles':  '11.04',
-  'finish_tile_glue':   '11.03', // bundle with tiles
-  'finish_grout':       '11.03',
   'finish_paint_walls': '13.01',
-  'finish_primer':      '13.01',
-  'finish_gypsum_ceiling': '12.01',
+  'finish_gypsum_ceiling': '11.01', // Corrected from 12.01 to 11.01
 
   // Doors & Windows
-  'doors_windows_aluminum': '14.01',
-  'doors_windows_wood': '14.02',
+  'doors_windows_aluminum': '12.03', // Corrected from 14.01 to 12.03
+  'doors_windows_wood': '12.01', // Corrected from 14.02 to 12.01
 
   // Fire Protection (v8.5 — Advanced Systems)
   'fire_extinguishers': '15.01',
@@ -96,8 +89,7 @@ const COGNITIVE_TO_DB_MAP: Record<string, string> = {
   'fire_wet_riser':     '21.01',  // شبكة Wet Riser
   'fire_water_tank':    '21.02',  // خزان مياه حريق 200م³
 
-  // Safety
-  'safety_hoarding':    '16.01',
+  // Safety (Removed 'safety_hoarding': '16.01' to fallback)
 
   // Electrical Advanced (v8.5)
   'mep_elec_mdb':       '19.01',  // لوحة توزيع رئيسية MDB
@@ -117,10 +109,7 @@ const COGNITIVE_TO_DB_MAP: Record<string, string> = {
   'elv_access_control': '18.05',  // تحكم دخول
   'elv_structured_cabling': '18.01', // شبكة بيانات
 
-  // Consumables — estimated prices
-  'consumable_tie_wire': '03.05', // steel-related
-  'consumable_spacers': '03.06', // formwork-related
-  'water_total':        '02.06', // site services
+  // Consumables — estimated prices (All removed to fallback to FALLBACK_PRICES)
 
   // v8.0 — Drop Beams (G1)
   'dropbeam_concrete':  '04.03', // same as slab concrete
@@ -131,7 +120,7 @@ const COGNITIVE_TO_DB_MAP: Record<string, string> = {
   'stairs_concrete':    '04.04', // stair concrete
   'stairs_steel':       '05.03', // rebar
   'stairs_formwork':    '03.06', // formwork
-  'stairs_handrail':    '14.03', // metalwork
+  'stairs_handrail':    '12.04', // Corrected from 14.03 to 12.04 (Handrails)
 
   // v8.0 — MEP additions (G6, G7, G13, G14)
   'mep_elec_earthing':  '09.15', // earthing system
@@ -139,19 +128,17 @@ const COGNITIVE_TO_DB_MAP: Record<string, string> = {
   'mep_plumb_manholes': '08.09', // manholes
 
   // v8.0 — Finishes (G4, G15)
-  'finish_gypsum_cornice': '12.01', // gypsum board
   'finish_roof_screed':    '06.02', // screed
 
   // v8.0 — Smart doors/windows (G5)
-  'doors_wood_smart':   '14.02', // wooden doors
-  'windows_alum_smart': '14.01', // aluminum windows
+  'doors_wood_smart':   '12.01', // Corrected from 14.02 to 12.01 (Internal Wooden Doors)
+  'windows_alum_smart': '12.03', // Corrected from 14.01 to 12.03 (Aluminum Windows)
 
   // v8.0 — External works (G10)
   'ext_boundary_wall_concrete': '04.01', // concrete
   'ext_boundary_wall_blocks':   '05.04', // blocks
-  'ext_car_shades':     '17.01', // shades
-  'ext_interlocking':   '17.02', // paving
-  'ext_landscaping':    '17.03', // landscaping
+  'ext_car_shades':     '14.07', // Corrected from 17.01 to 14.07 (Car Parking Shade)
+  'ext_interlocking':   '14.03', // Corrected from 17.02 to 14.03 (Interlock Paving)
   'ext_lighting':       '17.04', // ext lighting
 };
 
@@ -243,6 +230,10 @@ const FALLBACK_PRICES: Record<string, { material: number; labor: number }> = {
   'ext_interlocking':     { material: 55, labor: 25 },
   'ext_landscaping':      { material: 40, labor: 30 },
   'ext_lighting':         { material: 1200, labor: 800 },
+
+  // G2 Formwork Extras
+  'formwork_props':       { material: 8, labor: 2 },
+  'formwork_runners':     { material: 24, labor: 5 },
 };
 
 /**
@@ -268,11 +259,105 @@ function cognitiveToBaseItem(cog: CognitiveOutputItem, projectType: string): Bas
 }
 
 /**
+ * Calculates a dynamic scaling factor based on quantity (volume discount / setup premium)
+ */
+function getQuantityScalingFactor(unit: string, qty: number): number {
+  if (qty <= 0) return 1.0;
+  
+  let baseline = 100;
+  const normalizedUnit = (unit || '').toLowerCase().trim();
+  
+  if (normalizedUnit.includes('m³') || normalizedUnit.includes('m3') || normalizedUnit.includes('متر مكعب')) {
+    baseline = 100;
+  } else if (normalizedUnit.includes('طن') || normalizedUnit.includes('ton')) {
+    baseline = 10;
+  } else if (normalizedUnit.includes('m²') || normalizedUnit.includes('m2') || normalizedUnit.includes('متر مربع')) {
+    baseline = 300;
+  } else if (normalizedUnit === 'م' || normalizedUnit === 'm' || normalizedUnit.includes('متر طولي')) {
+    baseline = 200;
+  } else if (normalizedUnit.includes('حبة') || normalizedUnit.includes('pcs') || normalizedUnit.includes('عدد') || normalizedUnit.includes('طقم')) {
+    baseline = 2;
+  } else {
+    baseline = 1;
+  }
+  
+  const ratio = baseline / qty;
+  const factor = Math.pow(ratio, 0.06);
+  return Math.max(0.85, Math.min(1.15, factor));
+}
+
+/**
+ * Queries the brain's 13,000+ item database to fetch the best trained average price
+ */
+function getBrainBenchmarkPrice(cogItemId: string, category: string): number | null {
+  if (!brainDataLoader.isLoaded()) return null;
+
+  const keysToTry: string[] = [
+    `villa_str_${cogItemId}`,
+    `tbc_fm_${cogItemId}`,
+    `villa_str_${category}`,
+    `tbc_fm_${category}`,
+    `school_bench_${cogItemId}`,
+    `school_${category}`,
+    `feed_${cogItemId}`,
+    `feed_${category}`,
+  ];
+
+  const lowerId = cogItemId.toLowerCase();
+  const lowerCat = (category || '').toLowerCase();
+  
+  if (lowerCat === 'excavation' || lowerId.includes('exc_') || lowerId.includes('hفر')) {
+    keysToTry.push('villa_str_excavation');
+  }
+  if (lowerCat === 'backfill' || lowerId.includes('backfill') || lowerId.includes('ردم')) {
+    keysToTry.push('villa_str_backfill');
+  }
+  if (lowerCat === 'structure' || lowerId.includes('concrete') || lowerId.includes('خرسان')) {
+    keysToTry.push('villa_str_concrete');
+  }
+  if (lowerId.includes('steel') || lowerId.includes('rebar') || lowerId.includes('حديد')) {
+    keysToTry.push('villa_str_steel_rebar');
+  }
+  if (lowerId.includes('formwork') || lowerId.includes('قوالب')) {
+    keysToTry.push('villa_str_formwork');
+  }
+  if (lowerCat === 'masonry' || lowerId.includes('block') || lowerId.includes('بلك')) {
+    keysToTry.push('villa_str_blocks');
+  }
+  if (lowerCat === 'waterproofing' || lowerCat === 'insulation' || lowerId.includes('عزل')) {
+    keysToTry.push('villa_str_waterproofing');
+  }
+  if (lowerCat === 'mep' || lowerCat === 'plumbing' || lowerCat === 'electrical') {
+    keysToTry.push('asir_electrical', 'tbc_fm_plumbing', 'tbc_fm_electrical');
+  }
+
+  for (const key of keysToTry) {
+    const bench = brainDataLoader.getBenchmark(key);
+    if (bench && bench.avgPrice > 0) {
+      return bench.avgPrice;
+    }
+  }
+
+  return null;
+}
+
+/**
  * BOQ Engine — Bridges the advanced cognitive quantities with dynamic market prices.
  * v8.0: Now uses COGNITIVE_TO_DB_MAP for proper ID resolution + FALLBACK_PRICES for coverage.
  */
-export function generateDynamicBOQ(state: AppState): CalculationResult {
-  const cognitiveOutput = runCognitiveEngine(state.blueprint, state.soilType);
+export function generateDynamicBOQ(state: AppState, options?: { isDemoMode?: boolean }): CalculationResult {
+  // 🔒 Security: Engine-level Demo Mode enforcement
+  // Prevents bypass via DevTools/console — UI restrictions alone are insufficient
+  let effectiveState = state;
+  const demoWarnings: string[] = [];
+  if (options?.isDemoMode) {
+    if (state.projectType !== 'villa') {
+      effectiveState = { ...state, projectType: 'villa' as any };
+      demoWarnings.push('🔒 Security Alert: Demo mode restricts pricing to Villa projects. تم تقييد وضع التجربة على مشاريع الفلل فقط.');
+    }
+  }
+
+  const cognitiveOutput = runCognitiveEngine(effectiveState.blueprint, effectiveState.soilType);
   
   // Flatten all cognitive items into one array
   const allCognitiveItems = [
@@ -310,7 +395,7 @@ export function generateDynamicBOQ(state: AppState): CalculationResult {
     
     // Fallback: create a synthetic base item with estimated prices
     if (!baseItem) {
-      baseItem = cognitiveToBaseItem(cogItem, state.projectType);
+      baseItem = cognitiveToBaseItem(cogItem, effectiveState.projectType);
     }
 
     // Update qty to use the precise cognitive calculation
@@ -323,11 +408,72 @@ export function generateDynamicBOQ(state: AppState): CalculationResult {
 
     // 2. Determine Pricing
     // Try to get dynamic market rates first
-    let materialUnitCost = getDynamicMaterialCost(currentItem, state.location) ?? currentItem.baseMaterial;
+    let materialUnitCost = getDynamicMaterialCost(currentItem, effectiveState.location) ?? currentItem.baseMaterial;
     let laborUnitCost = getDynamicLaborCost(currentItem) ?? currentItem.baseLabor;
 
+    // 🧠 BRAIN BENCHMARK OVERRIDE: Use the brain's trained benchmark price to set the initial experimental price quote
+    try {
+      // ONLY query specific item benchmarks first!
+      const specificKeys = [
+        `villa_str_${cogItem.id}`,
+        `tbc_fm_${cogItem.id}`,
+        `school_bench_${cogItem.id}`,
+        `feed_${cogItem.id}`
+      ];
+      
+      let brainPrice: number | null = null;
+      for (const key of specificKeys) {
+        const bench = brainDataLoader.getBenchmark(key);
+        if (bench && bench.avgPrice > 0) {
+          brainPrice = bench.avgPrice;
+          break;
+        }
+      }
+      
+      // If no specific benchmark is found, and we don't have a database item, and we don't have a specific fallback in FALLBACK_PRICES,
+      // then we can try generic category benchmarks.
+      if (brainPrice === null) {
+        const hasDbItem = !!FULL_ITEMS_DATABASE.find(dbItem => dbItem.id === (mappedId || cogItem.id));
+        const hasFallbackPrice = !!FALLBACK_PRICES[cogItem.id];
+        
+        if (!hasDbItem && !hasFallbackPrice) {
+          const genericKeys = [
+            `villa_str_${cogItem.category}`,
+            `tbc_fm_${cogItem.category}`,
+            `school_${cogItem.category}`,
+            `feed_${cogItem.category}`
+          ];
+          for (const key of genericKeys) {
+            const bench = brainDataLoader.getBenchmark(key);
+            if (bench && bench.avgPrice > 0) {
+              brainPrice = bench.avgPrice;
+              break;
+            }
+          }
+        }
+      }
+
+      if (brainPrice !== null && brainPrice > 0) {
+        // Split the brain benchmark price: 65% material, 35% labor
+        materialUnitCost = brainPrice * 0.65;
+        laborUnitCost = brainPrice * 0.35;
+      }
+    } catch (e) {
+      console.warn('Failed to fetch brain benchmark for item', cogItem.id, e);
+    }
+
+    // Unit conversion check for blockwork (if baseItem is priced in m² but cognitive item is in pieces/حبة)
+    const isBasePerM2 = (baseItem.unit === 'م2' || baseItem.unit === 'm2' || baseItem.unit?.toLowerCase().includes('m2'));
+    const isCurrentPerPiece = (currentItem.unit === 'حبة' || currentItem.unit === 'pcs' || currentItem.unit === 'عدد');
+    
+    if (isBasePerM2 && isCurrentPerPiece && (cogItem.id.toLowerCase().includes('block') || currentItem.name?.ar?.includes('بلوك') || currentItem.name?.ar?.includes('بلك'))) {
+      // 12.5 blocks per m²
+      materialUnitCost /= 12.5;
+      laborUnitCost /= 12.5;
+    }
+
     // v8.0 G8: Apply regional price index (auto-adjusts based on city)
-    const regionKey = (state.location || '').toLowerCase().replace(/\s+/g, '');
+    const regionKey = (effectiveState.location || '').toLowerCase().replace(/\s+/g, '');
     const regionalFactor = brainDataLoader.getRegionalIndex(regionKey);
     if (regionalFactor !== 1.0) {
       materialUnitCost *= regionalFactor;
@@ -335,7 +481,7 @@ export function generateDynamicBOQ(state: AppState): CalculationResult {
     }
 
     // Apply User Manual Overrides if present
-    const userOverride = state.itemOverrides[currentItem.id];
+    const userOverride = effectiveState.itemOverrides[currentItem.id];
     if (userOverride?.manualPrice !== undefined) {
       materialUnitCost = userOverride.manualPrice;
       laborUnitCost = 0; // If user overrides, assume it's total unit cost
@@ -345,22 +491,30 @@ export function generateDynamicBOQ(state: AppState): CalculationResult {
       currentItem.qty = userOverride.manualQty;
     }
 
+    // 🧠 QUANTITY-BASED SCALING (linked to the Brain):
+    // Adjust unit rate dynamically based on quantity (economies of scale / setup premium)
+    const qtyFactor = getQuantityScalingFactor(currentItem.unit, currentItem.qty);
+    if (qtyFactor !== 1.0) {
+      materialUnitCost *= qtyFactor;
+      laborUnitCost *= qtyFactor;
+    }
+
     // Apply execution method adjustments
-    if (state.executionMethod === 'subcontractor') {
+    if (effectiveState.executionMethod === 'subcontractor') {
       laborUnitCost *= 1.15; // 15% markup for subcontractors
-    } else if (state.executionMethod === 'turnkey') {
+    } else if (effectiveState.executionMethod === 'turnkey') {
       materialUnitCost *= 1.10;
       laborUnitCost *= 1.20;
     }
 
     // Apply global price adjustment
-    if (state.globalPriceAdjustment !== 0) {
-      const factor = 1 + (state.globalPriceAdjustment / 100);
+    if (effectiveState.globalPriceAdjustment !== 0) {
+      const factor = 1 + (effectiveState.globalPriceAdjustment / 100);
       materialUnitCost *= factor;
       laborUnitCost *= factor;
     }
 
-    const isOptimalPrice = (getDynamicMaterialCost(currentItem, state.location) !== null);
+    const isOptimalPrice = (getDynamicMaterialCost(currentItem, effectiveState.location) !== null);
 
     // 3. Calculate Totals
     const lineMatCost = materialUnitCost * currentItem.qty;
@@ -368,9 +522,9 @@ export function generateDynamicBOQ(state: AppState): CalculationResult {
     const directUnitCost = materialUnitCost + laborUnitCost;
     
     // Profit Calculation
-    let targetMargin = state.profitMargin / 100;
-    if (state.pricingStrategy === 'target_roi') {
-      targetMargin = (state.targetROI / 100) * 1.2;
+    let targetMargin = effectiveState.profitMargin / 100;
+    if (effectiveState.pricingStrategy === 'target_roi') {
+      targetMargin = (effectiveState.targetROI / 100) * 1.2;
     }
 
     let profitAmount = 0;
@@ -384,7 +538,7 @@ export function generateDynamicBOQ(state: AppState): CalculationResult {
     // =================== v8.5 Brain Insights: Profit Validation ===================
     const baseCost = (baseItem?.baseMaterial ?? 0) + (baseItem?.baseLabor ?? 0);
     let profitStatus: 'balanced' | 'exaggerated' | 'loss' = 'balanced';
-    const brainWarnings: string[] = [];
+    const brainWarnings: string[] = [...demoWarnings];
 
     if (baseCost > 0 && directUnitCost > 0) {
       const profitMarginPercent = ((directUnitCost - baseCost) / baseCost) * 100;
@@ -392,14 +546,14 @@ export function generateDynamicBOQ(state: AppState): CalculationResult {
       if (directUnitCost < baseCost * 0.95) {
         profitStatus = 'loss';
         brainWarnings.push(
-          state.language === 'ar'
+          effectiveState.language === 'ar'
             ? `🔴 تنبيه خسارة: السعر (${directUnitCost.toFixed(0)} ر.س) أقل من التكلفة الأساسية (${baseCost.toFixed(0)} ر.س). خطر تركيب مواد رديئة!`
             : `🔴 Loss Alert: Price (${directUnitCost.toFixed(0)} SAR) below base cost (${baseCost.toFixed(0)} SAR). Risk of substandard materials!`
         );
       } else if (profitMarginPercent > 30) {
         profitStatus = 'exaggerated';
         brainWarnings.push(
-          state.language === 'ar'
+          effectiveState.language === 'ar'
             ? `🟠 ربح مبالغ: هامش ${profitMarginPercent.toFixed(0)}% يتجاوز 30%. تحقق من توازن التسعير.`
             : `🟠 Exaggerated: ${profitMarginPercent.toFixed(0)}% margin exceeds 30%. Check pricing balance.`
         );
@@ -414,14 +568,14 @@ export function generateDynamicBOQ(state: AppState): CalculationResult {
         const validation = brainDataLoader.validatePrice(category, directUnitCost);
         if (validation.status === 'high' && validation.deviation && validation.deviation > 4.0) {
           brainWarnings.push(
-            state.language === 'ar'
+            effectiveState.language === 'ar'
               ? `🧠 تحذير الدماغ: السعر ${Math.round(validation.deviation * 100)}% من المرجعي — نمط مبالغة مكتشف`
               : `🧠 Brain: Price is ${Math.round(validation.deviation * 100)}% of benchmark — inflation pattern detected`
           );
         }
         if (validation.status === 'low' && validation.deviation && validation.deviation < 0.3) {
           brainWarnings.push(
-            state.language === 'ar'
+            effectiveState.language === 'ar'
               ? `🧠 تحذير الدماغ: السعر ${Math.round(validation.deviation * 100)}% فقط من المرجعي — منخفض بشكل مريب`
               : `🧠 Brain: Price is only ${Math.round(validation.deviation * 100)}% of benchmark — suspiciously low`
           );
@@ -429,10 +583,22 @@ export function generateDynamicBOQ(state: AppState): CalculationResult {
         // Warn on excessive waste (SOW-TBC error pattern)
         if (cogItem.wastePercent > 25) {
           brainWarnings.push(
-            state.language === 'ar'
+            effectiveState.language === 'ar'
               ? `🧠 نسبة هدر ${cogItem.wastePercent}% مرتفعة — الطبيعي 5-10%`
               : `🧠 Waste ${cogItem.wastePercent}% is excessive — normal is 5-10%`
           );
+        }
+
+        // Shoring Props Purchase Recommendation (v10.0)
+        if (cogItem.id === 'formwork_props' || currentItem.id === 'formwork_props') {
+          const duration = effectiveState.projectDurationMonths || effectiveState.metadata.projectDurationMonths || 0;
+          if (duration > 4) {
+            brainWarnings.push(
+              effectiveState.language === 'ar'
+                ? `🧠 توصية الدماغ: مدة المشروع (${duration} أشهر) طويلة. من الأوفر شراء الجكات بسعر 48 ريال للحبة بدلاً من الاستئجار المستمر.`
+                : `🧠 Brain Recommendation: Project duration (${duration} months) is long. It's more cost-effective to buy shoring props at 48 SAR/unit instead of renting.`
+            );
+          }
         }
       }
     } catch { /* brainDataLoader not available — skip */ }
@@ -442,21 +608,21 @@ export function generateDynamicBOQ(state: AppState): CalculationResult {
 
     // === v9.0 Price Intelligence — Build display strings ===
     const scopeLabel = cogItem.scopeTag
-      ? `${cogItem.scopeTag.label[state.language]} [${cogItem.scopeTag.includes.join('، ')}]`
+      ? `${cogItem.scopeTag.label[effectiveState.language]} [${cogItem.scopeTag.includes.join('، ')}]`
       : '';
     const priceBreakdownDisplay = cogItem.priceBreakdown
-      ? cogItem.priceBreakdown.map(p => `${p.label[state.language]} ${p.unitCost}`).join(' + ')
+      ? cogItem.priceBreakdown.map(p => `${p.label[effectiveState.language]} ${p.unitCost}`).join(' + ')
       : '';
     let equipmentDisplay = '';
     let equipmentCostTotal = 0;
     if (cogItem.equipmentNeeded && cogItem.equipmentNeeded.length > 0) {
-      equipmentDisplay = cogItem.equipmentNeeded.map(e => `${e.name[state.language]} (${e.costPerUnit} ر.س/${cogItem.unit})`).join(' + ');
+      equipmentDisplay = cogItem.equipmentNeeded.map(e => `${e.name[effectiveState.language]} (${e.costPerUnit} ر.س/${cogItem.unit})`).join(' + ');
       equipmentCostTotal = cogItem.equipmentNeeded.reduce((s, e) => s + e.costPerUnit, 0);
     }
 
     // Build enhanced display name with scope
-    const scopeSuffix = cogItem.scopeTag ? ` [${cogItem.scopeTag.label[state.language]}]` : '';
-    const enhancedDisplayName = cogItem.name[state.language] + (cogItem.notes ? ` (${cogItem.notes})` : '') + scopeSuffix;
+    const scopeSuffix = cogItem.scopeTag ? ` [${cogItem.scopeTag.label[effectiveState.language]}]` : '';
+    const enhancedDisplayName = cogItem.name[effectiveState.language] + (cogItem.notes ? ` (${cogItem.notes})` : '') + scopeSuffix;
 
     calculatedItems.push({
       ...currentItem,
@@ -489,7 +655,7 @@ export function generateDynamicBOQ(state: AppState): CalculationResult {
 
   const totalDirect = totalMaterialCost + totalLaborCost;
   const totalProfit = calculatedItems.reduce((sum, item) => sum + (item.profitAmount * item.qty), 0);
-  const totalOverhead = state.fixedOverhead || 0;
+  const totalOverhead = effectiveState.fixedOverhead || 0;
   
   // Allocate overhead share proportionally
   if (totalDirect > 0 && totalOverhead > 0) {
@@ -516,6 +682,6 @@ export function generateDynamicBOQ(state: AppState): CalculationResult {
     totalConcreteVolume: cognitiveOutput.summary.totalConcreteM3,
     totalLaborCost,
     totalMaterialCost,
-    areaBreakdown: calculateAreaBreakdown(state.blueprint)
+    areaBreakdown: calculateAreaBreakdown(effectiveState.blueprint)
   };
 }

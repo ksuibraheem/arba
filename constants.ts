@@ -1,5 +1,7 @@
 import { BaseItem, SupplierOption, ProjectType, SoilType, RoomConfig, FacadeConfig, TeamMember, BlueprintConfig, Language, MaterialDef, SectionDef, DeliveryScope } from './types';
 import { ALL_PROJECT_SPECIFIC_ITEMS } from './items';
+import { MEP_ITEMS_DATABASE } from './constants/mepDatabase';
+import { EXTENDED_SUPPLIER_ITEMS } from './constants/extendedSupplierItems';
 
 
 // =================== ARBA Hybrid Section Definitions ===================
@@ -291,8 +293,6 @@ export const EST_COST_PER_SQM: Record<ProjectType, number> = {
     'rest_house': 1600,
     'school': 2200,
     'hospital': 4500,
-    'mosque': 2800,
-    'hotel': 3800,
     'residential_building': 2000,
     'sports_complex': 2500,
     'farm': 800,
@@ -303,6 +303,8 @@ export const EST_COST_PER_SQM: Record<ProjectType, number> = {
     'warehouse': 900,
     'government': 2800,
     'clinic': 3500,
+    'mosque': 2800,
+    'hotel': 3800,
 };
 
 export const PROJECT_TITLES: Record<ProjectType, string> = {
@@ -851,11 +853,11 @@ const suppliersConcrete: SupplierOption[] = [
 ];
 
 const suppliersSteel: SupplierOption[] = [
-    { id: 'steel_1', name: { ar: '\u062d\u062f\u064a\u062f \u0633\u0627\u0628\u0643', en: 'Sabic Steel', fr: 'Acier Sabic', zh: 'Sabic \u94a2\u94c1' }, tier: 'premium', priceMultiplier: 1.05, origin: 'Saudi' },
-    { id: 'steel_2', name: { ar: '\u062d\u062f\u064a\u062f \u0627\u0644\u0631\u0627\u062c\u062d\u064a', en: 'Rajhi Steel', fr: 'Acier Rajhi', zh: 'Rajhi \u94a2\u94c1' }, tier: 'standard', priceMultiplier: 1.0, origin: 'Saudi' },
+    { id: 'steel_1', name: { ar: '\u062d\u062f\u064a\u062f \u0633\u0627\u0627\u0628\u0643', en: 'Sabic Steel', fr: 'Acier Sabic', zh: 'Sabic \u94a2\u94c1' }, tier: 'premium', priceMultiplier: 1.05, origin: 'Saudi' },
+    { id: 'steel_2', name: { ar: '\u062d\u062f\u064a\u062f \u0627\u0644\u0631\u0627\u0627\u062c\u062d\u064a', en: 'Rajhi Steel', fr: 'Acier Rajhi', zh: 'Rajhi \u94a2\u94c1' }, tier: 'standard', priceMultiplier: 1.0, origin: 'Saudi' },
     { id: 'steel_3', name: { ar: '\u062d\u062f\u064a\u062f \u0645\u0633\u062a\u0648\u0631\u062f', en: 'Imported Steel', fr: 'Acier Import\u00e9', zh: '\u8fdb\u53e3\u94a2\u94c1' }, tier: 'budget', priceMultiplier: 0.95, origin: 'China/UAE' },
     { id: 'steel_4', name: { ar: '\u062d\u062f\u064a\u062f \u0627\u0644\u064a\u0645\u0627\u0645\u0629', en: 'Yamamah Steel', fr: 'Acier Yamamah', zh: 'Yamamah \u94a2\u94c1' }, tier: 'standard', priceMultiplier: 1.0, origin: 'Saudi' },
-    { id: 'steel_5', name: { ar: '\u062d\u062f\u064a\u062f \u0627\u0644\u0627\u062a\u0641\u0627\u0642', en: 'Al-Ittefaq Steel', fr: 'Acier Al-Ittefaq', zh: 'Al-Ittefaq \u94a2\u94c1' }, tier: 'standard', priceMultiplier: 1.02, origin: 'Saudi' }
+    { id: 'steel_5', name: { ar: '\u062d\u062f\u064a\u062f \u0627\u0644\u0627\u0627\u062a\u0641\u0627\u0642', en: 'Al-Ittefaq Steel', fr: 'Acier Al-Ittefaq', zh: 'Al-Ittefaq \u94a2\u94c1' }, tier: 'standard', priceMultiplier: 1.02, origin: 'Saudi' }
 ];
 
 const suppliersFinish: SupplierOption[] = [
@@ -1098,4 +1100,6 @@ export const ITEMS_DATABASE: BaseItem[] = [
 export const FULL_ITEMS_DATABASE: BaseItem[] = [
     ...ITEMS_DATABASE,
     ...ALL_PROJECT_SPECIFIC_ITEMS,
+    ...MEP_ITEMS_DATABASE,
+    ...EXTENDED_SUPPLIER_ITEMS,
 ];

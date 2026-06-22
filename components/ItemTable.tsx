@@ -173,8 +173,9 @@ const ItemRow: React.FC<{
                     <div className="flex items-center gap-1">
                         <input
                             type="number"
-                            value={item.qty}
+                            value={item.qty === 0 ? '' : item.qty}
                             onChange={(e) => handleManualQtyChange(e.target.value)}
+                            placeholder="0"
                             className={`w-12 sm:w-16 bg-transparent border-b ${item.isManualQty ? 'border-blue-500 text-blue-700 font-bold' : 'border-slate-300 text-slate-700'} text-center outline-none focus:border-emerald-500 text-sm`}
                         />
                         <span className="text-slate-400 text-xs sm:text-sm">{item.unit}</span>

@@ -37,15 +37,15 @@ const BrainInsightsBar: React.FC<BrainInsightsBarProps> = ({
   const totalAlerts = criticalCount + warningCount + scarcityCount + (insightReport.hasSeasonalAdjustment ? 1 : 0);
 
   const statusColor = criticalCount > 0
-    ? 'from-red-500/20 to-red-600/10 border-red-500/30'
+    ? 'bg-slate-900 border-red-500/40 shadow-red-950/20'
     : warningCount > 0
-    ? 'from-amber-500/20 to-amber-600/10 border-amber-500/30'
-    : 'from-emerald-500/20 to-emerald-600/10 border-emerald-500/30';
+    ? 'bg-slate-900 border-amber-500/40 shadow-amber-950/20'
+    : 'bg-slate-900 border-emerald-500/40 shadow-emerald-950/20';
 
   const statusIcon = criticalCount > 0 ? '🚨' : warningCount > 0 ? '⚠️' : '✅';
 
   return (
-    <div className={`mb-4 rounded-xl border bg-gradient-to-r ${statusColor} backdrop-blur-sm overflow-hidden transition-all duration-300`}>
+    <div className={`mb-4 rounded-xl border ${statusColor} shadow-lg overflow-hidden transition-all duration-300`}>
       {/* Header Bar */}
       <div
         className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors"

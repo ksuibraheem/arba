@@ -24,7 +24,16 @@ class AsymmetricPricer {
         // Load benchmark data
         this.benchmark = {};
         try {
-            const bPath = benchmarkPath || path.join(__dirname, '..', 'data', 'market_benchmark.json');
+            let bPath = benchmarkPath;
+            if (!bPath) {
+                const rootPath = path.join(__dirname, '..', '..', 'data', 'market_benchmark.json');
+                const systemPath = path.join(__dirname, '..', 'data', 'market_benchmark.json');
+                if (fs.existsSync(rootPath)) {
+                    bPath = rootPath;
+                } else {
+                    bPath = systemPath;
+                }
+            }
             const raw = JSON.parse(fs.readFileSync(bPath, 'utf-8'));
             this.benchmark = raw.rates || {};
         } catch (e) {

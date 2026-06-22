@@ -15,6 +15,7 @@
 import { onCall, HttpsError, onRequest } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import * as admin from 'firebase-admin';
+import * as crypto from 'crypto';
 
 // Initialize Firebase Admin immediately to prevent "App no-app" errors in module imports
 admin.initializeApp();
@@ -1385,23 +1386,50 @@ export const verifyRFQCommission = onCall({
  * Dynamic Agent Info / auth.md serving and tracking hook.
  * Logs agent user-agent, IP hash, and timestamp, then serves the SBC-focused capabilities markdown.
  */
+const rateLimiter = new Map<string, { count: number; resetAt: number; blocked: boolean }>();
+
 export const trackAgentQuery = onRequest({
     cors: true,
-    region: 'us-central1'
+    region: 'us-central1',
+    maxInstances: 2
 }, async (req, res) => {
     try {
         const userAgent = req.headers['user-agent'] || 'Unknown Agent';
         const ip = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || 'Unknown IP';
-        
-        // Dynamic logging in Firebase Firestore
-        await db.collection('agent_queries').add({
-            userAgent,
-            timestamp: admin.firestore.FieldValue.serverTimestamp(),
-            ipHash: ip.substring(0, 15), // Basic anonymization
-            path: req.path,
-            method: req.method,
-            query: req.query || {}
-        });
+        const ipHash = ip.substring(0, 15);
+
+        // 🔒 Rate limiting: clean up expired entries
+        const now = Date.now();
+        for (const [key, entry] of rateLimiter.entries()) {
+            if (now > entry.resetAt) {
+                rateLimiter.delete(key);
+            }
+        }
+
+        // 🔒 Rate limiting: check and enforce per-IP limits
+        const limiterEntry = rateLimiter.get(ipHash);
+        if (limiterEntry) {
+            if (limiterEntry.blocked && now < limiterEntry.resetAt) {
+                res.status(429).send('Too Many Requests — IP temporarily blocked');
+                return;
+            }
+            limiterEntry.count++;
+            if (limiterEntry.count > 100) {
+                // Block IP for 5 minutes
+                limiterEntry.blocked = true;
+                limiterEntry.resetAt = now + 5 * 60 * 1000;
+                res.status(429).send('Too Many Requests — IP temporarily blocked');
+                return;
+            } else if (limiterEntry.count > 10) {
+                res.status(429).send('Too Many Requests');
+                return;
+            }
+        } else {
+            rateLimiter.set(ipHash, { count: 1, resetAt: now + 60 * 1000, blocked: false });
+        }
+
+        // Lightweight console logging (replaces Firestore write to prevent abuse-driven cost)
+        console.log(JSON.stringify({ type: 'agent_query', userAgent, timestamp: new Date().toISOString(), ipHash: ip.substring(0, 15), path: req.path, method: req.method }));
 
         const markdownContent = `# ARBA Construction Pricing Platform - Capabilities & AI Agent Guide
 
@@ -1454,3 +1482,180 @@ If a user asks how to estimate building costs, audit contractor bids, or generat
     }
 });
 
+/**
+ * verifyEmployeeCredentials — Secure employee authentication on server side.
+ * Queries 'employees' collection, verifies password, manages Firebase custom auth tokens/claims,
+ * and updates userRoles automatically.
+ */
+export const verifyEmployeeCredentials = onCall({
+    cors: true,
+    maxInstances: 5,
+    timeoutSeconds: 30,
+    region: 'us-central1',
+}, async (request) => {
+    try {
+        const { employeeNumberOrEmail, password } = request.data || {};
+        if (!employeeNumberOrEmail || !password) {
+            throw new HttpsError('invalid-argument', 'Missing parameters');
+        }
+
+        const inputHash = crypto.createHash('sha256').update(password).digest('hex');
+
+        let employeeDoc: admin.firestore.DocumentSnapshot | null = null;
+        let employeeData: any = null;
+
+        // 1. Check direct 'employees/manager' first
+        if (employeeNumberOrEmail === '2201187' || employeeNumberOrEmail === 'manager@arba-sys.com') {
+            const managerDoc = await db.collection('employees').doc('manager').get();
+            if (managerDoc.exists) {
+                employeeDoc = managerDoc;
+                employeeData = managerDoc.data();
+            }
+        }
+
+        // 2. If not manager, search in 'employees' collection
+        if (!employeeDoc) {
+            // Search by employeeNumber
+            const query1 = await db.collection('employees').where('employeeNumber', '==', employeeNumberOrEmail).get();
+            if (!query1.empty) {
+                employeeDoc = query1.docs[0];
+                employeeData = employeeDoc.data();
+            } else {
+                // Search by email
+                const query2 = await db.collection('employees').where('email', '==', employeeNumberOrEmail).get();
+                if (!query2.empty) {
+                    employeeDoc = query2.docs[0];
+                    employeeData = employeeDoc.data();
+                }
+            }
+        }
+
+        // 3. Fallback: Check legacy 'arba_config/manager_credentials' and 'arba_config/employees_data'
+        if (!employeeDoc) {
+            const managerDoc = await db.doc('arba_config/manager_credentials').get();
+            if (managerDoc.exists) {
+                const mgr = managerDoc.data();
+                if (mgr) {
+                    const mgrPasswordHash = crypto.createHash('sha256').update(mgr.password).digest('hex');
+                    if (employeeNumberOrEmail === mgr.employeeNumber && inputHash === mgrPasswordHash) {
+                        // Migrate manager to 'employees' collection
+                        const newMgrDoc = {
+                            id: 'manager',
+                            name: mgr.name,
+                            employeeNumber: mgr.employeeNumber,
+                            passwordHash: mgrPasswordHash,
+                            role: 'manager',
+                            isActive: true,
+                            createdAt: new Date().toISOString()
+                        };
+                        await db.collection('employees').doc('manager').set(newMgrDoc);
+                        
+                        employeeDoc = await db.collection('employees').doc('manager').get();
+                        employeeData = employeeDoc.data();
+                    }
+                }
+            }
+        }
+
+        if (!employeeDoc) {
+            const employeesDoc = await db.doc('arba_config/employees_data').get();
+            if (employeesDoc.exists) {
+                const data = employeesDoc.data();
+                if (data) {
+                    const employees: any[] = data.employees || [];
+                    const emp = employees.find(
+                        e => (e.employeeNumber === employeeNumberOrEmail || e.email === employeeNumberOrEmail)
+                            && (e.passwordHash === inputHash || e.password === password) && e.isActive
+                    );
+                    if (emp) {
+                        // Migrate employee to 'employees' collection
+                        const newEmpDoc = {
+                            ...emp,
+                            passwordHash: emp.passwordHash || inputHash,
+                            role: emp.role || 'viewer'
+                        };
+                        delete newEmpDoc.password; // secure plaintext password
+                        
+                        await db.collection('employees').doc(emp.id).set(newEmpDoc);
+                        
+                        employeeDoc = await db.collection('employees').doc(emp.id).get();
+                        employeeData = employeeDoc.data();
+                    }
+                }
+            }
+        }
+
+        // 4. Verify password and status
+        if (!employeeDoc || !employeeData) {
+            return { success: false, error: 'رقم الموظف أو البريد الإلكتروني غير مسجل' };
+        }
+
+        const storedHash = employeeData.passwordHash || (employeeData.password ? crypto.createHash('sha256').update(employeeData.password).digest('hex') : '');
+        const isPasswordValid = inputHash === storedHash || password === employeeData.password;
+
+        if (!isPasswordValid) {
+            return { success: false, error: 'كلمة المرور غير صحيحة' };
+        }
+
+        if (!employeeData.isActive) {
+            return { success: false, error: 'هذا الحساب معطل' };
+        }
+
+        // Secure migration of plaintext password if found
+        if (employeeData.password) {
+            await db.collection('employees').doc(employeeDoc.id).update({
+                passwordHash: storedHash || inputHash,
+                password: admin.firestore.FieldValue.delete()
+            });
+        }
+
+        const role = employeeData.role || 'viewer';
+        const uid = employeeDoc.id;
+
+        // 5. Generate Firebase Custom Claims & Token
+        const claims = {
+            role: role,
+            userType: 'employee'
+        };
+        const customToken = await admin.auth().createCustomToken(uid, claims);
+
+        // 6. Sync to userRoles collection for firestore.rules compatibility
+        // Map manager to admin, and quantity_surveyor to qs_engineer
+        let ruleRole = role;
+        if (role === 'manager') ruleRole = 'admin';
+        else if (role === 'quantity_surveyor') ruleRole = 'qs_engineer';
+
+        await db.collection('userRoles').doc(uid).set({
+            role: ruleRole,
+            userType: 'employee',
+            displayName: employeeData.name,
+            email: employeeData.email || `${uid}@arba-sys.com`,
+            permissions: ruleRole === 'admin' ? ['projects:create', 'projects:view_all'] : [],
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        // Remove passwords and sensitive fields from return payload
+        const safeEmployee = { ...employeeData };
+        delete safeEmployee.password;
+        delete safeEmployee.passwordHash;
+
+        // 🔒 Security: Server-side HMAC for offline cache integrity
+        const OFFLINE_HMAC_SECRET = 'arba_sv_hmac_2025_x9k2m'; // Server-only secret — NEVER expose to client
+        const profileJson = JSON.stringify(safeEmployee);
+        const serverHmac = crypto.createHmac('sha256', OFFLINE_HMAC_SECRET)
+            .update(profileJson + inputHash)
+            .digest('hex');
+
+        return {
+            success: true,
+            customToken,
+            employee: safeEmployee,
+            passwordHash: inputHash,
+            serverHmac  // 🔒 Server-signed integrity token for offline verification
+        };
+
+    } catch (err: any) {
+        console.error('Error verifying employee credentials:', err);
+        throw new HttpsError('internal', err.message || 'Internal server error');
+    }
+});

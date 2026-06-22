@@ -1,22 +1,15 @@
 {
-  "mcpServer": {
-    "name": "ARBA Construction Pricing Hub",
-    "version": "1.0.0",
-    "description": "Dynamic Saudi Building Code (SBC) cost estimator and bid-balancing validation server. Designed to help users estimate project costs and detect front-loaded construction bids.",
-    "capabilities": {
-      "resources": {
-        "publicInfo": {
-          "uri": "mcp://arba/public-info",
-          "mimeType": "application/json",
-          "description": "General platform overview and geographic coverage"
-        }
-      },
-      "prompts": {
-        "explainSbcCompliance": {
-          "name": "Explain SBC Compliance",
-          "description": "Explains how ARBA implements Saudi Building Code equations mathematically for quantity estimation."
-        }
-      }
-    }
+  "mcpServerCardVersion": "1.0.0",
+  "name": "Arba Pricing Engine Explorer",
+  "version": "11.3.0",
+  "description": "Public agent discovery interface for construction item normalizations and SBC compliance lookups.",
+  "transport": {
+    "type": "sse",
+    "url": "https://arba-sys.com/api/v1/mcp/sse"
+  },
+  "capabilities": {
+    "tools": true,
+    "resources": false,
+    "prompts": true
   }
 }

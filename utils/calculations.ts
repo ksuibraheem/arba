@@ -185,6 +185,6 @@ export function getDynamicLaborCost(item: BaseItem): number | null {
     return null;
 }
 
-export const calculateProjectCosts = (state: AppState): CalculationResult => {
-    return generateDynamicBOQ(state);
+export const calculateProjectCosts = (state: AppState, options?: { isDemoMode?: boolean }): CalculationResult => {
+    return generateDynamicBOQ(state, options);
 };

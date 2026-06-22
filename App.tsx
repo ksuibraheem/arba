@@ -608,6 +608,22 @@ const App: React.FC = () => {
                 usedProjects: 0,
                 usedStorageMB: 0
             });
+            // Force reset to villa defaults for demo preview
+            const defaults = PROJECT_DEFAULTS['villa'];
+            if (defaults) {
+                setState(prev => ({
+                    ...prev,
+                    projectType: 'villa',
+                    rooms: defaults.rooms,
+                    facades: defaults.facades,
+                    team: defaults.team,
+                    blueprint: defaults.blueprint,
+                    itemOverrides: {},
+                    landArea: defaults.blueprint ? defaults.blueprint.plotLength * defaults.blueprint.plotWidth : prev.landArea,
+                    buildArea: defaults.blueprint ? defaults.blueprint.floors.reduce((sum, f) => sum + f.area, 0) : prev.buildArea,
+                    floors: defaults.blueprint ? defaults.blueprint.floors.length : prev.floors,
+                }));
+            }
             setCurrentPage('pricing-calc');
             return;
         }
@@ -1203,6 +1219,55 @@ const App: React.FC = () => {
         }));
     };
 
+    // === Load Warehouse Project (مستودع الرياض) ===
+    const handleLoadWarehouseProject = async () => {
+        try {
+            const res = await fetch('/warehouse_project.json');
+            const data = await res.json();
+            
+            const newItems: BaseItem[] = [];
+            for (const section of data.sections) {
+                const cat = section.category || 'custom';
+                for (const item of section.items) {
+                    newItems.push({
+                        id: `wh_${item.id}`,
+                        category: cat as any,
+                        type: 'all' as any,
+                        name: { ar: `[${section.name}] ${item.nameAr}`, en: item.nameAr, fr: '', zh: '' },
+                        unit: item.unit,
+                        qty: item.qty,
+                        baseMaterial: item.unitPrice,
+                        baseLabor: 0,
+                        waste: 0,
+                        suppliers: [],
+                        sbc: 'N/A',
+                        soilFactor: false,
+                        dependency: 'fixed',
+                        isCustom: true,
+                    });
+                }
+            }
+            
+            setState(prev => ({
+                ...prev,
+                customItems: [...prev.customItems.filter(i => !i.id.startsWith('wh_')), ...newItems],
+                metadata: {
+                    ...prev.metadata,
+                    projectName: data.projectInfo.name,
+                    tenderNumber: data.projectInfo.referenceNumber,
+                    projectAddress: data.projectInfo.location,
+                    projectDurationMonths: Math.ceil(data.projectInfo.duration / 30),
+                },
+                landArea: data.projectInfo.siteArea,
+                buildArea: data.projectInfo.buildingArea,
+            }));
+            
+            alert(`✅ تم تحميل مشروع "${data.projectInfo.name}" بنجاح!\n\n📋 ${newItems.length} بند مسعّر\n💰 الإجمالي: ${newItems.reduce((s, i) => s + (i.baseMaterial * i.qty), 0).toLocaleString()} ريال`);
+        } catch (err) {
+            alert('❌ فشل تحميل المشروع: ' + (err as any).message);
+        }
+    };
+
     const checkPriceWithAI = async (item: CalculatedItem, manualPrice: number): Promise<string> => {
         // Check if AI is available for this plan
         if (isFreePlan) {
@@ -1264,10 +1329,10 @@ const App: React.FC = () => {
 
     const calculationResult = useMemo(() => {
         const start = performance.now();
-        const res = calculateProjectCosts(state);
+        const res = calculateProjectCosts(state, { isDemoMode });
         silentBrainTracker.trackCalcTime(performance.now() - start);
         return res;
-    }, [state]);
+    }, [state, isDemoMode]);
     // =================== 🧠 Brain Layer: Initialize Training Data (v2.0) ===================
     React.useEffect(() => {
         try {
@@ -2020,21 +2085,43 @@ const App: React.FC = () => {
                     language={language}
                     onOpenPricing={(project, setupData) => {
                         setActiveProject(project || null);
-                        // Apply setup modal data to the pricing metadata
-                        if (setupData && !setupData.skipped) {
-                            const firstClient = setupData.clients[0];
-                            setState(prev => ({
-                                ...prev,
-                                location: setupData.location || prev.location,
-                                metadata: {
+                        setState(prev => {
+                            const merged = { ...prev };
+                            if (project) {
+                                // Load project details if it exists, force villa in demo mode
+                                merged.projectType = (isDemoMode ? 'villa' : (project.projectType || 'villa')) as ProjectType;
+                                if (project.location) merged.location = project.location as any;
+                                if (project.rooms) merged.rooms = project.rooms;
+                                if (project.facades) merged.facades = project.facades;
+                                if (project.team) merged.team = project.team;
+                                if (project.blueprint) merged.blueprint = project.blueprint;
+                                if (project.itemOverrides) merged.itemOverrides = project.itemOverrides;
+                                if (project.estimatedValue) merged.totalInvestment = project.estimatedValue;
+                                
+                                merged.metadata = {
                                     ...prev.metadata,
-                                    projectName: setupData.projectName || prev.metadata.projectName,
-                                    clientName: firstClient?.name || prev.metadata.clientName,
-                                    tenderNumber: firstClient?.tenderNumber || firstClient?.crNumber || prev.metadata.tenderNumber,
-                                    companyName: firstClient?.type === 'company' ? firstClient.name : prev.metadata.companyName,
-                                }
-                            }));
-                        }
+                                    projectName: project.name || prev.metadata.projectName,
+                                    clientName: project.clientName || prev.metadata.clientName,
+                                    clientPhone: project.clientPhone || prev.metadata.clientPhone,
+                                    clientEmail: project.clientEmail || prev.metadata.clientEmail,
+                                };
+                            }
+                            // Apply setup modal data on top if provided
+                            if (setupData && !setupData.skipped) {
+                                const firstClient = setupData.clients[0];
+                                merged.location = (setupData.location || merged.location) as any;
+                                merged.metadata = {
+                                    ...merged.metadata,
+                                    projectName: setupData.projectName || merged.metadata.projectName,
+                                    clientName: firstClient?.name || merged.metadata.clientName,
+                                    clientPhone: firstClient?.phone || merged.metadata.clientPhone,
+                                    clientEmail: firstClient?.email || merged.metadata.clientEmail,
+                                    tenderNumber: firstClient?.tenderNumber || firstClient?.crNumber || merged.metadata.tenderNumber,
+                                    companyName: firstClient?.type === 'company' ? firstClient.name : merged.metadata.companyName,
+                                };
+                            }
+                            return merged;
+                        });
                         setCurrentPage('pricing-calc');
                     }}
                     onLogout={handleLogout}
@@ -2052,19 +2139,43 @@ const App: React.FC = () => {
                     language={language}
                     onOpenPricing={(project, setupData) => {
                         setActiveProject(project || null);
-                        if (setupData && !setupData.skipped) {
-                            const firstClient = setupData.clients[0];
-                            setState(prev => ({
-                                ...prev,
-                                metadata: {
+                        setState(prev => {
+                            const merged = { ...prev };
+                            if (project) {
+                                // Load project details if it exists, force villa in demo mode
+                                merged.projectType = (isDemoMode ? 'villa' : (project.projectType || 'villa')) as ProjectType;
+                                if (project.location) merged.location = project.location as any;
+                                if (project.rooms) merged.rooms = project.rooms;
+                                if (project.facades) merged.facades = project.facades;
+                                if (project.team) merged.team = project.team;
+                                if (project.blueprint) merged.blueprint = project.blueprint;
+                                if (project.itemOverrides) merged.itemOverrides = project.itemOverrides;
+                                if (project.estimatedValue) merged.totalInvestment = project.estimatedValue;
+                                
+                                merged.metadata = {
                                     ...prev.metadata,
-                                    projectName: setupData.projectName || prev.metadata.projectName,
-                                    clientName: firstClient?.name || prev.metadata.clientName,
-                                    tenderNumber: firstClient?.tenderNumber || firstClient?.crNumber || prev.metadata.tenderNumber,
-                                    companyName: firstClient?.type === 'company' ? firstClient.name : prev.metadata.companyName,
-                                }
-                            }));
-                        }
+                                    projectName: project.name || prev.metadata.projectName,
+                                    clientName: project.clientName || prev.metadata.clientName,
+                                    clientPhone: project.clientPhone || prev.metadata.clientPhone,
+                                    clientEmail: project.clientEmail || prev.metadata.clientEmail,
+                                };
+                            }
+                            // Apply setup modal data on top if provided
+                            if (setupData && !setupData.skipped) {
+                                const firstClient = setupData.clients[0];
+                                merged.location = (setupData.location || merged.location) as any;
+                                merged.metadata = {
+                                    ...merged.metadata,
+                                    projectName: setupData.projectName || merged.metadata.projectName,
+                                    clientName: firstClient?.name || merged.metadata.clientName,
+                                    clientPhone: firstClient?.phone || merged.metadata.clientPhone,
+                                    clientEmail: firstClient?.email || merged.metadata.clientEmail,
+                                    tenderNumber: firstClient?.tenderNumber || firstClient?.crNumber || merged.metadata.tenderNumber,
+                                    companyName: firstClient?.type === 'company' ? firstClient.name : merged.metadata.companyName,
+                                };
+                            }
+                            return merged;
+                        });
                         setCurrentPage('pricing-calc');
                     }}
                     onLogout={handleLogout}
@@ -2500,6 +2611,14 @@ const App: React.FC = () => {
                                         {(isFreePlan || isDemoMode) && <Lock className="w-4 h-4" />}
                                         <Zap className={`w-4 h-4 ${(isFreePlan || isDemoMode) ? '' : 'text-yellow-300 fill-yellow-300'}`} />
                                         {state.language === 'ar' ? 'استيراد ذكي' : 'Smart Import'}
+                                    </button>
+                                    <button
+                                        onClick={handleLoadWarehouseProject}
+                                        title="تحميل مشروع مستودع الرياض المسعّر"
+                                        className="flex items-center gap-2 px-5 py-2.5 rounded-xl transition-all font-bold text-sm shadow-lg bg-gradient-to-r from-amber-600 hover:from-amber-500 to-orange-600 hover:to-orange-500 text-white shadow-amber-500/25 border border-amber-400/30 active:scale-95"
+                                    >
+                                        🏗️
+                                        {state.language === 'ar' ? 'مشروع المستودع' : 'Warehouse Project'}
                                     </button>
                                     <button
                                         onClick={handleExport}

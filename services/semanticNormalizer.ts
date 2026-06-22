@@ -102,6 +102,9 @@ const KEYWORD_TO_ITEM_MAP: Record<string, string[]> = {
   'خرسانة اعمدة':     ['04.01', 'super_columns'],
   'خرسانة ميدات':     ['03.03'],
   'خرسانة نظافة':     ['03.01'],
+  'خرسانة عادية':     ['03.01'],
+  'فرشة نظافة':       ['03.01'],
+  'فرشات نظافة':      ['03.01'],
   'صبة':              ['03.02', '04.03'],
   // Masonry
   'بلوك خارجي':       ['05.04'],
@@ -132,42 +135,148 @@ const KEYWORD_TO_ITEM_MAP: Record<string, string[]> = {
   'محول':             ['09.16', '19.03'],
 };
 
+export function cleanPunctuation(text: string): string {
+  return text.replace(/[()\[\]\.,\/#!$%\^&\*;:{}=\-_`~?؟،]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+export function stripArabicPrefixes(word: string): string {
+  let stem = word;
+  if (stem.startsWith('و') && stem.length > 3) {
+    stem = stem.substring(1);
+  }
+  if (stem.startsWith('ال') && stem.length > 3) {
+    stem = stem.substring(2);
+  }
+  if ((stem.startsWith('ب') || stem.startsWith('ل') || stem.startsWith('ف')) && stem.length > 3) {
+    if (stem.substring(1).startsWith('ال')) {
+      stem = stem.substring(3);
+    } else {
+      stem = stem.substring(1);
+    }
+  }
+  return stem;
+}
+
+const AR_STOP_WORDS = new Set([
+  'توريد', 'تركيب', 'توصيل', 'اختبار', 'تشغيل', 'شامل', 'شاملة', 'شاملا', 
+  'جميع', 'كل', 'ما', 'يلزم', 'اعمال', 'أعمال', 'طبقا', 'طبقاً', 'مخططات', 
+  'المخططات', 'مواصفات', 'المواصفات', 'المهندس', 'المشرف', 'تعليمات', 
+  'انهاء', 'إنهاء', 'العمل', 'عمل', 'صنع', 'نوع', 'لزوم', 'اللازمة', 'لازمة',
+  'اعاده', 'إعادة'
+]);
+
+const EN_STOP_WORDS = new Set([
+  'supply', 'install', 'test', 'commission', 'commissioning', 'including', 
+  'provide', 'complete', 'all', 'with', 'for', 'and', 'the', 'per', 'new', 
+  'from', 'type', 'size', 'each', 'set', 'work', 'item', 'general', 'according', 
+  'approved', 'equal', 'similar', 'specification', 'testing', 'installation', 
+  'material', 'materials', 'shall', 'necessary', 'required', 'accessories'
+]);
+
+const GENERIC_KEYWORDS = new Set([
+  'حديد', 'بلوك', 'لياسة', 'سباكة', 'كهرباء', 'تكييف', 'حريق', 'صبة'
+]);
+
 /**
  * يحاول ربط نص حر بالـ ID الأقرب في قاعدة البيانات
- * يستخدم أولوية: مطابقة كاملة → مطابقة جزئية → لا نتيجة
+ * يستخدم أولوية: مطابقة كاملة ← مطابقة جزئية ← لا نتيجة
  */
 export function matchTextToItemId(rawText: string): string | null {
   if (!rawText) return null;
 
   const cleaned = cleanArabicText(rawText);
-  const normalized = normalizeArabicChars(cleaned);
-  const corrected = correctSpelling(normalized);
+  const corrected = correctSpelling(cleaned);
+  const normalized = normalizeArabicChars(corrected);
+
+  // حساب عدد الكلمات في الاستعلام
+  const queryWordsCount = normalized.split(/\s+/).filter(w => w.length > 0).length;
 
   // 1. مطابقة مباشرة مع خريطة المصطلحات
   for (const [keyword, ids] of Object.entries(KEYWORD_TO_ITEM_MAP)) {
+    if (GENERIC_KEYWORDS.has(keyword) && queryWordsCount >= 4) {
+      continue; // تخطي الكلمات العامة في التوصيفات الطويلة لمنع الاختطاف
+    }
     const normalizedKeyword = normalizeArabicChars(keyword);
-    if (corrected.includes(normalizedKeyword)) {
+    if (normalized.includes(normalizedKeyword)) {
       return ids[0]; // أعلى أولوية
     }
   }
 
-  // 2. مطابقة مع أسماء قاعدة البيانات (fuzzy)
-  const words = corrected.split(' ').filter(w => w.length > 2);
-  let bestMatch: { id: string; score: number } | null = null;
-
-  for (const item of FULL_ITEMS_DATABASE) {
-    const itemNameNorm = normalizeArabicChars(item.name?.ar || '');
-    let matchScore = 0;
-
-    for (const word of words) {
-      if (itemNameNorm.includes(word)) {
-        matchScore += word.length; // كلمات أطول = ثقة أعلى
+  // 2. التحقق من وجود نصوص باللغة الإنجليزية
+  const hasEnglish = /[a-zA-Z]/.test(normalized);
+  let bestEngMatch: { id: string; score: number } | null = null;
+  if (hasEnglish) {
+    const engWords = normalized.toLowerCase().split(/[\s,;()\[\]\.,\-]+/g).filter(w => w.length > 2 && !EN_STOP_WORDS.has(w));
+    if (engWords.length > 0) {
+      for (const item of FULL_ITEMS_DATABASE) {
+        const itemNameEn = (item.name?.en || '').toLowerCase();
+        let matchScore = 0;
+        engWords.forEach((word, idx) => {
+          if (itemNameEn.includes(word)) {
+            let wordScore = word.length;
+            let multiplier = 1.0;
+            if (idx === 0) multiplier = 4.0;
+            else if (idx === 1) multiplier = 2.0;
+            else if (idx === 2) multiplier = 1.5;
+            else if (idx === 3) multiplier = 1.2;
+            else multiplier = Math.max(0.2, 1.0 - (idx - 3) * 0.05);
+            wordScore *= multiplier;
+            matchScore += wordScore;
+          }
+        });
+        if (matchScore > 0 && (!bestEngMatch || matchScore > bestEngMatch.score)) {
+          bestEngMatch = { id: item.id, score: matchScore };
+        }
       }
     }
+  }
 
-    if (matchScore > 0 && (!bestMatch || matchScore > bestMatch.score)) {
-      bestMatch = { id: item.id, score: matchScore };
+  // 3. مطابقة جذعية دقيقة للغة العربية
+  const cleanedPunc = cleanPunctuation(normalized);
+  const rawWords = cleanedPunc.split(' ').filter(w => w.length > 2);
+  // تطبيق الجذع أولاً ثم تصفية كلمات التوقف لضمان إزالة المسبوقة بـ (و، بـ، إلخ)
+  const stems = rawWords.map(w => stripArabicPrefixes(w));
+  const queryStems = stems.filter(w => !AR_STOP_WORDS.has(w));
+
+  let bestArMatch: { id: string; score: number } | null = null;
+  if (queryStems.length > 0) {
+    for (const item of FULL_ITEMS_DATABASE) {
+      const itemNameClean = cleanPunctuation(item.name?.ar || '');
+      const itemNameNorm = normalizeArabicChars(cleanArabicText(itemNameClean));
+      const itemWords = itemNameNorm.split(' ').filter(w => w.length > 2)
+        .map(w => stripArabicPrefixes(w))
+        .filter(w => !AR_STOP_WORDS.has(w));
+
+      let matchScore = 0;
+
+      queryStems.forEach((qStem, idx) => {
+        const matchedIw = itemWords.find(iw => iw === qStem);
+
+        if (matchedIw) {
+          let wordScore = qStem.length;
+          let multiplier = 1.0;
+          if (idx === 0) multiplier = 4.0;
+          else if (idx === 1) multiplier = 2.0;
+          else if (idx === 2) multiplier = 1.5;
+          else if (idx === 3) multiplier = 1.2;
+          else multiplier = Math.max(0.2, 1.0 - (idx - 3) * 0.05);
+          wordScore *= multiplier;
+          matchScore += wordScore;
+        }
+      });
+
+      if (matchScore > 0 && (!bestArMatch || matchScore > bestArMatch.score)) {
+        bestArMatch = { id: item.id, score: matchScore };
+      }
     }
+  }
+
+  // الموازنة بين المطابقة العربية والإنجليزية
+  let bestMatch: { id: string; score: number } | null = null;
+  if (bestArMatch && bestEngMatch) {
+    bestMatch = bestArMatch.score >= bestEngMatch.score ? bestArMatch : bestEngMatch;
+  } else {
+    bestMatch = bestArMatch || bestEngMatch || null;
   }
 
   return bestMatch && bestMatch.score >= 4 ? bestMatch.id : null;

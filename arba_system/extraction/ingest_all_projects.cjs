@@ -18,11 +18,15 @@ const fs   = require('fs');
 
 // ── Paths ──────────────────────────────────────────────────
 const PROJECTS_BASE = path.join(__dirname, '..', '..', 'المشاريع');
-const OUTPUT_DIR    = path.join(__dirname, '..', 'training_data', 'pending');
+const OUTPUT_DIR    = path.join(__dirname, '..', '..', 'training_data', 'pending');
 const OUTPUT_FILE   = path.join(OUTPUT_DIR, 'ingested_projects.json');
 
 // ── File manifest ──────────────────────────────────────────
 const FILES = [
+  // New Air Defense Projects (ADF)
+  { file: path.join(__dirname, '..', '..', 'pricing_files', 'hafr_albatin_raw.xlsx'), project: 'ADF_Hafr_AlBatin', type: 'government_boq', region: 'hafr_albatin' },
+  { file: path.join(__dirname, '..', '..', 'pricing_files', 'riyadh_raw.xlsx'), project: 'ADF_Riyadh', type: 'government_boq', region: 'riyadh' },
+
   // AL SHAFA - 5 villas
   { file: path.join(PROJECTS_BASE, '00- AL SHAFA - STRUCUTRAL WORK PACKAGE - VILLAS', '01-villa A', 'Alshafa- Villa A-STR-BOQ.xlsx'), project: 'AL_SHAFA_Villa_A', type: 'structural', region: 'saudi' },
   { file: path.join(PROJECTS_BASE, '00- AL SHAFA - STRUCUTRAL WORK PACKAGE - VILLAS', '02-villa B', 'Alshafa- Villa B-STR-BOQ.xlsx'), project: 'AL_SHAFA_Villa_B', type: 'structural', region: 'saudi' },

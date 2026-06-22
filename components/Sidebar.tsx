@@ -444,23 +444,23 @@ const Sidebar: React.FC<SidebarProps> = ({ state, onChange, isDemoMode = false }
                                 className="w-full bg-slate-700 border border-slate-600 rounded-lg p-3 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all"
                             >
                                 <option value="villa">🏠 {t('proj_villa')}</option>
-                                <option value="rest_house" disabled={isDemoMode}>🏖️ {t('proj_rest')}{isDemoMode ? ' 🔒' : ''}</option>
-                                <option value="tower" disabled={isDemoMode}>🏢 {t('proj_tower')}{isDemoMode ? ' 🔒' : ''}</option>
-                                <option value="factory" disabled={isDemoMode}>🏭 {t('proj_factory')}{isDemoMode ? ' 🔒' : ''}</option>
-                                <option value="school" disabled={isDemoMode}>🏫 {t('proj_school')}{isDemoMode ? ' 🔒' : ''}</option>
-                                <option value="hospital" disabled={isDemoMode}>🏥 {t('proj_hospital')}{isDemoMode ? ' 🔒' : ''}</option>
-                                <option value="mosque" disabled={isDemoMode}>🕌 {t('proj_mosque')}{isDemoMode ? ' 🔒' : ''}</option>
-                                <option value="hotel" disabled={isDemoMode}>🏨 {t('proj_hotel')}{isDemoMode ? ' 🔒' : ''}</option>
-                                <option value="residential_building" disabled={isDemoMode}>🏬 {t('proj_residential')}{isDemoMode ? ' 🔒' : ''}</option>
-                                <option value="sports_complex" disabled={isDemoMode}>🏟️ {t('proj_sports')}{isDemoMode ? ' 🔒' : ''}</option>
-                                <option value="farm" disabled={isDemoMode}>🌾 {t('proj_farm')}{isDemoMode ? ' 🔒' : ''}</option>
-                                <option value="gas_station" disabled={isDemoMode}>⛽ {tl('محطة وقود', 'Gas Station')}{isDemoMode ? ' 🔒' : ''}</option>
-                                <option value="mall" disabled={isDemoMode}>🛒 {tl('مركز تسوق', 'Shopping Mall')}{isDemoMode ? ' 🔒' : ''}</option>
-                                <option value="restaurant" disabled={isDemoMode}>🍽️ {tl('مطعم / كافيه', 'Restaurant')}{isDemoMode ? ' 🔒' : ''}</option>
-                                <option value="car_wash" disabled={isDemoMode}>🚗 {tl('مغسلة سيارات', 'Car Wash')}{isDemoMode ? ' 🔒' : ''}</option>
-                                <option value="warehouse" disabled={isDemoMode}>📦 {tl('مستودع', 'Warehouse')}{isDemoMode ? ' 🔒' : ''}</option>
-                                <option value="government" disabled={isDemoMode}>🏛️ {tl('مبنى حكومي', 'Government')}{isDemoMode ? ' 🔒' : ''}</option>
-                                <option value="clinic" disabled={isDemoMode}>🩺 {tl('عيادة / مركز طبي', 'Clinic')}{isDemoMode ? ' 🔒' : ''}</option>
+                                <option value="rest_house" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🏖️ {t('proj_rest')}{isDemoMode ? ' 🔒' : ''}</option>
+                                <option value="tower" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🏢 {t('proj_tower')}{isDemoMode ? ' 🔒' : ''}</option>
+                                <option value="factory" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🏭 {t('proj_factory')}{isDemoMode ? ' 🔒' : ''}</option>
+                                <option value="school" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🏫 {t('proj_school')}{isDemoMode ? ' 🔒' : ''}</option>
+                                <option value="hospital" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🏥 {t('proj_hospital')}{isDemoMode ? ' 🔒' : ''}</option>
+                                <option value="mosque" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🕌 {t('proj_mosque')}{isDemoMode ? ' 🔒' : ''}</option>
+                                <option value="hotel" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🏨 {t('proj_hotel')}{isDemoMode ? ' 🔒' : ''}</option>
+                                <option value="residential_building" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🏬 {t('proj_residential')}{isDemoMode ? ' 🔒' : ''}</option>
+                                <option value="sports_complex" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🏟️ {t('proj_sports')}{isDemoMode ? ' 🔒' : ''}</option>
+                                <option value="farm" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🌾 {t('proj_farm')}{isDemoMode ? ' 🔒' : ''}</option>
+                                <option value="gas_station" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>⛽ {tl('محطة وقود', 'Gas Station')}{isDemoMode ? ' 🔒' : ''}</option>
+                                <option value="mall" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🛒 {tl('مركز تسوق', 'Shopping Mall')}{isDemoMode ? ' 🔒' : ''}</option>
+                                <option value="restaurant" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🍽️ {tl('مطعم / كافيه', 'Restaurant')}{isDemoMode ? ' 🔒' : ''}</option>
+                                <option value="car_wash" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🚗 {tl('مغسلة سيارات', 'Car Wash')}{isDemoMode ? ' 🔒' : ''}</option>
+                                <option value="warehouse" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>📦 {tl('مستودع', 'Warehouse')}{isDemoMode ? ' 🔒' : ''}</option>
+                                <option value="government" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🏛️ {tl('مبنى حكومي', 'Government')}{isDemoMode ? ' 🔒' : ''}</option>
+                                <option value="clinic" disabled={isDemoMode} className={isDemoMode ? 'opacity-40' : ''}>🩺 {tl('عيادة / مركز طبي', 'Clinic')}{isDemoMode ? ' 🔒' : ''}</option>
                             </select>
                         </div>
 

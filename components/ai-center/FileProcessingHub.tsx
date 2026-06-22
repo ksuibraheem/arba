@@ -1,6 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { normalizeInput, matchTextToItemId } from '../../services/semanticNormalizer';
 import { itemCostAnalyzer } from '../../services/itemCostAnalyzer';
+import { extractSpecs, type ExtractedSpecs, type SpecCategory } from '../../services/specExtractor';
 import { FULL_ITEMS_DATABASE } from '../../constants';
 import * as XLSX from 'xlsx';
 import { priceProtectionService, type PriceValidation } from '../../services/priceProtectionService';
@@ -141,12 +142,27 @@ function estimatePrice(unit: string, sheetName: string, qty: number | null): num
   return bd ? bd.total : null;
 }
 
-// ─── Smart Matching: desc → 420-item database ───
+// ─── Smart Matching: desc → 874-item database ───
 // Price cap per unit type (prevents runaway pricing)
+// NOTE: High caps for generators/panels/transformers that cost 100K+
 const MAX_UNIT_PRICE: Record<string, number> = {
-  'عدد': 15000, 'م.ط': 500, 'م2': 800, 'م3': 2500,
-  'طن': 8000, 'كجم': 25, 'مقطوعية': 50000, 'طقم': 5000,
-  'نقطة': 800, 'مجموعة': 25000, 'default': 5000,
+  'عدد': 500000, 'م.ط': 1500, 'م2': 800, 'م3': 2500,
+  'طن': 8000, 'كجم': 25, 'مقطوعية': 200000, 'طقم': 50000,
+  'نقطة': 800, 'مجموعة': 100000, 'default': 50000,
+  // English units from BOQ files
+  "No's": 500000, 'Nos': 500000, 'No': 500000, 'Set': 50000,
+  'Lot': 500000, 'LS': 500000, 'EA': 500000, 'm': 1500, 'LM': 1500,
+};
+
+// ─── Spec-Category → DB-Category mapping ───
+const SPEC_TO_DB_CATEGORY: Record<SpecCategory, string[]> = {
+  electrical: ['mep_elec', 'elec_advanced'],
+  plumbing: ['mep_plumb'],
+  hvac: ['mep_hvac', 'hvac_central'],
+  fire: ['fire_protection', 'fire_advanced', 'safety'],
+  structural: ['structure', 'site'],
+  finishes: ['architecture', 'insulation'],
+  general: [],
 };
 
 function matchToDatabase(desc: string, unit: string): {
@@ -156,6 +172,21 @@ function matchToDatabase(desc: string, unit: string): {
 } {
   const noMatch = { itemId: null, itemName: '', confidence: 0, baseMaterial: 0, baseLabor: 0, waste: 0, sbc: '', source: 'none' as const };
   try {
+    // ═══ Step 0: Extract specs from description ═══
+    const specs = extractSpecs(desc, unit);
+
+    // ═══ Step 0.5: Direct code matching for common panel/equipment codes ═══
+    const codeMatch = desc.match(/\b(ESMDB|EMDB)\b/i);
+    if (codeMatch) {
+      const item = FULL_ITEMS_DATABASE.find((i: any) => i.id === 'EL-P-14'); // لوحة طوارئ ESMDB
+      if (item) return {
+        itemId: item.id, itemName: item.name?.ar || item.id,
+        confidence: 0.85, baseMaterial: item.baseMaterial || 0, baseLabor: item.baseLabor || 0,
+        waste: item.waste || 0, sbc: item.sbc || '', source: 'database' as const
+      };
+    }
+
+    // ═══ Step 1: Semantic normalizer direct match (highest priority) ═══
     const normalized = normalizeInput(desc, unit);
     if (normalized.matchedItemId) {
       const item = FULL_ITEMS_DATABASE.find((i: any) => i.id === normalized.matchedItemId);
@@ -165,45 +196,115 @@ function matchToDatabase(desc: string, unit: string): {
         waste: item.waste || 0, sbc: item.sbc || '', source: 'database'
       };
     }
-    // Fuzzy match — STRICT: requires ≥2 matching words AND score ≥10
+
+    // ═══ Step 2: Filter candidates by spec category ═══
+    let candidates: any[] = FULL_ITEMS_DATABASE as any[];
+    const dbCategories = SPEC_TO_DB_CATEGORY[specs.category];
+    if (specs.category !== 'general' && dbCategories.length > 0) {
+      const filtered = candidates.filter((item: any) =>
+        dbCategories.includes(item.category)
+      );
+      // Only use filtered if we got results — don't lose all candidates
+      if (filtered.length > 0) candidates = filtered;
+    }
+
+    // ═══ Step 3: Keyword matching with spec-boosted scoring ═══
+    // English stop words to exclude from matching
+    const STOP_WORDS = new Set(['supply', 'install', 'test', 'commission', 'commissioning', 'including', 'provide', 'complete', 'all', 'with', 'for', 'and', 'the', 'per', 'new', 'from', 'type', 'size', 'each', 'set', 'work', 'item', 'general', 'according', 'approved', 'equal', 'similar', 'specification', 'testing', 'installation', 'material', 'materials', 'shall', 'necessary', 'required', 'accessories']);
     const text = normalized.correctedText || desc;
     const words = text.split(/\s+/).filter((w: string) => w.length > 2);
     // Skip matching for very short descriptions
     if (words.length < 2) return noMatch;
-    
+
     let bestItem: any = null, bestScore = 0, bestMatchCount = 0;
-    for (const dbItem of FULL_ITEMS_DATABASE as any[]) {
+    for (const dbItem of candidates) {
       const dbName = dbItem.name?.ar || '';
+      const dbNameEn = dbItem.name?.en || '';
       let score = 0, matchCount = 0;
+
+      // Arabic word matching
       for (const word of words) {
         if (dbName.includes(word)) { score += word.length; matchCount++; }
       }
-      // Require ≥2 words match AND total score ≥10
-      if (score > bestScore && score >= 10 && matchCount >= 2) {
+      // English word matching (for English BOQ descriptions)
+      if (matchCount === 0 && /[a-zA-Z]/.test(desc)) {
+        const engWords = desc.toLowerCase().split(/[\s,;()]+/).filter((w: string) => w.length > 2 && !STOP_WORDS.has(w));
+        for (const word of engWords) {
+          if (dbNameEn.toLowerCase().includes(word)) { score += word.length; matchCount++; }
+        }
+      }
+
+      // ═══ Spec-based score boosting ═══
+      let specBonus = 0;
+      // Boost if subCategory keyword appears in item name
+      if (specs.subCategory !== 'general' && specs.subCategory !== 'unknown') {
+        const subCatLower = specs.subCategory.toLowerCase();
+        if (dbNameEn.toLowerCase().includes(subCatLower) || dbName.includes(subCatLower)) {
+          specBonus += 5;
+        }
+      }
+      // Boost for size match in item name
+      if (specs.size && (dbName.includes(specs.size) || dbNameEn.includes(specs.size))) {
+        specBonus += 8;
+      }
+      // Boost for capacity match in item name
+      if (specs.capacity && (dbName.includes(specs.capacity) || dbNameEn.includes(specs.capacity))) {
+        specBonus += 8;
+      }
+      // Boost for material match
+      if (specs.material && dbNameEn.toLowerCase().includes(specs.material.toLowerCase())) {
+        specBonus += 4;
+      }
+
+      const totalScore = score + specBonus;
+
+      // Allow matchCount >= 1 when spec has high confidence with size/capacity match
+      const minMatch = (specBonus >= 8 && specs.confidence >= 0.5) ? 1 : 2;
+      // Require total score ≥10 (or spec-filtered category with ≥8)
+      const minScore = (specs.category !== 'general' && dbCategories.length > 0) ? 8 : 10;
+      if (totalScore > bestScore && totalScore >= minScore && matchCount >= minMatch) {
         // Also check unit compatibility
         const dbUnit = dbItem.unit || '';
         if (unit && dbUnit && unit !== dbUnit) {
           // Unit mismatch: reduce confidence, only accept very high scores
-          if (score < 15) continue;
+          if (totalScore < 15) continue;
         }
-        bestItem = dbItem; bestScore = score; bestMatchCount = matchCount;
+        bestItem = dbItem; bestScore = totalScore; bestMatchCount = matchCount;
+      }
+      // Tie-breaker: prefer MEP-specific items (EL-*, PL-*, HV-*, FR-*) over generic ones
+      else if (totalScore === bestScore && totalScore >= minScore && matchCount >= minMatch && bestItem) {
+        const isMEPItem = /^(EL|PL|HV|FR)-/.test(dbItem.id);
+        const bestIsMEP = /^(EL|PL|HV|FR)-/.test(bestItem.id);
+        if (isMEPItem && !bestIsMEP) {
+          bestItem = dbItem; bestScore = totalScore; bestMatchCount = matchCount;
+        }
       }
     }
-    if (bestItem) return {
-      itemId: bestItem.id, itemName: bestItem.name?.ar || bestItem.id,
-      confidence: bestScore >= 20 ? 0.90 : bestScore >= 15 ? 0.80 : 0.65,
-      baseMaterial: bestItem.baseMaterial || 0,
-      baseLabor: bestItem.baseLabor || 0, waste: bestItem.waste || 0,
-      sbc: bestItem.sbc || '', source: 'database'
-    };
+    if (bestItem) {
+      // ═══ Confidence calculation with spec awareness ═══
+      let confidence = bestScore >= 25 ? 0.92 : bestScore >= 20 ? 0.90 : bestScore >= 15 ? 0.80 : 0.65;
+      // Boost confidence if specs matched
+      if (specs.confidence >= 0.5) confidence = Math.min(confidence + 0.05, 0.95);
+      if (specs.size || specs.capacity) confidence = Math.min(confidence + 0.03, 0.95);
+
+      return {
+        itemId: bestItem.id, itemName: bestItem.name?.ar || bestItem.id,
+        confidence,
+        baseMaterial: bestItem.baseMaterial || 0,
+        baseLabor: bestItem.baseLabor || 0, waste: bestItem.waste || 0,
+        sbc: bestItem.sbc || '', source: 'database'
+      };
+    }
   } catch {}
   return noMatch;
 }
 
 // ─── Smart Pricing: multi-source cascade ───
-function smartPriceItem(desc: string, unit: string, qty: number | null, sheetName: string): {
+function smartPriceItem(desc: string, unit: string, qty: number | null, sheetName: string, profitPct: number): {
   price: number | null; source: PriceSource; confidence: number;
   matchedItem: string; sbcRef: string; warnings: string[];
+  _rawBaseMaterial?: number;
+  _rawBaseLabor?: number;
 } {
   const q = qty || 1;
   const warnings: string[] = [];
@@ -231,12 +332,11 @@ function smartPriceItem(desc: string, unit: string, qty: number | null, sheetNam
     };
   }
   
-  // Source 1: 420-item database (only high-confidence matches)
+  // Source 1: 874-item database (only high-confidence matches)
   const dbMatch = matchToDatabase(desc, unit);
   if (dbMatch.source === 'database' && dbMatch.confidence >= 0.65) {
-    let unitPrice = dbMatch.baseMaterial + dbMatch.baseLabor;
-    const wasteFactor = 1 + (dbMatch.waste || 0);
-    unitPrice = Math.round(unitPrice * wasteFactor * 1.13);
+    // Bug #9 fix: DON'T apply waste here — the slider controls waste
+    let unitPrice = Math.round((dbMatch.baseMaterial + dbMatch.baseLabor) * 1.10); // 10% general markup only
     
     // ═══ Price Guard: cap per unit type ═══
     if (unitPrice > maxUnitPrice) {
@@ -246,13 +346,15 @@ function smartPriceItem(desc: string, unit: string, qty: number | null, sheetNam
     
     return {
       price: unitPrice * q, source: 'database', confidence: dbMatch.confidence,
-      matchedItem: dbMatch.itemName, sbcRef: dbMatch.sbc, warnings
+      matchedItem: dbMatch.itemName, sbcRef: dbMatch.sbc, warnings,
+      // Pass raw costs for dynamic slider recalculation
+      _rawBaseMaterial: dbMatch.baseMaterial, _rawBaseLabor: dbMatch.baseLabor,
     };
   }
   
   // Source 2: 120+ recipes (require higher confidence)
   try {
-    const result = itemCostAnalyzer.analyze(desc, unit, 0.15, 'hafr_albatin');
+    const result = itemCostAnalyzer.analyze(desc, unit, profitPct / 100, 'riyadh');
     if (result && result.confidence >= 70) {
       let recipeUnitPrice = result.sellingPrice;
       // Price guard for recipes too
@@ -269,10 +371,10 @@ function smartPriceItem(desc: string, unit: string, qty: number | null, sheetNam
   } catch {}
   
   // Source 3: Static estimate — ONLY for Arabic items with qty & unit
-  const hasArabic = /[\u0600-\u06FF]/.test(desc);
   const hasQtyAndUnit = !!qty && qty > 0 && !!unit;
   
-  if (hasArabic && hasQtyAndUnit) {
+  // Bug #5 fix: Allow English items with qty+unit to get estimates too
+  if (hasQtyAndUnit) {
     const bd = getBreakdown(unit, sheetName, qty);
     if (bd) {
       warnings.push('🤖 يحتاج مراجعة — تقدير تلقائي بدون مطابقة');
@@ -284,6 +386,7 @@ function smartPriceItem(desc: string, unit: string, qty: number | null, sheetNam
   }
   
   // ═══ NO MATCH — Flag for AI review instead of blind pricing ═══
+  const hasArabic = /[\u0600-\u06FF]/.test(desc);
   const reviewWarnings = ['🔴 لم يتم التعرف على البند — يحتاج مراجعة يدوية أو استعانة بذكاء اصطناعي'];
   if (!hasArabic) reviewWarnings.push('📝 نص إنجليزي بدون مطابقة في القاعدة');
   if (!hasQtyAndUnit) reviewWarnings.push('⚠️ لا توجد كمية أو وحدة');
@@ -332,9 +435,19 @@ const FileProcessingHub: React.FC = () => {
 
   const formatNum = (n: number) => n.toLocaleString('ar-SA');
 
-  // ─── Aggregated Stats ───
+  // ─── Aggregated Stats (dynamic — recalculates when sliders change) ───
   const totalBOQItems = files.reduce((sum, f) => sum + (f.boqItems?.length || 0), 0);
-  const totalEstimatedCost = files.reduce((sum, f) => sum + (f.summary?.estimatedTotalCost || 0), 0);
+  const totalEstimatedCost = useMemo(() => {
+    const markup = 1 + (profitPct + overheadPct + wastePct) / 100;
+    return files.reduce((sum, f) => {
+      if (!f.boqItems) return sum;
+      return sum + f.boqItems.reduce((s, item) => {
+        if (item.source === 'original') return s + (item.estimatedPrice || 0);
+        if (!item.baseUnitCost || !item.qty) return s + (item.estimatedPrice || 0);
+        return s + Math.round(item.baseUnitCost * item.qty * markup);
+      }, 0);
+    }, 0);
+  }, [files, profitPct, overheadPct, wastePct]);
   const doneFiles = files.filter(f => f.status === 'done').length;
   const errorFiles = files.filter(f => f.status === 'error').length;
 
@@ -480,33 +593,41 @@ const FileProcessingHub: React.FC = () => {
                   if (desc.length < 2 && itemNo.length < 1) continue;
                   if (/^(البند|الوصف|#|م|item|desc|أعمال$)$/i.test(desc)) continue;
                   
-                  // ═══ Filter: Skip specification/scope text (NOT BOQ items) ═══
-                  // 1. Too long = paragraph, not an item
-                  if (desc.length > 200) continue;
-                  
-                  // 2. Specification keywords (EN + AR)
-                  const specPattern = /\b(scope of work|shall be|contractor|specification|regulation|drawing|submission|verification|commissioning|in accordance|as per|clarified|discrepanc|approved by|prior to|comply|compliance|unless otherwise|note:|ملاحظة|المواصفات|المقاول|الاشتراطات|الرسومات|يجب أن|وفقاً|طبقاً)\b/i;
-                  if (specPattern.test(desc) && (!qty || qty === 0)) continue;
-                  
-                  // 3. No qty + no unit + long text = definitely spec text
-                  if ((!qty || qty === 0) && !unit && desc.length > 80) continue;
-                  
-                  // 4. Multiple sentences = spec paragraph
-                  const sentenceCount = (desc.match(/[.。;؛]/g) || []).length;
-                  if (sentenceCount >= 3) continue;
-                  
                   const rawPrice = cols.price >= 0 ? row[cols.price] : null;
                   const existingPrice = rawPrice !== null && rawPrice !== '' ? Number(rawPrice) : null;
                   
-                  // ═══ Filter: Section headers (NOT BOQ items) ═══
-                  // ALL CAPS English text = section header
-                  if (/^[A-Z\s\d\-\/&,.()]+$/.test(desc) && desc.length < 80 && (!qty || qty === 0)) continue;
-                  // Numbered section: "1.", "1.1", "A.", "B.", "I.", "II."
-                  if (/^(\d+\.?\d*\.?|[A-Z]\.?|[IVX]+\.?)\s*$/.test(desc.trim())) continue;
-                  // Short text without qty & unit & price = header
-                  if (desc.length < 50 && (!qty || qty === 0) && !unit && (!existingPrice || existingPrice === 0)) continue;
-                  // Common section header words
-                  if (/^(works|system|general|section|part|item|division|schedule|total|sub.?total|summary|grand)/i.test(desc) && (!qty || qty === 0)) continue;
+                  // ╔══════════════════════════════════════════════════════════╗
+                  // ║  CRITICAL: If NO quantity AND NO unit → NOT a BOQ item  ║
+                  // ║  Real BOQ items ALWAYS have qty + unit.                 ║
+                  // ║  Headers, scope text, and section titles don't.         ║
+                  // ╚══════════════════════════════════════════════════════════╝
+                  const hasQuantity = qty !== null && !isNaN(qty) && qty > 0;
+                  const hasUnit = unit.length >= 1;
+                  const hasPrice = existingPrice !== null && !isNaN(existingPrice) && existingPrice > 0;
+                  
+                  // Rule 1: MUST have quantity OR unit — otherwise it's a header/spec
+                  if (!hasQuantity && !hasUnit) continue;
+                  
+                  // Rule 2: If has unit but no quantity — suspicious, only allow if short
+                  if (hasUnit && !hasQuantity && desc.length > 100) continue;
+                  
+                  // Rule 3: Spec keywords — skip even if has qty (misdetected)
+                  const specPattern = /\b(scope of work|shall be|contractor shall|specification|in accordance|approved by|prior to|comply with|commissioning of|installation shall|unless otherwise|site verification|tender submission|government fees|guarantee|warranty|safety and|standards and codes|discrepanc|coordination|the works|first-class|all materials shall|note:|ملاحظة|المواصفات|المقاول|الاشتراطات|يجب أن|وفقاً|طبقاً)\b/i;
+                  if (specPattern.test(desc) && !hasPrice) continue;
+                  
+                  // Rule 4: ALL CAPS section header (ELECTRICAL WORKS, PANEL BOARDS, etc.)
+                  if (/^[A-Z\s\d\-\/&,.()]+$/.test(desc) && !hasQuantity) continue;
+                  
+                  // Rule 5: Section number only (04-01, 04-02, etc.)
+                  if (/^[\d\-\.\/\s]+$/.test(desc.trim())) continue;
+                  
+                  // Rule 6: Paragraph (>200 chars OR ≥3 sentences)
+                  if (desc.length > 200) continue;
+                  const sentenceCount = (desc.match(/[.;:]/g) || []).length;
+                  if (sentenceCount >= 3) continue;
+                  
+                  // Rule 7: Long description without price — likely scope/preamble
+                  if (desc.length > 100 && !hasPrice && !hasQuantity) continue;
                   
                   const displayDesc = desc.length > 2 ? desc : itemNo;
                   
@@ -516,15 +637,16 @@ const FileProcessingHub: React.FC = () => {
                   let sbcRef = '';
                   let itemWarnings: string[] = [];
                   let itemConfidence = 0.5;
+                  let smartResult: any = null;
                   
                   if (!existingPrice) {
-                    const smart = smartPriceItem(desc, unit, qty, table.name);
-                    finalPrice = smart.price;
-                    priceSource = smart.source;
-                    matchedItem = smart.matchedItem;
-                    sbcRef = smart.sbcRef;
-                    itemWarnings = smart.warnings;
-                    itemConfidence = smart.confidence;
+                    smartResult = smartPriceItem(desc, unit, qty, table.name, profitPct);
+                    finalPrice = smartResult.price;
+                    priceSource = smartResult.source;
+                    matchedItem = smartResult.matchedItem;
+                    sbcRef = smartResult.sbcRef;
+                    itemWarnings = smartResult.warnings;
+                    itemConfidence = smartResult.confidence;
                     
                     // ═══ Confidence adjustments ═══
                     // Long desc without match = likely wrong identification
@@ -538,15 +660,16 @@ const FileProcessingHub: React.FC = () => {
                     itemConfidence = 0.98;
                   }
 
-                  // Calculate baseUnitCost (before profit/overhead/waste) for dynamic recalc
+                  // Bug #1 fix: Use RAW DB costs as base, not reverse-engineered from final price
                   let baseUnitCost: number | null = null;
-                  if (finalPrice && qty && qty > 0) {
-                    // Strip out profit/overhead/waste to get base
-                    const markup = 1 + (profitPct + overheadPct + wastePct) / 100;
-                    baseUnitCost = Math.round((finalPrice / qty) / markup);
+                  if (smartResult && priceSource === 'database' && smartResult._rawBaseMaterial > 0) {
+                    // Direct from database — most accurate
+                    baseUnitCost = (smartResult._rawBaseMaterial || 0) + (smartResult._rawBaseLabor || 0);
+                  } else if (finalPrice && qty && qty > 0) {
+                    // Fallback: estimate base from final price (remove 10% general markup)
+                    baseUnitCost = Math.round(finalPrice / qty / 1.10);
                   } else if (finalPrice) {
-                    const markup = 1 + (profitPct + overheadPct + wastePct) / 100;
-                    baseUnitCost = Math.round(finalPrice / markup);
+                    baseUnitCost = Math.round(finalPrice / 1.10);
                   }
 
                   boqItems.push({
@@ -590,6 +713,7 @@ const FileProcessingHub: React.FC = () => {
                 qty: missing.suggestedQty || 1,
                 unit: missing.suggestedUnit || 'طقم',
                 estimatedPrice: (missing.estimatedPrice || 0) * (missing.suggestedQty || 1),
+                baseUnitCost: missing.estimatedPrice || 0,
                 sheet: 'اكسسوارات مفقودة',
                 confidence: 0.75,
                 source: 'auto_detected',

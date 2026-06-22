@@ -310,6 +310,16 @@ export function getEffectiveRate(ruleId: string): number {
   const baseRate = BENCHMARK_RATES[ruleId]?.rate || 0;
 
   try {
+    const manualRaw = localStorage.getItem('arba_manual_benchmark_overrides');
+    if (manualRaw) {
+      const manualOverrides = JSON.parse(manualRaw);
+      if (manualOverrides[ruleId] !== undefined) {
+        return Number(manualOverrides[ruleId]);
+      }
+    }
+  } catch {}
+
+  try {
     const raw = localStorage.getItem('arba_brain_auto_updates');
     if (raw) {
       const updates: Record<string, { suggestedRate: number; learningCount: number }> = JSON.parse(raw);
@@ -324,10 +334,22 @@ export function getEffectiveRate(ruleId: string): number {
 
 /**
  * يُطبّق كل تعديلات التعلّم على نسخة من BENCHMARK_RATES
- * يُستخدم لعرض الأسعار المحدّثة في واجهة المقارنة
+ * يُسخدم لعرض الأسعار المحدّثة في واجهة المقارنة
  */
 export function getLearnedBenchmarks(): BenchmarkData {
   const learned = { ...BENCHMARK_RATES };
+
+  try {
+    const manualRaw = localStorage.getItem('arba_manual_benchmark_overrides');
+    if (manualRaw) {
+      const manualOverrides = JSON.parse(manualRaw);
+      for (const [ruleId, rate] of Object.entries(manualOverrides)) {
+        if (learned[ruleId]) {
+          learned[ruleId] = { ...learned[ruleId], rate: Number(rate) };
+        }
+      }
+    }
+  } catch {}
 
   try {
     const raw = localStorage.getItem('arba_brain_auto_updates');

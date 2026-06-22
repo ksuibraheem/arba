@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { X, Printer, Building2, Phone, Mail, MapPin, FileText, FileSpreadsheet, Download, Eye, EyeOff, MessageSquare, Settings2, Loader2 } from 'lucide-react';
+import { X, Printer, Building2, Phone, Mail, MapPin, FileText, FileSpreadsheet, Download, Eye, EyeOff, MessageSquare, Settings2, Loader2, Code } from 'lucide-react';
 import { AppState, CalculatedItem, Language } from '../types';
 import { formatCurrency, formatNumber, numberToArabicWords } from '../utils/formatting';
 import { COMPANY_INFO } from '../companyData';
@@ -9,6 +9,7 @@ import { BrainCircuit, Instagram } from 'lucide-react';
 import { generatePriceComparisonCard, downloadSocialCard } from '../services/socialCardGenerator';
 import { temporalAuditService } from '../services/temporalAuditService';
 import { quoteSnapshotService } from '../services/quoteSnapshotService';
+import { downloadCompactJSON } from '../services/jsonExportService';
 
 interface PriceQuoteProps {
     state: AppState;
@@ -721,6 +722,14 @@ const PriceQuote: React.FC<PriceQuoteProps> = ({
                         >
                             <FileSpreadsheet className="w-4 h-4" />
                             {getLabel('exportExcel')}
+                        </button>
+                        {/* Export JSON */}
+                        <button
+                            onClick={() => downloadCompactJSON(state, { items: calculatedItems, totalDirect: totals.totalDirect, totalOverhead: totals.totalOverhead, totalProfit: totals.totalProfit, finalPrice: totals.finalPrice, totalConcreteVolume: 0, totalLaborCost: 0, totalMaterialCost: 0, areaBreakdown: { totalBuildArea: state.buildArea, floorsCount: state.floors, roomsArea: 0, commonArea: 0, closedArea: 0, openArea: 0, annexesArea: 0, serviceArea: 0, occupiedArea: 0, availableArea: 0, roomsPercent: 0, commonPercent: 0, closedPercent: 0, openPercent: 0, annexesPercent: 0, servicePercent: 0, occupiedPercent: 0, availablePercent: 0 } })}
+                            className="flex items-center gap-2 px-3 py-2 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-lg transition-colors"
+                        >
+                            <Code className="w-4 h-4" />
+                            {language === 'ar' ? 'تصدير JSON' : 'Export JSON'}
                         </button>
                         {/* Professional PDF Export */}
                         <button
