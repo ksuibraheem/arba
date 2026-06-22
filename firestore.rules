@@ -62,7 +62,10 @@ service cloud.firestore {
     // Users can CREATE their own role on registration (required by authService.ts)
     match /userRoles/{uid} {
       allow read: if isAuth() && (request.auth.uid == uid || isAdmin());
-      allow create: if isAuth() && request.auth.uid == uid;
+      // SECURITY FIX: block self-assign admin/superadmin (stopgap — move to Custom Claims)
+      allow create: if isAuth() && request.auth.uid == uid
+        && request.resource.data.role != 'admin'
+        && request.resource.data.role != 'superadmin';
       allow update, delete: if isAdmin();
       // SuperAdmins can read roles but NOT modify them
       allow read: if isSuperAdmin();
@@ -94,9 +97,10 @@ service cloud.firestore {
           isAssigned(get(/databases/$(database)/documents/projects/$(projectId)).data.assignedTo) ||
           isAdmin()
         ) && !isSuperAdmin();
+        // SECURITY FIX: restrict to owner/assigned/admin (was open to any engineer)
         allow write: if isAuth() && (
           isOwner(get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId) ||
-          isEngineer() ||
+          isAssigned(get(/databases/$(database)/documents/projects/$(projectId)).data.assignedTo) ||
           isAdmin()
         );
       }
@@ -109,7 +113,12 @@ service cloud.firestore {
           isAssigned(get(/databases/$(database)/documents/projects/$(projectId)).data.assignedTo) ||
           isAdmin()
         ) && !isSuperAdmin();
-        allow create: if isAuth(); // Any authenticated user can log price changes
+        // SECURITY FIX: restrict create to project stakeholders only
+        allow create: if isAuth() && (
+          isOwner(get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId) ||
+          isAssigned(get(/databases/$(database)/documents/projects/$(projectId)).data.assignedTo) ||
+          isAdmin()
+        );
         allow update, delete: if false; // Immutable audit trail
       }
 
@@ -177,7 +186,8 @@ service cloud.firestore {
         isOwner(resource.data.userId) ||
         isAdmin()
       ) && !isSuperAdmin();
-      allow create: if isAuth();
+      // SECURITY FIX: only the payment owner can create their own payment record
+      allow create: if isAuth() && request.auth.uid == request.resource.data.userId;
       allow update: if isAdmin(); // Only admin/accountant can approve
       allow delete: if false;
     }
@@ -647,8 +657,10 @@ service cloud.firestore {
     // Usage Tracking — per-user quotas and consumption
     match /usageTracking/{userId} {
       allow read: if isAuth() && (request.auth.uid == userId || isAdmin());
+      // SECURITY FIX: user can init their own doc, but only admin updates quotas
+      // (prevents client-side quota inflation; move to Cloud Function for full fix)
       allow create: if isAuth() && request.auth.uid == userId;
-      allow update: if isAuth() && (request.auth.uid == userId || isAdmin());
+      allow update: if isAuth() && isAdmin();
       allow delete: if false;
     }
 
