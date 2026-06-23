@@ -22,6 +22,7 @@ import {
     DashboardStats, ProjectStatus, PERMISSIONS
 } from '../../services/projectTypes';
 import * as projectService from '../../services/projectService';
+import { ProjectWriteResult } from '../../services/projectService';
 import * as clientService from '../../services/clientService';
 import ConnectHub from '../connect/ConnectHub';
 import { projectSupplierService } from '../../services/projectSupplierService';
@@ -97,6 +98,8 @@ const EmployeeWorkspace: React.FC<EmployeeWorkspaceProps> = ({
     const [projects, setProjects] = useState<ArbaProject[]>([]);
     const [clients, setClients] = useState<ArbaClient[]>([]);
     const [alerts, setAlerts] = useState<SecurityAlertType[]>([]);
+    // P2A: track the updatedAt timestamp (millis) of the currently opened project
+    const [projectBaseUpdatedAt, setProjectBaseUpdatedAt] = useState<number>(0);
 
     // =================== DATA LOADING ===================
 
@@ -145,6 +148,13 @@ const EmployeeWorkspace: React.FC<EmployeeWorkspaceProps> = ({
 
     const handleOpenExistingProject = (project: ArbaProject) => {
         setPendingProject(project);
+        // P2A: capture updatedAt millis for conflict detection
+        if (project?.updatedAt) {
+            const ua = project.updatedAt as any;
+            setProjectBaseUpdatedAt(typeof ua.toMillis === 'function' ? ua.toMillis() : (ua instanceof Date ? ua.getTime() : 0));
+        } else {
+            setProjectBaseUpdatedAt(0);
+        }
         setShowSetupModal(true);
     };
 
@@ -186,7 +196,18 @@ const EmployeeWorkspace: React.FC<EmployeeWorkspaceProps> = ({
                     if (!pendingProject) {
                         await projectService.createProject(projectPayload);
                     } else {
-                        await projectService.updateProject(pendingProject.id, projectPayload);
+                        // P2A: use conflict-aware update
+                        const result: ProjectWriteResult = await projectService.updateProjectChecked(
+                            pendingProject.id, projectPayload,
+                            projectBaseUpdatedAt ? { baseUpdatedAt: projectBaseUpdatedAt } : {}
+                        );
+                        if (result.status === 'buffered') {
+                            alert(isAr ? '✅ تم الحفظ محلياً وسيُرفع تلقائياً عند رجوع الشبكة' : '✅ Saved locally, will sync when online');
+                        } else if (result.status === 'conflict') {
+                            alert(isAr
+                                ? `⚠️ توجد نسخة أحدث من هذا المشروع (${result.serverData?.name || ''}). يرجى إعادة فتح المشروع.`
+                                : `⚠️ A newer version exists (${result.serverData?.name || ''}). Please reopen the project.`);
+                        }
                     }
                     await loadData();
                 }
@@ -211,7 +232,15 @@ const EmployeeWorkspace: React.FC<EmployeeWorkspaceProps> = ({
     };
 
     const handleStatusChange = async (id: string, status: ProjectStatus) => {
-        try { await projectService.updateProject(id, { status }); await loadData(); }
+        try {
+            const result = await projectService.updateProjectChecked(id, { status } as any);
+            if (result.status === 'buffered') {
+                alert(isAr ? '✅ محفوظ محلياً' : '✅ Saved locally');
+            } else if (result.status === 'conflict') {
+                alert(isAr ? '⚠️ نسخة أحدث موجودة' : '⚠️ Newer version exists');
+            }
+            await loadData();
+        }
         catch (err) { console.error(err); }
     };
 
