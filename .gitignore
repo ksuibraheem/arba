@@ -56,3 +56,8 @@ Desktop.ini
 
 # Build artifacts
 *.tsbuildinfo
+tests/_run/
+
+# Local JDK for emulator tests
+.jdk/
+.jdk17.zip
