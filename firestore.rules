@@ -255,9 +255,21 @@ service cloud.firestore {
     }
 
     // =================== ARBA CONFIG (Employees & Manager) ===================
-    // بيانات الموظفين وبيانات المدير — حظر الوصول الحساس للعامة
+    // P0-FIX: All reads now require authentication
     match /arba_config/{docId} {
-      allow read: if docId != 'employees_data' && docId != 'manager_credentials';
+      allow read: if isAuth() && docId != 'employees_data' && docId != 'manager_credentials';
+      allow read, write: if isAuth() && isAdmin();
+    }
+
+    // =================== FINANCIAL COLLECTIONS (migrated from arba_config) ===================
+    // P0-FIX: Admin-only. Accountant/manager access deferred to P1 (Custom Claims).
+    match /chart_of_accounts/{docId} {
+      allow read, write: if isAuth() && isAdmin();
+    }
+    match /journal_entries/{docId} {
+      allow read, write: if isAuth() && isAdmin();
+    }
+    match /invoice_versions/{docId} {
       allow read, write: if isAuth() && isAdmin();
     }
 

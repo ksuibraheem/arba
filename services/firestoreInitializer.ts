@@ -9,6 +9,8 @@
 
 import { firestoreDataService } from './firestoreDataService';
 import { registrationService } from './registrationService';
+import { getEffectiveRole } from './rbacService';
+import { getAuth } from 'firebase/auth';
 
 // Track initialization state
 let isInitialized = false;
@@ -71,7 +73,18 @@ export async function initializeFirestoreData(
  * تحميل البيانات في الخلفية (لا تحجز واجهة المستخدم)
  */
 async function loadBackgroundData(): Promise<void> {
-    const collections = [
+    // P0-FIX: Determine if current user is admin to gate financial collections
+    let isAdmin = false;
+    try {
+        const auth = getAuth();
+        const uid = auth.currentUser?.uid;
+        if (uid) {
+            const role = await getEffectiveRole(uid);
+            isAdmin = role === 'admin' || role === 'superadmin';
+        }
+    } catch { /* non-admin by default */ }
+
+    const collections: { collection: string; localKey: string; adminOnly?: boolean }[] = [
         { collection: 'supplier_products', localKey: 'arba_supplier_products' },
         { collection: 'purchase_invoices', localKey: 'arba_purchase_invoices' },
         { collection: 'supplier_payments', localKey: 'arba_supplier_payments' },
@@ -88,18 +101,20 @@ async function loadBackgroundData(): Promise<void> {
         { collection: 'support_tickets', localKey: 'arba_support_tickets' },
         { collection: 'notifications', localKey: 'arba_notifications' },
         { collection: 'invoice_edit_requests', localKey: 'arba_invoice_edit_requests' },
-        { collection: 'invoice_versions', localKey: 'arba_invoice_versions' },
+        { collection: 'invoice_versions', localKey: 'arba_invoice_versions', adminOnly: true },
         { collection: 'discount_requests', localKey: 'arba_discount_requests' },
         { collection: 'auth_users', localKey: 'arba_users' },
         { collection: 'supplier_reviews', localKey: 'arba_supplier_reviews' },
-        { collection: 'chart_of_accounts', localKey: 'arba_chart_of_accounts' },
-        { collection: 'journal_entries', localKey: 'arba_journal_entries' },
+        { collection: 'chart_of_accounts', localKey: 'arba_chart_of_accounts', adminOnly: true },
+        { collection: 'journal_entries', localKey: 'arba_journal_entries', adminOnly: true },
         // Sovereign v8.0: Temporal Audit System
         { collection: 'price_time_series', localKey: '_arba_price_time_series' },
         { collection: 'usage_metering', localKey: '_arba_usage_metering' },
     ];
 
-    for (const { collection, localKey } of collections) {
+    for (const { collection, localKey, adminOnly } of collections) {
+        // P0-FIX: Skip admin-only collections for non-admin users
+        if (adminOnly && !isAdmin) continue;
         try {
             const items = await firestoreDataService.getCollection(
                 collection,

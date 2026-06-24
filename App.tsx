@@ -92,8 +92,7 @@ const USE_FIREBASE = true;
 
 type PageRoute = 'landing' | 'login' | 'register' | 'about' | 'company' | 'payment' | 'pricing' | 'verification' | 'under-review' | 'payment-upload' | 'admin' | 'dashboard' | 'pricing-calc' | 'client-portal' | 'private' | 'security-403' | 'admin-login' | 'manager' | 'employee' | 'hr' | 'accountant' | 'password-reset' | 'cloud-sync' | 'support-center' | 'support' | 'developer' | 'developer-brain' | 'ai-control-center' | 'marketing' | 'quality' | 'deputy' | 'supplier' | 'quantity_surveyor' | 'supplier-catalog' | 'admin-suppliers' | 'demo' | 'team-login' | 'team-dashboard' | 'employee-login' | 'boq-engine' | 'terms' | 'owner' | 'admin-companies' | 'admin-data' | 'admin-users';
 
-// مفتاح الوصول السري للوحة المدير — يُقرأ من .env
-const ADMIN_SECRET_KEY = import.meta.env.VITE_ADMIN_SECRET_KEY || '';
+// P0-FIX: Admin secret key removed from client — verification moved to server
 
 // Super Admin — full access bypass (from .env)
 const SUPER_ADMIN_EMAIL = import.meta.env.VITE_SUPER_ADMIN_EMAIL || '';
@@ -1709,13 +1708,23 @@ const App: React.FC = () => {
                             <p className="text-red-400 text-sm text-center">{loginError}</p>
                         )}
                         <button
-                            onClick={() => {
-                                if (adminKeyInput === ADMIN_SECRET_KEY) {
-                                    setAdminAccessGranted(true);
-                                    setLoginError('');
-                                    setCurrentPage('login');
-                                } else {
-                                    setLoginError(language === 'ar' ? 'مفتاح الوصول غير صحيح' : 'Invalid access key');
+                            onClick={async () => {
+                                // P0-FIX: Verify admin key server-side via Cloud Function
+                                try {
+                                    const { getFunctions, httpsCallable } = await import('firebase/functions');
+                                    const functions = getFunctions(undefined, 'us-central1');
+                                    const verify = httpsCallable(functions, 'verifyEmployeeCredentials');
+                                    const result = await verify({ employeeNumberOrEmail: 'admin', password: adminKeyInput });
+                                    const data = result.data as any;
+                                    if (data.success) {
+                                        setAdminAccessGranted(true);
+                                        setLoginError('');
+                                        setCurrentPage('login');
+                                    } else {
+                                        setLoginError(language === 'ar' ? 'مفتاح الوصول غير صحيح' : 'Invalid access key');
+                                    }
+                                } catch {
+                                    setLoginError(language === 'ar' ? 'تعذر التحقق — تأكد من اتصالك' : 'Verification failed — check connection');
                                 }
                             }}
                             className="w-full py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl font-bold hover:from-purple-400 hover:to-indigo-500 transition-all"

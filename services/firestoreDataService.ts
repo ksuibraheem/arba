@@ -138,6 +138,8 @@ const ALLOWED_TOP_LEVEL = new Set([
     'price_time_series', 'usage_metering', 'audit_trail',
     // Sovereign v8.1: Internal Governance
     'internal_metadata', 'sweep_history',
+    // P0-FIX: Financial collections — dedicated top-level (no longer routed through arba_config)
+    'chart_of_accounts', 'journal_entries', 'invoice_versions',
 ]);
 
 function resolveCollectionPath(collectionName: string): string {

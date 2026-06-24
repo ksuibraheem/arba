@@ -258,6 +258,124 @@ await assert(
   ),
   "user CAN create own usageTracking doc"
 );
+// ══════════════════════════════════════════════════════════════════════════════
+// P0 — arba_config + financial collections: auth-gated reads
+// ══════════════════════════════════════════════════════════════════════════════
+console.log("\n── P0: arba_config + financial collections ──");
+
+// Seed financial data via admin context
+const adminSeed2 = testEnv.withSecurityRulesDisabled(async (ctx) => {
+  const db = ctx.firestore();
+  await setDoc(doc(db, "arba_config", "app_settings"), { version: "1.0" });
+  await setDoc(doc(db, "arba_config", "employees_data"), { secret: true });
+  await setDoc(doc(db, "chart_of_accounts", "1001"), { name: "Cash", type: "asset" });
+  await setDoc(doc(db, "journal_entries", "JE-2025-001"), { amount: 5000 });
+  await setDoc(doc(db, "invoice_versions", "INV-001"), { total: 12000 });
+});
+await adminSeed2;
+
+// 4a) Unauth CANNOT read arba_config
+const unauth2 = testEnv.unauthenticatedContext();
+await assert(
+  assertFails(getDoc(doc(unauth2.firestore(), "arba_config", "app_settings"))),
+  "P0: unauth DENIED read arba_config/app_settings"
+);
+
+// 4b) Unauth CANNOT read chart_of_accounts
+await assert(
+  assertFails(getDoc(doc(unauth2.firestore(), "chart_of_accounts", "1001"))),
+  "P0: unauth DENIED read chart_of_accounts"
+);
+
+// 4c) Unauth CANNOT read journal_entries
+await assert(
+  assertFails(getDoc(doc(unauth2.firestore(), "journal_entries", "JE-2025-001"))),
+  "P0: unauth DENIED read journal_entries"
+);
+
+// 4d) Unauth CANNOT read invoice_versions
+await assert(
+  assertFails(getDoc(doc(unauth2.firestore(), "invoice_versions", "INV-001"))),
+  "P0: unauth DENIED read invoice_versions"
+);
+
+// 4e) Authenticated non-admin CAN read arba_config (non-sensitive doc)
+const authUser2 = testEnv.authenticatedContext("user1");
+await assert(
+  assertSucceeds(getDoc(doc(authUser2.firestore(), "arba_config", "app_settings"))),
+  "P0: auth user CAN read arba_config/app_settings"
+);
+
+// 4f) Authenticated non-admin CANNOT read employees_data (blocked docId)
+await assert(
+  assertFails(getDoc(doc(authUser2.firestore(), "arba_config", "employees_data"))),
+  "P0: auth user DENIED read arba_config/employees_data"
+);
+
+// 4g) Non-admin DENIED read chart_of_accounts
+await assert(
+  assertFails(getDoc(doc(authUser2.firestore(), "chart_of_accounts", "1001"))),
+  "P0: non-admin DENIED read chart_of_accounts"
+);
+
+// 4h) Non-admin DENIED read journal_entries
+await assert(
+  assertFails(getDoc(doc(authUser2.firestore(), "journal_entries", "JE-2025-001"))),
+  "P0: non-admin DENIED read journal_entries"
+);
+
+// 4i) Non-admin DENIED read invoice_versions
+await assert(
+  assertFails(getDoc(doc(authUser2.firestore(), "invoice_versions", "INV-001"))),
+  "P0: non-admin DENIED read invoice_versions"
+);
+
+// 4j) Non-admin DENIED write chart_of_accounts
+await assert(
+  assertFails(setDoc(doc(authUser2.firestore(), "chart_of_accounts", "2001"), { name: "Bank", type: "asset" })),
+  "P0: non-admin DENIED write chart_of_accounts"
+);
+
+// 4k) Non-admin DENIED write journal_entries
+await assert(
+  assertFails(setDoc(doc(authUser2.firestore(), "journal_entries", "JE-2025-002"), { amount: 3000 })),
+  "P0: non-admin DENIED write journal_entries"
+);
+
+// 4l) Non-admin DENIED write invoice_versions
+await assert(
+  assertFails(setDoc(doc(authUser2.firestore(), "invoice_versions", "INV-002"), { total: 8000 })),
+  "P0: non-admin DENIED write invoice_versions"
+);
+
+// 4m) Admin CAN read all financial collections
+const adminCtx = testEnv.authenticatedContext("admin1");
+await assert(
+  assertSucceeds(getDoc(doc(adminCtx.firestore(), "chart_of_accounts", "1001"))),
+  "P0: admin CAN read chart_of_accounts"
+);
+await assert(
+  assertSucceeds(getDoc(doc(adminCtx.firestore(), "journal_entries", "JE-2025-001"))),
+  "P0: admin CAN read journal_entries"
+);
+await assert(
+  assertSucceeds(getDoc(doc(adminCtx.firestore(), "invoice_versions", "INV-001"))),
+  "P0: admin CAN read invoice_versions"
+);
+
+// 4n) Admin CAN write all financial collections
+await assert(
+  assertSucceeds(setDoc(doc(adminCtx.firestore(), "chart_of_accounts", "3001"), { name: "Revenue", type: "revenue" })),
+  "P0: admin CAN write chart_of_accounts"
+);
+await assert(
+  assertSucceeds(setDoc(doc(adminCtx.firestore(), "journal_entries", "JE-2025-003"), { amount: 7000 })),
+  "P0: admin CAN write journal_entries"
+);
+await assert(
+  assertSucceeds(setDoc(doc(adminCtx.firestore(), "invoice_versions", "INV-003"), { total: 15000 })),
+  "P0: admin CAN write invoice_versions"
+);
 
 // ══════════════════════════════════════════════════════════════════════════════
 // SUMMARY

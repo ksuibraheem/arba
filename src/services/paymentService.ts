@@ -14,12 +14,10 @@ import app from '../../firebase/config';
 
 // =================== إعدادات Tap ===================
 
+// P0-FIX: Secret key removed from client — Tap API calls go through Cloud Functions only
 const TAP_CONFIG = {
-    secretKey: import.meta.env.VITE_TAP_SECRET_KEY || '',
     publicKey: import.meta.env.VITE_TAP_PUBLIC_KEY || '',
     merchantId: import.meta.env.VITE_TAP_MERCHANT_ID || '599424',
-    // Use proxy in dev to bypass CORS, direct URL in production
-    apiUrl: import.meta.env.DEV ? '/api/tap' : 'https://api.tap.company/v2',
     // Use current origin for dev/prod compatibility
     get redirectUrl() {
         const base = typeof window !== 'undefined' ? window.location.origin : 'https://arba-sys.com';
@@ -172,70 +170,13 @@ export async function initiateElectronicPayment(request: PaymentRequest): Promis
             return { success: false, paymentId, error: data.error };
         }
     } catch (cfError: any) {
-        // Cloud Functions not deployed — fallback to direct API
-        console.warn('Cloud Functions unavailable, using direct Tap API:', cfError.code);
-    }
-
-    // === Fallback: Direct Tap API (for testing / dev) ===
-    if (!TAP_CONFIG.secretKey) {
-        await updatePaymentStatus(paymentId, 'failed', undefined);
-        return { success: false, paymentId, error: 'مفتاح Tap غير مُعد. راجع ملف .env' };
-    }
-
-    try {
-        const response = await fetch(`${TAP_CONFIG.apiUrl}/charges`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${TAP_CONFIG.secretKey}`,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                amount: request.amount,
-                currency: TAP_CONFIG.currency,
-                customer_initiated: true,
-                threeDSecure: true,
-                save_card: false,
-                description: `Arba Pricing - ${request.plan?.charAt(0).toUpperCase()}${request.plan?.slice(1)} Plan`,
-                metadata: {
-                    arba_payment_id: paymentId,
-                    arba_user_id: request.userId,
-                    arba_plan: request.plan
-                },
-                receipt: { email: true, sms: false },
-                customer: {
-                    first_name: request.userName?.split(' ')[0] || 'Arba',
-                    last_name: request.userName?.split(' ').slice(1).join(' ') || 'User',
-                    email: request.userEmail || 'user@arba-sys.com'
-                },
-                merchant: { id: TAP_CONFIG.merchantId },
-                source: { id: 'src_all' },
-                redirect: { url: redirectUrl },
-                post: { url: redirectUrl }
-            })
-        });
-
-        const data = await response.json();
-
-        if (data.transaction && data.transaction.url) {
-            return { success: true, paymentId, paymentUrl: data.transaction.url };
-        }
-
-        console.error('Tap API error:', data);
+        // P0-FIX: No direct-API fallback — secret key must not exist on client
+        console.error('Cloud Functions unavailable:', cfError.code);
         await updatePaymentStatus(paymentId, 'failed', undefined);
         return {
             success: false,
             paymentId,
-            error: data.errors?.[0]?.description || 'خطأ في بوابة الدفع'
-        };
-
-    } catch (error: any) {
-        console.error('Tap API call failed:', error);
-        await updatePaymentStatus(paymentId, 'failed', undefined);
-        return {
-            success: false,
-            paymentId,
-            error: 'تعذر الاتصال ببوابة الدفع. يرجى المحاولة لاحقاً.'
+            error: 'خدمة الدفع غير متاحة حالياً. يرجى المحاولة لاحقاً.'
         };
     }
 }
@@ -270,35 +211,9 @@ export async function verifyTapPayment(
         await updatePaymentStatus(arbaPaymentId, 'failed', tapChargeId);
         return { success: false, status: 'failed', error: `حالة العملية: ${data.status}` };
     } catch (cfError: any) {
-        console.warn('Cloud Functions unavailable for verify, using direct API:', cfError.code);
-    }
-
-    // === Fallback: Direct Tap API ===
-    try {
-        const response = await fetch(`${TAP_CONFIG.apiUrl}/charges/${tapChargeId}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${TAP_CONFIG.secretKey}`,
-                'Accept': 'application/json'
-            }
-        });
-
-        const charge = await response.json();
-
-        if (charge.status === 'CAPTURED') {
-            if (charge.amount !== expectedAmount) {
-                await updatePaymentStatus(arbaPaymentId, 'failed', tapChargeId);
-                return { success: false, status: 'amount_mismatch', amountPaid: charge.amount, error: `المبلغ المدفوع (${charge.amount}) لا يتطابق مع المطلوب (${expectedAmount})` };
-            }
-            await updatePaymentStatus(arbaPaymentId, 'completed', tapChargeId);
-            return { success: true, transactionId: tapChargeId, status: 'completed', amountPaid: charge.amount };
-        }
-
-        await updatePaymentStatus(arbaPaymentId, 'failed', tapChargeId);
-        return { success: false, status: 'failed', error: `حالة العملية: ${charge.status}` };
-    } catch (error: any) {
-        console.error('Tap verification failed:', error);
-        return { success: false, status: 'failed', error: 'تعذر التحقق من العملية' };
+        // P0-FIX: No direct-API fallback — secret key removed from client
+        console.error('Cloud Functions unavailable for verify:', cfError.code);
+        return { success: false, status: 'failed', error: 'خدمة التحقق غير متاحة حالياً' };
     }
 }
 
