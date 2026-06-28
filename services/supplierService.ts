@@ -8,6 +8,9 @@ import { registrationService, RegistrationRequest } from './registrationService'
 import { chartOfAccountsService, ACCOUNT_CODES, JournalEntry, VAT_RATE } from './chartOfAccountsService';
 import { FULL_ITEMS_DATABASE } from '../constants';
 import { firestoreDataService } from './firestoreDataService';
+import { offlineBufferService } from './offlineBufferService';
+import { getNextNumber } from './counterClient';
+import type { Address, TaxCategory, InvoiceTypeCode, PaymentMeansCode, AllowanceCharge } from '../types/accounting';
 
 // ====================== أنواع البيانات ======================
 
@@ -99,6 +102,14 @@ export interface PurchaseInvoiceItem {
     quantity: number;
     unitPrice: number;
     total: number;
+
+    // M1.1 — [الآن]
+    taxRate?: number;
+    taxCategory?: TaxCategory;
+    // M1.1 — [Z2 placeholder]
+    taxExemptionReasonCode?: string;
+    taxExemptionReasonText?: string;
+    lineAllowanceCharge?: AllowanceCharge[];
 }
 
 // فاتورة المشتريات
@@ -120,6 +131,20 @@ export interface PurchaseInvoice {
     createdBy: string;
     createdAt: string;
     updatedAt: string;
+
+    // M1.1 — [الآن]
+    supplierVatNumber?: string;
+    supplierCrNumber?: string;
+    supplierAddress?: Address;
+    currency?: string;
+    relatedProjectId?: string;
+    updatedBy?: string;
+    // M1.1 — [Z2 placeholder]
+    invoiceTypeCode?: InvoiceTypeCode;
+    supplyDate?: string;
+    paymentMeansCode?: PaymentMeansCode;
+    prepaidAmount?: number;
+    exchangeRate?: number;
 }
 
 // دفعة للمورد
@@ -136,6 +161,14 @@ export interface SupplierPayment {
     notes?: string;
     createdBy: string;
     createdAt: string;
+
+    // M1.1 — [الآن]
+    currency?: string;
+    updatedAt?: string;
+    updatedBy?: string;
+    // M1.1 — [Z2 placeholder]
+    paymentMeansCode?: PaymentMeansCode;
+    exchangeRate?: number;
 }
 
 // رصيد المورد
@@ -305,7 +338,10 @@ class SupplierService {
         localStorage.setItem(this.productsKey, JSON.stringify(products));
         // 🔥 Sync to Firestore
         const items = products.map(p => ({ id: p.id, data: { ...p } }));
-        firestoreDataService.batchWrite(this.fsProducts, items).catch(console.error);
+        firestoreDataService.batchWrite(this.fsProducts, items).catch(async (err) => {
+            console.error('❌ [Supplier] Product batch write failed, queuing for retry:', err);
+            await offlineBufferService.enqueue(this.fsProducts, items);
+        });
     }
 
     getProductsBySupplierId(supplierId: string): SupplierProduct[] {
@@ -351,14 +387,14 @@ class SupplierService {
         localStorage.setItem(this.invoicesKey, JSON.stringify(invoices));
         // 🔥 Sync to Firestore
         const items = invoices.map(i => ({ id: i.id, data: { ...i } }));
-        firestoreDataService.batchWrite(this.fsInvoices, items).catch(console.error);
+        firestoreDataService.batchWrite(this.fsInvoices, items).catch(async (err) => {
+            console.error('❌ [Supplier] Invoice batch write failed, queuing for retry:', err);
+            await offlineBufferService.enqueue(this.fsInvoices, items);
+        });
     }
 
-    generateInvoiceNumber(): string {
-        const year = new Date().getFullYear();
-        const invoices = this.getInvoices();
-        const count = invoices.filter(inv => inv.invoiceNumber.startsWith(`PI-${year}`)).length + 1;
-        return `PI-${year}-${count.toString().padStart(5, '0')}`;
+    async generateInvoiceNumber(): Promise<string> {
+        return getNextNumber('purchase_invoice');
     }
 
     getInvoicesBySupplierId(supplierId: string): PurchaseInvoice[] {
@@ -368,13 +404,13 @@ class SupplierService {
     /**
      * إنشاء فاتورة مشتريات جديدة
      */
-    createPurchaseInvoice(data: {
+    async createPurchaseInvoice(data: {
         supplierId: string;
         items: PurchaseInvoiceItem[];
         dueDate: string;
         notes?: string;
         createdBy: string;
-    }): PurchaseInvoice {
+    }): Promise<PurchaseInvoice> {
         const supplier = this.getSupplierById(data.supplierId);
         if (!supplier) {
             throw new Error('المورد غير موجود');
@@ -385,10 +421,11 @@ class SupplierService {
         const subtotal = data.items.reduce((sum, item) => sum + item.total, 0);
         const taxAmount = subtotal * VAT_RATE;
         const total = subtotal + taxAmount;
+        const invoiceNumber = await this.generateInvoiceNumber();
 
         const invoice: PurchaseInvoice = {
             id: crypto.randomUUID(),
-            invoiceNumber: this.generateInvoiceNumber(),
+            invoiceNumber,
             supplierId: data.supplierId,
             supplierName: supplier.companyName,
             items: data.items,
@@ -406,7 +443,7 @@ class SupplierService {
         };
 
         // إنشاء قيد محاسبي
-        const journalEntry = chartOfAccountsService.createJournalEntry({
+        const journalEntry = await chartOfAccountsService.createJournalEntry({
             date: new Date().toISOString().split('T')[0],
             description: `فاتورة مشتريات - ${supplier.companyName} - ${invoice.invoiceNumber}`,
             lines: [
@@ -471,7 +508,10 @@ class SupplierService {
         localStorage.setItem(this.paymentsKey, JSON.stringify(payments));
         // 🔥 Sync to Firestore
         const items = payments.map(p => ({ id: p.id, data: { ...p } }));
-        firestoreDataService.batchWrite(this.fsPayments, items).catch(console.error);
+        firestoreDataService.batchWrite(this.fsPayments, items).catch(async (err) => {
+            console.error('❌ [Supplier] Payment batch write failed, queuing for retry:', err);
+            await offlineBufferService.enqueue(this.fsPayments, items);
+        });
     }
 
     getPaymentsBySupplierId(supplierId: string): SupplierPayment[] {
@@ -481,7 +521,7 @@ class SupplierService {
     /**
      * تسجيل دفعة للمورد
      */
-    recordPayment(data: {
+    async recordPayment(data: {
         supplierId: string;
         invoiceId?: string;
         amount: number;
@@ -489,10 +529,18 @@ class SupplierService {
         reference?: string;
         notes?: string;
         createdBy: string;
-    }): SupplierPayment {
+    }): Promise<SupplierPayment> {
         const supplier = this.getSupplierById(data.supplierId);
         if (!supplier) {
             throw new Error('المورد غير موجود');
+        }
+
+        // Referential validation: ensure invoiceId exists if provided
+        if (data.invoiceId) {
+            const invoice = this.getInvoices().find(inv => inv.id === data.invoiceId);
+            if (!invoice) {
+                throw new Error(`Purchase invoice not found: ${data.invoiceId}. Cannot link payment to non-existent invoice.`);
+            }
         }
 
         const payments = this.getPayments();
@@ -508,7 +556,7 @@ class SupplierService {
         }
 
         // إنشاء قيد الدفع
-        const journalEntry = chartOfAccountsService.createJournalEntry({
+        const journalEntry = await chartOfAccountsService.createJournalEntry({
             date: new Date().toISOString().split('T')[0],
             description: `دفعة للمورد - ${supplier.companyName}${invoiceNumber ? ` - ${invoiceNumber}` : ''}`,
             lines: [

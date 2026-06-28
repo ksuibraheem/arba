@@ -5,6 +5,9 @@
  */
 
 import { firestoreDataService } from './firestoreDataService';
+import { offlineBufferService } from './offlineBufferService';
+import { getNextNumber } from './counterClient';
+import type { TaxCategory } from '../types/accounting';
 
 // ====================== أنواع البيانات ======================
 
@@ -26,6 +29,10 @@ export interface Account {
     linkedEntityType?: 'client' | 'supplier' | 'employee';
     isActive: boolean;
     createdAt: string;
+
+    // M1.1
+    updatedAt?: string;
+    updatedBy?: string;
 }
 
 // سطر القيد المحاسبي
@@ -36,6 +43,11 @@ export interface JournalLine {
     credit: number;            // دائن
     entityId?: string;         // معرف الطرف المرتبط (عميل/مورد/موظف)
     entityName?: string;       // اسم الطرف
+
+    // M1.1 — [الآن]
+    relatedProjectId?: string;
+    taxCategory?: TaxCategory;
+    taxRate?: number;
 }
 
 // القيد المحاسبي
@@ -56,6 +68,14 @@ export interface JournalEntry {
     createdAt: string;
     isPosted: boolean;         // هل تم ترحيله؟
     postedAt?: string;
+
+    // M1.1 — [الآن]
+    fiscalYearId?: string;
+    accountingPeriodId?: string;
+    currency?: string;
+    updatedBy?: string;
+    // M1.1 — [Z2 placeholder]
+    exchangeRate?: number;
 }
 
 // طلب إنشاء قيد تلقائي
@@ -166,8 +186,9 @@ export const ACCOUNT_CODES = {
     SALARY_EXPENSE: '5201'
 };
 
-// نسبة الضريبة
-export const VAT_RATE = 0.15;
+// نسبة الضريبة — dynamically loaded from taxSettingsService, fallback 0.15
+import { taxSettingsService } from './taxSettingsService';
+export const VAT_RATE = taxSettingsService.getVatRate();
 
 // ====================== خدمة شجرة الحسابات ======================
 
@@ -205,7 +226,10 @@ class ChartOfAccountsService {
     private saveAccounts(accounts: Account[]): void {
         localStorage.setItem(this.accountsKey, JSON.stringify(accounts));
         const items = accounts.map(a => ({ id: a.code, data: { ...a } }));
-        firestoreDataService.batchWrite('chart_of_accounts', items).catch(() => {});
+        firestoreDataService.batchWrite('chart_of_accounts', items).catch(async (err) => {
+            console.error('❌ [ChartOfAccounts] Account batch write failed, queuing for retry:', err);
+            await offlineBufferService.enqueue('chart_of_accounts', items);
+        });
     }
 
     getAccountByCode(code: string): Account | null {
@@ -240,6 +264,21 @@ class ChartOfAccountsService {
         return newAccount;
     }
 
+    updateAccount(code: string, updates: Partial<Pick<Account, 'name' | 'nameEn' | 'type' | 'parentCode' | 'linkedEntityType' | 'isActive' | 'isSubLedger'>>): Account | null {
+        const accounts = this.getAccounts();
+        const index = accounts.findIndex(a => a.code === code);
+        if (index === -1) return null;
+
+        accounts[index] = {
+            ...accounts[index],
+            ...updates,
+            updatedAt: new Date().toISOString()
+        };
+
+        this.saveAccounts(accounts);
+        return accounts[index];
+    }
+
     updateAccountBalance(code: string, amount: number, isDebit: boolean): Account | null {
         const accounts = this.getAccounts();
         const index = accounts.findIndex(a => a.code === code);
@@ -271,17 +310,25 @@ class ChartOfAccountsService {
     private saveJournalEntries(entries: JournalEntry[]): void {
         localStorage.setItem(this.journalKey, JSON.stringify(entries));
         const items = entries.map(e => ({ id: e.id, data: { ...e } }));
-        firestoreDataService.batchWrite('journal_entries', items).catch(() => {});
+        firestoreDataService.batchWrite('journal_entries', items).catch(async (err) => {
+            console.error('❌ [ChartOfAccounts] Journal batch write failed, queuing for retry:', err);
+            await offlineBufferService.enqueue('journal_entries', items);
+        });
     }
 
-    generateEntryNumber(): string {
-        const year = new Date().getFullYear();
-        const entries = this.getJournalEntries();
-        const count = entries.filter(e => e.entryNumber.startsWith(`JE-${year}`)).length + 1;
-        return `JE-${year}-${count.toString().padStart(5, '0')}`;
+    async generateEntryNumber(): Promise<string> {
+        return getNextNumber('journal_entry');
     }
 
-    createJournalEntry(entry: Omit<JournalEntry, 'id' | 'entryNumber' | 'totalDebit' | 'totalCredit' | 'isBalanced' | 'createdAt' | 'isPosted'>): JournalEntry {
+    async createJournalEntry(entry: Omit<JournalEntry, 'id' | 'entryNumber' | 'totalDebit' | 'totalCredit' | 'isBalanced' | 'createdAt' | 'isPosted'>): Promise<JournalEntry> {
+        // Referential validation: ensure all accountCodes exist
+        const accounts = this.getAccounts();
+        for (const line of entry.lines) {
+            if (!accounts.some(a => a.code === line.accountCode)) {
+                throw new Error(`Account code not found: ${line.accountCode}. Add it to Chart of Accounts first.`);
+            }
+        }
+
         const entries = this.getJournalEntries();
 
         const totalDebit = entry.lines.reduce((sum, line) => sum + line.debit, 0);
@@ -294,11 +341,13 @@ class ChartOfAccountsService {
             accountName: this.getAccountByCode(line.accountCode)?.name || line.accountCode
         }));
 
+        const entryNumber = await this.generateEntryNumber();
+
         const newEntry: JournalEntry = {
             ...entry,
             lines: enrichedLines,
             id: crypto.randomUUID(),
-            entryNumber: this.generateEntryNumber(),
+            entryNumber,
             totalDebit,
             totalCredit,
             isBalanced,
@@ -348,11 +397,11 @@ class ChartOfAccountsService {
      * مدين: مدينو الاشتراكات
      * دائن: إيراد اشتراكات + ضريبة المخرجات
      */
-    createSubscriptionActivationEntry(request: AutoJournalRequest): JournalEntry {
+    async createSubscriptionActivationEntry(request: AutoJournalRequest): Promise<JournalEntry> {
         const amountBeforeTax = request.amount / (1 + VAT_RATE);
         const taxAmount = request.amount - amountBeforeTax;
 
-        const entry = this.createJournalEntry({
+        const entry = await this.createJournalEntry({
             date: new Date().toISOString().split('T')[0],
             description: request.description,
             lines: [
@@ -390,8 +439,8 @@ class ChartOfAccountsService {
      * مدين: البنك
      * دائن: مدينو الاشتراكات
      */
-    createSubscriptionCollectionEntry(request: AutoJournalRequest): JournalEntry {
-        const entry = this.createJournalEntry({
+    async createSubscriptionCollectionEntry(request: AutoJournalRequest): Promise<JournalEntry> {
+        const entry = await this.createJournalEntry({
             date: new Date().toISOString().split('T')[0],
             description: request.description,
             lines: [
@@ -422,12 +471,12 @@ class ChartOfAccountsService {
      * إنشاء قيود عملية الوساطة (فاتورة مبيعات + فاتورة مشتريات)
      * يُحسب الربح الصافي تلقائياً
      */
-    createMediationEntries(request: AutoJournalRequest): { saleEntry: JournalEntry; purchaseEntry: JournalEntry; profit: number } {
+    async createMediationEntries(request: AutoJournalRequest): Promise<{ saleEntry: JournalEntry; purchaseEntry: JournalEntry; profit: number }> {
         const saleAmountBeforeTax = request.amount / (1 + VAT_RATE);
         const saleTax = request.amount - saleAmountBeforeTax;
 
         // قيد فاتورة المبيعات للمشتري
-        const saleEntry = this.createJournalEntry({
+        const saleEntry = await this.createJournalEntry({
             date: new Date().toISOString().split('T')[0],
             description: `فاتورة مبيعات - ${request.entityName}`,
             lines: [
@@ -461,7 +510,7 @@ class ChartOfAccountsService {
         const purchaseAmountBeforeTax = purchaseAmount / (1 + VAT_RATE);
         const purchaseTax = purchaseAmount - purchaseAmountBeforeTax;
 
-        const purchaseEntry = this.createJournalEntry({
+        const purchaseEntry = await this.createJournalEntry({
             date: new Date().toISOString().split('T')[0],
             description: `فاتورة مشتريات - ${request.linkedSupplierName}`,
             lines: [
@@ -504,7 +553,7 @@ class ChartOfAccountsService {
      * مدين: مصروف الرواتب
      * دائن: مستحقات الموظفين
      */
-    createPayrollAccrualEntry(employees: { id: string; name: string; salary: number }[], createdBy: string): JournalEntry {
+    async createPayrollAccrualEntry(employees: { id: string; name: string; salary: number }[], createdBy: string): Promise<JournalEntry> {
         const totalSalaries = employees.reduce((sum, emp) => sum + emp.salary, 0);
 
         const lines: JournalLine[] = [
@@ -526,7 +575,7 @@ class ChartOfAccountsService {
             });
         }
 
-        const entry = this.createJournalEntry({
+        const entry = await this.createJournalEntry({
             date: new Date().toISOString().split('T')[0],
             description: `استحقاق رواتب شهر ${new Date().toLocaleDateString('ar-SA', { month: 'long', year: 'numeric' })}`,
             lines,
@@ -543,8 +592,8 @@ class ChartOfAccountsService {
      * مدين: مستحقات الموظف
      * دائن: البنك
      */
-    createPayrollPaymentEntry(employeeId: string, employeeName: string, amount: number, createdBy: string): JournalEntry {
-        const entry = this.createJournalEntry({
+    async createPayrollPaymentEntry(employeeId: string, employeeName: string, amount: number, createdBy: string): Promise<JournalEntry> {
+        const entry = await this.createJournalEntry({
             date: new Date().toISOString().split('T')[0],
             description: `صرف راتب - ${employeeName}`,
             lines: [
@@ -574,21 +623,43 @@ class ChartOfAccountsService {
     /**
      * ميزان المراجعة
      */
+    /**
+     * ميزان المراجعة — recomputed from posted journal lines (not cached balances)
+     */
     getTrialBalance(): TrialBalance {
-        const accounts = this.getAccounts().filter(a => a.balance !== 0);
+        const accounts = this.getAccounts();
+        const entries = this.getJournalEntries().filter(e => e.isPosted);
 
-        const balanceItems = accounts.map(account => {
-            const isDebitNature = account.type === 'asset' || account.type === 'expense';
-            return {
-                code: account.code,
-                name: account.name,
-                type: account.type,
-                debit: account.balance > 0 && isDebitNature ? account.balance :
-                    account.balance < 0 && !isDebitNature ? Math.abs(account.balance) : 0,
-                credit: account.balance > 0 && !isDebitNature ? account.balance :
-                    account.balance < 0 && isDebitNature ? Math.abs(account.balance) : 0
-            };
-        });
+        // Build balance map from journal lines
+        const balanceMap: Record<string, number> = {};
+        for (const entry of entries) {
+            for (const line of entry.lines) {
+                if (!balanceMap[line.accountCode]) balanceMap[line.accountCode] = 0;
+                const account = accounts.find(a => a.code === line.accountCode);
+                if (!account) continue;
+                if (account.type === 'asset' || account.type === 'expense') {
+                    balanceMap[line.accountCode] += line.debit - line.credit;
+                } else {
+                    balanceMap[line.accountCode] += line.credit - line.debit;
+                }
+            }
+        }
+
+        const balanceItems = accounts
+            .filter(a => balanceMap[a.code] && balanceMap[a.code] !== 0)
+            .map(account => {
+                const bal = balanceMap[account.code] || 0;
+                const isDebitNature = account.type === 'asset' || account.type === 'expense';
+                return {
+                    code: account.code,
+                    name: account.name,
+                    type: account.type,
+                    debit: bal > 0 && isDebitNature ? bal :
+                        bal < 0 && !isDebitNature ? Math.abs(bal) : 0,
+                    credit: bal > 0 && !isDebitNature ? bal :
+                        bal < 0 && isDebitNature ? Math.abs(bal) : 0
+                };
+            });
 
         const totalDebit = balanceItems.reduce((sum, item) => sum + item.debit, 0);
         const totalCredit = balanceItems.reduce((sum, item) => sum + item.credit, 0);
@@ -655,11 +726,29 @@ class ChartOfAccountsService {
     /**
      * قائمة الدخل
      */
+    /**
+     * قائمة الدخل — recomputed from posted journal lines filtered by date range
+     */
     getIncomeStatement(fromDate: string, toDate: string): IncomeStatement {
-        const subscriptionRevenue = this.getAccountByCode(ACCOUNT_CODES.SUBSCRIPTION_REVENUE)?.balance || 0;
-        const salesRevenue = this.getAccountByCode(ACCOUNT_CODES.SALES_REVENUE)?.balance || 0;
-        const costOfGoodsSold = this.getAccountByCode(ACCOUNT_CODES.COST_OF_GOODS_SOLD)?.balance || 0;
-        const salaryExpense = this.getAccountByCode(ACCOUNT_CODES.SALARY_EXPENSE)?.balance || 0;
+        const entries = this.getJournalEntries()
+            .filter(e => e.isPosted && e.date >= fromDate && e.date <= toDate);
+
+        // Compute revenue/expense from filtered entries only
+        let subscriptionRevenue = 0, salesRevenue = 0, costOfGoodsSold = 0, salaryExpense = 0;
+
+        for (const entry of entries) {
+            for (const line of entry.lines) {
+                if (line.accountCode === ACCOUNT_CODES.SUBSCRIPTION_REVENUE) {
+                    subscriptionRevenue += line.credit - line.debit;
+                } else if (line.accountCode === ACCOUNT_CODES.SALES_REVENUE) {
+                    salesRevenue += line.credit - line.debit;
+                } else if (line.accountCode === ACCOUNT_CODES.COST_OF_GOODS_SOLD) {
+                    costOfGoodsSold += line.debit - line.credit;
+                } else if (line.accountCode === ACCOUNT_CODES.SALARY_EXPENSE) {
+                    salaryExpense += line.debit - line.credit;
+                }
+            }
+        }
 
         const totalRevenue = subscriptionRevenue + salesRevenue;
         const totalExpenses = costOfGoodsSold + salaryExpense;
@@ -680,6 +769,36 @@ class ChartOfAccountsService {
             subscriptionProfit: subscriptionRevenue,
             mediationProfit: grossProfit
         };
+    }
+
+    /**
+     * Recompute all account balances from posted journal lines (source-of-truth).
+     * Call this to fix any drift between cached balances and actual entries.
+     */
+    recomputeAccountBalances(): void {
+        const accounts = this.getAccounts();
+        const entries = this.getJournalEntries().filter(e => e.isPosted);
+
+        // Reset all balances
+        for (const account of accounts) {
+            account.balance = 0;
+        }
+
+        // Recompute from posted journal lines
+        for (const entry of entries) {
+            for (const line of entry.lines) {
+                const account = accounts.find(a => a.code === line.accountCode);
+                if (!account) continue;
+
+                if (account.type === 'asset' || account.type === 'expense') {
+                    account.balance += line.debit - line.credit;
+                } else {
+                    account.balance += line.credit - line.debit;
+                }
+            }
+        }
+
+        this.saveAccounts(accounts);
     }
 
     // =================== بيانات تجريبية ===================

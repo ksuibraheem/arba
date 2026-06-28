@@ -5,6 +5,9 @@
  */
 
 import { firestoreDataService } from './firestoreDataService';
+import { offlineBufferService } from './offlineBufferService';
+import { getNextNumber } from './counterClient';
+import type { Address, TaxCategory, InvoiceTypeCode, PaymentMeansCode, AllowanceCharge } from '../types/accounting';
 
 // ====================== أنواع البيانات ======================
 
@@ -59,6 +62,23 @@ export interface Invoice {
     notes?: string;             // ملاحظات
     createdBy: string;          // منشئ الفاتورة
     createdAt: string;
+
+    // M1.1 — [الآن]
+    currency?: string;              // ISO currency code (default SAR)
+    updatedAt?: string;
+    updatedBy?: string;
+    fiscalYearId?: string;
+    accountingPeriodId?: string;
+    relatedProjectId?: string;
+    buyerVatNumber?: string;
+    buyerCrNumber?: string;
+    buyerAddress?: Address;
+    // M1.1 — [Z2 placeholder]
+    invoiceTypeCode?: InvoiceTypeCode;
+    supplyDate?: string;
+    paymentMeansCode?: PaymentMeansCode;
+    prepaidAmount?: number;
+    exchangeRate?: number;
 }
 
 // بند الفاتورة
@@ -68,6 +88,14 @@ export interface InvoiceItem {
     quantity: number;           // الكمية
     unitPrice: number;          // سعر الوحدة
     total: number;              // الإجمالي
+
+    // M1.1 — [الآن]
+    taxRate?: number;
+    taxCategory?: TaxCategory;
+    // M1.1 — [Z2 placeholder]
+    taxExemptionReasonCode?: string;
+    taxExemptionReasonText?: string;
+    lineAllowanceCharge?: AllowanceCharge[];
 }
 // نوع العملية المالية — V10
 export type TransactionType = 
@@ -100,6 +128,16 @@ export interface LedgerEntry {
     planTo?: string;            // الباقة الجديدة
     relatedUserId?: string;     // معرف المستخدم المرتبط
     relatedOrderId?: string;    // معرف الطلب المرتبط (RFQ)
+
+    // M1.1 — [الآن]
+    relatedProjectId?: string;
+    fiscalYearId?: string;
+    accountingPeriodId?: string;
+    currency?: string;
+    updatedAt?: string;
+    updatedBy?: string;
+    // M1.1 — [Z2 placeholder]
+    exchangeRate?: number;
 }
 
 // الاشتراك
@@ -175,6 +213,14 @@ export interface Client {
 
     createdAt: string;
     updatedAt: string;
+
+    // M1.1 — [الآن]
+    clientCode?: string;
+    vatNumber?: string;
+    crNumber?: string;
+    address?: Address;
+    createdBy?: string;
+    updatedBy?: string;
 }
 
 // ملخص مالي للعميل
@@ -330,8 +376,9 @@ class AccountingService {
         localStorage.setItem(this.invoicesKey, JSON.stringify(invoices));
         // Firestore-first batch write
         const items = invoices.map(i => ({ id: i.id, data: { ...i } }));
-        firestoreDataService.batchWrite(this.fsInvoices, items).catch((err) => {
-            console.error('❌ [Accounting] Invoice batch write failed:', err);
+        firestoreDataService.batchWrite(this.fsInvoices, items).catch(async (err) => {
+            console.error('❌ [Accounting] Invoice batch write failed, queuing for retry:', err);
+            await offlineBufferService.enqueue(this.fsInvoices, items);
         });
     }
 
@@ -339,20 +386,24 @@ class AccountingService {
         return this.getInvoices().find(i => i.id === id) || null;
     }
 
-    generateInvoiceNumber(): string {
-        const year = new Date().getFullYear();
-        const invoices = this.getInvoices();
-        const count = invoices.filter(i => i.invoiceNumber.startsWith(`INV-${year}`)).length + 1;
-        return `INV-${year}-${count.toString().padStart(5, '0')}`;
+    async generateInvoiceNumber(): Promise<string> {
+        return getNextNumber('invoice');
     }
 
-    createInvoice(invoice: Omit<Invoice, 'id' | 'invoiceNumber' | 'createdAt' | 'isEdited' | 'editCount'>): Invoice {
+    async createInvoice(invoice: Omit<Invoice, 'id' | 'invoiceNumber' | 'createdAt' | 'isEdited' | 'editCount'>): Promise<Invoice> {
+        // Referential validation: ensure customerId exists
+        const client = this.getClientById(invoice.customerId);
+        if (!client) {
+            throw new Error(`Client not found: ${invoice.customerId}. Register the client before creating an invoice.`);
+        }
+
         const invoices = this.getInvoices();
+        const invoiceNumber = await this.generateInvoiceNumber();
 
         const newInvoice: Invoice = {
             ...invoice,
             id: crypto.randomUUID(),
-            invoiceNumber: this.generateInvoiceNumber(),
+            invoiceNumber,
             isEdited: false,
             editCount: 0,
             createdAt: new Date().toISOString()
@@ -412,8 +463,9 @@ class AccountingService {
         localStorage.setItem(this.ledgerKey, JSON.stringify(entries));
         // Firestore-first batch write
         const items = entries.map(e => ({ id: e.id, data: { ...e } }));
-        firestoreDataService.batchWrite(this.fsLedger, items).catch((err) => {
-            console.error('❌ [Accounting] Ledger batch write failed:', err);
+        firestoreDataService.batchWrite(this.fsLedger, items).catch(async (err) => {
+            console.error('❌ [Accounting] Ledger batch write failed, queuing for retry:', err);
+            await offlineBufferService.enqueue(this.fsLedger, items);
         });
     }
 
@@ -463,8 +515,9 @@ class AccountingService {
         localStorage.setItem(this.subscriptionsKey, JSON.stringify(subs));
         // Firestore-first batch write
         const items = subs.map(s => ({ id: s.id, data: { ...s } }));
-        firestoreDataService.batchWrite(this.fsSubscriptions, items).catch((err) => {
-            console.error('❌ [Accounting] Subscription batch write failed:', err);
+        firestoreDataService.batchWrite(this.fsSubscriptions, items).catch(async (err) => {
+            console.error('❌ [Accounting] Subscription batch write failed, queuing for retry:', err);
+            await offlineBufferService.enqueue(this.fsSubscriptions, items);
         });
     }
 
@@ -552,8 +605,9 @@ class AccountingService {
         localStorage.setItem(this.paymentsKey, JSON.stringify(payments));
         // Firestore-first batch write
         const items = payments.map(p => ({ id: p.id, data: { ...p } }));
-        firestoreDataService.batchWrite(this.fsPayments, items).catch((err) => {
-            console.error('❌ [Accounting] Payment batch write failed:', err);
+        firestoreDataService.batchWrite(this.fsPayments, items).catch(async (err) => {
+            console.error('❌ [Accounting] Payment batch write failed, queuing for retry:', err);
+            await offlineBufferService.enqueue(this.fsPayments, items);
         });
     }
 
@@ -741,7 +795,12 @@ class AccountingService {
                 }
             ];
 
-            sampleInvoices.forEach(inv => this.createInvoice(inv));
+            // createInvoice is now async — use Promise.all for sample data
+            (async () => {
+                for (const inv of sampleInvoices) {
+                    try { await this.createInvoice(inv); } catch { /* sample data — ignore validation */ }
+                }
+            })();
         }
 
         // اشتراكات تجريبية
@@ -827,10 +886,11 @@ class AccountingService {
     private saveClients(clients: Client[]): void {
         this._clientsCache = clients;
         localStorage.setItem(this.clientsKey, JSON.stringify(clients));
-        // Firestore-first batch write (clients were NEVER synced before!)
+        // Firestore-first batch write
         const items = clients.map(c => ({ id: c.id, data: { ...c } }));
-        firestoreDataService.batchWrite(this.fsClients, items).catch((err) => {
-            console.error('❌ [Accounting] Client batch write failed:', err);
+        firestoreDataService.batchWrite(this.fsClients, items).catch(async (err) => {
+            console.error('❌ [Accounting] Client batch write failed, queuing for retry:', err);
+            await offlineBufferService.enqueue(this.fsClients, items);
         });
     }
 
@@ -896,18 +956,23 @@ class AccountingService {
         return clients[index];
     }
 
-    // تحديث رصيد العميل
+    // تحديث رصيد العميل — recompute from actual linked records
     updateClientBalance(clientId: string): Client | null {
         const client = this.getClientById(clientId);
         if (!client) return null;
 
-        // حساب المدفوعات
-        const payments = this.getPayments().filter(p => client.paymentIds.includes(p.id) && p.status === 'completed');
+        // حساب المدفوعات من السجلات المرتبطة بالعميل عبر customerId
+        const invoices = this.getInvoices().filter(i => i.customerId === clientId);
+        const payments = this.getPayments().filter(p => {
+            // Match by linked paymentIds OR by invoiceId referencing this client's invoices
+            if (client.paymentIds.includes(p.id)) return true;
+            if (p.invoiceId && invoices.some(i => i.id === p.invoiceId)) return true;
+            return false;
+        }).filter(p => p.status === 'completed');
         const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
 
         // حساب المستحق من الاشتراكات والفواتير
         const subscriptions = this.getSubscriptions().filter(s => client.subscriptionIds.includes(s.id));
-        const invoices = this.getInvoices().filter(i => client.invoiceIds.includes(i.id));
         const subDue = subscriptions.reduce((sum, s) => sum + s.amount, 0);
         const invDue = invoices.filter(i => i.status !== 'paid' && i.status !== 'cancelled').reduce((sum, i) => sum + i.total, 0);
         const totalDue = subDue + invDue;
@@ -1022,17 +1087,29 @@ class AccountingService {
             }
         });
 
-        // مزامنة المدفوعات
+        // مزامنة المدفوعات — match via invoiceId → customerId (no fuzzy name matching)
         const payments = this.getPayments();
+        const allInvoices = this.getInvoices();
         payments.forEach(payment => {
-            // البحث عن العميل بالاسم
-            const client = this.getClients().find(c =>
-                c.name === payment.customerName ||
-                c.name.includes(payment.customerName) ||
-                payment.customerName.includes(c.name)
-            );
-            if (client) {
-                this.linkPaymentToClient(client.id, payment.id);
+            let matchedClient: Client | undefined;
+
+            // Primary: match via invoiceId → customerId
+            if (payment.invoiceId) {
+                const inv = allInvoices.find(i => i.id === payment.invoiceId);
+                if (inv) {
+                    matchedClient = this.getClientById(inv.customerId) || undefined;
+                }
+            }
+
+            // Fallback: exact email match via customerName (not fuzzy)
+            if (!matchedClient) {
+                matchedClient = this.getClients().find(c =>
+                    c.name === payment.customerName
+                );
+            }
+
+            if (matchedClient) {
+                this.linkPaymentToClient(matchedClient.id, payment.id);
             }
         });
     }
