@@ -29,6 +29,7 @@ import { scanImagesForBranding, extractImagesFromExcel, isImageScannable } from 
 import { executeFullPipeline, getGatewayStats } from './apiGateway';
 import { createSession, getSession, deleteSession, cleanupExpiredSessions } from './sessionManager';
 import { queryRates, getCategories, getEngineStats as getMarketEngineStats } from './marketRatesEngine';
+export { getNextNumber } from './counterService';
 
 // =================== Temporary Storage ===================
 // In production, use Firestore or Cloud Storage for scan sessions

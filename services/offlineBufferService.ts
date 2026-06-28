@@ -8,7 +8,11 @@
  * - Supports multi-layered cognitive state (complex nested objects)
  * 
  * PATTERN: Extends the existing storeLocalFallback() in auditLogService.ts (L160)
+ * 
+ * M1.3: Added enqueue() / flush() / pendingCount for batch-write retry pattern
  */
+
+import { firestoreDataService } from './firestoreDataService';
 
 // =================== Types ===================
 
@@ -38,9 +42,19 @@ export interface SyncResult {
     remaining: number;
 }
 
+// M1.3: Batch-write pending queue item
+interface PendingBatchWrite {
+  id: string;
+  collection: string;
+  items: { id: string; data: Record<string, any> }[];
+  timestamp: string;
+  retryCount: number;
+}
+
 // =================== Service ===================
 
 const BUFFER_KEY = 'arba_offline_buffer';
+const BATCH_BUFFER_KEY = 'arba_offline_batch_buffer';
 const MAX_BUFFER_SIZE = 200;
 const MAX_RETRIES = 5;
 
@@ -255,11 +269,80 @@ class OfflineBufferService {
         return this._isOnline;
     }
 
+    // =================== M1.3: Batch-Write Retry Queue ===================
+
+    /**
+     * Enqueue a failed batchWrite for later retry.
+     * Used by accounting/supplier save methods to replace silent fire-and-forget.
+     */
+    async enqueue(collection: string, items: { id: string; data: Record<string, any> }[]): Promise<void> {
+        const pending = this.getBatchPending();
+        pending.push({
+            id: crypto.randomUUID(),
+            collection,
+            items,
+            timestamp: new Date().toISOString(),
+            retryCount: 0
+        });
+        this.saveBatchPending(pending);
+        console.log(`📦 [OfflineBuffer] Queued ${items.length} items for ${collection}`);
+    }
+
+    /**
+     * Flush all queued batch writes, retrying up to 5 times per entry.
+     */
+    async flush(): Promise<{ flushed: number; failed: number }> {
+        const pending = this.getBatchPending();
+        if (pending.length === 0) return { flushed: 0, failed: 0 };
+
+        let flushed = 0;
+        let failed = 0;
+        const remaining: PendingBatchWrite[] = [];
+
+        for (const write of pending) {
+            try {
+                await firestoreDataService.batchWrite(write.collection, write.items);
+                flushed++;
+            } catch {
+                write.retryCount++;
+                if (write.retryCount < 5) {
+                    remaining.push(write);
+                }
+                failed++;
+            }
+        }
+
+        this.saveBatchPending(remaining);
+        console.log(`🔄 [OfflineBuffer] Flush complete: ${flushed} ok, ${failed} failed, ${remaining.length} remaining`);
+        return { flushed, failed };
+    }
+
+    get pendingCount(): number {
+        return this.getBatchPending().length;
+    }
+
+    private getBatchPending(): PendingBatchWrite[] {
+        try { return JSON.parse(localStorage.getItem(BATCH_BUFFER_KEY) || '[]'); } catch { return []; }
+    }
+
+    private saveBatchPending(pending: PendingBatchWrite[]): void {
+        localStorage.setItem(BATCH_BUFFER_KEY, JSON.stringify(pending));
+    }
+
     // =================== Private Auto-Sync ===================
 
     private async autoSync(): Promise<void> {
         console.info('[OfflineBuffer] Connection restored — auto-flushing buffer...');
-        // Use the default Firestore writer
+        // Flush batch writes first
+        try {
+            const batchResult = await this.flush();
+            if (batchResult.flushed > 0) {
+                console.info(`[OfflineBuffer] Auto-flushed ${batchResult.flushed} batch writes`);
+            }
+        } catch (err) {
+            console.warn('[OfflineBuffer] Batch auto-flush failed:', err);
+        }
+        // Use the default Firestore writer for single-doc writes
         try {
             const { doc, setDoc } = await import('firebase/firestore');
             const { db } = await import('../firebase/config');
