@@ -61,3 +61,6 @@ tests/_run/
 # Local JDK for emulator tests
 .jdk/
 .jdk17.zip
+
+# Local rollback/planning files — not committed
+rollback-pre-p1.1.rules
