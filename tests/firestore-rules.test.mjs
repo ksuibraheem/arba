@@ -378,6 +378,267 @@ await assert(
 );
 
 // ══════════════════════════════════════════════════════════════════════════════
+// P1.1 — Ownership / Anti-Forgery Tests (realistic payloads from service code)
+// ══════════════════════════════════════════════════════════════════════════════
+console.log("\n── P1.1: Ownership & Anti-Forgery ──");
+
+const owner1 = testEnv.authenticatedContext("owner1");
+const attacker = testEnv.authenticatedContext("attacker1");
+const adminP1 = testEnv.authenticatedContext("admin1");
+
+// Seed roles for P1.1
+const p1Seed = testEnv.withSecurityRulesDisabled(async (ctx) => {
+  const db = ctx.firestore();
+  await setDoc(doc(db, "userRoles", "owner1"), { role: "qs_engineer" });
+  await setDoc(doc(db, "userRoles", "attacker1"), { role: "qs_engineer" });
+  // Seed existing docs with REALISTIC fields matching TS interfaces
+  await setDoc(doc(db, "invoices", "inv1"), { createdBy: "admin1", customerId: "client1", total: 100 });
+  await setDoc(doc(db, "connect_messages", "msg1"), { senderId: "owner1", receiverId: "other", projectOwnerId: "owner1" });
+  await setDoc(doc(db, "attendance", "att1"), { employeeId: "owner1", date: "2025-01-01" });
+  await setDoc(doc(db, "suppliers", "sup1"), { ownerId: "owner1", name: "Test Supplier" });
+  await setDoc(doc(db, "external_suppliers", "es1"), { createdBy: "owner1", companyName: "Ext Sup" });
+  await setDoc(doc(db, "external_prices", "ep1"), { createdBy: "owner1", price: 100, externalSupplierId: "es1" });
+  await setDoc(doc(db, "discount_requests", "dr1"), { requestedBy: "owner1", discountValue: 50 });
+  await setDoc(doc(db, "support_tickets", "st1"), { userId: "owner1", assignedTo: "admin1", subject: "Test" });
+});
+await p1Seed;
+
+// ── Projects: ownerId pinned (projectService.ts) ──
+await assert(
+  assertSucceeds(setDoc(doc(owner1.firestore(), "projects", "p1-own"), { ownerId: "owner1", assignedTo: ["owner1"], name: "My Project" })),
+  "P1.1: owner CAN create project with own ownerId"
+);
+await assert(
+  assertFails(setDoc(doc(attacker.firestore(), "projects", "p1-forge"), { ownerId: "owner1", assignedTo: ["attacker1"], name: "Forged" })),
+  "P1.1: attacker DENIED create project with someone else's ownerId"
+);
+
+// ── Clients: ownerId pinned ──
+await assert(
+  assertSucceeds(setDoc(doc(owner1.firestore(), "clients", "c1-own"), { ownerId: "owner1", name: "My Client" })),
+  "P1.1: owner CAN create client with own ownerId"
+);
+await assert(
+  assertFails(setDoc(doc(attacker.firestore(), "clients", "c1-forge"), { ownerId: "owner1", name: "Forged Client" })),
+  "P1.1: attacker DENIED create client with forged ownerId"
+);
+
+// ── Invoices: admin-only create (accountingService.ts: createdBy=accountant, customerId=client) ──
+await assert(
+  assertSucceeds(setDoc(doc(adminP1.firestore(), "invoices", "inv-admin"), { createdBy: "admin1", customerId: "client1", total: 200 })),
+  "P1.1: admin CAN create invoice"
+);
+await assert(
+  assertFails(setDoc(doc(owner1.firestore(), "invoices", "inv-nonadmin"), { createdBy: "owner1", customerId: "client1", total: 200 })),
+  "P1.1: non-admin DENIED create invoice (admin-only interim)"
+);
+
+// ── Ledger entries: admin-only create (accountingService.ts: createdBy=accountant) ──
+await assert(
+  assertSucceeds(setDoc(doc(adminP1.firestore(), "ledger_entries", "le-admin"), { createdBy: "admin1", amount: 100, type: "credit" })),
+  "P1.1: admin CAN create ledger entry"
+);
+await assert(
+  assertFails(setDoc(doc(owner1.firestore(), "ledger_entries", "le-nonadmin"), { createdBy: "owner1", amount: 100, type: "debit" })),
+  "P1.1: non-admin DENIED create ledger entry"
+);
+
+// ── Accounting clients: admin-only create ──
+await assert(
+  assertSucceeds(setDoc(doc(adminP1.firestore(), "accounting_clients", "ac-admin"), { createdBy: "admin1", name: "Client Co" })),
+  "P1.1: admin CAN create accounting client"
+);
+await assert(
+  assertFails(setDoc(doc(owner1.firestore(), "accounting_clients", "ac-nonadmin"), { createdBy: "owner1", name: "Client Co" })),
+  "P1.1: non-admin DENIED create accounting client"
+);
+
+// ── Purchase invoices: createdBy pinned (supplierService.ts L403) ──
+await assert(
+  assertSucceeds(setDoc(doc(owner1.firestore(), "purchase_invoices", "pi-own"), { createdBy: "owner1", supplierId: "sup1", total: 500 })),
+  "P1.1: creator CAN create purchase invoice with own createdBy"
+);
+await assert(
+  assertFails(setDoc(doc(attacker.firestore(), "purchase_invoices", "pi-forge"), { createdBy: "owner1", supplierId: "sup1", total: 500 })),
+  "P1.1: attacker DENIED create purchase invoice with forged createdBy"
+);
+
+// ── Supplier payments: createdBy pinned (supplierService.ts L546) ──
+await assert(
+  assertSucceeds(setDoc(doc(owner1.firestore(), "supplier_payments", "spay-own"), { createdBy: "owner1", supplierId: "sup1", amount: 300 })),
+  "P1.1: creator CAN create supplier payment with own createdBy"
+);
+await assert(
+  assertFails(setDoc(doc(attacker.firestore(), "supplier_payments", "spay-forge"), { createdBy: "owner1", supplierId: "sup1", amount: 300 })),
+  "P1.1: attacker DENIED create supplier payment with forged createdBy"
+);
+
+// ── Connect messages: senderId pinned (connectService.ts L43) ──
+await assert(
+  assertSucceeds(setDoc(doc(owner1.firestore(), "connect_messages", "cm-own"), { senderId: "owner1", receiverId: "other", projectOwnerId: "p1" })),
+  "P1.1: owner CAN create message with own senderId"
+);
+await assert(
+  assertFails(setDoc(doc(attacker.firestore(), "connect_messages", "cm-forge"), { senderId: "owner1", receiverId: "other", projectOwnerId: "p1" })),
+  "P1.1: attacker DENIED create message with forged senderId"
+);
+
+// ── Connect mail: senderId pinned ──
+await assert(
+  assertSucceeds(setDoc(doc(owner1.firestore(), "connect_mail", "ml-own"), { senderId: "owner1", receiverId: "other" })),
+  "P1.1: owner CAN create mail with own senderId"
+);
+await assert(
+  assertFails(setDoc(doc(attacker.firestore(), "connect_mail", "ml-forge"), { senderId: "owner1", receiverId: "other" })),
+  "P1.1: attacker DENIED create mail with forged senderId"
+);
+
+// ── Attendance: employeeId pinned ──
+await assert(
+  assertSucceeds(setDoc(doc(owner1.firestore(), "attendance", "att-own"), { employeeId: "owner1", date: "2025-06-01" })),
+  "P1.1: employee CAN create attendance with own employeeId"
+);
+await assert(
+  assertFails(setDoc(doc(attacker.firestore(), "attendance", "att-forge"), { employeeId: "owner1", date: "2025-06-01" })),
+  "P1.1: attacker DENIED create attendance with forged employeeId"
+);
+
+// ── Discount requests: requestedBy pinned (discountRequestService.ts L31) ──
+await assert(
+  assertSucceeds(setDoc(doc(owner1.firestore(), "discount_requests", "dr-own"), { requestedBy: "owner1", discountValue: 10, targetId: "t1" })),
+  "P1.1: engineer CAN create discount request with own requestedBy"
+);
+await assert(
+  assertFails(setDoc(doc(attacker.firestore(), "discount_requests", "dr-forge"), { requestedBy: "owner1", discountValue: 10, targetId: "t1" })),
+  "P1.1: attacker DENIED create discount request with forged requestedBy"
+);
+
+// ── Support tickets: userId pinned (supportTicketService.ts L52) ──
+await assert(
+  assertSucceeds(setDoc(doc(owner1.firestore(), "support_tickets", "st-own"), { userId: "owner1", assignedTo: "admin1", subject: "Help" })),
+  "P1.1: owner CAN create support ticket with own userId"
+);
+await assert(
+  assertFails(setDoc(doc(attacker.firestore(), "support_tickets", "st-forge"), { userId: "owner1", assignedTo: "admin1", subject: "Help" })),
+  "P1.1: attacker DENIED create support ticket with forged userId"
+);
+
+// ── Suppliers: ownerId pinned ──
+await assert(
+  assertSucceeds(setDoc(doc(owner1.firestore(), "suppliers", "sup-own"), { ownerId: "owner1", name: "My Supplier" })),
+  "P1.1: owner CAN create supplier with own ownerId"
+);
+await assert(
+  assertFails(setDoc(doc(attacker.firestore(), "suppliers", "sup-forge"), { ownerId: "owner1", name: "Forged Supplier" })),
+  "P1.1: attacker DENIED create supplier with forged ownerId"
+);
+
+// ── External suppliers: createdBy pinned (externalSupplierService.ts L46) ──
+await assert(
+  assertSucceeds(setDoc(doc(owner1.firestore(), "external_suppliers", "es-own"), { createdBy: "owner1", companyName: "My Ext" })),
+  "P1.1: creator CAN create external supplier with own createdBy"
+);
+await assert(
+  assertFails(setDoc(doc(attacker.firestore(), "external_suppliers", "es-forge"), { createdBy: "owner1", companyName: "Forged Ext" })),
+  "P1.1: attacker DENIED create external supplier with forged createdBy"
+);
+
+// ── External prices: createdBy pinned (externalSupplierService.ts L84) ──
+await assert(
+  assertSucceeds(setDoc(doc(owner1.firestore(), "external_prices", "ep-own"), { createdBy: "owner1", price: 200, externalSupplierId: "es1" })),
+  "P1.1: creator CAN create external price with own createdBy"
+);
+await assert(
+  assertFails(setDoc(doc(attacker.firestore(), "external_prices", "ep-forge"), { createdBy: "owner1", price: 200, externalSupplierId: "es1" })),
+  "P1.1: attacker DENIED create external price with forged createdBy"
+);
+
+// ── Supplier products: supplierId pinned ──
+await assert(
+  assertSucceeds(setDoc(doc(owner1.firestore(), "supplier_products", "sp-own"), { supplierId: "owner1", name: "My Product" })),
+  "P1.1: supplier CAN create product with own supplierId"
+);
+await assert(
+  assertFails(setDoc(doc(attacker.firestore(), "supplier_products", "sp-forge"), { supplierId: "owner1", name: "Forged Product" })),
+  "P1.1: attacker DENIED create product with forged supplierId"
+);
+
+// ── SupplierRFQs: clientId pinned ──
+await assert(
+  assertSucceeds(setDoc(doc(owner1.firestore(), "supplierRFQs", "rfq-own"), { clientId: "owner1", supplierId: "sup1", items: [] })),
+  "P1.1: client CAN create RFQ with own clientId"
+);
+await assert(
+  assertFails(setDoc(doc(attacker.firestore(), "supplierRFQs", "rfq-forge"), { clientId: "owner1", supplierId: "sup1", items: [] })),
+  "P1.1: attacker DENIED create RFQ with forged clientId"
+);
+
+// ── SupplierStoragePurchases: supplierId pinned ──
+await assert(
+  assertSucceeds(setDoc(doc(owner1.firestore(), "supplierStoragePurchases", "ssp-own"), { supplierId: "owner1", amount: 1000 })),
+  "P1.1: supplier CAN create storage purchase with own supplierId"
+);
+await assert(
+  assertFails(setDoc(doc(attacker.firestore(), "supplierStoragePurchases", "ssp-forge"), { supplierId: "owner1", amount: 1000 })),
+  "P1.1: attacker DENIED create storage purchase with forged supplierId"
+);
+
+// ── Security alerts: reporterId pinned ──
+await assert(
+  assertSucceeds(setDoc(doc(owner1.firestore(), "security_alerts", "sa-own"), { reporterId: "owner1", type: "suspicious" })),
+  "P1.1: user CAN create security alert with own reporterId"
+);
+await assert(
+  assertFails(setDoc(doc(attacker.firestore(), "security_alerts", "sa-forge"), { reporterId: "owner1", type: "suspicious" })),
+  "P1.1: attacker DENIED create security alert with forged reporterId"
+);
+
+// ── Action logs: userId pinned ──
+await assert(
+  assertSucceeds(setDoc(doc(owner1.firestore(), "action_logs", "al-own"), { userId: "owner1", action: "login" })),
+  "P1.1: user CAN create action log with own userId"
+);
+await assert(
+  assertFails(setDoc(doc(attacker.firestore(), "action_logs", "al-forge"), { userId: "owner1", action: "login" })),
+  "P1.1: attacker DENIED create action log with forged userId"
+);
+
+// ── Registration requests: valid email+name (no auth needed) ──
+const unauthReg = testEnv.unauthenticatedContext();
+await assert(
+  assertSucceeds(setDoc(doc(unauthReg.firestore(), "registration_requests", "rr-valid"), { email: "test@example.com", name: "Test User" })),
+  "P1.1: unauth CAN create registration with valid email+name"
+);
+await assert(
+  assertFails(setDoc(doc(unauthReg.firestore(), "registration_requests", "rr-empty"), { email: "", name: "" })),
+  "P1.1: unauth DENIED create registration with empty fields"
+);
+await assert(
+  assertFails(setDoc(doc(unauthReg.firestore(), "registration_requests", "rr-nofields"), { phone: "123" })),
+  "P1.1: unauth DENIED create registration without email+name"
+);
+
+// ── Notifications: requires userId string field ──
+await assert(
+  assertSucceeds(setDoc(doc(owner1.firestore(), "notifications", "notif-own"), { userId: "owner1", message: "Hello" })),
+  "P1.1: user CAN create notification with userId"
+);
+await assert(
+  assertFails(setDoc(doc(owner1.firestore(), "notifications", "notif-noid"), { message: "No userId" })),
+  "P1.1: DENIED create notification without userId field"
+);
+
+// ── Quotes sub-collection: restricted to project stakeholders ──
+await assert(
+  assertSucceeds(setDoc(doc(owner1.firestore(), "projects", "p1-own", "quotes", "q1"), { total: 5000, items: [] })),
+  "P1.1: project owner CAN write quote"
+);
+await assert(
+  assertFails(setDoc(doc(attacker.firestore(), "projects", "p1-own", "quotes", "q2"), { total: 9999, items: [] })),
+  "P1.1: non-stakeholder DENIED write quote on project they don't own"
+);
+
+// ══════════════════════════════════════════════════════════════════════════════
 // SUMMARY
 // ══════════════════════════════════════════════════════════════════════════════
 console.log(`\n──── RESULT: ${passed}/${passed + failed} ✓ ────`);
