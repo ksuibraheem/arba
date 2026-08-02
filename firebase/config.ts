@@ -31,23 +31,34 @@ function getEnv(key: string, metaValue: string | undefined): string {
 
 // Firebase configuration — ALL values from .env (no hardcoded secrets)
 // ⚠️ Vite requires LITERAL `import.meta.env.VITE_*` for static replacement
+// Null-safe: import.meta.env may be undefined in Node.js/test environments
+const _env = (import.meta as any).env || {};
 const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-    appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
-    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || ''
+    apiKey: _env.VITE_FIREBASE_API_KEY || '',
+    authDomain: _env.VITE_FIREBASE_AUTH_DOMAIN || '',
+    projectId: _env.VITE_FIREBASE_PROJECT_ID || '',
+    storageBucket: _env.VITE_FIREBASE_STORAGE_BUCKET || '',
+    messagingSenderId: _env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
+    appId: _env.VITE_FIREBASE_APP_ID || '',
+    measurementId: _env.VITE_FIREBASE_MEASUREMENT_ID || ''
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize services
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+// Initialize services — safe initialization for test environments
+export const auth = (() => {
+    try { return getAuth(app); }
+    catch (e) { console.warn('Auth initialization skipped:', e); return null as any; }
+})();
+export const db = (() => {
+    try { return getFirestore(app); }
+    catch (e) { console.warn('Firestore initialization skipped:', e); return null as any; }
+})();
+export const storage = (() => {
+    try { return getStorage(app); }
+    catch (e) { console.warn('Storage initialization skipped:', e); return null as any; }
+})();
 
 // Analytics — safe initialization with error protection
 export const analytics = (() => {

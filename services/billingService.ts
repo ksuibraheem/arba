@@ -72,7 +72,8 @@ export interface UpgradeQuote {
 // Constants
 // ═══════════════════════════════════════════════════════════════
 
-const VAT_RATE = 0.15; // ضريبة القيمة المضافة 15%
+import { taxSettingsService } from './taxSettingsService';
+const VAT_RATE = taxSettingsService.getVatRate(); // dynamic, fallback 0.15
 const CURRENCY = 'SAR';
 
 // ═══════════════════════════════════════════════════════════════

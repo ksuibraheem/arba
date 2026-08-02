@@ -6,6 +6,7 @@
  */
 
 import { Invoice, Client } from './accountingService';
+import { firestoreDataService } from './firestoreDataService';
 
 // ====================== بيانات الشركة ======================
 
@@ -95,6 +96,30 @@ function hexToBase64(hex: string): string {
 
 class TaxInvoiceService {
 
+    /** Cached company settings from Firestore */
+    private _companySettings: typeof COMPANY_INFO | null = null;
+
+    /**
+     * جلب بيانات الشركة من Firestore مع الرجوع للثوابت
+     * Load company settings from Firestore 'company_settings/default',
+     * fallback to COMPANY_INFO constant.
+     */
+    async getCompanySettings(): Promise<typeof COMPANY_INFO> {
+        if (this._companySettings) return this._companySettings;
+        try {
+            const remote = await firestoreDataService.getDocument<typeof COMPANY_INFO>(
+                'company_settings', 'default'
+            );
+            if (remote) {
+                this._companySettings = { ...COMPANY_INFO, ...remote };
+                return this._companySettings;
+            }
+        } catch (error) {
+            console.warn('⚠️ taxInvoiceService: Firestore company_settings load failed, using fallback', error);
+        }
+        return COMPANY_INFO;
+    }
+
     /**
      * توليد رمز QR بصيغة ZATCA
      * @param data بيانات الفاتورة
@@ -135,6 +160,9 @@ class TaxInvoiceService {
     async generateTaxInvoicePDF(data: TaxInvoiceData): Promise<any> {
         const { invoice, customerVatNumber, invoiceType } = data;
 
+        // Load dynamic company settings (Firestore → fallback COMPANY_INFO)
+        const company = await this.getCompanySettings();
+
         // تحميل jsPDF من CDN
         const jsPDF = await loadJsPDF();
 
@@ -159,13 +187,13 @@ class TaxInvoiceService {
         // اسم الشركة (English - يسار)
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(12);
-        doc.text(COMPANY_INFO.nameEn, margin, yPos + 10);
+        doc.text(company.nameEn, margin, yPos + 10);
 
         // الرقم الضريبي
         doc.setFontSize(10);
         doc.setTextColor(148, 163, 184); // slate-400
-        doc.text(`VAT: ${COMPANY_INFO.vatNumber}`, margin, yPos + 18);
-        doc.text(`C.R: ${COMPANY_INFO.crNumber}`, margin, yPos + 24);
+        doc.text(`VAT: ${company.vatNumber}`, margin, yPos + 18);
+        doc.text(`C.R: ${company.crNumber}`, margin, yPos + 24);
 
         // عنوان الفاتورة
         doc.setTextColor(255, 255, 255);
@@ -283,8 +311,8 @@ class TaxInvoiceService {
         // ---------------------- رمز QR ----------------------
 
         const qrData: ZATCAQRData = {
-            sellerName: COMPANY_INFO.nameAr,
-            vatNumber: COMPANY_INFO.vatNumber,
+            sellerName: company.nameAr,
+            vatNumber: company.vatNumber,
             timestamp: new Date(invoice.issueDate).toISOString(),
             totalAmount: invoice.total,
             vatAmount: invoice.tax
@@ -310,9 +338,9 @@ class TaxInvoiceService {
         doc.setFontSize(8);
         doc.setFont('helvetica', 'normal');
 
-        doc.text(COMPANY_INFO.addressEn, pageWidth / 2, yPos, { align: 'center' });
-        doc.text(`Phone: ${COMPANY_INFO.phone} | Email: ${COMPANY_INFO.email}`, pageWidth / 2, yPos + 5, { align: 'center' });
-        doc.text(COMPANY_INFO.website, pageWidth / 2, yPos + 10, { align: 'center' });
+        doc.text(company.addressEn, pageWidth / 2, yPos, { align: 'center' });
+        doc.text(`Phone: ${company.phone} | Email: ${company.email}`, pageWidth / 2, yPos + 5, { align: 'center' });
+        doc.text(company.website, pageWidth / 2, yPos + 10, { align: 'center' });
 
         doc.setFontSize(7);
         doc.text('This is a computer-generated invoice and does not require a signature.', pageWidth / 2, yPos + 18, { align: 'center' });

@@ -31,6 +31,10 @@ export interface InvoiceEditRequest {
     expiresAt?: string;            // تاريخ انتهاء الصلاحية (3 أيام بعد الموافقة)
     isEdited: boolean;             // هل تم التعديل؟
     editedAt?: string;             // تاريخ التعديل
+
+    // M1.1
+    updatedAt?: string;
+    updatedBy?: string;
 }
 
 // نسخة الفاتورة (للحفاظ على النسخة الأصلية)
@@ -42,6 +46,10 @@ export interface InvoiceVersion {
     createdAt: string;
     createdBy: string;
     changeNote?: string;           // ملاحظة التغيير
+
+    // M1.1
+    updatedAt?: string;
+    updatedBy?: string;
 }
 
 // ====================== الترجمات ======================

@@ -3,7 +3,9 @@
  * Comprehensive Accountant Page
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import {
     Calculator, DollarSign, FileText, TrendingUp, PieChart, Receipt,
     Plus, Search, Filter, Eye, Edit2, Trash2, X, Save, Check,
@@ -31,7 +33,8 @@ import {
 } from '../../../services/registrationService';
 import {
     chartOfAccountsService,
-    Account, JournalEntry, TrialBalance, IncomeStatement,
+    Account, JournalEntry, JournalLine, TrialBalance, IncomeStatement,
+    AccountType, JournalSourceType,
     ACCOUNT_CODES, ACCOUNT_TYPE_TRANSLATIONS, JOURNAL_SOURCE_TRANSLATIONS
 } from '../../../services/chartOfAccountsService';
 import { employeeService, calculateTotalSalary, ROLE_TRANSLATIONS } from '../../../services/employeeService';
@@ -486,6 +489,27 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
     const [showPayrollModal, setShowPayrollModal] = useState(false);
     const [showMediationModal, setShowMediationModal] = useState(false);
 
+    // Account modal states (M1.4)
+    const [showAccountModal, setShowAccountModal] = useState(false);
+    const [editingAccount, setEditingAccount] = useState<Account | null>(null);
+    const [accountForm, setAccountForm] = useState({
+        code: '', name: '', nameEn: '', type: 'asset' as AccountType,
+        parentCode: '', linkedEntityType: '' as '' | 'client' | 'supplier' | 'employee',
+        isSubLedger: false
+    });
+
+    // Journal entry form states (M1.4)
+    const [journalForm, setJournalForm] = useState({
+        date: new Date().toISOString().split('T')[0],
+        description: '',
+        sourceType: 'manual' as JournalSourceType,
+        reference: ''
+    });
+    const [journalLines, setJournalLines] = useState<{ accountCode: string; debit: number; credit: number; entityId: string; entityName: string }[]>([
+        { accountCode: '', debit: 0, credit: 0, entityId: '', entityName: '' },
+        { accountCode: '', debit: 0, credit: 0, entityId: '', entityName: '' }
+    ]);
+
     // Supplier states
     const [suppliers, setSuppliers] = useState<Supplier[]>([]);
     const [supplierBalances, setSupplierBalances] = useState<SupplierBalance[]>([]);
@@ -642,25 +666,30 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
     };
 
     // Create invoice
-    const handleCreateInvoice = () => {
+    const handleCreateInvoice = async () => {
         const { subtotal, tax, total } = calculateInvoiceTotals();
 
-        accountingService.createInvoice({
-            customerId: crypto.randomUUID(),
-            customerName: invoiceForm.customerName,
-            customerEmail: invoiceForm.customerEmail,
-            customerPhone: invoiceForm.customerPhone,
-            items: invoiceForm.items,
-            subtotal,
-            tax,
-            discount: invoiceForm.discount,
-            total,
-            status: 'pending',
-            dueDate: invoiceForm.dueDate,
-            issueDate: new Date().toISOString().split('T')[0],
-            notes: invoiceForm.notes,
-            createdBy: employee.name
-        });
+        try {
+            await accountingService.createInvoice({
+                customerId: crypto.randomUUID(),
+                customerName: invoiceForm.customerName,
+                customerEmail: invoiceForm.customerEmail,
+                customerPhone: invoiceForm.customerPhone,
+                items: invoiceForm.items,
+                subtotal,
+                tax,
+                discount: invoiceForm.discount,
+                total,
+                status: 'pending',
+                dueDate: invoiceForm.dueDate,
+                issueDate: new Date().toISOString().split('T')[0],
+                notes: invoiceForm.notes,
+                createdBy: employee.name
+            });
+        } catch (e: any) {
+            alert(e.message);
+            return;
+        }
 
         setShowInvoiceModal(false);
         resetInvoiceForm();
@@ -2253,8 +2282,21 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
                             <Layers className="w-5 h-5 text-purple-400" />
                             {t('شجرة الحسابات', 'Chart of Accounts')}
                         </h3>
-                        <div className="text-slate-400 text-sm">
-                            {t('إجمالي الحسابات:', 'Total Accounts:')} <span className="text-white font-bold">{accounts.length}</span>
+                        <div className="flex items-center gap-3">
+                            <div className="text-slate-400 text-sm">
+                                {t('إجمالي الحسابات:', 'Total Accounts:')} <span className="text-white font-bold">{accounts.length}</span>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setEditingAccount(null);
+                                    setAccountForm({ code: '', name: '', nameEn: '', type: 'asset', parentCode: '', linkedEntityType: '', isSubLedger: false });
+                                    setShowAccountModal(true);
+                                }}
+                                className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
+                            >
+                                <Plus className="w-4 h-4" />
+                                {t('إضافة حساب', 'Add Account')}
+                            </button>
                         </div>
                     </div>
 
@@ -2289,11 +2331,12 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
                                     <th className="px-4 py-3 text-center text-sm text-slate-300">{t('النوع', 'Type')}</th>
                                     <th className="px-4 py-3 text-center text-sm text-slate-300">{t('الرصيد', 'Balance')}</th>
                                     <th className="px-4 py-3 text-center text-sm text-slate-300">{t('مرتبط بـ', 'Linked To')}</th>
+                                    <th className="px-4 py-3 text-center text-sm text-slate-300">{t('إجراءات', 'Actions')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-700/50">
                                 {accounts.map(account => (
-                                    <tr key={account.code} className="hover:bg-slate-700/30">
+                                    <tr key={account.code} className={`hover:bg-slate-700/30 ${!account.isActive ? 'opacity-50' : ''}`}>
                                         <td className="px-4 py-3 text-white font-mono">{account.code}</td>
                                         <td className="px-4 py-3">
                                             <p className="text-white">{account.name}</p>
@@ -2318,11 +2361,144 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
                                                         t('الموظفين', 'Employees')
                                             ) : '-'}
                                         </td>
+                                        <td className="px-4 py-3 text-center">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <button
+                                                    onClick={() => {
+                                                        setEditingAccount(account);
+                                                        setAccountForm({
+                                                            code: account.code, name: account.name, nameEn: account.nameEn,
+                                                            type: account.type, parentCode: account.parentCode || '',
+                                                            linkedEntityType: account.linkedEntityType || '',
+                                                            isSubLedger: account.isSubLedger
+                                                        });
+                                                        setShowAccountModal(true);
+                                                    }}
+                                                    className="p-1.5 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30"
+                                                    title={t('تعديل', 'Edit')}
+                                                >
+                                                    <Edit2 className="w-3.5 h-3.5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        chartOfAccountsService.updateAccount(account.code, { isActive: !account.isActive });
+                                                        loadData();
+                                                    }}
+                                                    className={`p-1.5 rounded-lg ${account.isActive ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'}`}
+                                                    title={account.isActive ? t('تعطيل', 'Deactivate') : t('تفعيل', 'Activate')}
+                                                >
+                                                    {account.isActive ? <XCircle className="w-3.5 h-3.5" /> : <CheckCircle className="w-3.5 h-3.5" />}
+                                                </button>
+                                            </div>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
                         </table>
                     </div>
+
+                    {/* Account Create/Edit Modal */}
+                    {showAccountModal && (
+                        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                            <div className="bg-slate-800 rounded-2xl p-6 w-full max-w-lg border border-slate-700">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h3 className="text-xl font-bold text-white">
+                                        {editingAccount ? t('تعديل حساب', 'Edit Account') : t('إضافة حساب', 'Add Account')}
+                                    </h3>
+                                    <button onClick={() => setShowAccountModal(false)} className="p-2 hover:bg-slate-700 rounded-lg">
+                                        <X className="w-5 h-5 text-slate-400" />
+                                    </button>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-slate-400 text-sm mb-1">{t('الكود', 'Code')} *</label>
+                                            <input type="text" value={accountForm.code}
+                                                onChange={e => setAccountForm({ ...accountForm, code: e.target.value })}
+                                                disabled={!!editingAccount}
+                                                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white disabled:opacity-50 font-mono"
+                                                placeholder="1101" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-slate-400 text-sm mb-1">{t('النوع', 'Type')} *</label>
+                                            <select value={accountForm.type}
+                                                onChange={e => setAccountForm({ ...accountForm, type: e.target.value as AccountType })}
+                                                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white">
+                                                {(['asset', 'liability', 'revenue', 'expense', 'equity'] as const).map(t2 => (
+                                                    <option key={t2} value={t2}>{ACCOUNT_TYPE_TRANSLATIONS[t2][language]}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-slate-400 text-sm mb-1">{t('اسم الحساب (عربي)', 'Account Name (AR)')} *</label>
+                                        <input type="text" value={accountForm.name}
+                                            onChange={e => setAccountForm({ ...accountForm, name: e.target.value })}
+                                            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-slate-400 text-sm mb-1">{t('اسم الحساب (إنجليزي)', 'Account Name (EN)')} *</label>
+                                        <input type="text" value={accountForm.nameEn}
+                                            onChange={e => setAccountForm({ ...accountForm, nameEn: e.target.value })}
+                                            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white" />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-slate-400 text-sm mb-1">{t('الحساب الأب', 'Parent Account')}</label>
+                                            <select value={accountForm.parentCode}
+                                                onChange={e => setAccountForm({ ...accountForm, parentCode: e.target.value })}
+                                                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white">
+                                                <option value="">{t('-- بدون --', '-- None --')}</option>
+                                                {accounts.filter(a => a.code !== accountForm.code).map(a => (
+                                                    <option key={a.code} value={a.code}>{a.code} - {a.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-slate-400 text-sm mb-1">{t('نوع الارتباط', 'Linked Entity')}</label>
+                                            <select value={accountForm.linkedEntityType}
+                                                onChange={e => setAccountForm({ ...accountForm, linkedEntityType: e.target.value as any })}
+                                                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white">
+                                                <option value="">{t('-- بدون --', '-- None --')}</option>
+                                                <option value="client">{t('العملاء', 'Clients')}</option>
+                                                <option value="supplier">{t('الموردين', 'Suppliers')}</option>
+                                                <option value="employee">{t('الموظفين', 'Employees')}</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            try {
+                                                if (editingAccount) {
+                                                    chartOfAccountsService.updateAccount(editingAccount.code, {
+                                                        name: accountForm.name, nameEn: accountForm.nameEn, type: accountForm.type,
+                                                        parentCode: accountForm.parentCode || undefined,
+                                                        linkedEntityType: accountForm.linkedEntityType || undefined,
+                                                        isSubLedger: !!accountForm.linkedEntityType
+                                                    });
+                                                } else {
+                                                    chartOfAccountsService.createAccount({
+                                                        code: accountForm.code, name: accountForm.name, nameEn: accountForm.nameEn,
+                                                        type: accountForm.type, isSubLedger: !!accountForm.linkedEntityType,
+                                                        parentCode: accountForm.parentCode || undefined,
+                                                        linkedEntityType: accountForm.linkedEntityType || undefined
+                                                    });
+                                                }
+                                                setShowAccountModal(false);
+                                                loadData();
+                                            } catch (err: any) {
+                                                alert(err.message);
+                                            }
+                                        }}
+                                        disabled={!accountForm.code || !accountForm.name || !accountForm.nameEn}
+                                        className="w-full py-3 bg-purple-500 text-white rounded-lg font-medium hover:bg-purple-600 disabled:opacity-50"
+                                    >
+                                        {editingAccount ? t('حفظ التعديلات', 'Save Changes') : t('إضافة الحساب', 'Add Account')}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -2350,14 +2526,169 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
                                 {t('مسير الرواتب', 'Payroll')}
                             </button>
                             <button
-                                onClick={() => setShowJournalModal(true)}
+                                onClick={() => {
+                                    setJournalForm({ date: new Date().toISOString().split('T')[0], description: '', sourceType: 'manual', reference: '' });
+                                    setJournalLines([{ accountCode: '', debit: 0, credit: 0, entityId: '', entityName: '' }, { accountCode: '', debit: 0, credit: 0, entityId: '', entityName: '' }]);
+                                    setShowJournalModal(true);
+                                }}
                                 className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
                             >
                                 <Plus className="w-4 h-4" />
-                                {t('قيد يدوي', 'Manual Entry')}
+                                {t('إنشاء قيد', 'Create Entry')}
                             </button>
                         </div>
                     </div>
+
+                    {/* Journal Entry Create Modal (M1.4) */}
+                    {showJournalModal && (
+                        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                            <div className="bg-slate-800 rounded-2xl p-6 w-full max-w-3xl border border-slate-700 max-h-[90vh] overflow-y-auto">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h3 className="text-xl font-bold text-white">{t('إنشاء قيد يدوي', 'Create Manual Journal Entry')}</h3>
+                                    <button onClick={() => setShowJournalModal(false)} className="p-2 hover:bg-slate-700 rounded-lg">
+                                        <X className="w-5 h-5 text-slate-400" />
+                                    </button>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-slate-400 text-sm mb-1">{t('التاريخ', 'Date')} *</label>
+                                            <input type="date" value={journalForm.date}
+                                                onChange={e => setJournalForm({ ...journalForm, date: e.target.value })}
+                                                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-slate-400 text-sm mb-1">{t('المرجع', 'Reference')}</label>
+                                            <input type="text" value={journalForm.reference}
+                                                onChange={e => setJournalForm({ ...journalForm, reference: e.target.value })}
+                                                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+                                                placeholder={t('اختياري', 'Optional')} />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-slate-400 text-sm mb-1">{t('الوصف', 'Description')} *</label>
+                                        <input type="text" value={journalForm.description}
+                                            onChange={e => setJournalForm({ ...journalForm, description: e.target.value })}
+                                            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white"
+                                            placeholder={t('وصف القيد المحاسبي', 'Journal entry description')} />
+                                    </div>
+
+                                    {/* Lines Table */}
+                                    <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-700/50">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h4 className="text-white font-medium text-sm">{t('بنود القيد', 'Entry Lines')}</h4>
+                                            <button onClick={() => setJournalLines([...journalLines, { accountCode: '', debit: 0, credit: 0, entityId: '', entityName: '' }])}
+                                                className="flex items-center gap-1 px-3 py-1 bg-purple-500/20 text-purple-400 rounded-lg hover:bg-purple-500/30 text-sm">
+                                                <Plus className="w-3 h-3" /> {t('إضافة سطر', 'Add Line')}
+                                            </button>
+                                        </div>
+                                        <table className="w-full text-sm">
+                                            <thead>
+                                                <tr className="text-slate-500">
+                                                    <th className="text-right pb-2 w-1/3">{t('الحساب', 'Account')}</th>
+                                                    <th className="text-center pb-2 w-1/5">{t('مدين', 'Debit')}</th>
+                                                    <th className="text-center pb-2 w-1/5">{t('دائن', 'Credit')}</th>
+                                                    <th className="text-right pb-2">{t('الطرف', 'Entity')}</th>
+                                                    <th className="pb-2 w-8"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {journalLines.map((line, idx) => (
+                                                    <tr key={idx} className="border-t border-slate-700/30">
+                                                        <td className="py-2 pe-2">
+                                                            <select value={line.accountCode}
+                                                                onChange={e => { const nl = [...journalLines]; nl[idx] = { ...nl[idx], accountCode: e.target.value }; setJournalLines(nl); }}
+                                                                className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1.5 text-white text-xs">
+                                                                <option value="">{t('اختر حساب', 'Select account')}</option>
+                                                                {accounts.filter(a => a.isActive).map(a => (
+                                                                    <option key={a.code} value={a.code}>{a.code} - {language === 'ar' ? a.name : a.nameEn}</option>
+                                                                ))}
+                                                            </select>
+                                                        </td>
+                                                        <td className="py-2 px-1">
+                                                            <input type="number" min="0" value={line.debit || ''}
+                                                                onChange={e => { const nl = [...journalLines]; nl[idx] = { ...nl[idx], debit: Number(e.target.value) || 0 }; setJournalLines(nl); }}
+                                                                className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1.5 text-white text-center text-xs" placeholder="0" />
+                                                        </td>
+                                                        <td className="py-2 px-1">
+                                                            <input type="number" min="0" value={line.credit || ''}
+                                                                onChange={e => { const nl = [...journalLines]; nl[idx] = { ...nl[idx], credit: Number(e.target.value) || 0 }; setJournalLines(nl); }}
+                                                                className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1.5 text-white text-center text-xs" placeholder="0" />
+                                                        </td>
+                                                        <td className="py-2 px-1">
+                                                            <input type="text" value={line.entityName}
+                                                                onChange={e => { const nl = [...journalLines]; nl[idx] = { ...nl[idx], entityName: e.target.value }; setJournalLines(nl); }}
+                                                                className="w-full bg-slate-700 border border-slate-600 rounded px-2 py-1.5 text-white text-xs"
+                                                                placeholder={t('اختياري', 'Optional')} />
+                                                        </td>
+                                                        <td className="py-2 ps-1">
+                                                            {journalLines.length > 2 && (
+                                                                <button onClick={() => setJournalLines(journalLines.filter((_, i) => i !== idx))}
+                                                                    className="p-1 text-red-400 hover:bg-red-500/20 rounded"><Trash2 className="w-3 h-3" /></button>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                        {/* Live Balance Check */}
+                                        {(() => {
+                                            const totalD = journalLines.reduce((s, l) => s + l.debit, 0);
+                                            const totalC = journalLines.reduce((s, l) => s + l.credit, 0);
+                                            const balanced = Math.abs(totalD - totalC) < 0.01 && totalD > 0;
+                                            return (
+                                                <div className={`mt-3 p-3 rounded-lg flex items-center justify-between ${balanced ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30'}`}>
+                                                    <div className="flex items-center gap-4 text-sm">
+                                                        <span className="text-blue-400">{t('مدين:', 'Debit:')} <b>{totalD.toLocaleString()}</b></span>
+                                                        <span className="text-green-400">{t('دائن:', 'Credit:')} <b>{totalC.toLocaleString()}</b></span>
+                                                    </div>
+                                                    <span className={`text-sm font-medium ${balanced ? 'text-green-400' : 'text-red-400'}`}>
+                                                        {balanced ? t('✓ متوازن', '✓ Balanced') : t('✗ غير متوازن', '✗ Unbalanced')}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+
+                                    <div className="flex gap-3">
+                                        <button onClick={() => setShowJournalModal(false)}
+                                            className="flex-1 py-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600">
+                                            {t('إلغاء', 'Cancel')}
+                                        </button>
+                                        <button
+                                            onClick={async () => {
+                                                try {
+                                                    const entry = await chartOfAccountsService.createJournalEntry({
+                                                        date: journalForm.date,
+                                                        description: journalForm.description,
+                                                        sourceType: 'manual',
+                                                        reference: journalForm.reference || undefined,
+                                                        createdBy: employee.name,
+                                                        lines: journalLines.filter(l => l.accountCode).map(l => ({
+                                                            accountCode: l.accountCode,
+                                                            debit: l.debit,
+                                                            credit: l.credit,
+                                                            entityId: l.entityId || undefined,
+                                                            entityName: l.entityName || undefined
+                                                        }))
+                                                    });
+                                                    chartOfAccountsService.postJournalEntry(entry.id);
+                                                    setShowJournalModal(false);
+                                                    loadData();
+                                                } catch (err: any) {
+                                                    alert(err.message);
+                                                }
+                                            }}
+                                            disabled={!journalForm.description || journalLines.filter(l => l.accountCode).length < 2 || Math.abs(journalLines.reduce((s, l) => s + l.debit, 0) - journalLines.reduce((s, l) => s + l.credit, 0)) >= 0.01 || journalLines.reduce((s, l) => s + l.debit, 0) === 0}
+                                            className="flex-1 py-3 bg-purple-500 text-white rounded-lg font-medium hover:bg-purple-600 disabled:opacity-50"
+                                        >
+                                            {t('إنشاء وترحيل', 'Create & Post')}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Journal Entries */}
                     <div className="space-y-3">
@@ -2441,10 +2772,52 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
                     {/* Income Statement Summary */}
                     {incomeStatement && (
                         <div className="bg-gradient-to-br from-emerald-900/20 to-green-900/20 rounded-xl p-6 border border-emerald-500/30">
-                            <h4 className="text-emerald-300 font-medium mb-4 flex items-center gap-2">
-                                <TrendingUp className="w-5 h-5" />
-                                {t('قائمة الدخل', 'Income Statement')}
-                            </h4>
+                            <div className="flex items-center justify-between mb-4">
+                                <h4 className="text-emerald-300 font-medium flex items-center gap-2">
+                                    <TrendingUp className="w-5 h-5" />
+                                    {t('قائمة الدخل', 'Income Statement')}
+                                </h4>
+                                <button onClick={() => {
+                                    if (!incomeStatement) return;
+                                    const doc = new jsPDF();
+                                    doc.setFont('helvetica', 'bold');
+                                    doc.setFontSize(18);
+                                    doc.text('ARBA Platform', 105, 20, { align: 'center' });
+                                    doc.setFontSize(14);
+                                    doc.text('Income Statement', 105, 30, { align: 'center' });
+                                    doc.setFontSize(10);
+                                    doc.setFont('helvetica', 'normal');
+                                    doc.text(`Period: ${incomeStatement.period.from} to ${incomeStatement.period.to}`, 105, 38, { align: 'center' });
+                                    autoTable(doc, {
+                                        startY: 48,
+                                        head: [['Item', 'Amount (SAR)']],
+                                        body: [
+                                            [{ content: 'REVENUE', colSpan: 2, styles: { fontStyle: 'bold', fillColor: [34, 139, 34] as [number, number, number], textColor: 255 } }],
+                                            ['Subscription Revenue', incomeStatement.subscriptionRevenue.toLocaleString()],
+                                            ['Sales Revenue', incomeStatement.salesRevenue.toLocaleString()],
+                                            ['Total Revenue', { content: incomeStatement.totalRevenue.toLocaleString(), styles: { fontStyle: 'bold' } }],
+                                            [{ content: 'EXPENSES', colSpan: 2, styles: { fontStyle: 'bold', fillColor: [220, 38, 38] as [number, number, number], textColor: 255 } }],
+                                            ['Cost of Goods Sold (COGS)', incomeStatement.costOfGoodsSold.toLocaleString()],
+                                            ['Salary Expense', incomeStatement.salaryExpense.toLocaleString()],
+                                            ['Other Expenses', incomeStatement.otherExpenses.toLocaleString()],
+                                            ['Total Expenses', { content: incomeStatement.totalExpenses.toLocaleString(), styles: { fontStyle: 'bold' } }],
+                                            [{ content: 'PROFIT', colSpan: 2, styles: { fontStyle: 'bold', fillColor: [71, 85, 105] as [number, number, number], textColor: 255 } }],
+                                            ['Mediation Profit', incomeStatement.mediationProfit.toLocaleString()],
+                                            ['Subscription Profit', incomeStatement.subscriptionProfit.toLocaleString()],
+                                            ['Gross Profit', incomeStatement.grossProfit.toLocaleString()],
+                                            ['Net Profit', { content: incomeStatement.netProfit.toLocaleString(), styles: { fontStyle: 'bold', textColor: incomeStatement.netProfit >= 0 ? [34, 139, 34] as [number, number, number] : [220, 38, 38] as [number, number, number] } }]
+                                        ],
+                                        theme: 'grid',
+                                        headStyles: { fillColor: [51, 65, 85], textColor: 255, fontStyle: 'bold' },
+                                        styles: { fontSize: 10 },
+                                        columnStyles: { 1: { halign: 'right', cellWidth: 50 } }
+                                    });
+                                    doc.save(`income_statement_${incomeStatement.period.from}_${incomeStatement.period.to}.pdf`);
+                                }} className="flex items-center gap-1 px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-lg hover:bg-emerald-500/30 text-sm">
+                                    <Download className="w-4 h-4" />
+                                    {t('تصدير PDF', 'Export PDF')}
+                                </button>
+                            </div>
 
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                                 <div className="bg-slate-800/50 rounded-lg p-4">
@@ -2502,21 +2875,36 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
                                     </span>
                                     <button onClick={() => {
                                         if (!trialBalance) return;
-                                        const lines = [
-                                            'ميزان المراجعة — Trial Balance',
-                                            '═'.repeat(60),
-                                            `${t('الكود', 'Code').padEnd(10)}${t('الحساب', 'Account').padEnd(30)}${t('مدين', 'Debit').padStart(12)}${t('دائن', 'Credit').padStart(12)}`,
-                                            '─'.repeat(60),
-                                            ...trialBalance.accounts.map(a => `${a.code.padEnd(10)}${a.name.padEnd(30)}${a.debit > 0 ? a.debit.toLocaleString().padStart(12) : '-'.padStart(12)}${a.credit > 0 ? a.credit.toLocaleString().padStart(12) : '-'.padStart(12)}`),
-                                            '═'.repeat(60),
-                                            `${''.padEnd(10)}${t('الإجمالي', 'Total').padEnd(30)}${trialBalance.totalDebit.toLocaleString().padStart(12)}${trialBalance.totalCredit.toLocaleString().padStart(12)}`,
-                                            '',
-                                            trialBalance.isBalanced ? '✓ متوازن — Balanced' : '✗ غير متوازن — Unbalanced'
-                                        ];
-                                        const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
-                                        const url = URL.createObjectURL(blob);
-                                        const a = document.createElement('a'); a.href = url; a.download = `trial_balance_${new Date().toISOString().slice(0,10)}.txt`;
-                                        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+                                        const doc = new jsPDF();
+                                        doc.setFont('helvetica', 'bold');
+                                        doc.setFontSize(18);
+                                        doc.text('ARBA Platform', 105, 20, { align: 'center' });
+                                        doc.setFontSize(14);
+                                        doc.text('Trial Balance', 105, 30, { align: 'center' });
+                                        doc.setFontSize(10);
+                                        doc.setFont('helvetica', 'normal');
+                                        doc.text(`Date: ${new Date().toISOString().slice(0, 10)}`, 105, 38, { align: 'center' });
+                                        autoTable(doc, {
+                                            startY: 45,
+                                            head: [['Code', 'Account Name', 'Debit (SAR)', 'Credit (SAR)']],
+                                            body: trialBalance.accounts.map(a => [
+                                                a.code, a.name,
+                                                a.debit > 0 ? a.debit.toLocaleString() : '-',
+                                                a.credit > 0 ? a.credit.toLocaleString() : '-'
+                                            ]),
+                                            foot: [['', 'Total', trialBalance.totalDebit.toLocaleString(), trialBalance.totalCredit.toLocaleString()]],
+                                            theme: 'grid',
+                                            headStyles: { fillColor: [71, 85, 105], textColor: 255, fontStyle: 'bold' },
+                                            footStyles: { fillColor: [51, 65, 85], textColor: 255, fontStyle: 'bold' },
+                                            styles: { fontSize: 9 },
+                                            columnStyles: { 0: { cellWidth: 25 }, 2: { halign: 'right' }, 3: { halign: 'right' } }
+                                        });
+                                        const finalY = (doc as any).lastAutoTable?.finalY || 200;
+                                        doc.setFontSize(11);
+                                        doc.setFont('helvetica', 'bold');
+                                        doc.setTextColor(trialBalance.isBalanced ? 34 : 220, trialBalance.isBalanced ? 139 : 38, trialBalance.isBalanced ? 34 : 38);
+                                        doc.text(trialBalance.isBalanced ? 'Balanced' : 'UNBALANCED', 105, finalY + 12, { align: 'center' });
+                                        doc.save(`trial_balance_${new Date().toISOString().slice(0, 10)}.pdf`);
                                     }} className="flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-400 rounded-lg hover:bg-blue-500/30 text-sm">
                                         <Download className="w-4 h-4" />
                                         {t('PDF', 'PDF')}
@@ -2813,9 +3201,9 @@ const AccountantPage: React.FC<AccountantPageProps> = ({ language, employee }) =
                         setShowPurchaseInvoiceModal(false);
                         setSelectedSupplier(null);
                     }}
-                    onSubmit={(data) => {
+                    onSubmit={async (data) => {
                         try {
-                            supplierService.createPurchaseInvoice({
+                            await supplierService.createPurchaseInvoice({
                                 supplierId: selectedSupplier.id,
                                 items: data.items,
                                 dueDate: data.dueDate,
