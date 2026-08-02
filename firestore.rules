@@ -81,7 +81,7 @@ service cloud.firestore {
         isAdmin() ||
         isSuperAdmin()
       );
-      allow create: if isAuth() && (isEngineer() || isAdmin());
+      allow create: if isAuth() && (isEngineer() || isAdmin()) && request.resource.data.ownerId == request.auth.uid;
       allow update: if isAuth() && (
         isOwner(resource.data.ownerId) ||
         isAssigned(resource.data.assignedTo) ||
@@ -129,7 +129,11 @@ service cloud.firestore {
           isAssigned(get(/databases/$(database)/documents/projects/$(projectId)).data.assignedTo) ||
           isAdmin()
         );
-        allow write: if isAuth() && (isEngineer() || isAdmin());
+        allow write: if isAuth() && (
+          isOwner(get(/databases/$(database)/documents/projects/$(projectId)).data.ownerId) ||
+          isAssigned(get(/databases/$(database)/documents/projects/$(projectId)).data.assignedTo) ||
+          isAdmin()
+        );
       }
     }
 
@@ -140,7 +144,7 @@ service cloud.firestore {
         isOwner(resource.data.ownerId) ||
         isAdmin()
       ) && !isSuperAdmin();
-      allow create: if isAuth() && (isEngineer() || isAdmin());
+      allow create: if isAuth() && (isEngineer() || isAdmin()) && request.resource.data.ownerId == request.auth.uid;
       allow update: if isAuth() && (isOwner(resource.data.ownerId) || isAdmin());
       allow delete: if isAdmin();
     }
@@ -195,7 +199,7 @@ service cloud.firestore {
     // =================== SECURITY ALERTS ===================
     match /security_alerts/{alertId} {
       allow read: if isAuth() && (isAdmin() || isEngineer());
-      allow create: if isAuth();
+      allow create: if isAuth() && request.resource.data.reporterId == request.auth.uid;
       allow update: if isAdmin();
       allow delete: if false;
     }
@@ -204,7 +208,7 @@ service cloud.firestore {
     // Write-only for authenticated users, read for admin
     match /action_logs/{logId} {
       allow read: if isAdmin();
-      allow create: if isAuth();
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if false; // Immutable
     }
 
@@ -212,7 +216,8 @@ service cloud.firestore {
     // Suppliers can manage their own data
     match /suppliers/{supplierId} {
       allow read: if isAuth();
-      allow write: if isAuth() && (
+      allow create: if isAuth() && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isAuth() && (
         isOwner(resource.data.ownerId) ||
         isAdmin()
       );
@@ -291,7 +296,11 @@ service cloud.firestore {
         resource.data.email == request.auth.token.email ||
         isAdmin()
       );
-      allow create: if true; // Allow unauthenticated registration
+      allow create: if request.resource.data.keys().hasAll(['email', 'name'])
+        && request.resource.data.email is string
+        && request.resource.data.name is string
+        && request.resource.data.email.size() > 0
+        && request.resource.data.name.size() > 0;
       allow update: if isAuth() && (
         resource.data.email == request.auth.token.email ||
         isAdmin()
@@ -303,13 +312,14 @@ service cloud.firestore {
     // الفواتير والقيود — المالك أو المحاسب أو المدير فقط
     match /invoices/{invoiceId} {
       allow read: if isAuth() && (
-        isOwner(resource.data.userId) ||
-        isOwner(resource.data.companyId) ||
+        isOwner(resource.data.createdBy) ||
+        isOwner(resource.data.customerId) ||
         isAdmin()
       );
-      allow create: if isAuth();
+      // P1.1-FIX: Invoice.userId doesn't exist; createdBy = accountant, customerId = client
+      allow create: if isAuth() && isAdmin();
       allow update: if isAuth() && (
-        isOwner(resource.data.userId) ||
+        isOwner(resource.data.createdBy) ||
         isAdmin()
       );
       allow delete: if isAdmin();
@@ -317,23 +327,23 @@ service cloud.firestore {
 
     match /ledger_entries/{entryId} {
       allow read: if isAuth() && (
-        isOwner(resource.data.userId) ||
-        isOwner(resource.data.companyId) ||
+        isOwner(resource.data.createdBy) ||
         isAdmin()
       );
-      allow create: if isAuth();
+      // P1.1-FIX: LedgerEntry has createdBy, not userId
+      allow create: if isAuth() && isAdmin();
       allow update, delete: if isAdmin();
     }
 
     match /accounting_clients/{clientId} {
       allow read: if isAuth() && (
-        isOwner(resource.data.userId) ||
-        isOwner(resource.data.companyId) ||
+        isOwner(resource.data.createdBy) ||
         isAdmin()
       );
-      allow create: if isAuth();
+      // P1.1-FIX: AccountingClient has no userId; admin-only interim
+      allow create: if isAuth() && isAdmin();
       allow update: if isAuth() && (
-        isOwner(resource.data.userId) ||
+        isOwner(resource.data.createdBy) ||
         isAdmin()
       );
       allow delete: if isAdmin();
@@ -343,7 +353,8 @@ service cloud.firestore {
     // بيانات الموردين — المورد أو المدير فقط
     match /supplier_products/{productId} {
       allow read: if isAuth(); // All users can browse products
-      allow write: if isAuth() && (
+      allow create: if isAuth() && request.resource.data.supplierId == request.auth.uid;
+      allow update, delete: if isAuth() && (
         isOwner(resource.data.supplierId) ||
         isAdmin()
       );
@@ -351,13 +362,14 @@ service cloud.firestore {
 
     match /purchase_invoices/{invoiceId} {
       allow read: if isAuth() && (
-        isOwner(resource.data.userId) ||
+        isOwner(resource.data.createdBy) ||
         isOwner(resource.data.supplierId) ||
         isAdmin()
       );
-      allow create: if isAuth();
+      // P1.1-FIX: PurchaseInvoice has createdBy (accountant), supplierId (supplier)
+      allow create: if isAuth() && request.resource.data.createdBy == request.auth.uid;
       allow update: if isAuth() && (
-        isOwner(resource.data.userId) ||
+        isOwner(resource.data.createdBy) ||
         isAdmin()
       );
       allow delete: if isAdmin();
@@ -365,11 +377,12 @@ service cloud.firestore {
 
     match /supplier_payments/{paymentId} {
       allow read: if isAuth() && (
-        isOwner(resource.data.userId) ||
+        isOwner(resource.data.createdBy) ||
         isOwner(resource.data.supplierId) ||
         isAdmin()
       );
-      allow create: if isAuth();
+      // P1.1-FIX: SupplierPayment has createdBy (accountant), supplierId
+      allow create: if isAuth() && request.resource.data.createdBy == request.auth.uid;
       allow update, delete: if isAdmin();
     }
 
@@ -382,7 +395,7 @@ service cloud.firestore {
         isOwner(resource.data.projectOwnerId) ||
         isAdmin()
       );
-      allow create: if isAuth();
+      allow create: if isAuth() && request.resource.data.senderId == request.auth.uid;
       allow update: if isAuth() && (
         isOwner(resource.data.senderId) ||
         isAdmin()
@@ -396,7 +409,7 @@ service cloud.firestore {
         isOwner(resource.data.receiverId) ||
         isAdmin()
       );
-      allow create: if isAuth();
+      allow create: if isAuth() && request.resource.data.senderId == request.auth.uid;
       allow update, delete: if isAdmin();
     }
 
@@ -406,7 +419,7 @@ service cloud.firestore {
         isOwner(resource.data.projectOwnerId) ||
         isAdmin()
       );
-      allow create: if isAuth();
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
       allow update: if isAuth() && (
         isOwner(resource.data.userId) || isAdmin()
       );
@@ -419,7 +432,7 @@ service cloud.firestore {
         isOwner(resource.data.projectOwnerId) ||
         isAdmin()
       );
-      allow create: if isAuth();
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
       allow update: if isAuth() && (
         isOwner(resource.data.userId) || isAdmin()
       );
@@ -432,7 +445,7 @@ service cloud.firestore {
         isOwner(resource.data.projectOwnerId) ||
         isAdmin()
       );
-      allow create: if isAuth();
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAuth() && (
         isOwner(resource.data.userId) || isAdmin()
       );
@@ -455,7 +468,7 @@ service cloud.firestore {
         isOwner(resource.data.userId) ||
         isAdmin()
       );
-      allow create: if isAuth();
+      allow create: if isAuth() && request.resource.data.userId is string && request.resource.data.userId.size() > 0;
       allow update: if isAuth() && (
         isOwner(resource.data.userId) ||
         isAdmin()
@@ -470,17 +483,18 @@ service cloud.firestore {
         isOwner(resource.data.employeeId) ||
         isAdmin()
       );
-      allow create: if isAuth();
+      allow create: if isAuth() && request.resource.data.employeeId == request.auth.uid;
       allow update, delete: if isAdmin();
     }
 
     // =================== DISCOUNT REQUESTS ===================
     match /discount_requests/{requestId} {
       allow read: if isAuth() && (
-        isOwner(resource.data.userId) ||
+        isOwner(resource.data.requestedBy) ||
         isAdmin()
       );
-      allow create: if isAuth();
+      // P1.1-FIX: DiscountRequest uses requestedBy, not userId
+      allow create: if isAuth() && request.resource.data.requestedBy == request.auth.uid;
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }
@@ -493,7 +507,7 @@ service cloud.firestore {
         isOwner(resource.data.assignedTo) ||
         isAdmin()
       );
-      allow create: if isAuth();
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
       allow update: if isAuth() && (
         isOwner(resource.data.userId) ||
         isOwner(resource.data.assignedTo) ||
@@ -520,16 +534,20 @@ service cloud.firestore {
     // =================== EXTERNAL SUPPLIERS ===================
     match /external_suppliers/{supplierId} {
       allow read: if isAuth(); // All users can browse suppliers
-      allow write: if isAuth() && (
-        isOwner(resource.data.userId) ||
+      // P1.1-FIX: ExternalSupplier uses createdBy, not userId
+      allow create: if isAuth() && request.resource.data.createdBy == request.auth.uid;
+      allow update, delete: if isAuth() && (
+        isOwner(resource.data.createdBy) ||
         isAdmin()
       );
     }
 
     match /external_prices/{priceId} {
       allow read: if isAuth(); // Price data is browsable
-      allow write: if isAuth() && (
-        isOwner(resource.data.userId) ||
+      // P1.1-FIX: ExternalPrice uses createdBy, not userId
+      allow create: if isAuth() && request.resource.data.createdBy == request.auth.uid;
+      allow update, delete: if isAuth() && (
+        isOwner(resource.data.createdBy) ||
         isAdmin()
       );
     }
@@ -552,7 +570,7 @@ service cloud.firestore {
         isOwner(resource.data.userId) ||
         isAdmin()
       );
-      allow create: if isAuth();
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }
@@ -562,7 +580,7 @@ service cloud.firestore {
         isOwner(resource.data.supplierId) ||
         isAdmin()
       );
-      allow create: if isAuth();
+      allow create: if isAuth() && request.resource.data.supplierId is string && request.resource.data.supplierId.size() > 0;
       allow update, delete: if isAdmin();
     }
 
@@ -598,7 +616,7 @@ service cloud.firestore {
         isOwner(resource.data.userId) ||
         isAdmin()
       );
-      allow create: if isAuth();
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }
@@ -607,7 +625,7 @@ service cloud.firestore {
     // التقييمات — الكاتب أو المورد المعني أو المدير
     match /supplier_reviews/{reviewId} {
       allow read: if isAuth(); // Reviews are public to authenticated users
-      allow create: if isAuth();
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
       allow update: if isAuth() && (
         isOwner(resource.data.userId) ||
         isAdmin()
@@ -620,21 +638,21 @@ service cloud.firestore {
     // Price Time Series — append-only historical price tracking
     match /price_time_series/{entryId} {
       allow read: if isAuth() && (isAdmin() || isEngineer());
-      allow create: if isAuth();
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if false; // Immutable — price history cannot be altered
     }
 
     // Usage Metering — API/token consumption tracking
     match /usage_metering/{entryId} {
       allow read: if isAuth() && (isOwner(resource.data.userId) || isAdmin());
-      allow create: if isAuth();
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if false; // Immutable
     }
 
     // Audit Trail — immutable change log
     match /audit_trail/{entryId} {
       allow read: if isAdmin();
-      allow create: if isAuth();
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if false; // Immutable — compliance requirement
     }
 
@@ -643,14 +661,14 @@ service cloud.firestore {
     // Internal Metadata — brain-only data, NEVER exposed to client UI
     match /internal_metadata/{itemId} {
       allow read: if isAdmin(); // Only admins/system can read
-      allow create, update: if isAuth(); // System stamps metadata on calculations
+      allow create, update: if isAuth() && request.resource.data.userId == request.auth.uid;
       allow delete: if false; // Metadata is preserved for historical analysis
     }
 
     // Sweep History — supplier audit cycle results (append-only)
     match /sweep_history/{sweepId} {
       allow read: if isAuth() && isAdmin();
-      allow create: if isAuth();
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if false; // Immutable audit record
     }
 
@@ -662,7 +680,7 @@ service cloud.firestore {
         isOwner(resource.data.userId) ||
         isAdmin()
       );
-      allow create: if isAuth(); // System creates on plan change
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if false; // Immutable financial record
     }
 
@@ -684,7 +702,7 @@ service cloud.firestore {
         resource.data.clientId == request.auth.uid ||
         isAdmin()
       );
-      allow create: if isAuth(); // Any authenticated client can create RFQ
+      allow create: if isAuth() && request.resource.data.clientId == request.auth.uid;
       allow update: if isAuth() && (
         resource.data.supplierId == request.auth.uid || // Supplier can accept/deliver
         resource.data.clientId == request.auth.uid ||   // Client can complete/rate
@@ -699,7 +717,7 @@ service cloud.firestore {
         resource.data.supplierId == request.auth.uid ||
         isAdmin()
       );
-      allow create: if isAuth();
+      allow create: if isAuth() && request.resource.data.supplierId == request.auth.uid;
       allow update, delete: if false; // Immutable financial record
     }
 
