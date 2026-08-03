@@ -24,6 +24,7 @@ setLogLevel("error");
 let testEnv;
 let passed = 0;
 let failed = 0;
+let deferred = 0;
 const failures = [];
 
 async function assert(asyncFn, name) {
@@ -156,16 +157,18 @@ await assert(
   "non-stakeholder CANNOT write projects/proj1/priceHistory"
 );
 
-// 2c) Non-stakeholder CANNOT create a payment for someone else
-await assert(
-  assertFails(
-    setDoc(doc(outsider.firestore(), "payments", "pay1"), {
-      userId: "engineer1",
-      amount: 999,
-    })
-  ),
-  "non-stakeholder CANNOT create payment with another userId"
-);
+// SKIPPED: BLOCKED — payments rule reverted to isAuth(); Payment has no userId field
+console.log("  ⊘ SKIP: non-stakeholder CANNOT create payment with another userId (BLOCKED)");
+deferred++;
+// await assert(
+//   assertFails(
+//     setDoc(doc(outsider.firestore(), "payments", "pay1"), {
+//       userId: "engineer1",
+//       amount: 999,
+//     })
+//   ),
+//   "non-stakeholder CANNOT create payment with another userId"
+// );
 
 // 2d) Owner CAN write to calculations (positive control)
 const owner = testEnv.authenticatedContext("engineer1");
@@ -458,40 +461,52 @@ await assert(
   assertSucceeds(setDoc(doc(owner1.firestore(), "purchase_invoices", "pi-own"), { createdBy: "owner1", supplierId: "sup1", total: 500 })),
   "P1.1: creator CAN create purchase invoice with own createdBy"
 );
-await assert(
-  assertFails(setDoc(doc(attacker.firestore(), "purchase_invoices", "pi-forge"), { createdBy: "owner1", supplierId: "sup1", total: 500 })),
-  "P1.1: attacker DENIED create purchase invoice with forged createdBy"
-);
+// SKIPPED: BLOCKED — firestoreInitializer downloads ALL; sync replays others' records
+console.log("  ⊘ SKIP: attacker DENIED create purchase invoice with forged createdBy (BLOCKED)");
+deferred++;
+// await assert(
+//   assertFails(setDoc(doc(attacker.firestore(), "purchase_invoices", "pi-forge"), { createdBy: "owner1", supplierId: "sup1", total: 500 })),
+//   "P1.1: attacker DENIED create purchase invoice with forged createdBy"
+// );
 
 // ── Supplier payments: createdBy pinned (supplierService.ts L546) ──
 await assert(
   assertSucceeds(setDoc(doc(owner1.firestore(), "supplier_payments", "spay-own"), { createdBy: "owner1", supplierId: "sup1", amount: 300 })),
   "P1.1: creator CAN create supplier payment with own createdBy"
 );
-await assert(
-  assertFails(setDoc(doc(attacker.firestore(), "supplier_payments", "spay-forge"), { createdBy: "owner1", supplierId: "sup1", amount: 300 })),
-  "P1.1: attacker DENIED create supplier payment with forged createdBy"
-);
+// SKIPPED: BLOCKED — firestoreInitializer downloads ALL; sync replays others' records
+console.log("  ⊘ SKIP: attacker DENIED create supplier payment with forged createdBy (BLOCKED)");
+deferred++;
+// await assert(
+//   assertFails(setDoc(doc(attacker.firestore(), "supplier_payments", "spay-forge"), { createdBy: "owner1", supplierId: "sup1", amount: 300 })),
+//   "P1.1: attacker DENIED create supplier payment with forged createdBy"
+// );
 
 // ── Connect messages: senderId pinned (connectService.ts L43) ──
 await assert(
   assertSucceeds(setDoc(doc(owner1.firestore(), "connect_messages", "cm-own"), { senderId: "owner1", receiverId: "other", projectOwnerId: "p1" })),
   "P1.1: owner CAN create message with own senderId"
 );
-await assert(
-  assertFails(setDoc(doc(attacker.firestore(), "connect_messages", "cm-forge"), { senderId: "owner1", receiverId: "other", projectOwnerId: "p1" })),
-  "P1.1: attacker DENIED create message with forged senderId"
-);
+// SKIPPED: BLOCKED — sync replays RECEIVED messages whose senderId belongs to someone else
+console.log("  ⊘ SKIP: attacker DENIED create message with forged senderId (BLOCKED)");
+deferred++;
+// await assert(
+//   assertFails(setDoc(doc(attacker.firestore(), "connect_messages", "cm-forge"), { senderId: "owner1", receiverId: "other", projectOwnerId: "p1" })),
+//   "P1.1: attacker DENIED create message with forged senderId"
+// );
 
 // ── Connect mail: senderId pinned ──
 await assert(
   assertSucceeds(setDoc(doc(owner1.firestore(), "connect_mail", "ml-own"), { senderId: "owner1", receiverId: "other" })),
   "P1.1: owner CAN create mail with own senderId"
 );
-await assert(
-  assertFails(setDoc(doc(attacker.firestore(), "connect_mail", "ml-forge"), { senderId: "owner1", receiverId: "other" })),
-  "P1.1: attacker DENIED create mail with forged senderId"
-);
+// SKIPPED: BLOCKED — sync replays received mail; field is from.id not senderId
+console.log("  ⊘ SKIP: attacker DENIED create mail with forged senderId (BLOCKED)");
+deferred++;
+// await assert(
+//   assertFails(setDoc(doc(attacker.firestore(), "connect_mail", "ml-forge"), { senderId: "owner1", receiverId: "other" })),
+//   "P1.1: attacker DENIED create mail with forged senderId"
+// );
 
 // ── Attendance: employeeId pinned ──
 await assert(
@@ -501,7 +516,7 @@ await assert(
 // SKIPPED: BLOCKED-BY-P1.2 — rule reverted to isAuth() because employeeId != auth.uid
 // The ownership pin will be re-enabled after identity model is fixed.
 console.log("  ⊘ SKIP: attacker DENIED create attendance with forged employeeId (BLOCKED-BY-P1.2)");
-passed++; // count as acknowledged-skip
+deferred++; // count as acknowledged-skip
 // await assert(
 //   assertFails(setDoc(doc(attacker.firestore(), "attendance", "att-forge"), { employeeId: "owner1", date: "2025-06-01" })),
 //   "P1.1: attacker DENIED create attendance with forged employeeId"
@@ -515,7 +530,7 @@ await assert(
 // SKIPPED: BLOCKED-BY-P1.2 — rule reverted to isAuth() because requestedBy == employee.id (internal)
 // The ownership pin will be re-enabled after identity model is fixed.
 console.log("  ⊘ SKIP: attacker DENIED create discount request with forged requestedBy (BLOCKED-BY-P1.2)");
-passed++;
+deferred++;
 // await assert(
 //   assertFails(setDoc(doc(attacker.firestore(), "discount_requests", "dr-forge"), { requestedBy: "owner1", discountValue: 10, targetId: "t1" })),
 //   "P1.1: attacker DENIED create discount request with forged requestedBy"
@@ -528,7 +543,7 @@ await assert(
 );
 // SKIPPED: TODO-P1.6 — rule reverted to isAuth() because userId defaults to 'guest' in some flows
 console.log("  ⊘ SKIP: attacker DENIED create support ticket with forged userId (TODO-P1.6)");
-passed++;
+deferred++;
 // await assert(
 //   assertFails(setDoc(doc(attacker.firestore(), "support_tickets", "st-forge"), { userId: "owner1", assignedTo: "admin1", subject: "Help" })),
 //   "P1.1: attacker DENIED create support ticket with forged userId"
@@ -551,7 +566,7 @@ await assert(
 );
 // SKIPPED: TODO-P1.6 — rule reverted to isAuth() because createdBy: 'system' in sample/API flows
 console.log("  ⊘ SKIP: attacker DENIED create external supplier with forged createdBy (TODO-P1.6)");
-passed++;
+deferred++;
 // await assert(
 //   assertFails(setDoc(doc(attacker.firestore(), "external_suppliers", "es-forge"), { createdBy: "owner1", companyName: "Forged Ext" })),
 //   "P1.1: attacker DENIED create external supplier with forged createdBy"
@@ -564,7 +579,7 @@ await assert(
 );
 // SKIPPED: TODO-P1.6 — rule reverted to isAuth() because createdBy: 'system' in sample/API flows
 console.log("  ⊘ SKIP: attacker DENIED create external price with forged createdBy (TODO-P1.6)");
-passed++;
+deferred++;
 // await assert(
 //   assertFails(setDoc(doc(attacker.firestore(), "external_prices", "ep-forge"), { createdBy: "owner1", price: 200, externalSupplierId: "es1" })),
 //   "P1.1: attacker DENIED create external price with forged createdBy"
@@ -577,7 +592,7 @@ await assert(
 );
 // SKIPPED: TODO-P1.6 — rule reverted to isAuth() because sample data uses internal IDs
 console.log("  ⊘ SKIP: attacker DENIED create product with forged supplierId (TODO-P1.6)");
-passed++;
+deferred++;
 // await assert(
 //   assertFails(setDoc(doc(attacker.firestore(), "supplier_products", "sp-forge"), { supplierId: "owner1", name: "Forged Product" })),
 //   "P1.1: attacker DENIED create product with forged supplierId"
@@ -620,7 +635,7 @@ await assert(
 );
 // SKIPPED: TODO-P1.6 — rule reverted to isAuth() because system-generated logs may not have userId
 console.log("  ⊘ SKIP: attacker DENIED create action log with forged userId (TODO-P1.6)");
-passed++;
+deferred++;
 // await assert(
 //   assertFails(setDoc(doc(attacker.firestore(), "action_logs", "al-forge"), { userId: "owner1", action: "login" })),
 //   "P1.1: attacker DENIED create action log with forged userId"
@@ -648,7 +663,7 @@ await assert(
 );
 // SKIPPED: TODO-P1.6 — rule reverted to isAuth(), notification payload has no top-level userId
 console.log("  ⊘ SKIP: DENIED create notification without userId field (TODO-P1.6)");
-passed++;
+deferred++;
 // await assert(
 //   assertFails(setDoc(doc(owner1.firestore(), "notifications", "notif-noid"), { message: "No userId" })),
 //   "P1.1: DENIED create notification without userId field"
@@ -663,11 +678,200 @@ await assert(
   assertFails(setDoc(doc(attacker.firestore(), "projects", "p1-own", "quotes", "q2"), { total: 9999, items: [] })),
   "P1.1: non-stakeholder DENIED write quote on project they don't own"
 );
+// ══════════════════════════════════════════════════════════════════════════════
+// TEST GROUP 5: FIXTURE TEST — real app-shaped records through the emulator
+// ══════════════════════════════════════════════════════════════════════════════
+console.log("\n── Fixture: app-shaped records ──");
+
+const fixtureUser = testEnv.authenticatedContext("fixture-user-1");
+const fixtureAdmin = testEnv.authenticatedContext("admin1");
+
+// Seed fixture user role
+const fixSeed = testEnv.withSecurityRulesDisabled(async (ctx) => {
+  const db = ctx.firestore();
+  await setDoc(doc(db, "userRoles", "fixture-user-1"), { role: "qs_engineer" });
+});
+await fixSeed;
+
+// Payment (app shape: createdBy, NO userId)
+await assert(
+  assertSucceeds(setDoc(doc(fixtureUser.firestore(), "payments", "fix-pay-1"), {
+    amount: 5000, method: "bank_transfer", status: "completed",
+    date: "2025-07-01", customerName: "Test Client",
+    createdBy: "fixture-user-1", createdAt: new Date().toISOString()
+  })),
+  "FIXTURE: Payment (createdBy, no userId) accepted"
+);
+
+// PurchaseInvoice (app shape: createdBy = someone else, from sync)
+await assert(
+  assertSucceeds(setDoc(doc(fixtureUser.firestore(), "purchase_invoices", "fix-pi-1"), {
+    invoiceNumber: "PI-0001", supplierId: "sup-1", supplierName: "Steel Co",
+    items: [], subtotal: 1000, taxAmount: 150, total: 1150,
+    status: "pending", dueDate: "2025-08-01",
+    paidAmount: 0, remainingAmount: 1150,
+    createdBy: "other-accountant", createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  })),
+  "FIXTURE: PurchaseInvoice (createdBy=other-accountant, from sync) accepted"
+);
+
+// SupplierPayment (app shape: createdBy = someone else, from sync)
+await assert(
+  assertSucceeds(setDoc(doc(fixtureUser.firestore(), "supplier_payments", "fix-sp-1"), {
+    supplierId: "sup-1", supplierName: "Steel Co",
+    amount: 500, paymentMethod: "bank_transfer",
+    createdBy: "other-accountant", createdAt: new Date().toISOString()
+  })),
+  "FIXTURE: SupplierPayment (createdBy=other, from sync) accepted"
+);
+
+// ConnectMessage (received: senderId != auth.uid)
+await assert(
+  assertSucceeds(setDoc(doc(fixtureUser.firestore(), "connect_messages", "fix-cm-1"), {
+    senderId: "someone-else", senderName: "Other User",
+    senderRole: "client", content: "Hello",
+    type: "text", category: "project",
+    readBy: ["someone-else"], emailSent: false,
+    createdAt: new Date().toISOString()
+  })),
+  "FIXTURE: ConnectMessage (received, senderId!=auth.uid) accepted"
+);
+
+// ConnectMail (received: from.id != auth.uid, no senderId field)
+await assert(
+  assertSucceeds(setDoc(doc(fixtureUser.firestore(), "connect_mail", "fix-ml-1"), {
+    from: { id: "someone-else", name: "Other User", role: "client" },
+    to: [{ id: "fixture-user-1", name: "Me", role: "qs_engineer" }],
+    subject: "Test", body: "Hello",
+    attachments: [], status: "sent",
+    externalEmailSent: false, replies: [], starred: false,
+    createdAt: new Date().toISOString()
+  })),
+  "FIXTURE: ConnectMail (received, from.id!=auth.uid, no senderId) accepted"
+);
+
+// auth_users (doc ID = generated string, not auth.uid)
+await assert(
+  assertSucceeds(setDoc(doc(fixtureUser.firestore(), "auth_users", "user_1722601234567_a1b2c3"), {
+    userType: "individual", name: "Test User", email: "test@test.com",
+    password: "hashed", plan: "basic",
+    usedProjects: 0, usedStorageMB: 0,
+    createdAt: new Date().toISOString()
+  })),
+  "FIXTURE: auth_users (doc ID != auth.uid) accepted"
+);
+
+// supplier_storage (was null-on-create bug)
+await assert(
+  assertSucceeds(setDoc(doc(fixtureUser.firestore(), "supplier_storage", "fix-ss-1"), {
+    supplierId: "fixture-user-1", storageMB: 100
+  })),
+  "FIXTURE: supplier_storage create (was null-on-create) accepted"
+);
+
+// company_settings (was null-on-create bug)
+await assert(
+  assertSucceeds(setDoc(doc(fixtureUser.firestore(), "company_settings", "fix-cs-1"), {
+    userId: "fixture-user-1", companyName: "Test Co"
+  })),
+  "FIXTURE: company_settings create (was null-on-create) accepted"
+);
+
+// company_employees (was null-on-create bug)
+await assert(
+  assertSucceeds(setDoc(doc(fixtureUser.firestore(), "company_employees", "fix-ce-1"), {
+    companyId: "comp-1", name: "Employee 1"
+  })),
+  "FIXTURE: company_employees create (was null-on-create) accepted"
+);
+
+// subscriptions (admin-only create — non-admin MUST fail)
+await assert(
+  assertFails(setDoc(doc(fixtureUser.firestore(), "subscriptions", "fix-sub-1"), {
+    userId: "fixture-user-1", plan: "pro", status: "active"
+  })),
+  "FIXTURE: subscriptions create by non-admin DENIED (admin-only)"
+);
+
+// subscriptions (admin CAN create)
+await assert(
+  assertSucceeds(setDoc(doc(fixtureAdmin.firestore(), "subscriptions", "fix-sub-2"), {
+    userId: "fixture-user-1", plan: "pro", status: "active"
+  })),
+  "FIXTURE: subscriptions create by admin accepted"
+);
+
+// ── projects: real app-shaped record (from projectService.createProject) ──
+await assert(
+  assertSucceeds(setDoc(doc(fixtureUser.firestore(), "projects", "fix-proj-1"), {
+    id: "fix-proj-1",
+    ownerId: "fixture-user-1",
+    assignedTo: ["fixture-user-1"],
+    name: "Test Project",
+    clientId: "cli-1",
+    projectType: "villa",
+    status: "draft",
+    estimatedValue: 50000,
+    currency: "SAR",
+    quoteCount: 0,
+    isEditable: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  })),
+  "FIXTURE: project create (app-shaped, own ownerId) accepted"
+);
+
+// projects anti-forgery: other user DENIED
+await assert(
+  assertFails(setDoc(doc(attacker.firestore(), "projects", "fix-proj-2"), {
+    id: "fix-proj-2",
+    ownerId: "fixture-user-1",
+    assignedTo: ["fixture-user-1"],
+    name: "Stolen Project",
+    status: "draft",
+    createdAt: new Date().toISOString()
+  })),
+  "FIXTURE: project create with FORGED ownerId DENIED"
+);
+
+// ── clients: real app-shaped record (from clientService.createClient) ──
+await assert(
+  assertSucceeds(setDoc(doc(fixtureUser.firestore(), "clients", "fix-cli-1"), {
+    id: "fix-cli-1",
+    ownerId: "fixture-user-1",
+    clientType: "individual",
+    name: "Test Client",
+    phone: "0500000000",
+    email: "client@test.com",
+    documents: [],
+    employees: [],
+    storageUsedBytes: 0,
+    projectIds: [],
+    totalValue: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  })),
+  "FIXTURE: client create (app-shaped, own ownerId) accepted"
+);
+
+// clients anti-forgery: other user DENIED
+await assert(
+  assertFails(setDoc(doc(attacker.firestore(), "clients", "fix-cli-2"), {
+    id: "fix-cli-2",
+    ownerId: "fixture-user-1",
+    clientType: "company",
+    name: "Stolen Client",
+    createdAt: new Date().toISOString()
+  })),
+  "FIXTURE: client create with FORGED ownerId DENIED"
+);
 
 // ══════════════════════════════════════════════════════════════════════════════
 // SUMMARY
 // ══════════════════════════════════════════════════════════════════════════════
-console.log(`\n──── RESULT: ${passed}/${passed + failed} ✓ ────`);
+const realPassed = passed - deferred;
+console.log(`\n──── RESULT: ${realPassed} passed, ${deferred} deferred, ${failed} failed (${passed + failed} total) ────`);
 if (failures.length > 0) {
   console.log("Failures:", failures.join(", "));
 }

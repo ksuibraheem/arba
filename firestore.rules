@@ -190,8 +190,8 @@ service cloud.firestore {
         isOwner(resource.data.userId) ||
         isAdmin()
       ) && !isSuperAdmin();
-      // SECURITY FIX: only the payment owner can create their own payment record
-      allow create: if isAuth() && request.auth.uid == request.resource.data.userId;
+      // BLOCKED: Payment has createdBy not userId; sync replays others' records
+      allow create: if isAuth();
       allow update: if isAdmin(); // Only admin/accountant can approve
       allow delete: if false;
     }
@@ -368,8 +368,8 @@ service cloud.firestore {
         isOwner(resource.data.supplierId) ||
         isAdmin()
       );
-      // P1.1-FIX: PurchaseInvoice has createdBy (accountant), supplierId (supplier)
-      allow create: if isAuth() && request.resource.data.createdBy == request.auth.uid;
+      // BLOCKED: firestoreInitializer downloads ALL purchase_invoices; sync replays others' records
+      allow create: if isAuth();
       allow update: if isAuth() && (
         isOwner(resource.data.createdBy) ||
         isAdmin()
@@ -383,8 +383,8 @@ service cloud.firestore {
         isOwner(resource.data.supplierId) ||
         isAdmin()
       );
-      // P1.1-FIX: SupplierPayment has createdBy (accountant), supplierId
-      allow create: if isAuth() && request.resource.data.createdBy == request.auth.uid;
+      // BLOCKED: firestoreInitializer downloads ALL supplier_payments; sync replays others' records
+      allow create: if isAuth();
       allow update, delete: if isAdmin();
     }
 
@@ -397,7 +397,8 @@ service cloud.firestore {
         isOwner(resource.data.projectOwnerId) ||
         isAdmin()
       );
-      allow create: if isAuth() && request.resource.data.senderId == request.auth.uid;
+      // BLOCKED: sync replays RECEIVED messages whose senderId belongs to someone else
+      allow create: if isAuth();
       allow update: if isAuth() && (
         isOwner(resource.data.senderId) ||
         isAdmin()
@@ -411,7 +412,8 @@ service cloud.firestore {
         isOwner(resource.data.receiverId) ||
         isAdmin()
       );
-      allow create: if isAuth() && request.resource.data.senderId == request.auth.uid;
+      // BLOCKED: sync replays received mail; field is from.id not senderId
+      allow create: if isAuth();
       allow update, delete: if isAdmin();
     }
 
@@ -531,7 +533,8 @@ service cloud.firestore {
         request.auth.uid == userId ||
         isAdmin()
       );
-      allow create: if isAuth() && request.auth.uid == userId;
+      // BLOCKED: doc ID = user_${timestamp}_xxx (not auth.uid); sync would always fail
+      allow create: if isAuth();
       allow update: if isAuth() && (
         request.auth.uid == userId ||
         isAdmin()
@@ -566,7 +569,9 @@ service cloud.firestore {
         isOwner(resource.data.supplierId) ||
         isAdmin()
       );
-      allow write: if isAuth() && (
+      // FIX: resource.data is null on create — split write into create + update/delete
+      allow create: if isAuth();
+      allow update, delete: if isAuth() && (
         isOwner(resource.data.supplierId) ||
         isAdmin()
       );
@@ -602,7 +607,9 @@ service cloud.firestore {
         isOwner(resource.data.companyId) ||
         isAdmin()
       );
-      allow write: if isAuth() && (
+      // FIX: resource.data is null on create — split write into create + update/delete
+      allow create: if isAuth();
+      allow update, delete: if isAuth() && (
         isOwner(resource.data.userId) ||
         isAdmin()
       );
@@ -614,7 +621,9 @@ service cloud.firestore {
         request.auth.uid == empId ||
         isAdmin()
       );
-      allow write: if isAuth() && (
+      // FIX: resource.data is null on create — split write into create + update/delete
+      allow create: if isAuth();
+      allow update, delete: if isAuth() && (
         isOwner(resource.data.companyId) ||
         isAdmin()
       );
