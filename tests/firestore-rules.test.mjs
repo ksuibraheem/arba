@@ -802,6 +802,71 @@ await assert(
   "FIXTURE: subscriptions create by admin accepted"
 );
 
+// ── projects: real app-shaped record (from projectService.createProject) ──
+await assert(
+  assertSucceeds(setDoc(doc(fixtureUser.firestore(), "projects", "fix-proj-1"), {
+    id: "fix-proj-1",
+    ownerId: "fixture-user-1",
+    assignedTo: ["fixture-user-1"],
+    name: "Test Project",
+    clientId: "cli-1",
+    projectType: "villa",
+    status: "draft",
+    estimatedValue: 50000,
+    currency: "SAR",
+    quoteCount: 0,
+    isEditable: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  })),
+  "FIXTURE: project create (app-shaped, own ownerId) accepted"
+);
+
+// projects anti-forgery: other user DENIED
+await assert(
+  assertFails(setDoc(doc(attacker.firestore(), "projects", "fix-proj-2"), {
+    id: "fix-proj-2",
+    ownerId: "fixture-user-1",
+    assignedTo: ["fixture-user-1"],
+    name: "Stolen Project",
+    status: "draft",
+    createdAt: new Date().toISOString()
+  })),
+  "FIXTURE: project create with FORGED ownerId DENIED"
+);
+
+// ── clients: real app-shaped record (from clientService.createClient) ──
+await assert(
+  assertSucceeds(setDoc(doc(fixtureUser.firestore(), "clients", "fix-cli-1"), {
+    id: "fix-cli-1",
+    ownerId: "fixture-user-1",
+    clientType: "individual",
+    name: "Test Client",
+    phone: "0500000000",
+    email: "client@test.com",
+    documents: [],
+    employees: [],
+    storageUsedBytes: 0,
+    projectIds: [],
+    totalValue: 0,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  })),
+  "FIXTURE: client create (app-shaped, own ownerId) accepted"
+);
+
+// clients anti-forgery: other user DENIED
+await assert(
+  assertFails(setDoc(doc(attacker.firestore(), "clients", "fix-cli-2"), {
+    id: "fix-cli-2",
+    ownerId: "fixture-user-1",
+    clientType: "company",
+    name: "Stolen Client",
+    createdAt: new Date().toISOString()
+  })),
+  "FIXTURE: client create with FORGED ownerId DENIED"
+);
+
 // ══════════════════════════════════════════════════════════════════════════════
 // SUMMARY
 // ══════════════════════════════════════════════════════════════════════════════
