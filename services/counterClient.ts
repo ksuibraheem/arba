@@ -33,8 +33,10 @@ export async function getNextNumber(type: CounterType): Promise<string> {
     const fn = httpsCallable(functions, 'getNextNumber');
     const result = await fn({ type });
     return (result.data as { number: string }).number;
-  } catch {
-    // Offline/unavailable: use local provisional counter
+  } catch (err) {
+    // LOUD FALLBACK: log the real reason so region mismatches / auth errors
+    // are visible in production, not silently swallowed.
+    console.error('❌ Cloud counter failed — falling back to PROV-', err);
     return getProvisionalNumber(type);
   }
 }
