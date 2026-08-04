@@ -693,68 +693,77 @@ const App: React.FC = () => {
                 // جلب بيانات المدير المحدّثة بعد التحميل من Firestore
                 const mgr = getManagerCredentials();
 
-                // دالة مساعدة للمصادقة بالـ Custom Token
-                const authSignIn = async (customToken?: string) => {
+                // دالة مساعدة للمصادقة بالـ Custom Token — returns auth.uid
+                const authSignIn = async (customToken?: string): Promise<string | null> => {
                     if (customToken) {
                         try {
                             const { getAuth, signInWithCustomToken } = await import('firebase/auth');
                             const auth = getAuth();
-                            await signInWithCustomToken(auth, customToken);
-                            console.log('🛡️ Security Shield: Authenticated session via custom token');
+                            const cred = await signInWithCustomToken(auth, customToken);
+                            console.log('🛡️ Security Shield: Authenticated session via custom token, uid:', cred.user.uid);
+                            return cred.user.uid;
                         } catch (authErr) {
-                            console.error('Error signing in with custom token:', authErr);
+                            console.error('🔴 CRITICAL: signInWithCustomToken FAILED:', authErr);
+                            return null;
                         }
                     }
+                    return null;
                 };
 
                 // التحقق إذا كان المدير
                 if ('role' in result.employee && result.employee.role === 'manager') {
                     // المدير
                     await handleSuccess(async () => {
+                        const authUid = await authSignIn(result.customToken);
+                        if (!authUid) console.error('🔴 Manager login: no auth.uid — Firestore writes will fail');
                         setIsManager(true);
                         setCurrentEmployee(null);
                         setUser({
+                            uid: authUid || undefined,
                             name: mgr.name,
                             email: 'manager@arba-sys.com',
                             plan: 'enterprise',
                             usedProjects: 0,
                             usedStorageMB: 0
                         });
-                        setRoleData('manager', mgr.name, 'manager@arba-sys.com').catch(console.error);
-                        await authSignIn(result.customToken);
+                        setRoleData(authUid || 'manager', mgr.name, 'manager@arba-sys.com').catch(console.error);
                         setCurrentPage('manager');
                     });
                 } else if ('employeeNumber' in result.employee && result.employee.employeeNumber === mgr.employeeNumber) {
                     // المدير (من بيانات الدخول الثابتة)
                     await handleSuccess(async () => {
+                        const authUid = await authSignIn(result.customToken);
+                        if (!authUid) console.error('🔴 Manager login (static): no auth.uid — Firestore writes will fail');
                         setIsManager(true);
                         setCurrentEmployee(null);
                         setUser({
+                            uid: authUid || undefined,
                             name: mgr.name,
                             email: 'manager@arba-sys.com',
                             plan: 'enterprise',
                             usedProjects: 0,
                             usedStorageMB: 0
                         });
-                        setRoleData('manager', mgr.name, 'manager@arba-sys.com').catch(console.error);
-                        await authSignIn(result.customToken);
+                        setRoleData(authUid || 'manager', mgr.name, 'manager@arba-sys.com').catch(console.error);
                         setCurrentPage('manager');
                     });
                 } else {
                     // موظف عادي
                     const emp = result.employee as Employee;
                     await handleSuccess(async () => {
+                        const authUid = await authSignIn(result.customToken);
+                        if (!authUid) console.error('🔴 Employee login: no auth.uid — Firestore writes will fail');
                         setIsManager(false);
                         setCurrentEmployee(emp);
                         setUser({
+                            uid: authUid || undefined,
                             name: emp.name,
                             email: emp.email,
                             plan: 'enterprise',
                             usedProjects: 0,
                             usedStorageMB: 0
                         });
-                        setRoleData(emp.id || emp.employeeNumber, emp.name, emp.email).catch(console.error);
-                        await authSignIn(result.customToken);
+                        setRoleData(authUid || emp.id || emp.employeeNumber, emp.name, emp.email).catch(console.error);
                         setCurrentPage('employee');
                     });
                 }
@@ -1315,7 +1324,7 @@ const App: React.FC = () => {
                 requiresVision: false,
                 requiresNLP: true,
                 complexity: 0.5,
-                userId: user?.uid || 'anonymous',
+                userId: (() => { if (!user?.uid) console.error('🔴 budgetGuardian.shouldUseGemini: user.uid is missing'); return user?.uid || 'anonymous'; })(),
             });
             if (!budgetCheck.approved) {
                 return language === 'ar'
@@ -1348,7 +1357,7 @@ const App: React.FC = () => {
                 requiresVision: false,
                 requiresNLP: true,
                 complexity: 0.5,
-                userId: user?.uid || 'anonymous',
+                userId: (() => { if (!user?.uid) console.error('🔴 budgetGuardian.recordUsage: user.uid is missing'); return user?.uid || 'anonymous'; })(),
             }, 500);
 
             return response.text || "لم يتم استلام رد";
@@ -1672,7 +1681,7 @@ const App: React.FC = () => {
             <SupportCenterPage
                 language={language}
                 onNavigate={handleNavigate}
-                userId={user?.email || 'guest'}
+                userId={(() => { if (!user?.uid) console.error('🔴 SupportCenterPage: user.uid is missing'); return user?.uid || 'NO_UID'; })()}
                 userName={user?.name}
                 userEmail={user?.email}
                 userType={user ? 'individual' : 'guest'}
@@ -1895,7 +1904,7 @@ const App: React.FC = () => {
                     setCurrentPage('landing');
                 }}
                 isTestMode={user.plan === 'network'}
-                supplierId={user.uid || user.email}
+                supplierId={(() => { if (!user.uid) console.error('🔴 SupplierDashboard: user.uid is missing — Firestore writes will fail'); return user.uid || 'NO_UID'; })()}
             />
         );
     }
@@ -2166,7 +2175,7 @@ const App: React.FC = () => {
                         setCurrentPage('pricing-calc');
                     }}
                     onLogout={handleLogout}
-                    userId={user?.uid || user?.email || 'demo'}
+                    userId={(() => { if (!user?.uid) console.error('🔴 SaaSDashboard: user.uid is missing'); return user?.uid || 'NO_UID'; })()}
                     userName={user?.name || 'Demo'}
                     isDemoMode={isDemoMode}
                 />
@@ -2220,7 +2229,7 @@ const App: React.FC = () => {
                         setCurrentPage('pricing-calc');
                     }}
                     onLogout={handleLogout}
-                    userId={user?.uid || user?.email || 'demo'}
+                    userId={(() => { if (!user?.uid) console.error('🔴 SaaSDashboard (zone): user.uid is missing'); return user?.uid || 'NO_UID'; })()}
                     userName={user?.name || 'Demo'}
                     isDemoMode={isDemoMode}
                 />
@@ -2251,7 +2260,7 @@ const App: React.FC = () => {
                 language={language}
                 onNavigate={handleNavigate}
                 onLogout={handleLogout}
-                userId={user?.uid || user?.email || 'guest'}
+                userId={(() => { if (!user?.uid) console.error('🔴 PrivatePortal: user.uid is missing'); return user?.uid || 'NO_UID'; })()}
                 userName={user?.name || 'Guest'}
                 isDemoMode={isDemoMode}
             />
