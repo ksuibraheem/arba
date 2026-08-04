@@ -31,7 +31,7 @@ type ViewMode = 'home' | 'new_ticket' | 'my_tickets' | 'track_ticket' | 'ticket_
 const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
     language,
     onNavigate,
-    userId = 'guest',
+    userId,
     userName = '',
     userEmail = '',
     userType = 'guest' as UserType
@@ -121,7 +121,7 @@ const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
     // Load demo data and user tickets
     useEffect(() => {
         supportTicketService.initializeDemoData();
-        if (userId !== 'guest') {
+        if (userId) {
             setMyTickets(supportTicketService.getUserTickets(userId));
         }
     }, [userId]);
@@ -147,7 +147,7 @@ const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
 
         try {
             const newTicket = supportTicketService.createTicket({
-                userId: userId,
+                userId: userId || 'anonymous',
                 userType: userType,
                 userName: ticketForm.name,
                 userEmail: ticketForm.email,
@@ -175,7 +175,7 @@ const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
             setTicketFiles([]);
 
             // Refresh my tickets
-            if (userId !== 'guest') {
+            if (userId) {
                 setMyTickets(supportTicketService.getUserTickets(userId));
             }
         } catch (error: any) {
@@ -207,7 +207,7 @@ const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
         if (!selectedTicket || (!responseMessage.trim() && responseFiles.length === 0)) return;
 
         const updatedTicket = supportTicketService.addResponse(selectedTicket.id, {
-            responderId: userId,
+            responderId: userId || 'anonymous',
             responderName: userName || ticketForm.name || t('زائر', 'Guest'),
             responderRole: 'user',
             message: responseMessage,
@@ -393,7 +393,7 @@ const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
             </div>
 
             {/* My Tickets (if logged in) */}
-            {userId !== 'guest' && myTickets.length > 0 && (
+            {userId && myTickets.length > 0 && (
                 <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-slate-700/50">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-bold text-white flex items-center gap-2">
@@ -859,7 +859,7 @@ const SupportCenterPage: React.FC<SupportCenterPageProps> = ({
                                 onClick={() => {
                                     if (viewMode === 'ticket_detail' && selectedTicket) {
                                         // Check if we came from my tickets or tracking
-                                        if (userId !== 'guest') {
+                                        if (userId) {
                                             setViewMode('my_tickets');
                                         } else {
                                             setViewMode('track_ticket');

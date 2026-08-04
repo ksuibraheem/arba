@@ -1681,7 +1681,7 @@ const App: React.FC = () => {
             <SupportCenterPage
                 language={language}
                 onNavigate={handleNavigate}
-                userId={(() => { if (!user?.uid) console.error('🔴 SupportCenterPage: user.uid is missing'); return user?.uid || 'NO_UID'; })()}
+                userId={user?.uid}
                 userName={user?.name}
                 userEmail={user?.email}
                 userType={user ? 'individual' : 'guest'}
