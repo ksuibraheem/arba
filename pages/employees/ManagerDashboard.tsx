@@ -61,13 +61,13 @@ const ManagerSettingsTab: React.FC<ManagerSettingsTabProps> = ({ language, t, on
     const [isEditing, setIsEditing] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [editForm, setEditForm] = useState({
-        employeeNumber: managerCreds.employeeNumber,
-        password: managerCreds.password
+        employeeNumber: managerCreds?.employeeNumber || '',
+        password: ''  // Never pre-fill password — hashed values are not displayable
     });
     const [saveSuccess, setSaveSuccess] = useState(false);
     const [saveError, setSaveError] = useState('');
 
-    const handleSave = () => {
+    const handleSave = async () => {
         setSaveError('');
         setSaveSuccess(false);
 
@@ -81,21 +81,26 @@ const ManagerSettingsTab: React.FC<ManagerSettingsTabProps> = ({ language, t, on
             return;
         }
 
-        // Update credentials
-        const updated = updateManagerCredentials({
-            employeeNumber: editForm.employeeNumber,
-            password: editForm.password
-        });
-        setManagerCreds(updated);
-        setIsEditing(false);
-        setSaveSuccess(true);
-        setTimeout(() => setSaveSuccess(false), 3000);
+        try {
+            // updateManagerCredentials hashes the password automatically
+            const updated = await updateManagerCredentials({
+                employeeNumber: editForm.employeeNumber,
+                password: editForm.password
+            });
+            setManagerCreds(updated);
+            setEditForm({ ...editForm, password: '' }); // Clear password field after save
+            setIsEditing(false);
+            setSaveSuccess(true);
+            setTimeout(() => setSaveSuccess(false), 3000);
+        } catch (err: any) {
+            setSaveError(err.message || t('حدث خطأ أثناء الحفظ', 'Error saving'));
+        }
     };
 
     const handleCancel = () => {
         setEditForm({
-            employeeNumber: managerCreds.employeeNumber,
-            password: managerCreds.password
+            employeeNumber: managerCreds?.employeeNumber || '',
+            password: ''  // Don't pre-fill password
         });
         setIsEditing(false);
         setSaveError('');
@@ -198,20 +203,15 @@ const ManagerSettingsTab: React.FC<ManagerSettingsTabProps> = ({ language, t, on
                             <div className="grid grid-cols-2 gap-4 text-sm">
                                 <div>
                                     <p className="text-slate-500">{t('رقم الموظف', 'Employee #')}</p>
-                                    <p className="text-white font-mono text-lg">{managerCreds.employeeNumber}</p>
+                                    <p className="text-white font-mono text-lg">{managerCreds?.employeeNumber || '—'}</p>
                                 </div>
                                 <div>
                                     <p className="text-slate-500">{t('الرقم السري', 'Password')}</p>
                                     <div className="flex items-center gap-2">
                                         <p className="text-white font-mono text-lg">
-                                            {showPassword ? managerCreds.password : '••••••••'}
+                                            ••••••••
                                         </p>
-                                        <button
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            className="p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-white"
-                                        >
-                                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                        </button>
+                                        <span className="text-xs text-slate-500">{t('مشفّر', 'Hashed')}</span>
                                     </div>
                                 </div>
                             </div>
@@ -514,7 +514,7 @@ const ManagerDashboard: React.FC<ManagerDashboardProps> = ({ language, onLogout,
                         </div>
                         <div>
                             <h1 className="text-lg font-bold text-white tracking-tight">{t('لوحة تحكم المدير', 'Manager Dashboard')}</h1>
-                            <p className="text-slate-500 text-xs font-medium">{MANAGER_CREDENTIALS.name} • {t('مدير عام', 'General Manager')}</p>
+                            <p className="text-slate-500 text-xs font-medium">{MANAGER_CREDENTIALS?.name || 'المدير العام'} • {t('مدير عام', 'General Manager')}</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
