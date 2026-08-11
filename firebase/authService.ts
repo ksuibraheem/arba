@@ -377,35 +377,13 @@ export const resetPasswordWithFirebase = async (email: string): Promise<AuthResu
         );
         return { success: true };
     } catch (error: any) {
-        console.error('Password reset error:', error);
-        
-        // If user not found in Firebase Auth, try local auth service
-        if (error.code === 'auth/user-not-found') {
-            try {
-                const { findUserByEmail, resetPassword } = await import('../services/authService');
-                const localUser = findUserByEmail(email);
-                if (localUser) {
-                    const tempPassword = Math.random().toString(36).slice(-8) + 'A1!';
-                    await resetPassword(email, tempPassword);
-                    return {
-                        success: true,
-                        error: `تم إعادة تعيين كلمة المرور مؤقتاً إلى: ${tempPassword}`
-                    };
-                }
-            } catch (localErr) {
-                console.warn('Local auth fallback failed:', localErr);
-            }
-        }
-        
-        let errorMessage = 'حدث خطأ أثناء إرسال رابط الاستعادة';
-        if (error.code === 'auth/user-not-found') {
-            errorMessage = 'البريد الإلكتروني غير مسجل';
-        } else if (error.code === 'auth/invalid-email') {
-            errorMessage = 'البريد الإلكتروني غير صالح';
-        } else if (error.message && !error.code) {
-            errorMessage = error.message;
-        }
-        return { success: false, error: errorMessage, errorCode: error.code || 'timeout' };
+        // Log real error for debugging — NEVER expose to UI
+        console.warn('[PasswordReset] error code:', error.code || 'timeout', '— returning success to prevent email enumeration');
+
+        // Always return success: true — never reveal whether the email exists.
+        // auth/user-not-found, auth/invalid-email, auth/too-many-requests, timeout
+        // all produce the same response to the caller.
+        return { success: true };
     }
 };
 

@@ -37,13 +37,12 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ language, onNavig
         setError('');
 
         try {
-            const result = await resetPasswordWithFirebase(email);
-            if (result.success) {
-                setStep('sent');
-            } else {
-                setError(result.error || (t('حدث خطأ', 'An error occurred')));
-            }
+            await resetPasswordWithFirebase(email);
+            // Always show 'sent' state — resetPasswordWithFirebase returns success
+            // for ALL outcomes to prevent email enumeration.
+            setStep('sent');
         } catch (err) {
+            console.error('[PasswordResetPage] unexpected error:', err);
             setError(t('حدث خطأ غير متوقع. يرجى المحاولة لاحقاً.', 'An unexpected error occurred. Please try later.'));
         } finally {
             setIsLoading(false);
@@ -55,12 +54,10 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ language, onNavig
         setIsLoading(true);
         setError('');
         try {
-            const result = await resetPasswordWithFirebase(email);
-            if (!result.success) {
-                setError(result.error || '');
-            }
-        } catch {
-            // Silently fail
+            await resetPasswordWithFirebase(email);
+        } catch (err) {
+            console.error('[PasswordResetPage] resend error:', err);
+            setError(t('حدث خطأ أثناء إعادة الإرسال. يرجى المحاولة لاحقاً.', 'Failed to resend. Please try again later.'));
         } finally {
             setIsLoading(false);
         }
@@ -92,8 +89,8 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ language, onNavig
                             </h2>
                             <p className="text-slate-500 mb-4">
                                 {language === 'ar'
-                                    ? 'تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني. افتح الرابط لإعادة تعيين كلمة المرور.'
-                                    : 'A password reset link has been sent to your email. Open the link to reset your password.'}
+                                    ? 'إن كان البريد مسجلاً لدينا فستصلك رسالة استعادة. افتح الرابط لإعادة تعيين كلمة المرور.'
+                                    : 'If this email is registered with us, you will receive a reset link. Open it to reset your password.'}
                             </p>
                             <div className="mb-6">
                                 <span className="inline-block px-4 py-2 bg-slate-100 rounded-xl text-sm font-medium text-slate-700" dir="ltr">
@@ -188,6 +185,16 @@ const PasswordResetPage: React.FC<PasswordResetPageProps> = ({ language, onNavig
                             </button>
                         </>
                     )}
+                </div>
+
+                {/* Support Contact */}
+                <div className="mt-4 text-center text-sm text-slate-400">
+                    {language === 'ar'
+                        ? 'للمساعدة تواصل مع '
+                        : 'Need help? Contact '}
+                    <a href="mailto:info@arba-sys.com" className="text-green-400 hover:text-green-300 transition-colors" dir="ltr">
+                        info@arba-sys.com
+                    </a>
                 </div>
 
                 {/* Back to Login */}
