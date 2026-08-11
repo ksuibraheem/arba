@@ -208,38 +208,64 @@ export const ROLE_COLORS: Record<EmployeeRole, string> = {
     quantity_surveyor: 'from-sky-500 to-blue-600',
 };
 
-// Manager credentials — stored in localStorage + Firestore for persistence
-const DEFAULT_MANAGER_CREDENTIALS = {
-    name: 'المدير العام',
-    employeeNumber: '2201187',
-    password: 'Aa0591529339',
-};
+// Manager credentials type — NO hardcoded secrets.
+// Credentials live in Firestore (arba_config/manager_credentials) + localStorage cache.
+export interface ManagerCredentials {
+    name: string;
+    employeeNumber: string;
+    passwordHash: string;  // SHA-256 hash — never store plaintext
+    password?: string;     // DEPRECATED — only for reading legacy data, never written
+}
 
 const FIRESTORE_EMPLOYEES_DOC = 'arba_config/employees_data';
 const FIRESTORE_MANAGER_DOC = 'arba_config/manager_credentials';
 
-export const MANAGER_CREDENTIALS = (() => {
+// Live in-memory cache — populated by loadManagerCredentialsFromFirestore() or localStorage
+export let MANAGER_CREDENTIALS: ManagerCredentials | null = (() => {
     try {
         const stored = localStorage.getItem('arba_manager_credentials');
-        if (stored) return { ...DEFAULT_MANAGER_CREDENTIALS, ...JSON.parse(stored) };
+        if (stored) return JSON.parse(stored) as ManagerCredentials;
     } catch { /* ignore */ }
-    return { ...DEFAULT_MANAGER_CREDENTIALS };
+    return null;
 })();
 
-export function getManagerCredentials() {
+/**
+ * بيانات المدير — FAIL CLOSED: إذا لم تُوجد بيانات مخزنة، يُرجع null.
+ * لا يوجد fallback مدمج. بيانات مفقودة = تسجيل دخول مرفوض.
+ */
+export function getManagerCredentials(): ManagerCredentials | null {
     try {
         const stored = localStorage.getItem('arba_manager_credentials');
-        if (stored) return { ...DEFAULT_MANAGER_CREDENTIALS, ...JSON.parse(stored) };
+        if (stored) {
+            const parsed = JSON.parse(stored) as ManagerCredentials;
+            // Must have at minimum name + employeeNumber + (passwordHash or legacy password)
+            if (parsed.name && parsed.employeeNumber && (parsed.passwordHash || parsed.password)) {
+                return parsed;
+            }
+        }
     } catch { /* ignore */ }
-    return { ...DEFAULT_MANAGER_CREDENTIALS };
+    return null;
 }
 
-export function updateManagerCredentials(updates: Partial<typeof DEFAULT_MANAGER_CREDENTIALS>) {
+/**
+ * تحديث بيانات المدير — يخزّن الهاش فقط، لا كلمة المرور الخام.
+ * إذا مُرر `password`، يُحوّل إلى `passwordHash` ويُحذف النص الخام.
+ */
+export async function updateManagerCredentials(updates: Partial<ManagerCredentials>): Promise<ManagerCredentials> {
     const current = getManagerCredentials();
-    const updated = { ...current, ...updates };
+    if (!current) throw new Error('لا توجد بيانات مدير محفوظة. يرجى تسجيل الدخول أولاً.');
+
+    // If plaintext password provided, hash it and remove plaintext
+    if (updates.password) {
+        updates.passwordHash = await hashPassword(updates.password);
+        delete updates.password;
+    }
+
+    const updated: ManagerCredentials = { ...current, ...updates };
+    delete updated.password; // Never persist plaintext
+
     localStorage.setItem('arba_manager_credentials', JSON.stringify(updated));
-    // Update the live object
-    Object.assign(MANAGER_CREDENTIALS, updated);
+    MANAGER_CREDENTIALS = updated;
     // Sync to Firestore (fire-and-forget)
     syncManagerCredentialsToFirestore(updated).catch(console.error);
     return updated;
@@ -249,14 +275,16 @@ export function updateManagerCredentials(updates: Partial<typeof DEFAULT_MANAGER
 
 /**
  * مزامنة بيانات المدير مع Firestore (ما بعد التحديث)
+ * يحذف أي حقل password خام قبل الإرسال.
  */
-async function syncManagerCredentialsToFirestore(creds: typeof DEFAULT_MANAGER_CREDENTIALS) {
+async function syncManagerCredentialsToFirestore(creds: ManagerCredentials) {
     try {
+        const toSync = { ...creds };
+        delete toSync.password; // Never sync plaintext
         await setDoc(doc(db, FIRESTORE_MANAGER_DOC.split('/')[0], FIRESTORE_MANAGER_DOC.split('/')[1]), {
-            ...creds,
+            ...toSync,
             updatedAt: serverTimestamp(),
         }, { merge: true });
-
     } catch (error) {
         console.warn('⚠️ Failed to sync manager credentials to Firestore:', error);
     }
@@ -264,20 +292,31 @@ async function syncManagerCredentialsToFirestore(creds: typeof DEFAULT_MANAGER_C
 
 /**
  * جلب بيانات المدير من Firestore (عند أول تحميل)
+ * FAIL CLOSED: إذا لم تُوجد وثيقة Firestore ولا localStorage → يُرجع null.
  */
-export async function loadManagerCredentialsFromFirestore(): Promise<typeof DEFAULT_MANAGER_CREDENTIALS> {
+export async function loadManagerCredentialsFromFirestore(): Promise<ManagerCredentials | null> {
     try {
         const docSnap = await getDoc(doc(db, FIRESTORE_MANAGER_DOC.split('/')[0], FIRESTORE_MANAGER_DOC.split('/')[1]));
         if (docSnap.exists()) {
-            const data = docSnap.data();
-            const merged = { ...DEFAULT_MANAGER_CREDENTIALS, ...data };
-            localStorage.setItem('arba_manager_credentials', JSON.stringify(merged));
-            Object.assign(MANAGER_CREDENTIALS, merged);
-
-            return merged as typeof DEFAULT_MANAGER_CREDENTIALS;
+            const data = docSnap.data() as Partial<ManagerCredentials>;
+            // If Firestore has a legacy plaintext password, hash it on load
+            if (data.password && !data.passwordHash) {
+                data.passwordHash = await hashPassword(data.password);
+                delete data.password;
+            }
+            const creds: ManagerCredentials = {
+                name: data.name || 'المدير العام',
+                employeeNumber: data.employeeNumber || '',
+                passwordHash: data.passwordHash || '',
+            };
+            if (creds.employeeNumber && creds.passwordHash) {
+                localStorage.setItem('arba_manager_credentials', JSON.stringify(creds));
+                MANAGER_CREDENTIALS = creds;
+                return creds;
+            }
         }
     } catch (error) {
-        console.warn('⚠️ Failed to load manager credentials from Firestore, using local:', error);
+        console.warn('⚠️ Failed to load manager credentials from Firestore:', error);
     }
     return getManagerCredentials();
 }
@@ -520,61 +559,9 @@ export const employeeService = {
             
             console.warn('🔒 loginAsync error details:', { code: errorCode, message: errorMessage, online: navigator.onLine });
 
-            // 1. Manager local validation bypass (Always allow manager fallback if credentials match)
-            const mgr = getManagerCredentials();
-            const isManagerNum = employeeNumberOrEmail === mgr.employeeNumber || employeeNumberOrEmail === 'manager@arba-sys.com';
-            const isManagerPass = password === mgr.password;
-
-            if (isManagerNum && isManagerPass) {
-                console.warn('⚠️ Cloud function failed. Logging in with local manager credentials fallback.');
-                const employeeObj = {
-                    name: mgr.name,
-                    employeeNumber: mgr.employeeNumber,
-                    role: 'manager',
-                    isActive: true
-                };
-                return { success: true, employee: employeeObj };
-            }
-
-            // Check if explicitly offline first
-            if (!navigator.onLine) {
-                console.warn('⚠️ Device is offline, attempting offline login fallback');
-                return this.login(employeeNumberOrEmail, password);
-            }
-
-            // Check for network-related error codes/messages
-            const isNetworkError = 
-                errorCode === 'NETWORK_TIMEOUT' ||
-                fullError.includes('unavailable') ||
-                fullError.includes('deadline-exceeded') ||
-                fullError.includes('failed to fetch') ||
-                fullError.includes('econnreset') ||
-                fullError.includes('network request failed') ||
-                fullError.includes('net::err');
-
-            if (isNetworkError) {
-                console.warn('⚠️ Network error detected, attempting offline login fallback:', fullError);
-                return this.login(employeeNumberOrEmail, password);
-            }
-
-            // For local development on localhost, allow fallback for all local employees
-            const isDevHost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-            if (isDevHost || fullError.includes('internal') || fullError.includes('not-found')) {
-                console.warn('⚠️ Dev environment / server error detected, attempting local DB fallback');
-                
-                // Check sample/local database directly
-                const employees = getStoredEmployees();
-                const inputPasswordHash = await hashPassword(password);
-                const emp = employees.find(
-                    e => (e.employeeNumber === employeeNumberOrEmail || e.email === employeeNumberOrEmail)
-                        && (e.passwordHash === inputPasswordHash || e.password === password)
-                        && e.isActive
-                );
-                if (emp) {
-                    console.warn('⚠️ Logged in using local employee database account.');
-                    return { success: true, employee: emp };
-                }
-            }
+            // FAIL CLOSED: If the Cloud Function is unreachable, login MUST fail.
+            // No manager fallback, no offline fallback, no dev localhost bypass.
+            // Client-side credential checking is NOT authentication.
 
             // Server errors (invalid-argument, internal, etc.) — do NOT fall back to offline in production
             console.error('🔒 Server authentication error (no offline fallback):', errorCode);
@@ -637,12 +624,14 @@ export const employeeService = {
         const oldHash = await hashPassword(oldPassword);
         const newHash = await hashPassword(newPassword);
         const mgr = getManagerCredentials();
-        if (employeeNumber === mgr.employeeNumber) {
-            const mgrHash = await hashPassword(mgr.password);
+        if (mgr && employeeNumber === mgr.employeeNumber) {
+            // Compare against stored hash (or legacy plaintext if still present)
+            const mgrHash = mgr.passwordHash || (mgr.password ? await hashPassword(mgr.password) : '');
             if (oldHash !== mgrHash) {
                 return { success: false, error: 'كلمة المرور الحالية غير صحيحة' };
             }
-            updateManagerCredentials({ password: newPassword });
+            // Store HASH only — updateManagerCredentials hashes automatically
+            await updateManagerCredentials({ password: newPassword });
             return { success: true };
         }
         const employees = getStoredEmployees();

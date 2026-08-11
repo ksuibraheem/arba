@@ -692,6 +692,7 @@ const App: React.FC = () => {
             if (result.success && result.employee) {
                 // جلب بيانات المدير المحدّثة بعد التحميل من Firestore
                 const mgr = getManagerCredentials();
+                const mgrName = mgr?.name || 'المدير العام';
 
                 // دالة مساعدة للمصادقة بالـ Custom Token — returns auth.uid
                 const authSignIn = async (customToken?: string): Promise<string | null> => {
@@ -720,16 +721,16 @@ const App: React.FC = () => {
                         setCurrentEmployee(null);
                         setUser({
                             uid: authUid || undefined,
-                            name: mgr.name,
+                            name: mgrName,
                             email: 'manager@arba-sys.com',
                             plan: 'enterprise',
                             usedProjects: 0,
                             usedStorageMB: 0
                         });
-                        setRoleData(authUid || 'manager', mgr.name, 'manager@arba-sys.com').catch(console.error);
+                        setRoleData(authUid || 'manager', mgrName, 'manager@arba-sys.com').catch(console.error);
                         setCurrentPage('manager');
                     });
-                } else if ('employeeNumber' in result.employee && result.employee.employeeNumber === mgr.employeeNumber) {
+                } else if (mgr && 'employeeNumber' in result.employee && result.employee.employeeNumber === mgr.employeeNumber) {
                     // المدير (من بيانات الدخول الثابتة)
                     await handleSuccess(async () => {
                         const authUid = await authSignIn(result.customToken);
@@ -738,13 +739,13 @@ const App: React.FC = () => {
                         setCurrentEmployee(null);
                         setUser({
                             uid: authUid || undefined,
-                            name: mgr.name,
+                            name: mgrName,
                             email: 'manager@arba-sys.com',
                             plan: 'enterprise',
                             usedProjects: 0,
                             usedStorageMB: 0
                         });
-                        setRoleData(authUid || 'manager', mgr.name, 'manager@arba-sys.com').catch(console.error);
+                        setRoleData(authUid || 'manager', mgrName, 'manager@arba-sys.com').catch(console.error);
                         setCurrentPage('manager');
                     });
                 } else {
@@ -1916,7 +1917,7 @@ const App: React.FC = () => {
             id: 'manager-view',
             employeeNumber: 'MGR-001',
             password: '',
-            name: isManager ? MANAGER_CREDENTIALS.name : 'مدير الموارد البشرية',
+            name: isManager ? MANAGER_CREDENTIALS?.name || 'المدير العام' : 'مدير الموارد البشرية',
             email: 'hr@arba-sys.com',
             phone: '0500000000',
             role: 'hr',
@@ -1967,7 +1968,7 @@ const App: React.FC = () => {
             id: 'manager-view-qs',
             employeeNumber: 'MGR-QS-001',
             password: '',
-            name: isManager ? MANAGER_CREDENTIALS.name : 'مهندس الكميات',
+            name: isManager ? MANAGER_CREDENTIALS?.name || 'المدير العام' : 'مهندس الكميات',
             email: 'qs@arba-sys.com',
             phone: '0500000000',
             role: 'quantity_surveyor',
@@ -2000,7 +2001,7 @@ const App: React.FC = () => {
             id: 'manager-view',
             employeeNumber: 'MGR-001',
             password: '',
-            name: isManager ? MANAGER_CREDENTIALS.name : 'المحاسب',
+            name: isManager ? MANAGER_CREDENTIALS?.name || 'المدير العام' : 'المحاسب',
             email: 'accountant@arba-sys.com',
             phone: '0500000000',
             role: 'accountant',
@@ -2045,7 +2046,7 @@ const App: React.FC = () => {
             id: 'manager-view',
             employeeNumber: 'MGR-001',
             password: '',
-            name: isManager ? MANAGER_CREDENTIALS.name : 'موظف الدعم الفني',
+            name: isManager ? MANAGER_CREDENTIALS?.name || 'المدير العام' : 'موظف الدعم الفني',
             email: 'support@arba-sys.com',
             phone: '0500000000',
             role: 'support',
